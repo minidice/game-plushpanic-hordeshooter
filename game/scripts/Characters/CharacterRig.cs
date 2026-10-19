@@ -63,6 +63,8 @@ public partial class CharacterRig : Node3D
             ?? Pivot(Weapon, "Muzzle", new Vector3(0, 0, (def.ColliderRadius + .4f) * _forwardSign) / def.ModelScale);
 
         PrepareTail();
+        PrepareEars();
+        PrepareBodyTones();
         PrepareColors();
         if (def.IsZombie) Zombify(def);
         HidePart(def.Id + "_beret");

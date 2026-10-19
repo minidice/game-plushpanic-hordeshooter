@@ -52,7 +52,8 @@ public partial class ModularCustomization : Node
             Check(AppearanceStore.ReadProfile("raccoon",path).FaceStyle==1,"other species retains independent preset");
             var legacy=new ConfigFile();legacy.SetValue("duck","body","#aabbcc");legacy.Save(path);
             var migrated=AppearanceStore.ReadProfile("duck",path);
-            Check(migrated.Body=="#aabbcc"&&migrated.BodyWidth==1&&migrated.HairStyle==0,"old color-only profiles retain defaults for new parts");
+            // The old body tint becomes main/second tones (decisions A-9); new parts keep their defaults.
+            Check(migrated.Body.Length>0&&migrated.Body!="#aabbcc"&&migrated.BodySecondary.Length>0&&migrated.BodyWidth==1&&migrated.HairStyle==0&&migrated.EarAngle==0,"old color-only profiles migrate the tint and retain defaults for new parts");
             var invalid=new AppearanceProfile{BodyWidth=float.NaN,EyeSize=99,FeetSize=-3,HairStyle=99};invalid.Normalize();
             Check(invalid.BodyWidth==1&&invalid.EyeSize==1.45f&&invalid.FeetSize==.8f&&invalid.HairStyle==2,"out-of-range profiles clamped to safe cosmetic limits");
             DirAccess.RemoveAbsolute(ProjectSettings.GlobalizePath(path));

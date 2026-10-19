@@ -37,6 +37,7 @@
 | I-43 | 네임드 시체 루팅·모드별 정책 선택·저장·호스트 동기화 미구현 | `tier`, 별도 수명 JSON, 고정된 사망 기록/로컬 ID까지 구현. 실제 아이템·상호작용은 없음. 멀티에서는 호스트가 ID/위치/수명/루팅 상태를 확정해야 하며 로컬 물리 외형을 루팅 좌표로 쓰지 않음. 네임드 5분 누적 부하도 별도 검증 필요 | 열림 | 2026-10-20 | `corpse-retention.md`, `decisions.md` T-16 |
 
 | I-46 | 다른 PC에서 초기 빌드 시 Godot 로컬 NuGet 경로가 맞지 않을 수 있음 | `game/nuget.config`의 GodotLocal472 소스가 현재 설치 경로 `D:/Util/Godot/.../GodotSharp/Tools/nupkgs`를 참조. 다른 설치 경로에서는 이 소스와 실행 스크립트 GodotDir를 맞춰야 함. 현재 PC 빌드는 통과했으며 타 PC의 깨끗한 설치는 미검증 | 제약 | 2026-10-20 | `../game/nuget.config`, `../README.md` |
+| I-50 | 무늬색을 크게 바꾸면 얼굴 무늬 경계에 점이 보일 수 있음 | 투톤 비율을 생성기 공식으로 다시 계산하는데, 감량된 메시의 경계 정점 약 2%(라쿤 52개, 랫서판다 43개)는 공식 값과 원래 색이 0.05 이상(최대 0.55) 다름. 근본 해결은 생성기가 영역 비율을 별도 정점 속성으로 내보내는 것(모델 재생성 필요) | 제약 | 2026-10-20 | `character-model-spec.md` 7.1, `decisions.md` A-9 |
 
 ## 2. 해결
 
@@ -79,6 +80,9 @@
 | I-13 | 처음에 Godot 4.6.3으로 작업함 | 지정 버전을 몰랐음 | 사용자가 지정한 `D:\Util\Godot\Godot_v4.7.2-stable_mono_win64`로 전환 (D-8) | 2026-10-19 | 빌드 경고·오류 0 |
 | I-36 | 꼬리 피벗을 새 부모로 옮길 때 imported scene Owner 경고 | 하위 노드 Owner가 재부모화 중 잠시 조상이 아니게 됨 | 꼬리 하위 트리의 Owner를 보관·해제한 뒤 새 부모에 연결하고 복원. 기존 장착 변환도 보존 | 2026-10-20 | `TailMeleeCheck`, `CaptureTailMelee`; `../game/scripts/Characters/CharacterTail.cs` |
 | I-47 | 언어 테이블 `customization.csv`·`hud-polish.csv`(kor·eng)가 Godot 번역 리소스(`.text.translation`)로 가져와짐 | 이 CSV들의 `.import`가 `importer="csv_translation"`으로 생성됨(`localization.md`의 `keep` 규칙이 새 파일에 적용되지 않음). 에디터 실행에서는 원본 CSV가 있어 문제가 안 보였지만, **내보낸 빌드에는 원본 CSV가 들어가지 않아 해당 문구가 키로 보였을 것**(추정, 내보내기는 아직 미검증) | 네 파일의 `.import`를 `importer="keep"`으로 바꾸고 생성된 `.text.translation` 삭제. 통합 검사에 "모든 언어 CSV는 importer=keep" 추가 | 2026-10-20 | `Integration`: "every language CSV is kept as plain text (importer=keep)" |
+| I-48 | 커스터마이징 프리셋이 동작하지 않는 것처럼 보임 (사용자 보고) | 프리셋 3종이 코드에 박힌 작은 체형·장비 차이뿐이고 색이 없었음. 목록에서 고른 뒤 [적용]을 따로 눌러야 했음 | 프리셋을 JSON으로 옮기고 종별 색 프리셋 추가, 고르면 즉시 적용(A-12). 프리셋 로드 오류는 검사에서 0개여야 함 | 2026-10-20 | `CustomizationToneCheck`: 프리셋 로드 오류 없음, 종별 프리셋이 몸 색을 바꿈; `CaptureCustomization` |
+| I-51 | (커밋 전 리뷰에서 발견) 거위·오리의 '말린 꼬리'가 끝에서 180° 뒤틀림, 보이는 프리셋을 다시 골라도 적용 안 됨, 몸 색이 있으면 모든 슬라이더 틱마다 몸 메시를 다시 읽고 만듦, 프리셋 파일의 타입 오류에 예외가 나서 작업실이 안 열림, 예전 몸 색조 저장의 의미가 바뀜 | 꼬리 단면의 옆 축을 접선×위로 구해 새 꼬리 끝이 수직을 넘으면 뒤집힘 / `OptionButton.AllowReselect` 기본값 false / 캐시 없음 / `JsonException`만 잡음 / 저장 형식 버전 없음 | 새 꼬리 옆 축을 +X로 고정하고 고리 연속성 검사 추가 / 재선택 허용 / 원래 배열 1회 읽기·몸 색이 바뀔 때만 재생성·메시 재사용 / 항목별 타입 확인과 모든 예외 수집, 기본 프리셋 보장 / `tone_version` 추가와 색조 → 세 색 자동 변환 | 2026-10-20 | `CustomizationToneCheck`: 모든 꼬리 모양 고리 연속, 말린 꼬리 높이, 재선택 허용, 예전 저장 변환 재현, 털 정점 정확한 색 |
+| I-49 | 라쿤·랫서판다 귀가 어색함 (사용자 보고) | 모델 생성기의 귀가 윤곽을 앞뒤로 밀어낸 납작한 판 + 안쪽 판이라 두께·오목함이 없음 | 게임에서 오목한 껍질 귀로 재구성, 모양 4종·기울기 추가(A-10). 원본 GLB는 그대로이므로 다른 프로젝트로 옮길 때는 I-27과 같은 제약 | 2026-10-20 | `CustomizationToneCheck`: 두 귀 재구성, 기울기, 뾰족한 귀 높이, 모자 접힘; `output/custom-tones-ears-tails.png` |
 
 ### 2.4 모델 · 파지 · 피격 효과
 
@@ -101,6 +105,7 @@
 | 플레이어/적 모델·최적화 | `TailMeleeCheck` + `EnemyAttackCheck` + `ModularCustomization` + `WeaponGripCheck`; 네 종과 복제 좀비, 팔 피벗·꼬리·색·크기·손 연결. GLB 자체와 최신 종류별 summary를 비교하고 후면·측면 렌더 확인 |
 | 피격 재질 | `HitFlashCheck`; 피격 개체만 점멸, 원래 색·좀비 오버레이 복원, 생성 팔/교체 장비 포함, 무적·회피 무효 피해에 점멸 없음 |
 | 시체·소품 충돌·멀티 관찰자 | `CorpseRetentionCheck` + `CorpseTierCheck` + `Integration`; 화면/거리 보호·생성 순서·분할 정리·모든 관찰자 등록·양쪽 마스크. `CorpsePerformance`로 실제 렌더 부하 확인 |
+| 커스터마이징 외형 | `CustomizationToneCheck`(창 모드면 `output/custom-tones-*.png`) + `AppearanceExpansion` + `ModularCustomization` + `CaptureCustomization`; 기본값이면 원래 정점 색, 보조색은 배만, 팔·손 따라가기, 프리셋 오류 0, 귀·꼬리 모양. 생성기의 무늬 공식·팔레트를 바꾸면 `CharacterBodyTones`도 같이 |
 | 메인 메뉴·설정 | `MenuCheck`(창 모드면 `output/menu-*.png`도 저장) + `CaptureCustomization`; 페이지 이동, 잠긴 모드·멀티 버튼, AI 분대원 선택, 설정 저장/복원과 잘못된 값, 언어 전환 후 재구성. 테스트가 `user://settings.cfg`를 쓰지 않는지 |
 | 카메라·맵·HUD | `CombatPacingCheck` + `CaptureArtDirection`; 기본/확대 시 방향과 화면 기준 이동, HUD 겹침. 70% 필수 경로 거리 비율은 별도 측정(I-25) |
 

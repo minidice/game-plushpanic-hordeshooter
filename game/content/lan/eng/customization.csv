@@ -81,3 +81,33 @@ preview_auto_rotate,Auto rotate
 preview_gear,Gear
 preview_weapon,Weapon
 preview_only_hint,Gear and weapon visibility affect this preview only.
+# 투톤 몸 색, 귀·꼬리 모양, 프리셋 (2026-10-20)
+custom_body_primary,Main color
+custom_body_secondary,Second color
+custom_body_marking,Face markings
+custom_tone_hint_goose,"Main: body, wings and crest. Second: belly and tail feathers."
+custom_tone_hint_duck,"Main: body, wings and crest. Second: belly and tail feathers."
+custom_tone_hint_raccoon,"Main: body, ears and crest. Second: belly, face, muzzle and inner ears. Markings: eye mask and arms."
+custom_tone_hint_redpanda,"Main: body, ears and crest. Second: belly and arms. Markings: white face patches, muzzle and inner ears."
+custom_arm_follow_hint,Arm (wing) color follows the body. Feet can be colored separately.
+custom_ear_style,Ear shape
+custom_ear_default,Default
+custom_ear_round,Round
+custom_ear_pointed,Pointed
+custom_ear_folded,Folded
+custom_ear_angle,Ear angle
+custom_tail_style,Tail shape
+custom_tail_default,Default
+custom_tail_fluffy,Fluffy
+custom_tail_long,Long and thin
+custom_tail_short,Short and round
+custom_tail_curled,Curled
+custom_preset_hint,"Applies as soon as you pick it, replacing the current look."
+custom_preset_goose_greylag,Greylag
+custom_preset_goose_black_swan,Black swan
+custom_preset_duck_mallard,Mallard
+custom_preset_duck_white,White duck
+custom_preset_raccoon_snow,Snow raccoon
+custom_preset_raccoon_midnight,Midnight raccoon
+custom_preset_redpanda_ember,Ember
+custom_preset_redpanda_pale,Pale

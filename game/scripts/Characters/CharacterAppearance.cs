@@ -6,7 +6,6 @@ namespace HordeShooter;
 public partial class CharacterRig
 {
     private readonly List<(string Channel,StandardMaterial3D Material,Color Original)> _colorMaterials=new();
-    private readonly Dictionary<Node3D,Transform3D> _earHomes=new();
     private AppearanceProfile? _appliedAppearance;
     public Color HandColor {get;private set;}=Colors.White;
     private void PrepareColors()
@@ -18,8 +17,10 @@ public partial class CharacterRig
             for(int i=0;i<mesh.Mesh.GetSurfaceCount();i++)
             {
                 if(mesh.GetActiveMaterial(i) is not StandardMaterial3D source)continue;
-                foreach(var channel in new[]{"body","beak","hat","vest","pack","wing","tail","feet","eyes","hair"})
-                    if(source.ResourceName.StartsWith("custom_"+channel,StringComparison.Ordinal))
+                // Brows are painted in a body tone but exported as plain detail; they follow the tones too.
+                bool brow=mesh.Name.ToString().Contains("Brow");
+                foreach(var channel in new[]{"body","beak","hat","vest","pack","wing","tail","feet","eyes","hair","brow"})
+                    if(brow?channel=="brow":source.ResourceName.StartsWith("custom_"+channel,StringComparison.Ordinal))
                     {
                         var owned=(StandardMaterial3D)source.Duplicate();
                         // Imported skin has COLOR_0 markings, but the glTF material can omit the vertex-color flag.
@@ -32,31 +33,79 @@ public partial class CharacterRig
             }
         }
     }
+
+    /// <summary>Current color of a channel. Body tones ("body", "body2", "body3") report the tone, not a material.</summary>
     public Color ChannelColor(string channel)
     {
-        PrepareColors();foreach(var item in _colorMaterials)if(item.Channel==channel)return item.Material.AlbedoColor;
+        PrepareColors();
+        if(BodyTone(channel) is { } tone)return tone;
+        foreach(var item in _colorMaterials)if(item.Channel==channel)return item.Material.AlbedoColor;
         return Colors.White;
     }
-    public bool HasColorChannel(string channel){PrepareColors();return _colorMaterials.Exists(m=>m.Channel==channel);}
+    public bool HasColorChannel(string channel)
+    {
+        PrepareColors();
+        if(channel is "body" or "body2")return AppearanceCatalog.Palette(_toneSpecies)!=null||_colorMaterials.Exists(m=>m.Channel=="body");
+        if(channel=="body3")return AppearanceCatalog.HasMarking(_toneSpecies);
+        return _colorMaterials.Exists(m=>m.Channel==channel);
+    }
+
+    private Color? BodyTone(string channel)
+    {
+        if(AppearanceCatalog.Palette(_toneSpecies) is not { } palette)return null;
+        var p=_appliedAppearance??new AppearanceProfile();
+        return channel switch
+        {
+            "body"=>Tone(p.Body,palette.Primary),
+            "body2"=>Tone(p.BodySecondary,palette.Secondary),
+            "body3"=>palette.Marking is { } m?Tone(p.BodyMarking,m):null,
+            _=>null,
+        };
+    }
+
+    /// <summary>
+    /// Parts painted with one of the species' tone colors (ears, arms, crest, mammal muzzle, bird tail)
+    /// take the new tone, so the whole animal recolors together. Anything else keeps its color.
+    /// </summary>
+    private Color FollowBody(Color original,AppearanceProfile p)
+    {
+        if(AppearanceCatalog.Palette(_toneSpecies) is not { } palette)return original;
+        static bool Same(Color a,Color b)=>Mathf.Abs(a.R-b.R)<.02f&&Mathf.Abs(a.G-b.G)<.02f&&Mathf.Abs(a.B-b.B)<.02f;
+        if(Same(original,palette.Primary))return Tone(p.Body,palette.Primary);
+        if(Same(original,palette.Secondary))return Tone(p.BodySecondary,palette.Secondary);
+        if(palette.Marking is { } marking&&Same(original,marking))return Tone(p.BodyMarking,marking);
+        return original;
+    }
+
     public void ApplyAppearance(AppearanceProfile profile)
     {
         _appliedAppearance=profile;
         profile.Normalize();
         PrepareColors();
+        bool bird=AppearanceCatalog.IsBird(_toneSpecies);
+        Color? arm=null,armOriginal=null;
         foreach(var item in _colorMaterials)
         {
             string value=profile.ColorFor(item.Channel);
-            if(value.Length==0&&(item.Channel=="hair"||(item.Channel=="wing"&&AppearanceCatalog.IsBird(Definition.Id))))
+            bool chosen=value.Length>0&&Color.HtmlIsValid(value);
+            item.Material.AlbedoColor=item.Channel switch
             {
-                item.Material.AlbedoColor=profile.Body.Length>0&&Color.HtmlIsValid(profile.Body)?item.Original*new Color(profile.Body):item.Original;
-                continue;
-            }
-            item.Material.AlbedoColor=value.Length>0&&Color.HtmlIsValid(value)
-                ? new Color(value)*(item.Channel is "body" or "tail"?item.Original:Colors.White) : item.Original;
+                // The skin keeps a white albedo; its tones live in the vertex colors (ApplyBodyTones).
+                "body"=>FollowBody(item.Original,profile),
+                // Arms always match the body (old saved arm colors are ignored).
+                "wing" or "brow"=>FollowBody(item.Original,profile),
+                "hair"=>chosen?new Color(value):FollowBody(item.Original,profile),
+                "beak"=>chosen?new Color(value):bird?item.Original:FollowBody(item.Original,profile),
+                "tail"=>(chosen?new Color(value):Colors.White)*(bird?FollowBody(item.Original,profile):item.Original),
+                _=>chosen?new Color(value):item.Original,
+            };
+            if(item.Channel=="wing"){arm=item.Material.AlbedoColor;armOriginal=item.Original;}
         }
+        ApplyBodyTones(profile);
+        // Gripping hands move by as much as the arms did, so an unchanged arm leaves the species' hand color.
         HandColor=Definition.HandColor;
-        if((Definition.Id=="goose"||Definition.Id=="duck")&&profile.Body.Length>0&&Color.HtmlIsValid(profile.Body))HandColor*=new Color(profile.Body);
-        if(profile.Wing.Length>0&&Color.HtmlIsValid(profile.Wing))HandColor=new Color(profile.Wing);
+        if(arm is { } armNow&&armOriginal is { } armBefore&&!armNow.IsEqualApprox(armBefore))
+            HandColor=new Color(Mathf.Clamp(HandColor.R+armNow.R-armBefore.R,0,1),Mathf.Clamp(HandColor.G+armNow.G-armBefore.G,0,1),Mathf.Clamp(HandColor.B+armNow.B-armBefore.B,0,1));
         foreach(var child in Weapon.FindChildren("Hand*",nameof(MeshInstance3D),true,false))
             ((MeshInstance3D)child).MaterialOverride=Mat.Solid(HandColor);
         UpdateWeaponGrip();
@@ -67,14 +116,8 @@ public partial class CharacterRig
         SetPartVisible(Definition.Id+"_goggles",profile.Goggles);
         SetPartVisible(Definition.Id+"_headset",profile.Headset);
         SetPartVisible(Definition.Id+"_pack",profile.Pack);
-        foreach(var (suffix,side) in new[]{("leftEar",-1f),("rightEar",1f)})
-            if(Model.FindChild(Definition.Id+"_"+suffix,true,false) is Node3D ear)
-            {
-                if(!_earHomes.ContainsKey(ear))_earHomes[ear]=ear.Transform;
-                ear.Transform=_earHomes[ear];
-                if(profile.Hat!=0){ear.Position=new Vector3(side*.43f,.16f,-.06f);ear.Rotation=new Vector3(0,0,-side*.55f);ear.Scale=new Vector3(.72f,.60f,.80f);}
-                ear.Scale*=profile.EarSize;
-            }
+        ApplyEars(profile,profile.Hat!=0);
+        ApplyTailStyle(profile.TailStyle);
         ApplyPartShapes(profile);
     }
     private void SetPartVisible(string name,bool visible){if(Model.FindChild(name,true,false) is Node3D part)part.Visible=visible;}
@@ -87,7 +130,7 @@ public partial class CharacterRig
             if(!equipment)
             {
                 foreach(var name in Definition.GearNodes)HidePart(name);
-                foreach(var (ear,home) in _earHomes){ear.Transform=home;ear.Scale*=p.EarSize;}
+                ApplyEars(p,hatOn:false);
                 SetPartVisible(Definition.Id+"_crestShort",p.HairStyle==1);
                 SetPartVisible(Definition.Id+"_crestSwept",p.HairStyle==2);
             }

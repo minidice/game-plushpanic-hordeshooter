@@ -38,19 +38,18 @@ public partial class AppearanceEditor : VBoxContainer
 
         var presets = new HBoxContainer();
         presets.AddChild(UiTheme.Label(Loc.Text("custom_presets"), 17));
-        var preset = new OptionButton { Name = "PresetChoice", SizeFlagsHorizontal = SizeFlags.ExpandFill };
-        foreach (var key in new[] { "custom_preset_default", "custom_preset_round", "custom_preset_scout" }) preset.AddItem(Loc.Text(key));
-        preset.Select(presetIndex);
-        presets.AddChild(preset);
-        var usePreset = new Button { Name = "ApplyPreset", Text = Loc.Text("custom_apply_preset") };
-        usePreset.Pressed += () =>
+        // Reselect lets the shown preset be applied again to undo later edits.
+        var preset = new OptionButton { Name = "PresetChoice", SizeFlagsHorizontal = SizeFlags.ExpandFill, TooltipText = Loc.Text("custom_preset_hint"), AllowReselect = true };
+        foreach (var item in AppearancePresets.For(rig.Definition.Id)) preset.AddItem(Loc.Text(item.NameKey));
+        if (preset.ItemCount > 0) preset.Select(Math.Clamp(presetIndex, 0, preset.ItemCount - 1));
+        // Choosing a preset applies it at once; the editor is rebuilt after the popup's signal returns.
+        preset.ItemSelected += chosen =>
         {
-            int chosenPreset = preset.Selected;
-            _profile = AppearanceCatalog.CreatePreset(rig.Definition.Id, chosenPreset);
+            _profile = AppearanceCatalog.CreatePreset(rig.Definition.Id, (int)chosen);
             Apply();
-            ShowRig(rig, chosenPreset);
+            Callable.From(() => { if (IsInstanceValid(this) && _rig == rig) ShowRig(rig, (int)chosen); }).CallDeferred();
         };
-        presets.AddChild(usePreset);
+        presets.AddChild(preset);
         AddChild(presets);
 
         _tabs = new TabContainer { Name = "PartTabs", SizeFlagsVertical = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(0, 270) };
@@ -75,23 +74,33 @@ public partial class AppearanceEditor : VBoxContainer
             new[] { "custom_face_neutral", "custom_face_alert", "custom_face_sleepy" }, value => _profile.FaceStyle = value);
         AddChoice(bodies["face"], "BeakStyle", bird ? "custom_beak_style" : "custom_snout_style", _profile.BeakStyle,
             new[] { "custom_shape_default", "custom_shape_wide", "custom_shape_short" }, value => _profile.BeakStyle = value);
+        if (!bird)
+        {
+            AddChoice(bodies["head"], "EarStyle", "custom_ear_style", _profile.EarStyle,
+                new[] { "custom_ear_default", "custom_ear_round", "custom_ear_pointed", "custom_ear_folded" }, value => _profile.EarStyle = value);
+        }
         AddChoice(bodies["head"], "HairStyle", "custom_hair_style", _profile.HairStyle,
             new[] { "custom_hair_none", "custom_hair_short", "custom_hair_swept" }, value => _profile.HairStyle = value);
         foreach (var scale in AppearanceCatalog.Scales)
         {
-            if (scale.Key == "ear_size" && bird) continue;
+            if (scale.MammalOnly && bird) continue;
             string label = scale.Key == "beak_size" && !bird ? "custom_snout_size" : scale.LabelKey;
-            AddScale(bodies[scale.Tab], scale.Key, label, scale.Min, scale.Max);
+            AddScale(bodies[scale.Tab], scale.Key, label, scale.Min, scale.Max, scale.Unit);
         }
-        AddColor(bodies["body"], "body");
+        AddColor(bodies["body"], "body", "custom_body_primary");
+        AddColor(bodies["body"], "body2", "custom_body_secondary");
+        if (AppearanceCatalog.HasMarking(rig.ToneSpecies)) AddColor(bodies["body"], "body3", "custom_body_marking");
+        bodies["body"].AddChild(Hint(Loc.Text("custom_tone_hint_" + rig.ToneSpecies)));
         AddColor(bodies["face"], "eyes");
         AddColor(bodies["face"], "beak", bird ? "custom_beak" : "custom_snout");
         AddColor(bodies["head"], "hair");
         var hairHint = UiTheme.Label(Loc.Text("custom_hair_hint"), 14, UiTheme.Muted);
         hairHint.AutowrapMode = TextServer.AutowrapMode.WordSmart;
         bodies["head"].AddChild(hairHint);
-        AddColor(bodies["limbs"], "wing");
+        bodies["limbs"].AddChild(Hint(Loc.Text("custom_arm_follow_hint")));
         AddColor(bodies["limbs"], "feet");
+        AddChoice(bodies["tail"], "TailStyle", "custom_tail_style", _profile.TailStyle,
+            new[] { "custom_tail_default", "custom_tail_fluffy", "custom_tail_long", "custom_tail_short", "custom_tail_curled" }, value => _profile.TailStyle = value);
         AddColor(bodies["tail"], "tail");
 
         var gear = bodies["gear"];
@@ -141,13 +150,21 @@ public partial class AppearanceEditor : VBoxContainer
         row.AddChild(choice);
     }
 
-    private void AddScale(VBoxContainer parent, string key, string labelKey, float min, float max)
+    private static Label Hint(string text)
+    {
+        var hint = UiTheme.Label(text, 14, UiTheme.Muted);
+        hint.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        return hint;
+    }
+
+    private void AddScale(VBoxContainer parent, string key, string labelKey, float min, float max, string unit = "×")
     {
         var row = Row(parent, labelKey);
-        var valueLabel = UiTheme.Label($"{_profile.ScaleFor(key):0.00}×", 15, UiTheme.Muted);
+        string Show(double v) => unit == "°" ? $"{v:+0;-0;0}°" : $"{v:0.00}{unit}";
+        var valueLabel = UiTheme.Label(Show(_profile.ScaleFor(key)), 15, UiTheme.Muted);
         valueLabel.CustomMinimumSize = new Vector2(58, 0);
-        var slider = new HSlider { Name = "Scale_" + key, MinValue = min, MaxValue = max, Step = .01, Value = _profile.ScaleFor(key), SizeFlagsHorizontal = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(100, 32) };
-        slider.ValueChanged += value => { _profile.SetScale(key, (float)value); valueLabel.Text = $"{value:0.00}×"; Apply(); };
+        var slider = new HSlider { Name = "Scale_" + key, MinValue = min, MaxValue = max, Step = unit == "°" ? 1 : .01, Value = _profile.ScaleFor(key), SizeFlagsHorizontal = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(100, 32) };
+        slider.ValueChanged += value => { _profile.SetScale(key, (float)value); valueLabel.Text = Show(value); Apply(); };
         row.AddChild(slider);
         row.AddChild(valueLabel);
     }
@@ -157,7 +174,7 @@ public partial class AppearanceEditor : VBoxContainer
         if (_rig == null) return;
         var row = Row(parent, labelKey ?? "custom_" + channel);
         string chosen = _profile.ColorFor(channel);
-        bool tint = channel is "body" or "tail";
+        bool tint = channel == "tail";
         var picker = new ColorPickerButton
         {
             Name = "Color_" + channel,

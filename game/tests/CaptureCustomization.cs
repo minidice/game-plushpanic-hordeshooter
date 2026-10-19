@@ -24,7 +24,7 @@ public partial class CaptureCustomization : Node
             Check(_menu.Characters.Count==4,"four playable species exposed before customization");
             Check(Ui<TabContainer>("PartTabs").GetTabCount()==6,"six part categories available");
             await Shot("custom-workshop-default");
-            Choose("PresetChoice",1);Click("ApplyPreset");await Frames(2);
+            Choose("PresetChoice",1);await Frames(2);
             Ui<HSlider>("Scale_body_width").Value=1.08;
             Choose("Choice_HairStyle",2);Choose("Choice_FaceStyle",1);Tint("body","#9ecfd7");Tint("hair","#638f9d");
             Ui<CheckButton>("PreviewGear").ButtonPressed=false;Ui<CheckButton>("PreviewWeapon").ButtonPressed=false;
@@ -35,16 +35,16 @@ public partial class CaptureCustomization : Node
             Click("Species_raccoon");await Frames(2);
             Check(_menu.Selected.Id=="raccoon"&&Ui<HSlider>("Scale_ear_size")!=null,"raccoon exposes species-specific ears");
             Check(Math.Abs(Ui<HSlider>("Scale_body_width").Value-1)<.001,"switching species does not inherit goose proportions (value="+Ui<HSlider>("Scale_body_width").Value+")");
-            Choose("PresetChoice",1);Click("ApplyPreset");await Frames(2);
+            Choose("PresetChoice",1);await Frames(2);
             Ui<HSlider>("Scale_ear_size").Value=1.20;Choose("Choice_HairStyle",1);Ui<TabContainer>("PartTabs").CurrentTab=2;
             Ui<HSlider>("PreviewRotation").Value=25;await Frames(2);await Shot("custom-workshop-raccoon");
             Click("Species_redpanda");await Frames(2);
-            Choose("PresetChoice",2);Click("ApplyPreset");await Frames(2);
+            Choose("PresetChoice",2);await Frames(2);
             Choose("Choice_HairStyle",2);Ui<HSlider>("Scale_tail_size").Value=1.25;
             Ui<TabContainer>("PartTabs").CurrentTab=4;Ui<HSlider>("PreviewRotation").Value=130;
             await Frames(2);await Shot("custom-workshop-redpanda");
             Click("Species_duck");await Frames(2);
-            Choose("PresetChoice",1);Click("ApplyPreset");await Frames(2);
+            Choose("PresetChoice",1);await Frames(2);
             Choose("Choice_BeakStyle",1);Tint("body","#c1d7aa");Ui<TabContainer>("PartTabs").CurrentTab=3;Ui<HSlider>("PreviewRotation").Value=-25;
             await Frames(2);await Shot("custom-workshop-duck");
             Click("Species_goose");await Frames(2);

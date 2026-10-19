@@ -1,0 +1,38 @@
+{
+  "description": "Customization workshop presets. Keys are the same as user://appearance.cfg. Fields not listed keep their defaults. 'shared' is offered to every species, then the species' own list. Colors: body = main fur, body_secondary = belly, body_marking = face pattern (raccoon, red panda). ear_style 0 default / 1 round / 2 pointed / 3 folded. tail_style 0 default / 1 fluffy / 2 long & thin / 3 short & round / 4 curled.",
+  "shared": [
+    { "id": "default", "name": "custom_preset_default" },
+    {
+      "id": "round", "name": "custom_preset_round",
+      "body_width": 1.10, "body_height": 0.93, "eye_size": 1.35, "eye_spacing": 1.04,
+      "beak_size": 0.90, "beak_style": 1, "ear_size": 0.92, "ear_style": 1, "ear_angle": 12,
+      "tail_size": 1.10, "tail_style": 1,
+      "hat": 0, "goggles": false, "hair_style": 1, "vest": false, "pack": false
+    },
+    {
+      "id": "scout", "name": "custom_preset_scout",
+      "body_width": 0.94, "body_height": 1.06, "eye_size": 1.10, "face_style": 1,
+      "ear_size": 1.10, "ear_style": 2, "ear_angle": -8, "tail_size": 0.90, "tail_style": 2,
+      "vest_style": 1, "headset": true, "goggles": false,
+      "hat_color": "#344b45", "vest_color": "#3a4a45", "pack_color": "#4c5c4b"
+    }
+  ],
+  "species": {
+    "goose": [
+      { "id": "greylag", "name": "custom_preset_goose_greylag", "body": "#9b948a", "body_secondary": "#e3ddd0", "beak": "#e08a3c" },
+      { "id": "black_swan", "name": "custom_preset_goose_black_swan", "body": "#2e3033", "body_secondary": "#5a5c61", "beak": "#c8383a", "feet": "#3a3c40" }
+    ],
+    "duck": [
+      { "id": "mallard", "name": "custom_preset_duck_mallard", "body": "#8a7458", "body_secondary": "#cdb894", "beak": "#d6b13c" },
+      { "id": "white", "name": "custom_preset_duck_white", "body": "#f1ede2", "body_secondary": "#f7ecd2", "beak": "#f0a43a" }
+    ],
+    "raccoon": [
+      { "id": "snow", "name": "custom_preset_raccoon_snow", "body": "#c4cacd", "body_secondary": "#f3eee3", "body_marking": "#5d666b" },
+      { "id": "midnight", "name": "custom_preset_raccoon_midnight", "body": "#4b5257", "body_secondary": "#b7ad99", "body_marking": "#16191b", "tail": "#8a8f95" }
+    ],
+    "redpanda": [
+      { "id": "ember", "name": "custom_preset_redpanda_ember", "body": "#b8461f", "body_secondary": "#241b18", "body_marking": "#f6e2b8" },
+      { "id": "pale", "name": "custom_preset_redpanda_pale", "body": "#cf8a5c", "body_secondary": "#5b4b42", "body_marking": "#fff3dc", "tail": "#f0d0b0" }
+    ]
+  }
+}

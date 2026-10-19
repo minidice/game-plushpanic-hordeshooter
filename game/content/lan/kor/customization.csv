@@ -81,3 +81,33 @@ preview_auto_rotate,자동 회전
 preview_gear,장비 보기
 preview_weapon,무기 보기
 preview_only_hint,장비·무기 표시는 미리보기에만 적용됩니다.
+# 투톤 몸 색, 귀·꼬리 모양, 프리셋 (2026-10-20)
+custom_body_primary,몸 주색
+custom_body_secondary,몸 보조색
+custom_body_marking,얼굴 무늬색
+custom_tone_hint_goose,주색: 몸·날개·머리털. 보조색: 배와 꼬리 깃털.
+custom_tone_hint_duck,주색: 몸·날개·머리털. 보조색: 배와 꼬리 깃털.
+custom_tone_hint_raccoon,주색: 몸·귀·머리털. 보조색: 배·얼굴·주둥이·귀 안쪽. 무늬색: 눈가 마스크와 팔.
+custom_tone_hint_redpanda,주색: 몸·귀·머리털. 보조색: 배와 팔. 무늬색: 얼굴 흰 무늬·주둥이·귀 안쪽.
+custom_arm_follow_hint,팔(날개) 색은 몸 색을 따라갑니다. 발 색은 따로 고를 수 있습니다.
+custom_ear_style,귀 모양
+custom_ear_default,기본
+custom_ear_round,둥근 귀
+custom_ear_pointed,뾰족한 귀
+custom_ear_folded,접힌 귀
+custom_ear_angle,귀 각도
+custom_tail_style,꼬리 모양
+custom_tail_default,기본
+custom_tail_fluffy,풍성한 꼬리
+custom_tail_long,길고 가는 꼬리
+custom_tail_short,짧고 동근 꼬리
+custom_tail_curled,말린 꼬리
+custom_preset_hint,고르면 바로 적용되고 지금 외형을 덮어씁니다.
+custom_preset_goose_greylag,회색기러기
+custom_preset_goose_black_swan,흑고니
+custom_preset_duck_mallard,청둥오리
+custom_preset_duck_white,흰 오리
+custom_preset_raccoon_snow,눈 라쿤
+custom_preset_raccoon_midnight,한밤 라쿤
+custom_preset_redpanda_ember,짙은 털
+custom_preset_redpanda_pale,옅은 털

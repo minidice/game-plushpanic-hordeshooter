@@ -19,13 +19,21 @@ public partial class AppearanceExpansion : Node
                 first.ApplyAppearance(profile);
                 var skin=first.Model.FindChild(id+"_torso_mesh",true,false) as MeshInstance3D;
                 Require(skin!=null && skin.GetActiveMaterial(0) is StandardMaterial3D{VertexColorUseAsAlbedo:true},id+" skin markings use imported vertex colors");
-                Require(first.ChannelColor("body").IsEqualApprox(new Color(profile.Body)*original),id+" body tint applied");
-                Require(second.ChannelColor("body").IsEqualApprox(original),id+" shared model material remains unchanged");
+                Require(first.ChannelColor("body").IsEqualApprox(new Color(profile.Body)),id+" main body tone applied");
+                Require(second.ChannelColor("body").IsEqualApprox(original)&&second.SkinColors().Length>0&&!first.SkinColors().SequenceEqual(second.SkinColors()),
+                    id+" recoloring one character leaves another of the same species unchanged");
                 Require(first.Model.FindChild(id+"_beret",true,false) is Node3D{Visible:true},id+" beret available");
                 Require(first.Model.FindChild(id+"_vest",true,false) is Node3D{Visible:false},id+" vest hidden");
                 var colors=new AppearanceProfile{Wing="#397c71",Tail="#bad4aa",Feet="#d49b51",Eyes="#273e4b",Goggles=false,Headset=true,VestStyle=1};
                 first.ApplyAppearance(colors);
-                Require(first.ChannelColor("wing").IsEqualApprox(new Color(colors.Wing))&&first.HandColor.IsEqualApprox(new Color(colors.Wing)),id+" wing and gripping hand share selected color");
+                Require(first.ChannelColor("wing").IsEqualApprox(second.ChannelColor("wing"))&&first.HandColor.IsEqualApprox(def.HandColor),id+" an old saved arm color is ignored: arms follow the body");
+                var toned=new AppearanceProfile{Body="#3c6e8f",BodySecondary="#d8c9a0",BodyMarking="#5a2a2a"};
+                first.ApplyAppearance(toned);
+                var arm=first.ChannelColor("wing");
+                var handShift=first.HandColor-def.HandColor;var armShift=arm-second.ChannelColor("wing");
+                Require(new[]{toned.Body,toned.BodySecondary,toned.BodyMarking}.Any(c=>arm.IsEqualApprox(new Color(c)))&&Mathf.Abs(handShift.R-armShift.R)<.01f&&Mathf.Abs(handShift.B-armShift.B)<.01f,
+                    id+" arms take a body tone and gripping hands move with them");
+                first.ApplyAppearance(colors);
                 Require(first.ChannelColor("tail").IsEqualApprox(second.ChannelColor("tail")*new Color(colors.Tail)),id+" tail tint preserves original markings");
                 Require(first.ChannelColor("feet").IsEqualApprox(new Color(colors.Feet))&&first.ChannelColor("eyes").IsEqualApprox(new Color(colors.Eyes)),id+" feet and eyes independently colored");
                 Require(first.Model.FindChild(id+"_goggles",true,false) is Node3D{Visible:false}&&first.Model.FindChild(id+"_headset",true,false) is Node3D{Visible:true},id+" goggles and headset independently selected");
