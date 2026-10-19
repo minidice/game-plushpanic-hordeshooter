@@ -73,12 +73,10 @@ public partial class CharacterRig
         arrays[(int)Mesh.ArrayType.Color]=colors;
         _skinToned??=new ArrayMesh();
         _skinToned.ClearSurfaces();
-        // Keep the import's attribute compression (positions are unchanged, so its shadow mesh still fits).
-        var compress=_skinOriginal.SurfaceGetFormat(0)&Mesh.ArrayFormat.FlagCompressAttributes;
-        _skinToned.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles,arrays,null,null,compress);
+        // Uncompressed, and no shadow mesh: Godot also draws the shadow mesh in the depth pre-pass, and the
+        // import's compressed one sits a hair off this rebuilt surface, which blacked out patches of skin (I-52).
+        _skinToned.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles,arrays);
         _skinToned.SurfaceSetMaterial(0,_skinOriginal.SurfaceGetMaterial(0));
-        // The shadow mesh can only be attached once the mesh has a surface.
-        if(_skinOriginal.ShadowMesh is { } shadow&&_skinToned.ShadowMesh!=shadow)_skinToned.ShadowMesh=shadow;
         _skin.Mesh=_skinToned;
         _skin.SetSurfaceOverrideMaterial(0,overrideMaterial);
         _skinTonesShown=tones;

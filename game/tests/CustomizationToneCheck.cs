@@ -195,6 +195,33 @@ public partial class CustomizationToneCheck : Node
         world.AddChild(cam);
         cam.LookAt(new Vector3(0, 1, 0));
 
+        // Regression (I-52): a recolored skin must render as one clean surface, without black patches.
+        foreach (var id in new[] { "goose", "raccoon" })
+        {
+            var close = CharacterRig.Create(CharacterCatalog.Player(id));
+            world.AddChild(close);
+            close.ApplyAppearance(new AppearanceProfile { Hat = 0, Vest = false, Pack = false, Goggles = false, Body = "#f0f0f0", BodySecondary = "#f0f0f0", BodyMarking = "#f0f0f0" });
+            close.HideBuiltInWeapon();
+            cam.Size = 1.0f;
+            cam.Position = new Vector3(0, .75f, 6);
+            cam.LookAt(new Vector3(0, .75f, 0));
+            await Frames(8);
+            await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+            var image = GetViewport().GetTexture().GetImage();
+            image.SavePng(ProjectSettings.GlobalizePath($"res://output/custom-tones-close-{id}.png"));
+            // A clean skin is a smooth gradient; depth fighting shows up as pixel-to-pixel speckle.
+            int w = image.GetWidth(), h = image.GetHeight(), speckle = 0, total = 0;
+            for (int y = (int)(h * .15f); y < h * .85f; y += 2)
+                for (int x = (int)(w * .40f); x < w * .60f; x += 2)
+                { total++; if (Mathf.Abs(image.GetPixel(x, y).Luminance - image.GetPixel(x + 1, y).Luminance) > .04f) speckle++; }
+            Check(speckle < total * .005f, $"{id}: a recolored body renders as a clean surface ({speckle}/{total} speckled samples)");
+            close.QueueFree();
+            await Frames(2);
+        }
+        cam.Size = 7.2f;
+        cam.Position = new Vector3(0, 3.2f, 9);
+        cam.LookAt(new Vector3(0, 1, 0));
+
         // Row 1: species defaults. Row 2: the species' last color preset with no gear.
         string[] species = { "goose", "duck", "raccoon", "redpanda" };
         for (int row = 0; row < 2; row++)
