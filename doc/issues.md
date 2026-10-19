@@ -19,10 +19,10 @@
 
 | ID | 증상 | 원인 / 메모 | 상태 | 날짜 | 관련 |
 |---|---|---|---|---|---|
-| I-17 | 일부 단독 헤드리스 검사가 끝날 때 `ObjectDB instances were leaked at exit` 경고 | 정확한 잔존 객체/원인은 미확인. 최근 `TailMeleeCheck`·`HitFlashCheck` 로그에도 종료 경고가 남음. 기능 검사는 통과했지만, 이것만으로 런타임 자원 누수가 없다고 결론 내리지 않음. `--verbose`로 객체를 식별해 재검증 필요 | 열림 | 2026-10-20 | `feature-checklist.md`, `../game/output/TailMeleeCheck-polish-final.log`, I-1·I-2와 구분 |
+| I-17 | 일부 단독 헤드리스 검사가 끝날 때 `ObjectDB instances were leaked at exit` 경고 | 정확한 잔존 객체/원인은 미확인. 최근 `TailMeleeCheck`·`HitFlashCheck` 로그에도 종료 경고가 남음. 기능 검사는 통과했지만, 이것만으로 런타임 자원 누수가 없다고 결론 내리지 않음. `--verbose`로 객체를 식별해 재검증 필요. 2026-10-20 메뉴 작업 중 `Integration` 4회 중 3회에서 "4 ObjectDB instances were leaked" 발생, `--verbose`로 객체 식별: **`AudioStreamWAV` 2개 + `AudioStreamPlaybackWAV` 2개**(참조 1), 고아 StringName `SFX`·`Ambience`. 종료 순간 아직 재생 중인 소리 2개가 오디오 서버에 남는 것으로 보임(추정: 합성음 스트림을 실행 단위로 공유하는 캐시 + 재생 중 종료). 소리가 끝나기 전에 끝나는지에 따라 나와서 간헐적. 메뉴 변경은 Integration 경로의 오디오를 바꾸지 않음(볼륨 dB 설정만 추가). 후보 해결: `QuitHygiene`에서 재생기 정지·합성 캐시 비우기 | 열림 | 2026-10-20 | `feature-checklist.md`, `../game/output/TailMeleeCheck-polish-final.log`, I-1·I-2와 구분 |
 | I-18 | 기어다니는 적을 맞히면 피 튀는 효과가 머리 위 10cm쯤에 보일 수 있음 | I-14 수정 때 몸통 판정을 1.4m까지 올렸기 때문. 총알이 판정 윗부분에 맞음 | 열림 (보기만의 문제) | 2026-10-20 | I-14 |
-| I-19 | 설정 화면 없음 (언어, 넉백 줄이기, 볼륨) | 값은 코드에 준비됨: `Loc.Language`, `GameSettings.RecoilScale`. 화면만 없음 | 열림 | 2026-10-19 | `localization.md`, `weapon-spec.md` 5장 |
-| I-20 | 붙잡히면 F8 치트로만 빠져나올 수 있음(싱글) | 정식 규칙은 동료 구조. 동료 AI·멀티가 없어 치트를 기본으로 켜 둠. 멀티가 생기면 기본 끔 | 제약 | 2026-10-19 | `decisions.md` C-14 |
+| I-19 | 설정 화면 없음 (언어, 넉백 줄이기, 볼륨) | 값은 코드에 준비됨: `Loc.Language`, `GameSettings.RecoilScale`. 화면만 없음. **2026-10-20 해결**: 메인 메뉴 설정 페이지(언어, 전체·효과음·배경음 볼륨, 사격 반동 밀림 %)와 `user://settings.cfg` 저장(T-19). 키 재설정은 아직 없음 | 해결 | 2026-10-20 | `MenuCheck`, `decisions.md` T-19 |
+| I-20 | 붙잡히면 F8 치트로만 빠져나올 수 있음(싱글) | 정식 규칙은 동료 구조. 동료 AI·멀티가 없어 치트를 기본으로 켜 둠. 멀티가 생기면 기본 끔. 2026-10-20 검토: AI 분대원 옵션(M-11)이 정해져, 분대원이 구조를 맡으면 싱글에서도 끌 수 있음 | 제약 | 2026-10-19 | `decisions.md` C-14 |
 | I-21 | 피격 판정이 캡슐 하나라서 모델 모양과 다를 수 있음 | 단순 체형 전제(D-5). 크게 다르면 `.tres`의 `ColliderRadius/Height`를 맞춤 | 제약 | 2026-10-19 | `character-model-spec.md` 5장 |
 | I-22 | 효과음이 합성음이라 단순하고 음악이 없음 | 음원 없이 시작하기 위함(T-8). 같은 ID의 파일을 넣으면 교체됨 | 제약 | 2026-10-19 | `sound-spec.md` |
 | I-23 | 커스텀 플레이어 모델의 군중용 LOD·재질/부위 병합이 미완료 | **초기 18,107삼각형 기록을 현재 수치로 사용하지 않음.** 10/20 실제 GLB 확인: 오리·거위 21,796삼각형/21메시, 라쿤 22,457·랫서판다 22,456삼각형/23메시. GLB 재질 정의 47~51개. 경량화는 이미 있지만 부위 편집 분리 비용이 있음. 런타임 꼬리 교체 후 수치는 별도 | 열림 | 2026-10-20 갱신 (최초 10-19) | `character-model-spec.md` 7장, `../game/assets/characters`, I-29 |
@@ -78,6 +78,7 @@
 | I-12 | 창 모드 입력 검사 "마우스 위치로 조준 방향" 가끔 실패 | 검사 중 실제 마우스가 창 위로 움직여 위치를 덮어씀 | 매 프레임 마우스 위치를 다시 고정 | 2026-10-19 | InputCheck 14개 반복 통과 |
 | I-13 | 처음에 Godot 4.6.3으로 작업함 | 지정 버전을 몰랐음 | 사용자가 지정한 `D:\Util\Godot\Godot_v4.7.2-stable_mono_win64`로 전환 (D-8) | 2026-10-19 | 빌드 경고·오류 0 |
 | I-36 | 꼬리 피벗을 새 부모로 옮길 때 imported scene Owner 경고 | 하위 노드 Owner가 재부모화 중 잠시 조상이 아니게 됨 | 꼬리 하위 트리의 Owner를 보관·해제한 뒤 새 부모에 연결하고 복원. 기존 장착 변환도 보존 | 2026-10-20 | `TailMeleeCheck`, `CaptureTailMelee`; `../game/scripts/Characters/CharacterTail.cs` |
+| I-47 | 언어 테이블 `customization.csv`·`hud-polish.csv`(kor·eng)가 Godot 번역 리소스(`.text.translation`)로 가져와짐 | 이 CSV들의 `.import`가 `importer="csv_translation"`으로 생성됨(`localization.md`의 `keep` 규칙이 새 파일에 적용되지 않음). 에디터 실행에서는 원본 CSV가 있어 문제가 안 보였지만, **내보낸 빌드에는 원본 CSV가 들어가지 않아 해당 문구가 키로 보였을 것**(추정, 내보내기는 아직 미검증) | 네 파일의 `.import`를 `importer="keep"`으로 바꾸고 생성된 `.text.translation` 삭제. 통합 검사에 "모든 언어 CSV는 importer=keep" 추가 | 2026-10-20 | `Integration`: "every language CSV is kept as plain text (importer=keep)" |
 
 ### 2.4 모델 · 파지 · 피격 효과
 
@@ -100,6 +101,7 @@
 | 플레이어/적 모델·최적화 | `TailMeleeCheck` + `EnemyAttackCheck` + `ModularCustomization` + `WeaponGripCheck`; 네 종과 복제 좀비, 팔 피벗·꼬리·색·크기·손 연결. GLB 자체와 최신 종류별 summary를 비교하고 후면·측면 렌더 확인 |
 | 피격 재질 | `HitFlashCheck`; 피격 개체만 점멸, 원래 색·좀비 오버레이 복원, 생성 팔/교체 장비 포함, 무적·회피 무효 피해에 점멸 없음 |
 | 시체·소품 충돌·멀티 관찰자 | `CorpseRetentionCheck` + `CorpseTierCheck` + `Integration`; 화면/거리 보호·생성 순서·분할 정리·모든 관찰자 등록·양쪽 마스크. `CorpsePerformance`로 실제 렌더 부하 확인 |
+| 메인 메뉴·설정 | `MenuCheck`(창 모드면 `output/menu-*.png`도 저장) + `CaptureCustomization`; 페이지 이동, 잠긴 모드·멀티 버튼, AI 분대원 선택, 설정 저장/복원과 잘못된 값, 언어 전환 후 재구성. 테스트가 `user://settings.cfg`를 쓰지 않는지 |
 | 카메라·맵·HUD | `CombatPacingCheck` + `CaptureArtDirection`; 기본/확대 시 방향과 화면 기준 이동, HUD 겹침. 70% 필수 경로 거리 비율은 별도 측정(I-25) |
 
 종료 경고(I-17), 테스트 통과, 렌더 확인, 실제 플레이 평가(I-26)는 각각 구분해 기록한다. 삼각형별 반복 검사 수를 기능 수로 세지 않는다. 수정한 파일에 맞는 전용 검사만 선택하고, 새 문제나 변경이 없다면 같은 검사를 불필요하게 반복하지 않는다.

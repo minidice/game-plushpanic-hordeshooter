@@ -10,7 +10,7 @@ Godot **4.7.2 .NET (C#) + Jolt**. 기획 기준은 [`doc/idea.md`](../doc/idea.m
 
 ```powershell
 ./Start-Game.ps1              # 플레이
-./Start-Game.ps1 -Test        # 헤드리스 통합 검사 145개 → output/integration-report.json, 효과음 44종 → output/sounds/*.wav
+./Start-Game.ps1 -Test        # 헤드리스 통합 검사 147개 → output/integration-report.json, 효과음 44종 → output/sounds/*.wav
 ./Start-Game.ps1 -InputCheck  # 창 모드 입력 경로 검사 14개 (이동·조준·E·1/2·사격·R·G 조준/우클릭 취소/클릭 투척·Space·Esc)
 ./Start-Game.ps1 -Capture     # 장면 10개 렌더 → output/*.png
 ./Start-Game.ps1 -GodotDir 'C:/다른/경로'     # Godot 위치가 다를 때
@@ -41,11 +41,13 @@ Stage 1은 타일 줄눈과 청록색 벽 패널, 모서리를 깎은 금속 상
 
 카메라는 수직 55° / 수평 -30° 직교 뷰입니다. WASD는 화면 방향을 따르고 Tab 확대를 지원합니다. 하단 HUD에는 실제 장비 4칸(1/2/G/Q), 체력, 도약 대기시간, 현재 탄약을 표시합니다. 무기 16종의 투명 아이콘은 기존 모델을 렌더한 PNG이며 CSV의 `icon` 경로로 연결됩니다. 아이콘 재생성 스크립트는 `../prototypes/character-lab/tools/render-weapon-icons.py`입니다.
 
+메인 메뉴·설정 검사는 `res://tests/MenuCheck.tscn`(24개)입니다. 창 모드로 실행하면 `output/menu-*.png`도 저장합니다. 설정은 `user://settings.cfg`에 저장되며, 검사는 별도 파일을 써서 실제 설정을 건드리지 않습니다.
+
 빌드·가져오기 후 `res://tests/CaptureArtDirection.tscn`을 창 모드로 실행하면 세이프룸·창고·확대·거리·1280×720 화면을 `output/art-*.png`로 저장하고 카메라 방향, HUD 영역, 아이콘과 상태 표시를 검사합니다. 실제 렌더 기준으로 확인하는 1차 환경 아트이며, 개별 소품의 최종 조형과 대규모 전투 성능 최적화는 이후 작업입니다.
 
 ## 외형·적 확장 (2026-10-19)
 
-메뉴에서 거위·오리·라쿤·랫서판다를 고르고 몸 색조, 부리, 모자/조끼/배낭 색상을 변경합니다. 몸 무늬는 유지됩니다. 모자는 없음/헬멧/베레모, 조끼와 배낭은 표시 여부를 선택하며 능력치에는 영향이 없습니다. 외형은 `user://appearance.cfg`에 종별로 저장됩니다.
+메뉴의 **커스터마이징**에서 거위·오리·라쿤·랫서판다를 고르고 몸 색조, 부리, 모자/조끼/배낭 색상을 변경합니다. 몸 무늬는 유지됩니다. 모자는 없음/헬멧/베레모, 조끼와 배낭은 표시 여부를 선택하며 능력치에는 영향이 없습니다. 외형은 `user://appearance.cfg`에 종별로 저장됩니다.
 
 감염체/야생 동물/무장 동물 선택은 현재 Stage 1의 적 구성을 바꿉니다. 별도 맵 3개가 아닙니다. 감염체에는 인간형, 기어오는 적, 끌개, 덮치는 적, 토사물 적과 기존 특수 적이 섞입니다. 무장 동물은 예고 조준 후 발사하며 엄폐물에 막힙니다.
 
@@ -177,14 +179,13 @@ game/
   assets/characters/    GLB 모델
   scenes/               Menu.tscn(시작), Stage1.tscn
   scripts/Core|Audio|Characters|Player|Weapons|Enemies|World|UI
-  tests/                Integration(헤드리스 검사), InputCheck(창 모드 입력), Capture(렌더 캡처)
+  tests/                Integration(헤드리스 검사), InputCheck(창 모드 입력), Capture(렌더 캡처), MenuCheck(메뉴·설정) 외 전용 검사
 ```
 
 ## 아직 없는 것
 
-- 멀티플레이(의도적으로 제외), 근접 보이스챗
-- 음악, 볼륨·언어·넉백 설정 UI. 효과음은 합성음이라 실제 녹음보다 단순합니다.
-- UI 문구(HUD, 메뉴, 알림)는 아직 한국어로 코드에 있습니다. 이름(무기·투척물·몬스터·캐릭터)만 언어 테이블로 옮겼습니다.
+- 멀티플레이(메뉴에 "준비 중" 페이지만 있음, 계획은 `doc/menu-multiplayer-plan.md`), AI 분대원(메뉴 선택만 저장), 근접 보이스챗
+- 음악, 키 재설정. 효과음은 합성음이라 실제 녹음보다 단순합니다.
 - 인형 뽑기 손(스모커 포지션), 쓰러짐 후 구조, 아군 오사(싱글이라 해당 없음)
 - 무기 모델은 도형 조합입니다(`WeaponDefinition.Model`에 GLB를 넣으면 교체). 특수 감염체도 도형 대체 모델입니다.
 - 장비 드롭 물리, 표정 텍스처 교체, 키 재설정 UI, 세이브

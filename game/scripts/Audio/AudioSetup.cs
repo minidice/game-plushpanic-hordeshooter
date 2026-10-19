@@ -36,6 +36,7 @@ public static class AudioSetup
         }
         SetHelium(false);
         SetMuffled(false);
+        GameSettings.ApplyAudio();
     }
 
     /// <summary>Helium: every effect squeaks up in pitch.</summary>

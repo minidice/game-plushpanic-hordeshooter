@@ -177,9 +177,3 @@ public static class Knockback
     public static float Hit(float power) => power * SpeedPerPower;
 }
 
-/// <summary>Player options (no settings UI yet; values are read every shot so a menu can change them live).</summary>
-public static class GameSettings
-{
-    /// <summary>1 = as authored, 0 = no self-knockback when shooting.</summary>
-    public static float RecoilScale { get; set; } = 1f;
-}

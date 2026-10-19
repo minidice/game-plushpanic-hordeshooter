@@ -19,7 +19,7 @@ public partial class CaptureCustomization : Node
         {
             DirAccess.RemoveAbsolute(ProjectSettings.GlobalizePath(TestPath));
             _menu=GD.Load<PackedScene>("res://scenes/Menu.tscn").Instantiate<MainMenu>();_menu.AppearancePath=TestPath;AddChild(_menu);
-            await Frames(5);
+            await Frames(5);_menu.ShowPage(MenuPage.Customize);await Frames(2);
             Ui<CheckButton>("PreviewAutoRotate").ButtonPressed=false;Ui<HSlider>("PreviewRotation").Value=-18;Ui<HSlider>("PreviewZoom").Value=1.25;
             Check(_menu.Characters.Count==4,"four playable species exposed before customization");
             Check(Ui<TabContainer>("PartTabs").GetTabCount()==6,"six part categories available");

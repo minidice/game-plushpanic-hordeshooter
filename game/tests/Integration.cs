@@ -222,6 +222,10 @@ public partial class Integration : Node
         var eng = Loc.Table("eng");
         var missing = kor.Keys.Where(k => !eng.ContainsKey(k)).ToList();
         Check(missing.Count == 0, "every Korean text key has an English line" + (missing.Count > 0 ? ": " + string.Join(", ", missing) : ""));
+        // A CSV imported as a Godot translation is not exported as plain text, so Loc could not read it in a build.
+        var translated = Loc.Languages.SelectMany(l => DirAccess.GetFilesAt($"{Loc.Dir}/{l}").Where(f => f.EndsWith(".csv")).Select(f => $"{Loc.Dir}/{l}/{f}"))
+            .Where(path => !FileAccess.FileExists(path + ".import") || !FileAccess.GetFileAsString(path + ".import").Contains("importer=\"keep\"")).ToList();
+        Check(translated.Count == 0, "every language CSV is kept as plain text (importer=keep)" + (translated.Count > 0 ? ": " + string.Join(", ", translated) : ""));
         Check(ArmoryCatalog.Weapon("ak47").DisplayName == "AK47" && ArmoryCatalog.Weapon("m1911").DualVariant!.DisplayName == "쌍 M1911",
             "names resolve through the Korean table");
         Loc.Language = "eng";

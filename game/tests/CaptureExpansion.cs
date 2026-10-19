@@ -7,7 +7,7 @@ public partial class CaptureExpansion : Node
     public override async void _Ready()
     {
         var menu=GD.Load<PackedScene>("res://scenes/Menu.tscn").Instantiate<MainMenu>();AddChild(menu);
-        await Frames(35);await Shot("expansion-menu");menu.QueueFree();await Frames(3);
+        await Frames(5);menu.ShowPage(MenuPage.Customize);await Frames(30);await Shot("expansion-menu");menu.QueueFree();await Frames(3);
         var world=new Node3D();AddChild(world);
         world.AddChild(new WorldEnvironment{Environment=new Godot.Environment{BackgroundMode=Godot.Environment.BGMode.Color,BackgroundColor=new Color("172127"),AmbientLightSource=Godot.Environment.AmbientSource.Color,AmbientLightColor=new Color("c6dcdf"),AmbientLightEnergy=.6f,TonemapMode=Godot.Environment.ToneMapper.Agx}});
         world.AddChild(new DirectionalLight3D{RotationDegrees=new Vector3(-50,-35,0),LightEnergy=1.5f,LightColor=new Color("ffe2be"),ShadowEnabled=true});

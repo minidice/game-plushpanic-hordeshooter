@@ -4,7 +4,7 @@ ui_controls,"WASD Move   Mouse Aim   LMB Fire   Space Leap   1·2 Switch weapon 
 R Reload   Tab Zoom   Esc Pause"
 # Main menu
 ui_menu_title,HORDE SHOOTER  (working title)
-ui_menu_subtitle,STAGE 1 · Warehouse District — single-player prototype
+ui_menu_subtitle,Isometric co-op horde shooter — prototype
 ui_menu_select,Choose a character
 ui_menu_start,Deploy  [Enter]
 ui_menu_new_character,New character: add a .tres to content/characters and it shows up in this list.
@@ -82,3 +82,50 @@ ui_floor_saferoom,SAFE ROOM
 ui_floor_warehouse,WAREHOUSE →
 ui_floor_safehouse_arrow,SAFEHOUSE →
 ui_floor_safehouse,SAFEHOUSE
+# 메인 메뉴 페이지 (홈·커스터마이징·싱글·멀티·설정)
+menu_home_customize,Customize
+menu_home_customize_desc,"Pick a species and edit colors, shape and gear. Saved per species."
+menu_home_single,Single Player
+menu_home_single_desc,"Choose Scenario, Survival or Survivor and set AI squadmates."
+menu_home_multi,Multiplayer
+menu_home_multi_desc,Private rooms for up to 6 players — coming soon
+menu_home_settings,Settings
+menu_home_settings_desc,"Language, volume, shooting recoil"
+menu_home_quit,Quit
+menu_back,← Back  [Esc]
+menu_customize_title,Customize
+menu_single_title,Single Player
+fmt_menu_single_character,Character: {0}   (change it in Customize)
+menu_mode_label,Mode
+mode_scenario,Scenario
+mode_survival,Survival
+mode_survivor,Survivor
+mode_scenario_desc,Push from A to B. No levels: grab weapons off the floor and break through the rushing horde.
+mode_survival_desc,Defend a base with an inventory. Many enemies carry guns. (Coming soon)
+mode_survivor_desc,"Survive, pick a special ability at every level-up, and fight skill-using bosses. (Coming soon)"
+fmt_menu_coming_soon,{0} · Coming soon
+menu_stage_auto,"Stage: STAGE 1 · Warehouse District (only one for now, picked automatically)"
+menu_squad_label,AI Squadmates
+squad_0,None
+squad_1,1 (default)
+squad_3,3 (4-player shots for video)
+menu_squad_hint,Not in the game yet. Your choice is saved and will apply once AI squadmates are added. Multiplayer has no AI.
+menu_test_options,Test options
+menu_multi_title,Multiplayer
+menu_multi_rules,Up to 6 players · private rooms (join by code only) · no AI squadmates · friendly fire is a room option (off by default)
+menu_multi_host,Create Room
+menu_multi_code,6-character room code
+menu_multi_join,Join
+menu_multi_public,Browse Public Rooms
+menu_multi_soon_hint,Multiplayer is coming soon. It opens once two-player sync and room-code joining are built.
+menu_settings_title,Settings
+settings_language,Language
+settings_sound,Sound
+settings_volume_master,Master volume
+settings_volume_sfx,Effects
+settings_volume_ambience,Ambience
+settings_gameplay,Gameplay
+settings_recoil,Shooting recoil push
+settings_recoil_hint,How far you slide back when firing. 0% means no push. Enemy knockback is not affected.
+settings_saved_hint,Changes apply right away and are saved.
+settings_not_saved_hint,Test run: settings are not saved.
