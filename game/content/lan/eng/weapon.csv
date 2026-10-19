@@ -1,0 +1,28 @@
+﻿key,text
+name_weapontype_melee,Melee
+name_weapontype_pistol,Pistol
+name_weapontype_smg,SMG
+name_weapontype_assault_rifle,Assault Rifle
+name_weapontype_lmg,LMG
+name_weapontype_shotgun,Shotgun
+name_weapontype_bolt_sniper,Bolt-Action Sniper
+name_weapontype_dmr,DMR
+name_weapontype_rocket_launcher,Rocket Launcher
+name_weapontype_mortar,Mortar
+name_weapon_frying_pan,Frying Pan
+name_weapon_m1911,M1911
+name_weapon_glock17,Glock 17
+name_weapon_mp5,MP5
+name_weapon_m4,M4
+name_weapon_m16,M16
+name_weapon_ak47,AK-47
+name_weapon_m249,M249
+name_weapon_r870,Remington 870
+name_weapon_benelli_m4,Benelli M4
+name_weapon_double_barrel,Double Barrel
+name_weapon_awm,AWM
+name_weapon_svd,SVD
+name_weapon_m82,Barrett M82
+name_weapon_alabong,Alabong
+name_weapon_mortar,Mortar
+fmt_weapon_dual,Dual {0}

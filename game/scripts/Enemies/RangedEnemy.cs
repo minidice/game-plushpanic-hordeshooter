@@ -1,0 +1,94 @@
+using Godot;
+
+namespace HordeShooter;
+
+public partial class RangedEnemy : Enemy
+{
+    public bool WindingUp { get; private set; }
+    public int ProjectilesFired { get; private set; }
+    private RangedTrait Shot => Monster.Ranged!;
+    private float _timer, _cooldown = 2f;
+    private Vector3 _target;
+    private MeshInstance3D? _marker;
+
+    public override void _Ready()
+    {
+        base._Ready();
+        if (Monster.Behavior != MonsterBehavior.Shooter) return;
+        var built = WeaponVisual.Build(ArmoryCatalog.Weapon("m4"), Definition.HandColor);
+        var weapon = built.Root;
+        weapon.Scale = Vector3.One / Definition.ModelScale;
+        if (!Definition.ModelFacesPositiveZ) weapon.RotationDegrees = new Vector3(0, 180, 0);
+        Rig.Weapon.AddChild(weapon);
+        Rig.BindWeaponGrip(built);
+    }
+
+    protected override Vector3 Think(float dt)
+    {
+        _cooldown -= dt;
+        var to = Stage.Player.GlobalPosition - GlobalPosition;
+        to.Y = 0;
+        float distance = to.Length();
+        if (Stage.Player.IsDead) { AbortShot(); return Vector3.Zero; }
+        if (WindingUp)
+        {
+            FaceOverride = _target - GlobalPosition;
+            _timer -= dt;
+            Kick = .25f;
+            if (_timer <= 0)
+            {
+                // Check the locked aim point again: closing a door during windup stops the shot.
+                var from = GlobalPosition + Vector3.Up * .8f;
+                if (Rays.Clear(this, from, _target, Layers.World | Layers.Props))
+                {
+                    var projectile = new EnemyProjectile();
+                    projectile.Setup(Stage, from, _target, Shot, AttackDamage);
+                    Stage.AddChild(projectile);
+                    ProjectilesFired++;
+                    Kick = 1;
+                    Stage.Sfx.PlayAt(Monster.Behavior == MonsterBehavior.Shooter ? "shot_rifle" : "zombie_hit", from);
+                }
+                AbortShot();
+            }
+            return Vector3.Zero;
+        }
+        if (Awake && distance < Shot.Range && _cooldown <= 0 &&
+            Rays.Clear(this, GlobalPosition + Vector3.Up * .8f, Stage.Player.GlobalPosition + Vector3.Up * .8f, Layers.World | Layers.Props))
+        { StartWindup(); return Vector3.Zero; }
+        if (Awake && distance > 3 && distance < Shot.Range && _cooldown > 0 && HasLineOfSight(dt))
+        { FaceOverride = to; return Vector3.Zero; }
+        return base.Think(dt);
+    }
+
+    public void StartWindup()
+    {
+        if (IsDead || StunTime > 0) return;
+        AbortShot();
+        WindingUp = true;
+        Awake = true;
+        _timer = Shot.Windup;
+        _target = Stage.Player.GlobalPosition + Vector3.Up * .8f;
+        var color = Shot.HazardSeconds > 0 ? new Color("b4df45") : new Color("ff6252");
+        var flatTarget = new Vector3(_target.X, .055f, _target.Z);
+        if (Shot.HazardSeconds > 0)
+            _marker = Mat.Mesh(Stage.Effects, new CylinderMesh { TopRadius = Shot.HazardRadius, BottomRadius = Shot.HazardRadius, Height = .025f }, flatTarget, Mat.Fade(new Color(color, .35f)));
+        else
+        {
+            var start = new Vector3(GlobalPosition.X, .055f, GlobalPosition.Z);
+            _marker = Mat.Box(Stage.Effects, (start + flatTarget) * .5f, new Vector3(.12f, .03f, start.DistanceTo(flatTarget)), Mat.Glow(color));
+            if (start.DistanceTo(flatTarget) > .01f) _marker.LookAt(flatTarget, Vector3.Up);
+        }
+        Stage.Sfx.PlayAt("bull_snort", GlobalPosition, -8, 1.8f);
+    }
+
+    private void AbortShot()
+    {
+        WindingUp = false;
+        _cooldown = Shot.Cooldown;
+        if (IsInstanceValid(_marker)) _marker!.QueueFree();
+        _marker = null;
+    }
+    protected override void OnStunned() => AbortShot();
+    public override void Die(Vector3 direction, float force) { AbortShot(); base.Die(direction, force); }
+    public override void _ExitTree() { if (IsInstanceValid(_marker)) _marker!.QueueFree(); }
+}

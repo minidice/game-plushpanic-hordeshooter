@@ -1,0 +1,7 @@
+{
+  "kind": "blind_self",
+  "description": "바라보고 있으면 화면이 하얘짐 (가까울수록 길게)",
+  "radius_m": 8,
+  "max_ms": 3000,
+  "facing_threshold": 0.3
+}

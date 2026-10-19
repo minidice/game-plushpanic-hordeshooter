@@ -1,0 +1,9 @@
+key,text
+hud_medkit,Medkit
+hud_melee,Melee
+hud_empty,Empty
+hud_throwable,Throwable
+hud_quick_help,WASD Move · E Interact · Esc Controls
+hud_ammo_hint,MAG / RESERVE   ·   R
+hud_melee_hint,CLOSE RANGE   ·   LMB
+hud_no_refill_hint,NO REFILL   ·   R

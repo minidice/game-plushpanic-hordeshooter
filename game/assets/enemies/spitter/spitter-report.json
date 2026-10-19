@@ -1,0 +1,35 @@
+{
+  "id": "spitter",
+  "source_triangles": 10584,
+  "triangles": 4005,
+  "meshes": 6,
+  "materials": [
+    "infected_cloth.004",
+    "infected_cream.004",
+    "infected_ink.004",
+    "infected_mouth.004",
+    "infected_skin.004",
+    "infected_trim.004"
+  ],
+  "bytes": 120480,
+  "nodes": [
+    "spitter_root",
+    "Body",
+    "Deform",
+    "Head",
+    "Head_mesh",
+    "Deform_mesh",
+    "LeftFoot",
+    "LeftFoot_mesh",
+    "spitter_leftArm_mesh",
+    "RightFoot",
+    "RightFoot_mesh",
+    "spitter_rightArm_mesh",
+    "Weapon",
+    "Muzzle",
+    "spitter_leftArm",
+    "spitter_rightArm"
+  ],
+  "forward": "+Z",
+  "notes": "No bones. Runtime object pivots. Beret included for runtime visibility. Source vertex colors preserved."
+}

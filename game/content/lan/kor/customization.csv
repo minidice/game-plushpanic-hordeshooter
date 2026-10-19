@@ -1,0 +1,83 @@
+key,text
+custom_title,외형 커스텀
+custom_body,몸 색조
+custom_beak,부리
+custom_hat,모자 색
+custom_vest,조끼 색
+custom_pack,가방 색
+custom_tint_hint,무늬를 유지하면서 몸 전체에 색조를 입힙니다.
+custom_color_hint,선택한 부위의 색을 바꿉니다.
+custom_no_hat,모자 없음
+custom_helmet,헬멧
+custom_beret,베레모
+custom_reset,기본 외형으로 복원
+custom_saved,변경한 외형은 종별로 자동 저장됩니다.
+theme_zombie,감염체 · 좀비
+theme_animals,야생 동물
+theme_armed,무장 동물
+debug_escape_option,테스트 치트 · F8로 붙잡힘 탈출
+restrained_status,붙잡혔습니다 · 조작 불가
+restrained_cheat,[F8] 테스트용 즉시 탈출
+restrained_rescue,동료의 구조가 필요합니다
+custom_speed,이동 속도
+custom_wear_vest,조끼 착용
+custom_wear_pack,가방 착용
+custom_wing,날개·앞발
+custom_tail,꼬리 색조
+custom_feet,발
+custom_eyes,눈
+custom_goggles,고글
+custom_headset,헤드셋
+custom_vest_pouches,파우치 조끼
+custom_vest_padded,패딩 조끼
+preview_idle,서 있기
+preview_run,달리기
+preview_fire,사격 자세
+custom_species_step,1 · 종 선택
+custom_presets,2 · 프리셋
+custom_preset_default,기본형
+custom_preset_round,동글형
+custom_preset_scout,정찰형
+custom_apply_preset,적용
+custom_tab_body,몸
+custom_tab_face,얼굴
+custom_tab_head,귀·머리
+custom_tab_limbs,날개·발
+custom_tab_tail,꼬리
+custom_tab_gear,장비
+custom_body_width,몸 너비
+custom_body_height,몸 높이
+custom_eye_size,눈 크기
+custom_eye_spacing,눈 간격
+custom_beak_size,부리 크기
+custom_snout_size,주둥이 크기
+custom_ear_size,귀 크기
+custom_wing_size,날개·앞발 크기
+custom_feet_size,발 크기
+custom_tail_size,꼬리 크기
+custom_face_style,표정
+custom_face_neutral,기본
+custom_face_alert,또렷하게
+custom_face_sleepy,졸리게
+custom_beak_style,부리 모양
+custom_snout_style,주둥이 모양
+custom_snout,주둥이
+custom_shape_default,기본형
+custom_shape_wide,넓게
+custom_shape_short,짧게
+custom_hair_style,머리털 모양
+custom_hair_none,없음
+custom_hair_short,짧은 털
+custom_hair_swept,넘긴 털
+custom_hair,머리털 색
+custom_hair_hint,모자를 쓰면 머리털이 가려집니다. 미리보기 장비를 끄면 확인할 수 있습니다.
+custom_hat_choice,모자
+custom_vest_style,조끼 모양
+custom_shape_hint,체형은 외형만 변경하며 능력치와 피격 판정은 동일합니다.
+custom_stage_theme,스테이지 테마
+preview_rotation,회전
+preview_zoom,확대
+preview_auto_rotate,자동 회전
+preview_gear,장비 보기
+preview_weapon,무기 보기
+preview_only_hint,장비·무기 표시는 미리보기에만 적용됩니다.

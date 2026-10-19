@@ -1,0 +1,13 @@
+{
+  "cleanup_interval_seconds": 1,
+  "common": {
+    "target_count": 100,
+    "keep_distance_m": 28,
+    "minimum_age_seconds": 10,
+    "unseen_grace_seconds": 5,
+    "removals_per_pass": 8
+  },
+  "named": {
+    "lifetime_seconds": 300
+  }
+}

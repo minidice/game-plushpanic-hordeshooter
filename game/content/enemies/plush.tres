@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="CharacterDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/Characters/CharacterDefinition.cs" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+Id = "plush"
+DisplayName = "name_monster_plush"
+Description = "외형 전용. 체력·속도·무게 같은 능력치는 content/data/monsters.csv에 있습니다."
+MirrorPlayerSpecies = true
+ZombieTint = Color(0.42, 0.62, 0.3, 0.55)
+Role = 1
+Shape = 0
+PrimaryColor = Color(0.66, 0.6, 0.74, 1)
+SecondaryColor = Color(0.25, 0.14, 0.3, 1)
+ColliderRadius = 0.38
+ColliderHeight = 1.55
+MoveSpeed = 4.5
+MaxHealth = 30
+StepRate = 15.0
+WaddleDegrees = 12.0
+StuffingColor = Color(1, 0.93, 0.97, 1)

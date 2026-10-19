@@ -1,0 +1,14 @@
+{
+  "name": "horde-character-lab",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "build": "node tools/export.mjs",
+    "start": "node tools/serve.mjs"
+  },
+  "dependencies": {
+    "@dimforge/rapier3d-compat": "^0.21.0",
+    "three": "0.180.0"
+  }
+}

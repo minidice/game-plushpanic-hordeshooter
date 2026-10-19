@@ -1,0 +1,6 @@
+{
+  "kind": "projectile",
+  "description": "직선으로 날아가는 투사체",
+  "speed_mps": 24,
+  "max_flight_ms": 2500
+}

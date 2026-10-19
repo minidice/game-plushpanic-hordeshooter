@@ -1,0 +1,13 @@
+﻿key,text
+name_character_goose,거위
+name_character_test_capsule,테스트 캡슐 (빈 슬롯)
+name_character_test_round,테스트 찹쌀떡 (빈 슬롯)
+desc_character_goose,길고 좁은 부리와 밝은 깃털을 가진 거위. 장비를 자유롭게 바꿀 수 있습니다.
+desc_character_test_capsule,모델 파일 없이 도형으로 만든 대체 캐릭터. 새 종을 넣을 자리입니다.
+desc_character_test_round,둥근 체형 대체 캐릭터. 햄스터류 체형 테스트용입니다.
+name_character_duck,오리
+desc_character_duck,넓적한 부리와 물갈퀴 발을 가진 갈색 오리.
+name_character_raccoon,라쿤
+desc_character_raccoon,눈가의 검은 무늬와 줄무늬 꼬리를 가진 숲속 정찰병.
+name_character_redpanda,랫서판다
+desc_character_redpanda,밝은 얼굴 무늬와 풍성한 줄무늬 꼬리를 가진 붉은 정찰병.

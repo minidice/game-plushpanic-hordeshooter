@@ -1,0 +1,35 @@
+{
+  "id": "tether",
+  "source_triangles": 10260,
+  "triangles": 3881,
+  "meshes": 6,
+  "materials": [
+    "infected_cloth.002",
+    "infected_cream.002",
+    "infected_ink.002",
+    "infected_mouth.002",
+    "infected_skin.002",
+    "infected_trim.002"
+  ],
+  "bytes": 115204,
+  "nodes": [
+    "tether_root",
+    "Body",
+    "Deform",
+    "Head",
+    "Head_mesh",
+    "Deform_mesh",
+    "LeftFoot",
+    "LeftFoot_mesh",
+    "tether_leftArm_mesh",
+    "RightFoot",
+    "RightFoot_mesh",
+    "tether_rightArm_mesh",
+    "Weapon",
+    "Muzzle",
+    "tether_leftArm",
+    "tether_rightArm"
+  ],
+  "forward": "+Z",
+  "notes": "No bones. Runtime object pivots. Beret included for runtime visibility. Source vertex colors preserved."
+}

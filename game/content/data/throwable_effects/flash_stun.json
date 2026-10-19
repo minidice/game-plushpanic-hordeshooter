@@ -1,0 +1,6 @@
+{
+  "kind": "stun",
+  "description": "범위 안 좀비 기절 (벽 뒤는 안 걸림)",
+  "radius_m": 8,
+  "duration_ms": 4000
+}

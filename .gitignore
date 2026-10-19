@@ -1,0 +1,25 @@
+# Generated caches, dependencies and local agent state
+**/.godot/
+**/node_modules/
+**/bin/
+**/obj/
+**/.omc/
+**/output/*
+!**/output/.gitkeep
+**/__pycache__/
+**/.pytest_cache/
+**/.vs/
+**/.idea/
+
+# Machine-local settings, credentials and transient output
+.env
+.env.*
+!.env.example
+*.user
+*.suo
+*.log
+*.tmp
+*.blend1
+*.blend2
+Thumbs.db
+.DS_Store

@@ -1,0 +1,13 @@
+id,name,behavior,look,mirror_player,hp,move_speed_mps,mass,attack_damage,attack_interval_ms,attack_reach_m,wake_range_m,traits,tier
+#몬스터ID,이름 키,행동(common balloon bull),외형(content/enemies/*.tres),플레이어 종으로 좀비화,체력,이동 속도(m/s),무게(넉백 나눔, 1=보통),공격 대미지,공격 간격(ms),공격 거리(m, 몸끼리),깨어나는 거리(m),고유 행동(; 구분, monster_traits/*.json),등급(common/named; 시체 유지 정책)
+plush,name_monster_plush,common,plush,true,30,4.5,1,4,1000,0.4,6.5,,common
+balloon,name_monster_balloon,balloon,balloon,false,25,2.1,0.7,0,1000,0,6.5,balloon_pop,named
+bull,name_monster_bull,bull,bull,false,260,3.4,5,10,1300,0.4,6.5,bull_charge,named
+humanoid,name_monster_humanoid,common,humanoid,false,38,3.8,1.15,5,1100,0.4,7,,common
+crawler,name_monster_crawler,common,crawler,false,24,5.2,0.65,3,800,0.3,7,,common
+tether,name_monster_tether,tether,tether,false,70,2.8,1.4,3,1400,0.3,10,tether_capture,named
+leaper,name_monster_leaper,leaper,leaper,false,65,4.2,1,4,1200,0.3,10,leaper_capture,named
+spitter,name_monster_spitter,spitter,spitter,false,55,2.8,1.2,8,1500,0.4,12,vomit_shot,named
+wild_animal,name_monster_wild_animal,common,plush,false,32,4.8,0.9,5,900,0.35,8,,common
+armed_animal,name_monster_armed_animal,shooter,plush,false,42,3.4,1,6,1000,0.35,12,animal_shot,common
+armed_veteran,name_monster_armed_veteran,shooter,plush,false,110,3,1.7,10,1000,0.35,14,veteran_shot,named

@@ -1,0 +1,84 @@
+key,text
+# Controls (bottom of the HUD, main menu, pause)
+ui_controls,"WASD Move   Mouse Aim   LMB Fire   Space Leap   1·2 Switch weapon   G Aim throw   Q Medkit   E Pick up
+R Reload   Tab Zoom   Esc Pause"
+# Main menu
+ui_menu_title,HORDE SHOOTER  (working title)
+ui_menu_subtitle,STAGE 1 · Warehouse District — single-player prototype
+ui_menu_select,Choose a character
+ui_menu_start,Deploy  [Enter]
+ui_menu_new_character,New character: add a .tres to content/characters and it shows up in this list.
+fmt_menu_details,ID {0}   ·   Health {1}   ·   Speed {2:0.0}   ·   Height {3:0.00}m
+fmt_menu_model,Model: {0}
+ui_menu_no_model,none → stand-in shape model
+# HUD
+ui_hud_stage,STAGE 1 · Warehouse District
+fmt_hud_timer,{0:00}:{1:00}    Kills {2}
+fmt_hud_healing,Healing... {0}%
+ui_hud_medkit,Medkit 1  [Q]
+ui_hud_no_medkit,No medkit
+ui_hud_reload,Reloading
+ui_hud_melee_reserve,Melee · unlimited
+fmt_hud_reserve_infinite,{0} · reserve unlimited
+fmt_hud_reserve,{0} · reserve {1}
+fmt_hud_reserve_no_refill,{0} · reserve {1} (no refill)
+ui_hud_slot2_empty,[2] Empty
+ui_hud_no_throwable,[G] No throwables
+fmt_hud_roll_cooldown,Leap {0:0.0}s
+ui_hud_roll_ready,[Space] Leap ready
+fmt_hud_throw_aim,Aiming throw: {0} ×{1}   LMB throw · RMB/G cancel · Wheel change type
+fmt_hud_helium,Helium high! Vision narrowed  {0}s
+ui_hud_stunned,Aaargh!
+ui_hud_mag_empty,Magazine empty [R]
+ui_hud_ammo_low,Low ammo [R]
+# Pause and result screens
+ui_pause_title,Paused
+ui_pause_keys,[Esc] Resume   [Enter] Restart   [M] Menu
+ui_end_clear,STAGE CLEAR
+ui_end_over,GAME OVER
+fmt_end_stats,Time {0:00}:{1:00}    Kills {2}    Special infected {3}    Shots {4}
+ui_end_keys,[Enter] Play again    [Esc] Menu
+# Objectives (top left of the HUD)
+ui_objective_leave_saferoom,Open the safe room door  [E]
+ui_objective_reach_shutter,Reach the shutter panel at the end of the warehouse  [E]
+fmt_objective_hold_out,Hold out until the shutter opens  {0}s
+ui_objective_reach_safehouse,Get to the safehouse
+ui_objective_close_safehouse,Close the safehouse door  [E]
+ui_objective_cleared,Stage clear
+# Stage notices
+msg_stage_start,Safe room — open the door to set out
+msg_stage_find_shutter,Find the shutter panel at the end of the warehouse
+msg_stage_alarm,Alarm! Hold out until the shutter opens
+msg_stage_shutter_open,The shutter is open! Run to the safehouse
+msg_stage_close_to_clear,Close the door to clear the stage
+msg_stage_enemies_inside,There are still enemies inside!
+msg_stage_down,You went down...
+# Use prompts (next to [E])
+ui_use_open_door,Open door
+ui_use_shutter,Open shutter (sets off the alarm!)
+ui_use_close_safehouse,Close door (clear stage)
+ui_use_ammo,Refill ammo (weapon 2)
+ui_use_medkit,Pick up medkit
+fmt_use_pickup_weapon,Pick up {0}  (slot {1})
+fmt_use_pickup_throwable,Pick up {0}  (G)
+# Pickup and refill messages
+fmt_pickup_throwable_max,You can carry up to {1} {0}
+fmt_pickup_throwable,+{0}
+fmt_pickup_upgraded,{0}!
+msg_pickup_full,You can't carry any more
+msg_pickup_ammo,+Ammo
+msg_pickup_medkit,Got a medkit — heal with [Q]
+msg_pickup_medkit_full,You can only carry one medkit
+msg_refill_no_primary,You have no weapon 2
+fmt_refill_not_refillable,{0} can't be refilled
+fmt_refill_got,+{0} AMMO
+msg_refill_full,FULL
+fmt_weapon_no_ammo,{0} out of ammo
+# Short text above heads
+msg_flashbang_blind,"Argh, my eyes!"
+msg_lure_squeak,Squeak!
+# Floor text
+ui_floor_saferoom,SAFE ROOM
+ui_floor_warehouse,WAREHOUSE →
+ui_floor_safehouse_arrow,SAFEHOUSE →
+ui_floor_safehouse,SAFEHOUSE

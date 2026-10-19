@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="CharacterDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/Characters/CharacterDefinition.cs" id="1_def"]
+[ext_resource type="PackedScene" path="res://assets/characters/redpanda/redpanda.glb" id="2_model"]
+
+[resource]
+script = ExtResource("1_def")
+Id = "redpanda"
+DisplayName = "name_character_redpanda"
+Description = "desc_character_redpanda"
+Role = 0
+SortOrder = 3
+Model = ExtResource("2_model")
+ModelFacesPositiveZ = true
+ModelScale = 1.0
+BodyNode = "redpanda_body"
+DeformNode = "redpanda_deform"
+HeadNode = "redpanda_head"
+LeftFootNode = "redpanda_leftFoot"
+RightFootNode = "redpanda_rightFoot"
+WeaponNode = "redpanda_weapon"
+MuzzleNode = "Muzzle"
+GearNodes = PackedStringArray("redpanda_helmet", "redpanda_beret", "redpanda_vest", "redpanda_pack", "redpanda_goggles", "redpanda_headset", "redpanda_vestPadded")
+BuiltInWeaponNode = "redpanda_weapon_mesh"
+HandColor = Color(0.22, 0.18, 0.16, 1)
+ColliderRadius = 0.48
+ColliderHeight = 2.06
+MoveSpeed = 4.4
+MaxHealth = 100
+StepRate = 13.0
+WaddleDegrees = 6.0
+StuffingColor = Color(1, 0.97, 0.88, 1)

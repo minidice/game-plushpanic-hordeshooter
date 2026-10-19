@@ -1,0 +1,18 @@
+id,type,name,slot,category,fire_mode,automatic,damage,max_range_m,effective_range_m,falloff_min,fire_interval_ms,reload_ms,reload_shell_ms,mag_size,max_mags,start_mags,refillable,pierce,spread_deg,spread_per_shot_deg,move_spread_deg,max_spread_deg,recoil_power,hit_power,traits,fire_sound,model,icon,color,accent_color,length_m
+#무기ID,분류ID(weapon_types.csv),이름 키 (content/lan/<언어>/*.csv),빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,1발씩 추가 장전 시간(ms; 0=탄창 교체),빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값
+frying_pan,melee,name_weapon_frying_pan,,,,,,,,,,,,,,,,,,,,,,,,,,res://assets/icons/frying_pan.png,,,
+m1911,pistol,name_weapon_m1911,,,,,,,,,,,,,,,,,,,,,,,,,res://assets/weapons/m1911.glb,res://assets/icons/m1911.png,,,
+glock17,pistol,name_weapon_glock17,,,,,4,,,,110,,,17,,,,,,,,,6,,,,res://assets/weapons/glock17.glb,res://assets/icons/glock17.png,1d1f21,,
+mp5,smg,name_weapon_mp5,,,,,6,,,,,,,,,,,,,,,,,,,,res://assets/weapons/mp5.glb,res://assets/icons/mp5.png,,,
+m4,assault_rifle,name_weapon_m4,,,,,11,,,,,,,,,,,,,,,,,,,,res://assets/weapons/m4.glb,res://assets/icons/m4.png,,,
+m16,assault_rifle,name_weapon_m16,,,,false,12,,,,360,2400,,60,8,7,,,,,,,,,burst_3,,res://assets/weapons/m16.glb,res://assets/icons/m16.png,3b4535,2a2f25,0.9
+ak47,assault_rifle,name_weapon_ak47,,,,,7,,,,,2300,,40,12,10,,,,,,,,,,,res://assets/weapons/ak47.glb,res://assets/icons/ak47.png,5a3a22,2a2a2a,
+m249,lmg,name_weapon_m249,,,,,,,,,,,,,,,,,,,,,,,,,res://assets/weapons/m249.glb,res://assets/icons/m249.png,,,
+r870,shotgun,name_weapon_r870,,,,,,,,,,,,,,,,,,,,,,,,,res://assets/weapons/r870.glb,res://assets/icons/r870.png,,,
+benelli_m4,shotgun,name_weapon_benelli_m4,,,,true,26,,,,280,500,320,10,9,9,,,,,,,40,,,,res://assets/weapons/benelli_m4.glb,res://assets/icons/benelli_m4.png,262a2c,4a4f52,0.85
+double_barrel,shotgun,name_weapon_double_barrel,,,,,40,,,,220,1300,0,2,30,20,,,,,,,90,120,-buckshot;buckshot_wide,,res://assets/weapons/double_barrel.glb,res://assets/icons/double_barrel.png,5a3a26,8a8f92,0.75
+awm,bolt_sniper,name_weapon_awm,,,,,,,,,,,,10,,,,,,,,,,,,,res://assets/weapons/awm.glb,res://assets/icons/awm.png,,,
+svd,dmr,name_weapon_svd,,,,,,,,,,,,,,,,,,,,,,,,,res://assets/weapons/svd.glb,res://assets/icons/svd.png,,,
+m82,bolt_sniper,name_weapon_m82,,,,,220,,,,1500,2500,,5,6,4,,99,,,,,80,40,,,res://assets/weapons/m82.glb,res://assets/icons/m82.png,3d4235,1c1e1f,1.3
+alabong,rocket_launcher,name_weapon_alabong,,,,,,,,,,,,,,,,,,,,,,,,,res://assets/weapons/alabong.glb,res://assets/icons/alabong.png,,,
+mortar,mortar,name_weapon_mortar,,,,,,,,,,,,,,,,,,,,,,,,,res://assets/weapons/mortar.glb,res://assets/icons/mortar.png,,,

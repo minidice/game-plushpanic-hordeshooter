@@ -1,0 +1,35 @@
+{
+  "id": "leaper",
+  "source_triangles": 10296,
+  "triangles": 3896,
+  "meshes": 6,
+  "materials": [
+    "infected_cloth.003",
+    "infected_cream.003",
+    "infected_ink.003",
+    "infected_mouth.003",
+    "infected_skin.003",
+    "infected_trim.003"
+  ],
+  "bytes": 116832,
+  "nodes": [
+    "leaper_root",
+    "Body",
+    "Deform",
+    "Head",
+    "Head_mesh",
+    "Deform_mesh",
+    "LeftFoot",
+    "LeftFoot_mesh",
+    "leaper_leftArm_mesh",
+    "RightFoot",
+    "RightFoot_mesh",
+    "leaper_rightArm_mesh",
+    "Weapon",
+    "Muzzle",
+    "leaper_leftArm",
+    "leaper_rightArm"
+  ],
+  "forward": "+Z",
+  "notes": "No bones. Runtime object pivots. Beret included for runtime visibility. Source vertex colors preserved."
+}

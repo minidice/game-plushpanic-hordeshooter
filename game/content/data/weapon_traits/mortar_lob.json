@@ -1,0 +1,6 @@
+{
+  "kind": "lob",
+  "description": "조준점으로 곡사. 벽 너머 가능",
+  "flight_ms": 1300,
+  "min_range_m": 6
+}

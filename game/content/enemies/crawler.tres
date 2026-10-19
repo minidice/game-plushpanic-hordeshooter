@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CharacterDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/Characters/CharacterDefinition.cs" id="1_def"]
+[ext_resource type="PackedScene" path="res://assets/enemies/crawler/crawler.glb" id="2_model"]
+
+[resource]
+script = ExtResource("1_def")
+Id = "crawler"
+DisplayName = "name_monster_crawler"
+Description = "Authored infected silhouette with runtime object pivots."
+Role = 1
+Model = ExtResource("2_model")
+ModelFacesPositiveZ = true
+BodyNode = "Body"
+DeformNode = "Deform"
+HeadNode = "Head"
+LeftFootNode = "LeftFoot"
+RightFootNode = "RightFoot"
+WeaponNode = "Weapon"
+MuzzleNode = "Muzzle"
+ColliderRadius = 0.43
+ColliderHeight = 0.9
+MoveSpeed = 4.9
+MaxHealth = 28
+StepRate = 17.0
+WaddleDegrees = 4.0
+StuffingColor = Color(0.77, 0.85, 0.60, 1)

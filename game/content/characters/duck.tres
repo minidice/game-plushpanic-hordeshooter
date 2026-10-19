@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="CharacterDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/Characters/CharacterDefinition.cs" id="1_def"]
+[ext_resource type="PackedScene" path="res://assets/characters/duck/duck.glb" id="2_model"]
+
+[resource]
+script = ExtResource("1_def")
+Id = "duck"
+DisplayName = "name_character_duck"
+Description = "desc_character_duck"
+Role = 0
+SortOrder = 1
+Model = ExtResource("2_model")
+ModelFacesPositiveZ = true
+ModelScale = 1.0
+BodyNode = "duck_body"
+DeformNode = "duck_deform"
+HeadNode = "duck_head"
+LeftFootNode = "duck_leftFoot"
+RightFootNode = "duck_rightFoot"
+WeaponNode = "duck_weapon"
+MuzzleNode = "Muzzle"
+GearNodes = PackedStringArray("duck_helmet", "duck_beret", "duck_vest", "duck_pack", "duck_goggles", "duck_headset", "duck_vestPadded")
+BuiltInWeaponNode = "duck_weapon_mesh"
+HandColor = Color(0.73, 0.47, 0.2, 1)
+ColliderRadius = 0.48
+ColliderHeight = 2.06
+MoveSpeed = 4.4
+MaxHealth = 100
+StepRate = 13.0
+WaddleDegrees = 6.0
+StuffingColor = Color(1, 0.97, 0.88, 1)

@@ -1,0 +1,10 @@
+{
+  "kind": "balloon_pop",
+  "description": "가까이 오면 부풀어 터짐. 맞은 사람은 헬륨 + 호드 소환",
+  "trigger_range_m": 2.3,
+  "inflate_ms": 700,
+  "radius_m": 4.2,
+  "helium_ms": 15000,
+  "summon_count": 12,
+  "knockback_power": 90
+}

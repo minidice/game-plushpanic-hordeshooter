@@ -1,0 +1,8 @@
+{
+  "kind": "explode",
+  "description": "모인 좀비 위에서 폭발",
+  "radius_m": 5,
+  "damage": 220,
+  "knockback_power": 120,
+  "self_damage_share": 0.2
+}

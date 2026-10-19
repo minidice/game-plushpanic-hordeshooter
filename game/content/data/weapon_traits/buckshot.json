@@ -1,0 +1,6 @@
+{
+  "kind": "pellets",
+  "description": "산탄 9발. damage는 전탄 합계 — 다 맞으면 전부, 일부만 맞으면 그만큼만",
+  "count": 9,
+  "spread_deg": 15
+}

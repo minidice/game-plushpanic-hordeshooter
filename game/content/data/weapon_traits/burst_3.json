@@ -1,0 +1,6 @@
+{
+  "kind": "burst",
+  "description": "한 번 클릭에 3점사",
+  "count": 3,
+  "interval_ms": 65
+}

@@ -1,0 +1,8 @@
+{
+  "kind": "explode_on_hit",
+  "description": "맞은 자리에서 폭발. 직격당한 적은 damage, 주변은 폭발 대미지",
+  "radius_m": 4.8,
+  "damage": 170,
+  "self_damage_share": 0.2,
+  "knockback_power": 150
+}

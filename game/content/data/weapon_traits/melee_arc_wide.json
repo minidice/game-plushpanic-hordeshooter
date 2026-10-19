@@ -1,0 +1,6 @@
+{
+  "kind": "melee_arc",
+  "description": "앞쪽 부채꼴 안의 적을 한 번에 여러 마리 침",
+  "arc_deg": 120,
+  "max_targets": 4
+}

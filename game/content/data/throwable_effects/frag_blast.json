@@ -1,0 +1,8 @@
+{
+  "kind": "explode",
+  "description": "폭발",
+  "radius_m": 4.6,
+  "damage": 160,
+  "knockback_power": 120,
+  "self_damage_share": 0.2
+}

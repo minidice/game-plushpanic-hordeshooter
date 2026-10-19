@@ -1,0 +1,84 @@
+key,text
+# 조작 안내 (HUD 아래, 메인 메뉴, 일시정지)
+ui_controls,"WASD 이동   마우스 조준   좌클릭 사격   Space 도약   1·2 무기 교체   G 투척 조준   Q 구급상자   E 줍기
+R 재장전   Tab 확대/축소   Esc 일시정지"
+# 메인 메뉴
+ui_menu_title,HORDE SHOOTER  (가칭)
+ui_menu_subtitle,STAGE 1 · 창고 지구 — 싱글 플레이 프로토타입
+ui_menu_select,캐릭터 선택
+ui_menu_start,출격  [Enter]
+ui_menu_new_character,새 캐릭터: content/characters 에 .tres 를 추가하면 이 목록에 자동으로 나타납니다.
+fmt_menu_details,ID {0}   ·   체력 {1}   ·   속도 {2:0.0}   ·   키 {3:0.00}m
+fmt_menu_model,모델: {0}
+ui_menu_no_model,없음 → 도형 대체 모델
+# HUD
+ui_hud_stage,STAGE 1 · 창고 지구
+fmt_hud_timer,{0:00}:{1:00}    처치 {2}
+fmt_hud_healing,치료 중... {0}%
+ui_hud_medkit,구급상자 1  [Q]
+ui_hud_no_medkit,구급상자 없음
+ui_hud_reload,장전 중
+ui_hud_melee_reserve,근접 · 무제한
+fmt_hud_reserve_infinite,{0} · 예비 무제한
+fmt_hud_reserve,{0} · 예비 {1}
+fmt_hud_reserve_no_refill,{0} · 예비 {1} (보충 불가)
+ui_hud_slot2_empty,[2] 없음
+ui_hud_no_throwable,[G] 투척물 없음
+fmt_hud_roll_cooldown,도약 {0:0.0}초
+ui_hud_roll_ready,[Space] 도약 준비
+fmt_hud_throw_aim,투척 조준: {0} ×{1}   좌클릭 던지기 · 우클릭/G 취소 · 휠 종류 변경
+fmt_hud_helium,헬륨 중독! 시야 좁아짐  {0}초
+ui_hud_stunned,으아악!
+ui_hud_mag_empty,탄창 비었음 [R]
+ui_hud_ammo_low,탄약 부족 [R]
+# 일시정지·결과 화면
+ui_pause_title,일시정지
+ui_pause_keys,[Esc] 계속   [Enter] 재시작   [M] 메뉴
+ui_end_clear,STAGE CLEAR
+ui_end_over,GAME OVER
+fmt_end_stats,시간 {0:00}:{1:00}    처치 {2}    특수 감염체 {3}    발사 {4}
+ui_end_keys,[Enter] 다시 하기    [Esc] 메뉴
+# 목표 (HUD 왼쪽 위)
+ui_objective_leave_saferoom,세이프룸 문을 여세요  [E]
+ui_objective_reach_shutter,창고 끝 셔터 제어판으로 이동  [E]
+fmt_objective_hold_out,셔터가 열릴 때까지 버티기  {0}초
+ui_objective_reach_safehouse,세이프하우스로 이동
+ui_objective_close_safehouse,세이프하우스 문 닫기  [E]
+ui_objective_cleared,스테이지 클리어
+# 스테이지 알림
+msg_stage_start,세이프룸 — 문을 열고 출발하세요
+msg_stage_find_shutter,창고 끝의 셔터 제어판을 찾으세요
+msg_stage_alarm,경보 작동! 셔터가 열릴 때까지 버티세요
+msg_stage_shutter_open,셔터가 열렸습니다! 세이프하우스로 달리세요
+msg_stage_close_to_clear,문을 닫으면 스테이지 클리어
+msg_stage_enemies_inside,안에 적이 남아 있습니다!
+msg_stage_down,쓰러졌습니다...
+# 상호작용 안내 ([E] 옆)
+ui_use_open_door,문 열기
+ui_use_shutter,셔터 열기 (경보 작동!)
+ui_use_close_safehouse,문 닫기 (스테이지 클리어)
+ui_use_ammo,탄약 보충 (2번 무기)
+ui_use_medkit,구급상자 줍기
+fmt_use_pickup_weapon,{0} 줍기  ({1}번)
+fmt_use_pickup_throwable,{0} 줍기  (G)
+# 줍기·보충 메시지
+fmt_pickup_throwable_max,{0}은(는) {1}개까지
+fmt_pickup_throwable,+{0}
+fmt_pickup_upgraded,{0}!
+msg_pickup_full,더 가져갈 수 없습니다
+msg_pickup_ammo,+탄약
+msg_pickup_medkit,구급상자 획득 — [Q] 로 치료
+msg_pickup_medkit_full,구급상자는 하나만 들 수 있습니다
+msg_refill_no_primary,2번 무기가 없습니다
+fmt_refill_not_refillable,{0}은(는) 탄약을 보충할 수 없습니다
+fmt_refill_got,+{0} AMMO
+msg_refill_full,FULL
+fmt_weapon_no_ammo,{0} 탄약 없음
+# 머리 위 짧은 글씨
+msg_flashbang_blind,앗 눈부셔!
+msg_lure_squeak,삑!
+# 바닥 글씨
+ui_floor_saferoom,SAFE ROOM
+ui_floor_warehouse,WAREHOUSE →
+ui_floor_safehouse_arrow,SAFEHOUSE →
+ui_floor_safehouse,SAFEHOUSE

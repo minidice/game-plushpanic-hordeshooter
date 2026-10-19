@@ -1,0 +1,13 @@
+﻿key,text
+name_character_goose,Goose
+name_character_test_capsule,Test Capsule (empty slot)
+name_character_test_round,Test Mochi (empty slot)
+desc_character_goose,A tall pale bird with a narrow bill and removable field gear.
+desc_character_test_capsule,Primitive stand-in character. A slot for a new species.
+desc_character_test_round,Round primitive stand-in for testing hamster-like bodies.
+name_character_duck,Duck
+desc_character_duck,A warm brown bird with a broad bill and webbed feet.
+name_character_raccoon,Raccoon
+desc_character_raccoon,A masked woodland scout with a striped tail and dark paws.
+name_character_redpanda,Red Panda
+desc_character_redpanda,A red forest scout with cream face markings and a long ringed tail.

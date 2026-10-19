@@ -1,0 +1,43 @@
+{
+  "source_triangles": 78564,
+  "triangles": 18107,
+  "meshes": 10,
+  "material_slots": 49,
+  "bytes": 1054400,
+  "nodes": [
+    "goose_root",
+    "goose_body",
+    "goose_deform",
+    "goose_torso",
+    "goose_torso_mesh",
+    "goose_head",
+    "goose_beak",
+    "goose_beak_mesh",
+    "goose_head_mesh",
+    "goose_helmet",
+    "goose_helmet_mesh",
+    "goose_goggles",
+    "goose_tail",
+    "goose_tail_mesh",
+    "goose_leftFoot",
+    "goose_leftFoot_mesh",
+    "goose_rightFoot",
+    "goose_rightFoot_mesh",
+    "goose_vest",
+    "goose_vest_mesh",
+    "goose_pack",
+    "goose_pack_mesh",
+    "goose_weapon",
+    "goose_weapon_mesh",
+    "goose_leftHand",
+    "goose_rightHand",
+    "Muzzle"
+  ],
+  "forward": "+Z",
+  "collider": {
+    "radius": 0.48,
+    "height": 2.18,
+    "center_y": 1.09
+  },
+  "notes": "Static details merged per movement pivot. Object animation at runtime; no skeleton, no soft body."
+}

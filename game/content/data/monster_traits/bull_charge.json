@@ -1,0 +1,14 @@
+{
+  "kind": "bull_charge",
+  "description": "예고 후 직선 돌진. 플레이어를 날리고 경로의 좀비를 볼링핀처럼 쓰러뜨림. 벽에 박으면 기절",
+  "trigger_range_m": 11,
+  "min_range_m": 2.5,
+  "windup_ms": 900,
+  "speed_mps": 12.5,
+  "duration_ms": 1500,
+  "dazed_ms": 1900,
+  "cooldown_ms": 5000,
+  "player_damage": 18,
+  "dazed_damage_multiplier": 1.6,
+  "bowl_power": 130
+}

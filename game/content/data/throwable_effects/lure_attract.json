@@ -1,0 +1,7 @@
+{
+  "kind": "attract",
+  "description": "착지 후 삑삑거리며 일반 좀비를 끌어모음. 끝나면 다음 효과 발동",
+  "radius_m": 30,
+  "duration_ms": 6000,
+  "beep_interval_ms": 500
+}

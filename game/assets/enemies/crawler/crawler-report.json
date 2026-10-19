@@ -1,0 +1,35 @@
+{
+  "id": "crawler",
+  "source_triangles": 10008,
+  "triangles": 3787,
+  "meshes": 6,
+  "materials": [
+    "infected_cloth.001",
+    "infected_cream.001",
+    "infected_ink.001",
+    "infected_mouth.001",
+    "infected_skin.001",
+    "infected_trim.001"
+  ],
+  "bytes": 113028,
+  "nodes": [
+    "crawler_root",
+    "Body",
+    "Deform",
+    "Head",
+    "Head_mesh",
+    "Deform_mesh",
+    "LeftFoot",
+    "LeftFoot_mesh",
+    "crawler_leftArm_mesh",
+    "RightFoot",
+    "RightFoot_mesh",
+    "crawler_rightArm_mesh",
+    "Weapon",
+    "Muzzle",
+    "crawler_leftArm",
+    "crawler_rightArm"
+  ],
+  "forward": "+Z",
+  "notes": "No bones. Runtime object pivots. Beret included for runtime visibility. Source vertex colors preserved."
+}

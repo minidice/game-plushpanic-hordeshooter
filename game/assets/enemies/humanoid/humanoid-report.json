@@ -1,0 +1,35 @@
+{
+  "id": "humanoid",
+  "source_triangles": 11160,
+  "triangles": 4223,
+  "meshes": 6,
+  "materials": [
+    "infected_cloth",
+    "infected_cream",
+    "infected_ink",
+    "infected_mouth",
+    "infected_skin",
+    "infected_trim"
+  ],
+  "bytes": 123360,
+  "nodes": [
+    "humanoid_root",
+    "Body",
+    "Deform",
+    "Head",
+    "Head_mesh",
+    "Deform_mesh",
+    "LeftFoot",
+    "LeftFoot_mesh",
+    "humanoid_leftArm_mesh",
+    "RightFoot",
+    "RightFoot_mesh",
+    "humanoid_rightArm_mesh",
+    "Weapon",
+    "Muzzle",
+    "humanoid_leftArm",
+    "humanoid_rightArm"
+  ],
+  "forward": "+Z",
+  "notes": "No bones. Runtime object pivots. Beret included for runtime visibility. Source vertex colors preserved."
+}

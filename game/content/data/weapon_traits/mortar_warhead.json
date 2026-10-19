@@ -1,0 +1,8 @@
+{
+  "kind": "explode_on_hit",
+  "description": "착탄 폭발",
+  "radius_m": 5.2,
+  "damage": 190,
+  "self_damage_share": 0.2,
+  "knockback_power": 150
+}

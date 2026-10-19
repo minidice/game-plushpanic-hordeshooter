@@ -1,0 +1,9 @@
+{
+  "kind": "dual_wield",
+  "description": "같은 무기를 하나 더 주우면 쌍으로 듦",
+  "name_format_key": "fmt_weapon_dual",
+  "mag_multiplier": 2,
+  "fire_interval_multiplier": 0.6,
+  "spread_add_deg": 1.0,
+  "recoil_multiplier": 1.3
+}

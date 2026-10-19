@@ -1,0 +1,64 @@
+using Godot;
+using System.Collections.Generic;
+
+namespace HordeShooter;
+
+public partial class CharacterRig
+{
+    private Node3D? _tailMotion;
+    private string _tailSpecies="";
+    private Transform3D _tailMotionHome;
+    private float _tailClock, _tailMove;
+
+    private void PrepareTail()
+    {
+        // Zombie definitions use composite IDs; the imported model retains its species node names.
+        Node3D? tail=null;
+        foreach(var species in new[]{"goose","duck","raccoon","redpanda"})
+            if(Model.FindChild(species+"_tail",true,false) is Node3D found)
+            {tail=found;_tailSpecies=species;break;}
+        if(tail==null)return;
+        // GLBs already embed this pivot in the rump (.55/.60 high, -.30 rearward).
+        // Keep that authored attachment; resize and rotate the mesh around it, never the model origin.
+        var parent=tail.GetParent();
+        _tailMotion=new Node3D{Name="TailMotion",Transform=tail.Transform};
+        // Imported descendants belong to the model scene. Suspend ownership while the
+        // subtree is detached, then restore it once every owner is an ancestor again.
+        var owners=new List<(Node Part,Node? Owner)>{(tail,tail.Owner)};
+        foreach(var child in tail.FindChildren("*","",true,false))owners.Add((child,child.Owner));
+        foreach(var (part,_) in owners)part.Owner=null;
+        parent.RemoveChild(tail);parent.AddChild(_tailMotion);_tailMotion.AddChild(tail);
+        _tailMotion.Owner=owners[0].Owner;
+        foreach(var (part,owner) in owners)part.Owner=owner;
+        tail.Transform=Transform3D.Identity;
+        if(tail.FindChild(_tailSpecies+"_tail_mesh",true,false) is MeshInstance3D mesh && mesh.Mesh!=null)
+        {
+            // The .19 decimation pass folded imported tail faces. Rebuild a clean surface
+            // with the same palette before PrepareColors creates per-character overrides.
+            var materials=new Material[mesh.Mesh.GetSurfaceCount()];
+            for(int i=0;i<materials.Length;i++)materials[i]=mesh.GetActiveMaterial(i);
+            mesh.Mesh=CharacterTailMesh.Build(_tailSpecies,materials);
+            mesh.Transform=Transform3D.Identity;
+        }
+        _tailMotionHome=_tailMotion.Transform;
+    }
+
+    private void UpdateTail(float dt,float movement)
+    {
+        if(_tailMotion==null)return;
+        _tailClock+=Mathf.Max(0,dt);
+        _tailMove=Mathf.Lerp(_tailMove,Mathf.Clamp(movement,0,1),1-Mathf.Exp(-Mathf.Max(0,dt)*8));
+        bool bird=AppearanceCatalog.IsBird(_tailSpecies);
+        float yaw=Mathf.Sin(_tailClock*1.9f)*.018f+Mathf.Sin(_clock-.9f)*_tailMove*(bird?.035f:.075f);
+        float pitch=Mathf.Cos(_clock-.9f)*_tailMove*(bird?.018f:.03f);
+        _tailMotion.Transform=_tailMotionHome;
+        _tailMotion.RotateObjectLocal(Vector3.Up,yaw);
+        _tailMotion.RotateObjectLocal(Vector3.Right,pitch);
+    }
+
+    private void ResetTail()
+    {
+        if(_tailMotion!=null)_tailMotion.Transform=_tailMotionHome;
+        _tailClock=_tailMove=0;
+    }
+}

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Field Notes · 캐릭터 비교실</title>
+  <link rel="stylesheet" href="src/style.css">
+  <script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/","@dimforge/rapier3d-compat":"./node_modules/@dimforge/rapier3d-compat/dist/rapier.mjs"}}</script>
+</head>
+<body>
+<main>
+  <header class="masthead"><div><div class="eyebrow">HORDE SHOOTER / CHARACTER STUDY 003</div><h1>작은 몸, 다른 존재감.</h1><p>같은 시점과 장비에서 네 동물의 실루엣을 비교하세요.</p></div><div class="stamp">FIELD NOTES<span>일체형 · 쿼터뷰 · 물리</span></div></header>
+  <div class="workspace">
+    <section class="preview" aria-label="캐릭터 비교">
+      <div class="toolbar"><div class="segmented"><button id="roster" aria-pressed="true">4종 비교</button><button id="paired" aria-pressed="false">장비 전후</button></div><label class="compact">동작<select id="motion"><option value="walk">걷기 · 8방향</option><option value="strafe">옆걸음 · 조준 유지</option><option value="recoil">사격 · 반동</option><option value="fall">피격 · 넘어짐</option><option value="tumble">눌림 · 공중 회전</option><option value="physics">물리 · 날리기</option><option value="idle">대기</option></select></label><button id="pause" class="quiet" aria-pressed="false">일시정지</button></div>
+      <div class="camera-presets"><button id="camera-play" aria-pressed="true">플레이 크기 · 기본</button><button id="camera-close" aria-pressed="false">확대 · 쿼터뷰</button><button id="camera-portrait" aria-pressed="false">낮은 시점 · 체형</button></div><div id="stage"><canvas id="view" aria-label="실시간 3D 캐릭터"></canvas><div id="cards"></div><p id="error" role="alert" hidden></p></div>
+      <div class="view-controls"><label for="elevation">카메라 각도 <output id="elevation-value">55°</output><input id="elevation" type="range" min="5" max="70" step="1" value="55"></label><label for="zoom">확대 배율 <output id="zoom-value">1.0×</output><input id="zoom" type="range" min="1" max="6" step="0.1" value="1"></label><label for="direction">바라보는 방향 <output id="direction-value">30°</output><input id="direction" type="range" min="0" max="360" step="45" value="0"></label><div class="checks"><label><input id="turn" type="checkbox" checked>8방향 자동 회전</label><label><input id="gear" type="checkbox" checked>헬멧 + 배낭</label><label><input id="studio" type="checkbox">스튜디오 조명</label><label><input id="night" type="checkbox">어두운 배경</label></div></div>
+      <p class="footnote">맨몸 비교에도 같은 무기를 사용합니다. 기본은 참고 이미지에서 추정한 55° · 작은 크기입니다. 물리 모드는 캡슐 충돌 + 시각적 눌림을 사용합니다.</p>
+    </section>
+    <aside>
+      <div class="eyebrow">PROPORTION EDITOR</div><h2><span id="selected-name">라쿤</span> <span class="tag">조정 중</span></h2>
+      <p class="aside-note">캐릭터 카드를 선택하면 해당 종의 비율만 바뀝니다.</p>
+      <div id="sliders"></div>
+      <button id="reset" class="wide quiet">선택한 종 기본 비율</button>
+      <div class="export"><h3>이 비율로 가져가기</h3><p>4종 모델과 동작 5개를 함께 저장합니다. GLB는 Blender에서 바로 열 수 있습니다.</p><button id="export-glb" class="primary wide">3D 모델 저장 · GLB</button><div class="export-row"><button id="export-json" class="quiet">비율 저장</button><button id="import-json" class="quiet">비율 불러오기</button><input id="file" type="file" accept=".json" hidden></div><p id="status" role="status" aria-live="polite">설정은 이 브라우저에 자동 저장됩니다.</p></div>
+    </aside>
+  </div>
+  <footer><span>ART PASS / v0.3</span><span>최종 아트 전, 형태와 동작을 판단하는 모델</span><span>RACCOON · RED PANDA · DUCK · GOOSE</span></footer>
+</main>
+<script type="module" src="src/app.mjs"></script>
+</body></html>

@@ -1,0 +1,28 @@
+﻿key,text
+name_weapontype_melee,근접 무기
+name_weapontype_pistol,권총
+name_weapontype_smg,기관단총
+name_weapontype_assault_rifle,돌격소총
+name_weapontype_lmg,경기관총
+name_weapontype_shotgun,샷건
+name_weapontype_bolt_sniper,볼트액션 저격총
+name_weapontype_dmr,반자동 저격총
+name_weapontype_rocket_launcher,로켓런처
+name_weapontype_mortar,박격포
+name_weapon_frying_pan,프라이팬
+name_weapon_m1911,M1911
+name_weapon_glock17,글록 17
+name_weapon_mp5,MP5
+name_weapon_m4,M4
+name_weapon_m16,M16
+name_weapon_ak47,AK47
+name_weapon_m249,M249
+name_weapon_r870,레밍턴 870
+name_weapon_benelli_m4,베넬리 M4
+name_weapon_double_barrel,더블배럴
+name_weapon_awm,AWM
+name_weapon_svd,SVD
+name_weapon_m82,바렛 M82
+name_weapon_alabong,알라봉
+name_weapon_mortar,박격포
+fmt_weapon_dual,쌍 {0}

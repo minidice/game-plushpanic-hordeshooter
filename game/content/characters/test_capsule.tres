@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="CharacterDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/Characters/CharacterDefinition.cs" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+Id = "test_capsule"
+DisplayName = "name_character_test_capsule"
+Description = "desc_character_test_capsule"
+Role = 0
+SortOrder = 10
+Shape = 0
+PrimaryColor = Color(0.55, 0.6, 0.42, 1)
+SecondaryColor = Color(0.16, 0.16, 0.14, 1)
+ColliderRadius = 0.45
+ColliderHeight = 1.7
+MoveSpeed = 4.4
+MaxHealth = 100
+WaddleDegrees = 9.0

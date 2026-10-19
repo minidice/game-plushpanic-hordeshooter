@@ -1,0 +1,144 @@
+using Godot;
+
+namespace HordeShooter;
+
+/// <summary>Telegraphed tether/pounce. Holds indefinitely until interrupted or the captor dies.</summary>
+public partial class CaptureEnemy : Enemy
+{
+    public enum Mode { Chase, Windup, Leap, Holding }
+    public Mode State { get; private set; }
+    public bool IsLeaper => Monster.Behavior == MonsterBehavior.Leaper;
+    private CaptureTrait Capture => Monster.Capture!;
+    private float _timer, _cooldown = 1.5f, _damageTimer;
+    private Vector3 _target, _direction;
+    private MeshInstance3D? _marker;
+
+    protected override Vector3 Think(float dt)
+    {
+        _cooldown -= dt;
+        var player = Stage.Player;
+        var to = player.GlobalPosition - GlobalPosition;
+        to.Y = 0;
+        float distance = to.Length();
+        if (player.IsDead) { CancelCapture(); return Vector3.Zero; }
+        if (State == Mode.Holding)
+        {
+            if (player.RestrainingEnemy != this) { CancelCapture(); return Vector3.Zero; }
+            // A tether cannot pass through new cover; a pin requires actual body contact.
+            // These are physical interruptions, never a duration-based self escape.
+            float holdRange = IsLeaper ? Radius + player.Definition.ColliderRadius + 1.2f : Capture.Range * 1.25f;
+            if (distance > holdRange || !ClearToPlayer()) { CancelCapture(); return Vector3.Zero; }
+            FaceOverride = to;
+            if (!IsLeaper) player.RestraintPullTarget = GlobalPosition;
+            DrawLine(player.GlobalPosition + Vector3.Up * .8f, .06f, new Color("e6b3e9"));
+            _damageTimer -= dt;
+            if (_damageTimer <= 0)
+            {
+                player.TakeDamage(AttackDamage, to, 0);
+                _damageTimer = AttackInterval;
+            }
+            return Vector3.Zero;
+        }
+        if (State == Mode.Windup)
+        {
+            FaceOverride = _target - GlobalPosition;
+            _timer -= dt;
+            if (_timer <= 0)
+            {
+                ClearMarker();
+                if (IsLeaper)
+                {
+                    State = Mode.Leap;
+                    _timer = Capture.Range / Capture.Speed + .15f;
+                    _direction = (_target - GlobalPosition) with { Y = 0 };
+                    _direction = _direction.Normalized();
+                    Velocity = new Vector3(0, 4f, 0);
+                }
+                else
+                {
+                    var miss = player.GlobalPosition - _target; miss.Y = 0;
+                    if (miss.Length() < 1.25f && distance <= Capture.Range && ClearToPlayer()) Grab();
+                    else CancelCapture();
+                }
+            }
+            return Vector3.Zero;
+        }
+        if (State == Mode.Leap)
+        {
+            FaceOverride = _direction;
+            _timer -= dt;
+            if (distance < Radius + player.Definition.ColliderRadius + .35f && ClearToPlayer())
+            {
+                Grab();
+                return Vector3.Zero;
+            }
+            if (_timer <= 0) { CancelCapture(); return Vector3.Zero; }
+            return _direction * Capture.Speed;
+        }
+        if (Awake && !player.IsRestrained && _cooldown <= 0 && distance < Capture.Range && distance > 1.5f && ClearToPlayer())
+        {
+            StartWindup();
+            return Vector3.Zero;
+        }
+        return base.Think(dt);
+    }
+
+    public void StartWindup()
+    {
+        if (IsDead || StunTime > 0) return;
+        State = Mode.Windup;
+        _timer = Capture.Windup;
+        _target = Stage.Player.GlobalPosition;
+        Awake = true;
+        DrawLine(_target + Vector3.Up * .04f, IsLeaper ? .65f : .24f, new Color("f9b34c"));
+        Stage.Sfx.PlayAt("bull_snort", GlobalPosition + Vector3.Up, -5, IsLeaper ? 1.5f : .7f);
+    }
+
+    private bool ClearToPlayer() => Rays.Clear(this, GlobalPosition + Vector3.Up * .7f,
+        Stage.Player.GlobalPosition + Vector3.Up * .7f, Layers.World | Layers.Props);
+
+    private void Grab()
+    {
+        if (!Stage.Player.TryRestrain(this)) { CancelCapture(); return; }
+        State = Mode.Holding;
+        _damageTimer = AttackInterval;
+        Velocity = Vector3.Zero;
+        if (!IsLeaper) Stage.Player.RestraintPullTarget = GlobalPosition;
+    }
+
+    private void CancelCapture()
+    {
+        Stage.Player.ReleaseRestraint(this);
+        State = Mode.Chase;
+        _cooldown = Capture.Cooldown;
+        ClearMarker();
+    }
+
+    protected override void AfterMove(float dt)
+    {
+        if (State != Mode.Leap) return;
+        for (int i = 0; i < GetSlideCollisionCount(); i++)
+            if (GetSlideCollision(i).GetCollider() is StaticBody3D && GetSlideCollision(i).GetNormal().Y < .5f)
+            { CancelCapture(); break; }
+    }
+
+    private void DrawLine(Vector3 target, float width, Color color)
+    {
+        var from = GlobalPosition + Vector3.Up * (State == Mode.Holding ? .8f : .04f);
+        float distance = from.DistanceTo(target);
+        if (_marker == null)
+            _marker = Mat.Box(Stage.Effects, Vector3.Zero, Vector3.One, Mat.Fade(new Color(color, .65f)));
+        _marker.Scale = new Vector3(width, .035f, Mathf.Max(.01f, distance));
+        _marker.GlobalPosition = (from + target) * .5f;
+        if (distance > .01f) _marker.LookAt(target, Vector3.Up);
+    }
+
+    private void ClearMarker() { if (IsInstanceValid(_marker)) _marker!.QueueFree(); _marker = null; }
+    protected override void OnStunned() => CancelCapture();
+    public override void Die(Vector3 direction, float force) { CancelCapture(); base.Die(direction, force); }
+    public override void _ExitTree()
+    {
+        if (IsInstanceValid(Stage.Player)) Stage.Player.ReleaseRestraint(this);
+        ClearMarker();
+    }
+}

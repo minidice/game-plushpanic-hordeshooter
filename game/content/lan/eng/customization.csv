@@ -1,0 +1,83 @@
+key,text
+custom_title,Appearance
+custom_body,Body tint
+custom_beak,Beak
+custom_hat,Hat color
+custom_vest,Vest color
+custom_pack,Pack color
+custom_tint_hint,Tints the body while preserving markings.
+custom_color_hint,Changes this part's color.
+custom_no_hat,No hat
+custom_helmet,Helmet
+custom_beret,Beret
+custom_reset,Restore default appearance
+custom_saved,Appearance is saved automatically for each species.
+theme_zombie,Infected
+theme_animals,Wild animals
+theme_armed,Armed animals
+debug_escape_option,Test cheat · F8 escapes restraint
+restrained_status,Restrained · controls disabled
+restrained_cheat,[F8] Debug escape
+restrained_rescue,A teammate must rescue you
+custom_speed,Move speed
+custom_wear_vest,Wear vest
+custom_wear_pack,Wear pack
+custom_wing,Wings / paws
+custom_tail,Tail tint
+custom_feet,Feet
+custom_eyes,Eyes
+custom_goggles,Goggles
+custom_headset,Headset
+custom_vest_pouches,Pouch vest
+custom_vest_padded,Padded vest
+preview_idle,Idle
+preview_run,Run
+preview_fire,Firing pose
+custom_species_step,1 · Species
+custom_presets,2 · Preset
+custom_preset_default,Standard
+custom_preset_round,Round
+custom_preset_scout,Scout
+custom_apply_preset,Apply
+custom_tab_body,Body
+custom_tab_face,Face
+custom_tab_head,Ears / hair
+custom_tab_limbs,Wings / feet
+custom_tab_tail,Tail
+custom_tab_gear,Gear
+custom_body_width,Body width
+custom_body_height,Body height
+custom_eye_size,Eye size
+custom_eye_spacing,Eye spacing
+custom_beak_size,Beak size
+custom_snout_size,Snout size
+custom_ear_size,Ear size
+custom_wing_size,Wing / paw size
+custom_feet_size,Foot size
+custom_tail_size,Tail size
+custom_face_style,Expression
+custom_face_neutral,Neutral
+custom_face_alert,Alert
+custom_face_sleepy,Sleepy
+custom_beak_style,Beak shape
+custom_snout_style,Snout shape
+custom_snout,Snout
+custom_shape_default,Standard
+custom_shape_wide,Wide
+custom_shape_short,Short
+custom_hair_style,Hair shape
+custom_hair_none,None
+custom_hair_short,Short
+custom_hair_swept,Swept
+custom_hair,Hair color
+custom_hair_hint,Hair is hidden beneath headwear. Turn off preview gear to inspect it.
+custom_hat_choice,Headwear
+custom_vest_style,Vest style
+custom_shape_hint,Body shape changes appearance only; stats and hitboxes stay the same.
+custom_stage_theme,Stage theme
+preview_rotation,Rotation
+preview_zoom,Zoom
+preview_auto_rotate,Auto rotate
+preview_gear,Gear
+preview_weapon,Weapon
+preview_only_hint,Gear and weapon visibility affect this preview only.
