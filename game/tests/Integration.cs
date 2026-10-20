@@ -404,7 +404,9 @@ public partial class Integration : Node
         var front = stage.SpawnEnemy<Enemy>(plush, new Vector3(44, 0, .4f), awake: false);
         var behind = stage.SpawnEnemy<Enemy>(plush, new Vector3(18, 0, -2), awake: false);
         await Frames(40);
-        Check(front.IsSeen && !behind.IsSeen && !behind.Rig.Visible, "vision cone shows the enemy ahead and hides the one behind");
+        // Behind you it is not shown as it is: hidden in the dark, or only a silhouette in a lamp's glow (decisions.md C-23).
+        Check(front.IsSeen && !behind.IsSeen && behind.Visibility != VisionSystem.Visibility.Visible && !behind.Rig.IsSilhouette == !behind.Rig.Visible,
+            $"vision cone shows the enemy ahead; the one behind is not shown as it is ({behind.Visibility})");
         Check(!behind.Awake, "idle enemy outside sight stays idle");
         Check(player.CritReady && player.FocusTarget == front, "holding the aim on an enemy readies a crit");
         int kills = stage.Kills;

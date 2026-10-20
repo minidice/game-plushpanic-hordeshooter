@@ -93,6 +93,7 @@ public partial class CaptureEnemy : Enemy
         _victim = victim;
         State = Mode.Windup;
         _timer = Capture.Windup;
+        RevealTo(victim, Capture.Windup + VisionSystem.RevealAfterHit);
         _target = victim.GlobalPosition;
         Awake = true;
         DrawLine(_target + Vector3.Up * .04f, IsLeaper ? .65f : .24f, new Color("f9b34c"));

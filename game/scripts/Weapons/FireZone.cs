@@ -47,6 +47,7 @@ public partial class FireZone : Node3D
             HueVariationMax = .05f,
         });
         var light = new OmniLight3D { OmniRange = burn.RadiusM * 2.2f, LightEnergy = 1.4f, LightColor = new Color("ff7a2a"), Position = Vector3.Up * 1.6f };
+        light.AddToGroup(VisionSystem.LightGroup);
         zone.AddChild(light);
         stage.FlickerLights.Add(light);
         light.SetMeta("base_energy", 1.4f);

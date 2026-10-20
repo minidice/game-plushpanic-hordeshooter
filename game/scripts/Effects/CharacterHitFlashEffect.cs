@@ -36,7 +36,8 @@ public partial class CharacterHitFlashEffect : Node
     {
         if (node is MeshInstance3D mesh && !_meshes.Exists(entry => entry.Mesh == mesh))
         {
-            var original = mesh.MaterialOverlay;
+            // While a silhouette is draining off (CharacterRig.ShowAs) the real overlay is parked in meta.
+            var original = mesh.HasMeta(CharacterRig.BaseOverlayMeta) ? mesh.GetMeta(CharacterRig.BaseOverlayMeta).Obj as Material : mesh.MaterialOverlay;
             _meshes.Add((mesh, original, original == null ? _white : CopyOverlay(original)));
         }
         foreach (var child in node.GetChildren()) CacheMeshes(child);

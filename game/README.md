@@ -138,7 +138,7 @@ ID와 발생 시점 목록, 교체 방법은 [`doc/sound-spec.md`](../doc/sound-
 | 기획 | 구현 | 위치 |
 |---|---|---|
 | 5.1 캠페인 루프 | 세이프룸 → 구간 → 크레센도 → 세이프하우스 | `World/Stage.cs`, `World/StageOneLayout.cs` |
-| 5.3① 부채꼴 시야 | 114° 시야 + 벽 가림. 시야 밖 적은 숨김. 움직이는 적은 붉은 소나 파문 | `Player/VisionSystem.cs` |
+| 5.3① 부채꼴 시야 | 114° 시야 + 벽 가림. 적은 보임 / 실루엣 / 숨김 3단계: 원뿔·2.6m·아군 손전등이 비추면 보임, 원뿔 밖 7m·가로등 빛 안·나를 공격 중이면 실루엣, 그 밖은 숨김(움직이면 붉은 소나 파문). 맞으면 맞은 방향 빨간 호 | `Player/VisionSystem.cs`, `Characters/CharacterSilhouette.cs` |
 | 5.3② 정밀 사격 | 블룸, 0.5초 조준 고정 치명타 + 조준 보정, 거리별 대미지 감쇠, 사격 반동 넉백 | `Weapons/WeaponState.cs`, `Weapons/WeaponController.cs` |
 | 5.3③ 큐트 고어 | 솜 파편, 페인트 자국, 시체 더미(일반 100구 목표·화면 보호, 네임드 별도 5분, 정지하면 고정) | `World/Effects.cs`, `World/Corpse.cs` |
 | 5.5② 슬랩스틱 | 구르기, 반동에 밀리는 더블배럴·대물 저격총·로켓런처, 내 폭발에 내가 날아감, 섬광탄 자폭 | `Player/Player.cs`, `World/Blast.cs` |
@@ -184,7 +184,7 @@ game/
   assets/characters/    GLB 모델
   scenes/               Menu.tscn(시작), Stage1.tscn
   scripts/Core|Audio|Characters|Player|Weapons|Enemies|World|UI
-  tests/                Integration(헤드리스 검사), InputCheck(창 모드 입력), Capture(렌더 캡처), MenuCheck(메뉴·설정), SquadCheck(AI 분대·부활), SpawnCheck(몬스터 등장·반응·경보), SupplyCheck(보급 배치), SupplyCapture(보급 지점 전후 렌더), AudioLevelCheck(효과음 레시피 크기), AudioMixCheck(창 모드 실제 출력 녹음), CaptureEnemyShots(적 탄 렌더) 외 전용 검사
+  tests/                Integration(헤드리스 검사), InputCheck(창 모드 입력), Capture(렌더 캡처), MenuCheck(메뉴·설정), SquadCheck(AI 분대·부활), SpawnCheck(몬스터 등장·반응·경보), SupplyCheck(보급 배치), SupplyCapture(보급 지점 전후 렌더), AudioLevelCheck(효과음 레시피 크기), AudioMixCheck(창 모드 실제 출력 녹음), CaptureEnemyShots(적 탄 렌더), VisionTierCheck(보임·실루엣·숨김) 외 전용 검사
 ```
 
 ## 아직 없는 것

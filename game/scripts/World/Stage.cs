@@ -195,8 +195,7 @@ public partial class Stage : Node3D
         // Ledge entries start on a wall top; everything else stands on the floor.
         enemy.Position = new Vector3(at.X, Mathf.Max(at.Y, .05f), at.Z);
         _enemyRoot.AddChild(enemy);
-        enemy.IsSeen = Player == null || Vision.CanSee(enemy.GlobalPosition + Vector3.Up * .8f);
-        enemy.Rig.Visible = enemy.IsSeen;
+        if (Player != null) Vision.Apply(enemy);
         _pending.Add(enemy);
         return enemy;
     }

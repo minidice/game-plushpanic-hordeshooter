@@ -60,6 +60,8 @@ public partial class Player : CharacterBody3D
     public string DisplayLabel { get; set; } = "";
 
     public event Action? Died;
+    /// <summary>Accepted damage with a direction (from the source toward this survivor). Drives the HUD hit arc.</summary>
+    public event Action<Vector3>? HitFrom;
 
     private CollisionShape3D _shape = null!;
     private readonly RandomNumberGenerator _rng = new();
@@ -384,6 +386,7 @@ public partial class Player : CharacterBody3D
         {
             _push += direction.Normalized() * push;
             Rig.Jolt(direction.Normalized() * 3);
+            HitFrom?.Invoke(direction.Normalized());
         }
         Stage.Director.ReportDamage(damage);
         if (Health > 0 && _honkCooldown <= 0)

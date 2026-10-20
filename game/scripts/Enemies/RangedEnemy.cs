@@ -70,6 +70,8 @@ public partial class RangedEnemy : Enemy
         _timer = Shot.Windup;
         var victim = Target ?? Stage.NearestAlivePlayer(GlobalPosition) ?? Stage.Player;
         _target = victim.GlobalPosition + Vector3.Up * .8f;
+        // Shooting at you from the dark: you see who it is from the windup until a moment after the shot (C-23).
+        RevealTo(victim, Shot.Windup + 1f + VisionSystem.RevealAfterHit);
         var color = Shot.HazardSeconds > 0 ? new Color("b4df45") : new Color("ff6252");
         var flatTarget = new Vector3(_target.X, .055f, _target.Z);
         if (Shot.HazardSeconds > 0)

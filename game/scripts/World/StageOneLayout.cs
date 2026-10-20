@@ -274,6 +274,8 @@ public sealed class StageOneLayout
     {
         var light = new OmniLight3D { Position = at, LightColor = new Color(color), LightEnergy = energy, OmniRange = range, ShadowEnabled = false };
         light.SetMeta("base_energy", energy);
+        // Enemies in a lamp's glow show as silhouettes (decisions.md C-23).
+        light.AddToGroup(VisionSystem.LightGroup);
         _stage.AddChild(light);
         StageArt.Fixture(light, color);
         if (flicker) _stage.FlickerLights.Add(light);

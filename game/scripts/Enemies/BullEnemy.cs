@@ -79,6 +79,7 @@ public partial class BullEnemy : Enemy
         _timer = Charge.WindupTime;
         _chargeDir = direction.Normalized();
         _windupVictim = Target ?? Stage.NearestAlivePlayer(GlobalPosition);
+        RevealTo(_windupVictim, Charge.WindupTime + 1.5f + VisionSystem.RevealAfterHit);
         Awake = true;
         ShowTelegraph();
         Stage.Sfx.PlayAt("bull_snort", GlobalPosition + Vector3.Up);

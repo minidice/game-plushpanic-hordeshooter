@@ -14,6 +14,7 @@ public static class QuitHygiene
         // Release our strong hold on scripted content first, so it is finalized now, not during shutdown.
         ContentCache.Clear();
         CharacterEarMesh.ClearCache();
+        CharacterRig.ClearSilhouetteCache();
         GC.Collect();
         GC.WaitForPendingFinalizers();
     }

@@ -35,8 +35,18 @@ public partial class Enemy : CharacterBody3D
         get => _reaction;
         set { _reaction = value; if (value == Reaction.Hunter) Awake = true; }
     }
-    /// <summary>Inside the player's vision cone this frame (maintained by <see cref="VisionSystem"/>).</summary>
+    /// <summary>Fully visible to the local player this frame (maintained by <see cref="VisionSystem"/>).</summary>
     public bool IsSeen { get; set; } = true;
+    /// <summary>Visible, a silhouette, or hidden for the local player (decisions.md C-23).</summary>
+    public VisionSystem.Visibility Visibility { get; set; } = VisionSystem.Visibility.Visible;
+    /// <summary>Seconds this enemy stays at least a silhouette because it is attacking the local player.</summary>
+    public float RevealTime { get; private set; }
+
+    /// <summary>An attack aimed at <paramref name="victim"/>: if that is the local player, keep the attacker in view.</summary>
+    public void RevealTo(Player? victim, float seconds)
+    {
+        if (victim != null && victim == Stage.Player) RevealTime = Mathf.Max(RevealTime, seconds);
+    }
     public float PingTimer { get; set; }
     public bool IsSpecial => Monster.IsSpecial;
     /// <summary>Commons chase the lure; specials ignore it.</summary>
@@ -138,6 +148,7 @@ public partial class Enemy : CharacterBody3D
         if (IsDead) return;
         float dt = (float)delta;
         Hurt = Mathf.MoveToward(Hurt, 0, dt * 3);
+        RevealTime = Mathf.Max(0, RevealTime - dt);
         Kick = Mathf.MoveToward(Kick, 0, dt * 5);
         AttackCooldown -= dt;
         FaceOverride = null;
@@ -327,6 +338,7 @@ public partial class Enemy : CharacterBody3D
         AttackCooldown = Mathf.Max(AttackInterval, MeleeWindup + MeleeRecovery);
         _meleeTarget = player;
         _meleeTime = 0;
+        RevealTo(player, MeleeWindup + MeleeRecovery + VisionSystem.RevealAfterHit);
         _meleeHit = false;
         toPlayer.Y = 0;
         _meleeDirection = toPlayer.LengthSquared() > .0001f ? toPlayer.Normalized() : Rig.Forward;

@@ -1,4 +1,5 @@
 using Godot;
+using System.Collections.Generic;
 
 namespace HordeShooter;
 
@@ -40,6 +41,11 @@ void fragment() {
         _darkVignette = Overlay(new Color(0, 0, 0, 1), .25f, .28f);
         _hurtVignette = Overlay(new Color(.85f, .05f, .05f, 1), 0, .2f);
         _heliumVignette = Overlay(new Color(1f, .55f, .8f, 1), 0, .12f);
+
+        var hitArcs = new Paint { Name = "HitArcs", Painter = DrawHitArcs };
+        hitArcs.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+        _root.AddChild(hitArcs);
+        Stage.Player.HitFrom += dir => _hits.Add((dir, HitArcSeconds));
 
         var reticle = new Paint { Name = "Reticle", Painter = DrawReticle };
         reticle.SetAnchorsPreset(Control.LayoutPreset.FullRect);
@@ -234,6 +240,44 @@ void fragment() {
         c.DrawString(c.GetThemeDefaultFont(), new Vector2(0, 21), $"{player.Health} / {player.MaxHealth}", HorizontalAlignment.Center, size.X, 15, HudWhite);
         if (player.IsHealing)
             c.DrawRect(new Rect2(2, size.Y - 6, (size.X - 4) * player.HealProgress, 4), UiTheme.Heal);
+    }
+
+    /// <summary>How long a hit-direction arc stays on screen (decisions.md C-23).</summary>
+    public const float HitArcSeconds = 1.2f;
+    private readonly List<(Vector3 Direction, float Left)> _hits = new();
+    /// <summary>Screen angle (radians, 0 = right, clockwise) of each arc still showing; read by checks.</summary>
+    public IReadOnlyList<float> HitArcAngles { get; private set; } = new List<float>();
+
+    /// <summary>A red arc around your character on the side the hit came from, fading out.</summary>
+    private void DrawHitArcs(Control c)
+    {
+        var stage = Stage;
+        var player = stage.Player;
+        float dt = (float)GetProcessDeltaTime();
+        for (int i = _hits.Count - 1; i >= 0; i--)
+        {
+            var (direction, left) = _hits[i];
+            left -= Paused ? 0 : dt;
+            if (left <= 0) _hits.RemoveAt(i);
+            else _hits[i] = (direction, left);
+        }
+        var angles = new List<float>();
+        if (player.IsDead || stage.State != StageState.Playing || _hits.Count == 0) { HitArcAngles = angles; return; }
+        var cam = stage.Cam;
+        var body = player.GlobalPosition + Vector3.Up;
+        var center = cam.UnprojectPosition(body);
+        foreach (var (direction, left) in _hits)
+        {
+            // The direction points from the source to us; the arc sits on the source's side.
+            var toward = cam.UnprojectPosition(body - direction * 2f) - center;
+            if (toward.LengthSquared() < 1) continue;
+            float angle = toward.Angle();
+            angles.Add(angle);
+            float alpha = Mathf.Clamp(left / HitArcSeconds, 0, 1);
+            c.DrawArc(center, 78, angle - .5f, angle + .5f, 24, new Color(0, 0, 0, .45f * alpha), 9, true);
+            c.DrawArc(center, 78, angle - .45f, angle + .45f, 24, new Color(1f, .22f, .18f, .9f * alpha), 5, true);
+        }
+        HitArcAngles = angles;
     }
 
     private void DrawReticle(Control c)
