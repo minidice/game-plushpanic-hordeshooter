@@ -5,7 +5,9 @@ param(
     [switch]$Capture,
     # Two-player test (doc/multiplayer-sync-design.md): one window hosts, another joins.
     [switch]$NetHost,
-    [string]$NetJoin
+    [string]$NetJoin,
+    # One PC, two windows: builds once, opens a host window, then a window that joins it.
+    [switch]$NetPair
 )
 $ErrorActionPreference = 'Stop'
 $console = Join-Path $GodotDir 'Godot_v4.7.2-stable_mono_win64_console.exe'
@@ -15,7 +17,7 @@ if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) { throw '.NET SDK 8
 
 Push-Location $PSScriptRoot
 try {
-    & dotnet build --nologo -v q
+    & dotnet build HordeShooter.csproj --nologo -v q
     if ($LASTEXITCODE -ne 0) { throw 'C# build failed.' }
     # Imports new or changed assets (GLB models) before running.
     & $console --headless --editor --import --path $PSScriptRoot --quit *> (Join-Path $PSScriptRoot 'output/import.log')
@@ -28,6 +30,10 @@ try {
     } elseif ($Capture) {
         & $console --path $PSScriptRoot res://tests/Capture.tscn
         if ($LASTEXITCODE -ne 0) { throw 'Capture failed.' }
+    } elseif ($NetPair) {
+        Start-Process -FilePath $windowed -ArgumentList '--path', ('"' + $PSScriptRoot + '"'), '--', '--host' -WorkingDirectory $PSScriptRoot
+        Start-Sleep -Seconds 4
+        Start-Process -FilePath $windowed -ArgumentList '--path', ('"' + $PSScriptRoot + '"'), '--', '--join=127.0.0.1' -WorkingDirectory $PSScriptRoot
     } elseif ($NetHost) {
         Start-Process -FilePath $windowed -ArgumentList '--path', ('"' + $PSScriptRoot + '"'), '--', '--host' -WorkingDirectory $PSScriptRoot
     } elseif ($NetJoin) {

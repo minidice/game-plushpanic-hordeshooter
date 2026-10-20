@@ -75,6 +75,15 @@ public partial class AudioMixCheck : Node
         Check(walk < swing - 4 && walk > shot - 22, $"walking footsteps are clearly heard, under a pan swing ({walk:0.0} vs swing {swing:0.0}, rifle {shot:0.0})");
         Check(swing < shot - 2 && swing > shot - 10, $"a pan swing is a little under a rifle shot ({swing:0.0} vs {shot:0.0})");
 
+        // Getting hit: the honk is a warning, not a blast (I-74).
+        player.SetControls(Vector2.Zero, player.GlobalPosition, false);
+        await Frames(40);
+        player.Invulnerable = false;
+        float hit = await Peak(40, () => { if (player.Health == player.MaxHealth) player.TakeDamage(1, Vector3.Left, 0); });
+        player.Invulnerable = true;
+        GD.Print($"mix peak dB: hit honk {hit:0.0}");
+        Check(hit < shot - 4 && hit > shot - 14, $"the hit honk sits clearly under a rifle shot ({hit:0.0} vs {shot:0.0})");
+
         // The car siren right next to you: noticeable, never blaring (I-62).
         player.SetControls(Vector2.Zero, player.GlobalPosition, false);
         await Frames(60);

@@ -65,7 +65,8 @@ public static class SoundRecipes
         // vanished on small speakers even when loud, so it carries a short mid-range scuff.
         new("step", "플레이어 발소리 (발바닥 툭 + 스침)", PlayerStep, -12, .12f, 3, NearCap: true),
         new("roll", "구르기", Roll, -4, .08f, 2),
-        new("honk", "피격 비명 (꽥)", s => Honk(s, .28f, 330, 260), -2, .1f, 2, Priority: 2),
+        // Played at the listener's own head: it rode the +3 dB ceiling as loud as a rifle shot. Half as loud now (I-74).
+        new("honk", "피격 비명 (꽥)", s => Honk(s, .28f, 330, 260), -3, .1f, 2, Priority: 2, NearCap: true),
         new("honk_long", "쓰러질 때 비명", s => Honk(s, .9f, 360, 180), 0, .03f, 1, Priority: 2),
         new("heal", "치료 완료", s => Chime(s, new[] { 660f, 880f, 1320f }, .6f, .08f), -6, 0, 1),
         new("pickup", "줍기", s => Chime(s, new[] { 660f, 990f }, .16f, .05f), -8, .03f, 2),

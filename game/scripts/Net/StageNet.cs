@@ -28,6 +28,8 @@ public partial class StageNet : Node
     public long BytesReceived { get; private set; }
     public int SnapshotsReceived { get; private set; }
     public bool Started { get; private set; }
+    /// <summary>Host: the line that tells a friend where to join (also shown on the pause screen).</summary>
+    public string HostInfo { get; private set; } = "";
     /// <summary>Client: events or survivor records it could not apply (each one is skipped, the rest still apply).</summary>
     public int ApplyErrors { get; private set; }
 
@@ -58,6 +60,11 @@ public partial class StageNet : Node
             Multiplayer.PeerDisconnected += OnPeerLeft;
             Peers[HostPeer] = _stage.Player;
             _stage.Player.PeerId = HostPeer;
+            // Tell the host what to give a friend: this PC (127.0.0.1) or its address on the router.
+            var lan = NetLaunch.LanAddresses();
+            HostInfo = Loc.Format("fmt_net_hosting", lan.Length > 0 ? string.Join(" / ", lan) : "127.0.0.1", NetLaunch.Port);
+            _stage.ShowNotice(HostInfo, 12);
+            GD.Print("[net] " + HostInfo);
             // The start fill ran before this node existed: number those enemies now, in spawn order.
             foreach (var e in _stage.AllEnemies)
                 if (e.NetId == 0) { e.NetId = ++_nextEnemyId; _enemies[e.NetId] = e; }

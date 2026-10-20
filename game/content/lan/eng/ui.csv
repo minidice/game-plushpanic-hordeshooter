@@ -50,6 +50,7 @@ msg_stage_start,Safe room — open the door to set out
 msg_stage_find_shutter,Find the shutter panel at the end of the warehouse
 msg_stage_alarm,Alarm! Hold out until the shutter opens
 msg_net_host_left,Lost the connection to the host
+fmt_net_hosting,Room open — join with 127.0.0.1 on this PC · {0} from another PC on the same router (UDP {1})
 msg_net_peer_refused,Different game version: cannot join
 msg_car_alarm,Car alarm! They are coming
 msg_stage_shutter_open,The shutter is open! Run to the safehouse

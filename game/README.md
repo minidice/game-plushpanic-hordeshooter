@@ -13,10 +13,14 @@ Godot **4.7.2 .NET (C#) + Jolt**. 기획 기준은 [`doc/idea.md`](../doc/idea.m
 ./Start-Game.ps1 -Test        # 헤드리스 통합 검사 147개 → output/integration-report.json, 효과음 44종 → output/sounds/*.wav
 ./Start-Game.ps1 -InputCheck  # 창 모드 입력 경로 검사 14개 (이동·조준·E·1/2·사격·R·G 조준/우클릭 취소/클릭 투척·Space·Esc)
 ./Start-Game.ps1 -Capture     # 장면 10개 렌더 → output/*.png
+./Start-Game.ps1 -NetPair     # 멀티 2인 테스트: 한 PC에서 방장 창 + 참가 창 (Start-Multi-Test.cmd와 같음)
 ./Start-Game.ps1 -NetHost     # 멀티 2인 테스트: 방장 창 (UDP 24680)
 ./Start-Game.ps1 -NetJoin 127.0.0.1  # 멀티 2인 테스트: 파티원 창 (같은 PC면 127.0.0.1)
 ./Start-Game.ps1 -GodotDir 'C:/다른/경로'     # Godot 위치가 다를 때
+./Export-Game.ps1             # 다른 PC용 실행 파일 → ../build/windows/, ../build/HordeShooter-windows.zip (Export-Game.cmd와 같음)
 ```
+
+다른 PC에서 실행: `build/HordeShooter-windows.zip`을 풀고 `HordeShooter.exe` 실행(Godot·.NET 설치 불필요). 처음 내보낼 때 Godot 4.7.2 .NET 내보내기 템플릿이 필요합니다(에디터 → 내보내기 템플릿 관리, `%APPDATA%\Godot\export_templates\4.7.2.stable.mono`).
 
 필요 환경: Godot 4.7.2 .NET(기본 경로 `D:\Util\Godot\Godot_v4.7.2-stable_mono_win64`), .NET SDK 8 이상. 에디터에서 열려면 Godot .NET 에디터로 `game/project.godot`를 가져옵니다.
 

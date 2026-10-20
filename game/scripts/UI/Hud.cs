@@ -77,7 +77,9 @@ void fragment() {
         var pauseTitle = UiTheme.Label(Loc.Text("ui_pause_title"), 40, UiTheme.Accent);
         pauseTitle.HorizontalAlignment = HorizontalAlignment.Center;
         pauseBox.AddChild(pauseTitle);
-        var pauseBody = UiTheme.Label(Loc.Text("ui_pause_keys") + "\n\n" + ControlsText, 18);
+        // A host can read the join address again here (multiplayer-sync-design.md 10장).
+        var hostInfo = Stage.Net is { HostInfo: { Length: > 0 } info } ? info + "\n\n" : "";
+        var pauseBody = UiTheme.Label(hostInfo + Loc.Text("ui_pause_keys") + "\n\n" + ControlsText, 18);
         pauseBody.HorizontalAlignment = HorizontalAlignment.Center;
         pauseBox.AddChild(pauseBody);
     }

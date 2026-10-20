@@ -50,6 +50,7 @@ msg_stage_start,세이프룸 — 문을 열고 출발하세요
 msg_stage_find_shutter,창고 끝의 셔터 제어판을 찾으세요
 msg_stage_alarm,경보 작동! 셔터가 열릴 때까지 버티세요
 msg_net_host_left,방장과의 연결이 끊겼습니다
+fmt_net_hosting,방 만듦 — 같은 PC는 127.0.0.1 · 같은 공유기의 다른 PC는 {0} 로 참가 (UDP {1})
 msg_net_peer_refused,게임 버전이 달라 참가할 수 없습니다
 msg_car_alarm,차 경보기가 울린다! 몰려온다
 msg_stage_shutter_open,셔터가 열렸습니다! 세이프하우스로 달리세요

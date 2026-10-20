@@ -117,6 +117,7 @@ D-10·D-11은 초기 페어 구상의 이력이다. 현재 제작·검증 범위
 | T-17 | 기능 추가·동작 변경·버그 수정 시 decisions.md와 issues.md를 함께 갱신하고 코드와 같은 커밋에 포함 | 결정 이유·버그 원인·검증·재발 방지 이력이 대화에만 남는 것을 방지. 변경할 결정/이슈가 없으면 관련 항목에 검토 근거를 짧게 기록 | 2026-10-20 | `[확정]` | 사용자 요청, `../AGENTS.md` |
 | T-18 | GitHub 저장소는 `minidice/game-plushpanic-hordeshooter`, 작업 소스·문서·실행 에셋을 Git으로 보관 | 사용자 지정 저장소에 현재 프로토타입 중간 상태를 보존. 캐시·의존성 설치본·생성 출력·개인 상태는 제외 | 2026-10-20 | `[확정]` | 사용자 지정 URL, `../README.md`, `../.gitignore` |
 | T-19 | 설정(언어·볼륨 3종·사격 반동)과 마지막 메뉴 선택(캐릭터·AI 분대원 수·조우 테마)은 `user://settings.cfg`에 저장. **메뉴가 실제 시작 장면일 때만 읽고 쓰며**, 테스트 장면은 기본값으로 돌고 파일을 건드리지 않음. 잘못된 값은 기본값으로 | 플레이어 설정을 테스트가 덮어쓰지 않게. 반동은 기존 옵션 배율(`GameSettings.RecoilScale`, C-7)을 그대로 씀 | 2026-10-20 | `[확정]` | `../game/scripts/Core/GameSettings.cs`, `../game/tests/MenuCheck.cs` |
+| T-20 | **다른 PC용 Windows 실행 파일**: `game/Export-Game.cmd`가 `build/windows/`(HordeShooter.exe + .pck + .NET 폴더 `data_HordeShooter_windows_x86_64`, 약 186MB)와 `build/HordeShooter-windows.zip`(약 80MB)을 만든다. 릴리스 템플릿, 한 파일로 합치지 않고 폴더째 복사. `build/`는 커밋하지 않음 | 멀티 테스트용으로 다른 PC에 Godot·.NET SDK 없이 복사만 해서 실행(사용자 요청 2026-10-21). C# 게임은 .NET 폴더가 따로 필요해 단일 exe가 안 됨 | 2026-10-21 | `[현재 구현]` | `game/export_presets.cfg`, `game/Export-Game.ps1`, `game/PLAY-README.txt`, I-75 |
 
 ## 5. 레벨 · 아트 (L, A)
 

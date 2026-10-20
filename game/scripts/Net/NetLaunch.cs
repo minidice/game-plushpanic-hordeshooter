@@ -1,4 +1,5 @@
 using Godot;
+using System.Linq;
 
 namespace HordeShooter;
 
@@ -40,6 +41,15 @@ public static class NetLaunch
         api.MultiplayerPeer = null;
         Pending = NetRole.Offline;
     }
+
+    /// <summary>
+    /// This PC's addresses a friend on the same router can join: private IPv4 only (192.168.x.x, 10.x.x.x, 172.16–31.x.x).
+    /// Over the internet the public address and an open port are needed (room codes, step ③).
+    /// </summary>
+    public static string[] LanAddresses() => IP.GetLocalAddresses()
+        .Where(a => a.Count(c => c == '.') == 3 && (a.StartsWith("192.168.") || a.StartsWith("10.") ||
+                    (a.StartsWith("172.") && int.TryParse(a.Split('.')[1], out int b) && b is >= 16 and <= 31)))
+        .Distinct().ToArray();
 
     /// <summary>False when the port is taken (another game already hosts on this PC).</summary>
     public static bool Host(SceneTree tree)

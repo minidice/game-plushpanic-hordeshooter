@@ -23,3 +23,6 @@
 *.blend2
 Thumbs.db
 .DS_Store
+
+# Exported game for other PCs (game/Export-Game.cmd)
+build/
