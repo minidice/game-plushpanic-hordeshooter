@@ -121,6 +121,7 @@ void fragment() {
         bool playing = stage.State == StageState.Playing;
 
         _objective.Text = stage.ObjectiveText;
+        UpdateSquadPanel(stage);
         int t = (int)stage.Elapsed;
         _timer.Text = Loc.Format("fmt_hud_timer", t / 60, t % 60, stage.Kills);
         _notice.Text = stage.NoticeTime > 0 ? stage.Notice : "";
@@ -148,12 +149,16 @@ void fragment() {
             throwable?.IconPath ?? "", "throwable", player.Weapons.AimingThrow, throwable != null);
         _blind.Color = new Color(1, 1, 1, Mathf.Clamp(player.BlindTime / 1.2f, 0, 1) * .95f);
 
-        _status.Text = player.IsRestrained ? Loc.Text("restrained_status")
+        _status.Text = player.IsDowned ? Loc.Format("fmt_hud_downed", Mathf.CeilToInt(Mathf.Max(0, player.BleedLeft)))
+            : player.IsRestrained ? Loc.Text("restrained_status")
             : player.Weapons.AimingThrow && player.Loadout.CurrentThrowable is { } aiming
             ? Loc.Format("fmt_hud_throw_aim", aiming.DisplayName, player.Loadout.Count(aiming))
             : player.HeliumTime > 0 ? Loc.Format("fmt_hud_helium", Mathf.CeilToInt(player.HeliumTime))
-            : player.IsStunned ? Loc.Text("ui_hud_stunned") : "";
+            : player.IsStunned ? Loc.Text("ui_hud_stunned")
+            : player.OnLastDown && stage.ReviveEnabled ? Loc.Text("hud_last_down") : "";
         _prompt.Text = player.IsRestrained ? Loc.Text(GameSession.DebugEscapeEnabled ? "restrained_cheat" : "restrained_rescue")
+            : playing && stage.RevivePromptTarget is { } downed
+            ? Loc.Format("fmt_use_revive", downed.DisplayLabel.Length > 0 ? downed.DisplayLabel : Loc.Text(downed.Definition.DisplayName), Mathf.RoundToInt(downed.ReviveProgress * 100))
             : playing && stage.FocusedInteractable is { } use ? $"[E]  {use.Prompt}" : "";
         _help.Visible = stage.Objective == Objective.LeaveSafeRoom || stage.Elapsed < 20;
 
@@ -235,7 +240,7 @@ void fragment() {
     {
         var stage = Stage;
         var player = stage.Player;
-        if (player.IsDead || stage.State != StageState.Playing || Paused) return;
+        if (player.IsDead || player.IsDowned || stage.State != StageState.Playing || Paused) return;
         var cam = stage.Cam;
         if (player.Weapons.AimingThrow && player.Weapons.Preview is { } preview)
         {

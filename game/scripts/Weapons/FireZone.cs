@@ -7,7 +7,8 @@ namespace HordeShooter;
 public partial class FireZone : Node3D
 {
     private Stage _stage = null!;
-    private float _radius, _dps, _playerDps, _life, _playerDebt;
+    private float _radius, _dps, _playerDps, _life;
+    private readonly System.Collections.Generic.Dictionary<Player, float> _playerDebts = new();
     private readonly Dictionary<Enemy, float> _ticks = new();
 
     public float Radius => _radius;
@@ -16,6 +17,8 @@ public partial class FireZone : Node3D
     {
         var zone = new FireZone { Name = "Fire", _stage = stage, _radius = burn.RadiusM, _dps = burn.EnemyDps, _playerDps = burn.PlayerDps, _life = burn.Duration, Position = at };
         stage.Effects.AddChild(zone);
+        zone.AddToGroup(SquadGroups.Hazard);
+        zone.SetMeta("radius", burn.RadiusM);
         // Edge ring + flames only (no filled disc): the burning zombies inside must stay readable.
         Mat.Mesh(zone, new TorusMesh { InnerRadius = burn.RadiusM * .94f, OuterRadius = burn.RadiusM, Rings = 32, RingSegments = 4 },
             Vector3.Up * .04f, Mat.Glow(new Color("ff7a2a"), 1.5f));
@@ -79,15 +82,17 @@ public partial class FireZone : Node3D
             _ticks[enemy] = t;
         }
 
-        var player = _stage.Player;
-        var p = player.GlobalPosition - GlobalPosition;
-        p.Y = 0;
-        if (player.IsDead || p.LengthSquared() > r2) return;
-        _playerDebt += _playerDps * dt;
-        if (_playerDebt < 1) return;
-        int whole = (int)_playerDebt;
-        _playerDebt -= whole;
-        player.TakeDamage(whole, Vector3.Zero, 0);
+        foreach (var player in System.Linq.Enumerable.ToList(_stage.AlivePlayers))
+        {
+            var p = player.GlobalPosition - GlobalPosition;
+            p.Y = 0;
+            if (p.LengthSquared() > r2) continue;
+            // Whole points only, so each survivor carries their own fraction between frames.
+            float debt = _playerDebts.GetValueOrDefault(player) + _playerDps * dt;
+            int whole = (int)debt;
+            _playerDebts[player] = debt - whole;
+            if (whole > 0) player.TakeDamage(whole, Vector3.Zero, 0);
+        }
     }
 
     public override void _ExitTree() => _stage.FlickerLights.RemoveAll(l => !IsInstanceValid(l) || l.GetParent() == this);

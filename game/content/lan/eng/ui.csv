@@ -129,3 +129,20 @@ settings_recoil,Shooting recoil push
 settings_recoil_hint,How far you slide back when firing. 0% means no push. Enemy knockback is not affected.
 settings_saved_hint,Changes apply right away and are saved.
 settings_not_saved_hint,Test run: settings are not saved.
+# 동료 목록 (HUD)
+hud_squad_dead,Dead
+hud_squad_held,Grabbed
+# AI 분대원 역할 (content/data/squad.csv)
+name_squad_assault,Assault
+name_squad_cover,Cover
+name_squad_support,Support
+# 쓰러짐 · 부활 (doc/ai-squad-plan.md 6장)
+settings_revive,Revive (pick up downed teammates)
+settings_revive_hint,"When on, reaching 0 health knocks you down instead of killing you. A teammate can pick you up in 4 seconds, twice per life. Fallen AI squadmates rejoin from behind after a while."
+fmt_hud_downed,Down — waiting for a teammate  {0}s
+hud_last_down,Danger: one more fall is death (a medkit resets it)
+fmt_use_revive,[Hold E]  Pick up {0}  {1}%
+fmt_hud_squad_down,Down {0}
+msg_revived,Back up!
+msg_you_are_down,You are down! Hold on until a teammate picks you up
+fmt_squad_returned,{0} rejoined

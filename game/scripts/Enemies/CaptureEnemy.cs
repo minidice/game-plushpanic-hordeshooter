@@ -12,15 +12,17 @@ public partial class CaptureEnemy : Enemy
     private float _timer, _cooldown = 1.5f, _damageTimer;
     private Vector3 _target, _direction;
     private MeshInstance3D? _marker;
+    /// <summary>The survivor being aimed at or held. Fixed from windup until the capture ends.</summary>
+    private Player? _victim;
 
     protected override Vector3 Think(float dt)
     {
         _cooldown -= dt;
-        var player = Stage.Player;
+        var player = State == Mode.Chase ? CurrentTarget(dt) : _victim;
+        if (player == null || !IsInstanceValid(player) || player.IsDead) { CancelCapture(); return State == Mode.Chase ? base.Think(dt) : Vector3.Zero; }
         var to = player.GlobalPosition - GlobalPosition;
         to.Y = 0;
         float distance = to.Length();
-        if (player.IsDead) { CancelCapture(); return Vector3.Zero; }
         if (State == Mode.Holding)
         {
             if (player.RestrainingEnemy != this) { CancelCapture(); return Vector3.Zero; }
@@ -75,40 +77,48 @@ public partial class CaptureEnemy : Enemy
             if (_timer <= 0) { CancelCapture(); return Vector3.Zero; }
             return _direction * Capture.Speed;
         }
-        if (Awake && !player.IsRestrained && _cooldown <= 0 && distance < Capture.Range && distance > 1.5f && ClearToPlayer())
+        if (Awake && !player.IsRestrained && !player.IsDowned && _cooldown <= 0 && distance < Capture.Range && distance > 1.5f && ClearTo(player))
         {
-            StartWindup();
+            StartWindup(player);
             return Vector3.Zero;
         }
         return base.Think(dt);
     }
 
-    public void StartWindup()
+    public void StartWindup(Player? victim = null)
     {
         if (IsDead || StunTime > 0) return;
+        victim ??= Target ?? Stage.NearestAlivePlayer(GlobalPosition);
+        if (victim == null) return;
+        _victim = victim;
         State = Mode.Windup;
         _timer = Capture.Windup;
-        _target = Stage.Player.GlobalPosition;
+        _target = victim.GlobalPosition;
         Awake = true;
         DrawLine(_target + Vector3.Up * .04f, IsLeaper ? .65f : .24f, new Color("f9b34c"));
         Stage.Sfx.PlayAt("bull_snort", GlobalPosition + Vector3.Up, -5, IsLeaper ? 1.5f : .7f);
     }
 
-    private bool ClearToPlayer() => Rays.Clear(this, GlobalPosition + Vector3.Up * .7f,
-        Stage.Player.GlobalPosition + Vector3.Up * .7f, Layers.World | Layers.Props);
+    private bool ClearToPlayer() => _victim != null && ClearTo(_victim);
+    private bool ClearTo(Player player) => Rays.Clear(this, GlobalPosition + Vector3.Up * .7f,
+        player.GlobalPosition + Vector3.Up * .7f, Layers.World | Layers.Props);
+
+    /// <summary>The survivor currently held (null when not holding anyone).</summary>
+    public Player? Held => State == Mode.Holding ? _victim : null;
 
     private void Grab()
     {
-        if (!Stage.Player.TryRestrain(this)) { CancelCapture(); return; }
+        if (_victim == null || !_victim.TryRestrain(this)) { CancelCapture(); return; }
         State = Mode.Holding;
         _damageTimer = AttackInterval;
         Velocity = Vector3.Zero;
-        if (!IsLeaper) Stage.Player.RestraintPullTarget = GlobalPosition;
+        if (!IsLeaper) _victim.RestraintPullTarget = GlobalPosition;
     }
 
     private void CancelCapture()
     {
-        Stage.Player.ReleaseRestraint(this);
+        ReleaseAll();
+        _victim = null;
         State = Mode.Chase;
         _cooldown = Capture.Cooldown;
         ClearMarker();
@@ -120,6 +130,13 @@ public partial class CaptureEnemy : Enemy
         for (int i = 0; i < GetSlideCollisionCount(); i++)
             if (GetSlideCollision(i).GetCollider() is StaticBody3D && GetSlideCollision(i).GetNormal().Y < .5f)
             { CancelCapture(); break; }
+    }
+
+    /// <summary>Lets go of anyone this captor holds (ReleaseRestraint ignores survivors held by someone else).</summary>
+    private void ReleaseAll()
+    {
+        foreach (var survivor in Stage.Players)
+            if (IsInstanceValid(survivor)) survivor.ReleaseRestraint(this);
     }
 
     private void DrawLine(Vector3 target, float width, Color color)
@@ -138,7 +155,7 @@ public partial class CaptureEnemy : Enemy
     public override void Die(Vector3 direction, float force) { CancelCapture(); base.Die(direction, force); }
     public override void _ExitTree()
     {
-        if (IsInstanceValid(Stage.Player)) Stage.Player.ReleaseRestraint(this);
+        ReleaseAll();
         ClearMarker();
     }
 }

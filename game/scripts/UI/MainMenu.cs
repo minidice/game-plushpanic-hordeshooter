@@ -277,6 +277,10 @@ public partial class MainMenu : Control
         page.AddChild(Section("settings_gameplay"));
         PercentSlider(page, "Settings_Recoil", "settings_recoil", GameSettings.RecoilScale, v => GameSettings.RecoilScale = v);
         page.AddChild(Hint(Loc.Text("settings_recoil_hint")));
+        var revive = new CheckButton { Name = "Settings_Revive", Text = Loc.Text("settings_revive"), ButtonPressed = GameSettings.ReviveEnabled };
+        revive.Toggled += on => { GameSettings.ReviveEnabled = on; GameSettings.Save(); };
+        page.AddChild(revive);
+        page.AddChild(Hint(Loc.Text("settings_revive_hint")));
 
         page.AddChild(new Control { SizeFlagsVertical = SizeFlags.ExpandFill });
         page.AddChild(Hint(Loc.Text(GameSettings.Loaded ? "settings_saved_hint" : "settings_not_saved_hint")));

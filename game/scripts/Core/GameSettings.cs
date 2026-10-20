@@ -21,6 +21,8 @@ public static class GameSettings
     public static float MasterVolume { get; set; } = 1f;
     public static float SfxVolume { get; set; } = 1f;
     public static float AmbienceVolume { get; set; } = 1f;
+    /// <summary>Game option "revive" for single player (multiplayer: a room option). Default on (decisions.md M-18).</summary>
+    public static bool ReviveEnabled { get; set; } = true;
 
     /// <summary>Korean first (the fallback language), then the rest in folder order.</summary>
     public static IReadOnlyList<string> Languages =>
@@ -40,6 +42,7 @@ public static class GameSettings
             MasterVolume = Unit(cfg.GetValue("options", "volume_master", 1f));
             SfxVolume = Unit(cfg.GetValue("options", "volume_sfx", 1f));
             AmbienceVolume = Unit(cfg.GetValue("options", "volume_ambience", 1f));
+            ReviveEnabled = (bool)cfg.GetValue("options", "revive", true);
             GameSession.SelectedCharacterId = (string)cfg.GetValue("menu", "character", GameSession.DefaultCharacterId);
             GameSession.SquadSize = GameSession.ValidSquad((int)cfg.GetValue("menu", "squad_size", GameSession.DefaultSquadSize));
             GameSession.SelectedTheme = (string)cfg.GetValue("menu", "theme", GameSession.SelectedTheme);
@@ -58,6 +61,7 @@ public static class GameSettings
         cfg.SetValue("options", "volume_master", MasterVolume);
         cfg.SetValue("options", "volume_sfx", SfxVolume);
         cfg.SetValue("options", "volume_ambience", AmbienceVolume);
+        cfg.SetValue("options", "revive", ReviveEnabled);
         cfg.SetValue("menu", "character", GameSession.SelectedCharacterId);
         cfg.SetValue("menu", "squad_size", GameSession.SquadSize);
         cfg.SetValue("menu", "theme", GameSession.SelectedTheme);
@@ -71,6 +75,7 @@ public static class GameSettings
         Loaded = false;
         Path = DefaultPath;
         RecoilScale = MasterVolume = SfxVolume = AmbienceVolume = 1f;
+        ReviveEnabled = true;
         Loc.Language = Loc.Fallback;
         ApplyAudio();
     }

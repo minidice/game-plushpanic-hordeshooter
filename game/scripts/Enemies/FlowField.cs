@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace HordeShooter;
 
@@ -20,7 +21,7 @@ public sealed class FlowField
 
     private readonly bool[] _blocked;
     private readonly int[] _cost;
-    private int _targetIndex = -1;
+    private int[] _targets = System.Array.Empty<int>();
     private bool _dirty = true;
 
     private static readonly (int dx, int dz, int cost)[] Neighbors =
@@ -83,22 +84,45 @@ public sealed class FlowField
     /// <summary>Rebuild costs toward <paramref name="target"/> if the target cell or the walls changed.</summary>
     public bool Update(Vector3 target)
     {
-        int index = Index(target);
-        if (index < 0) return false;
-        if (_blocked[index]) index = NearestOpen(index, target);
-        if (index < 0 || (!_dirty && index == _targetIndex)) return false;
-        _targetIndex = index;
+        _single[0] = target;
+        return Update(_single);
+    }
+    private readonly Vector3[] _single = new Vector3[1];
+    private readonly List<int> _cells = new();
+
+    /// <summary>
+    /// Costs toward the nearest of several targets (every living survivor), so each zombie walks to
+    /// whoever is closest by path. Rebuilds only when a target cell or the walls changed.
+    /// </summary>
+    public bool Update(IReadOnlyList<Vector3> targets)
+    {
+        var cells = _cells;
+        cells.Clear();
+        foreach (var target in targets)
+        {
+            int index = Index(target);
+            if (index < 0) continue;
+            if (_blocked[index]) index = NearestOpen(index, target);
+            if (index >= 0 && !cells.Contains(index)) cells.Add(index);
+        }
+        if (cells.Count == 0) return false;
+        cells.Sort();
+        if (!_dirty && cells.Count == _targets.Length && cells.SequenceEqual(_targets)) return false;
+        _targets = cells.ToArray();
         _dirty = false;
-        Build(index);
+        Build(_targets);
         return true;
     }
 
-    private void Build(int start)
+    private void Build(int[] starts)
     {
         Array.Fill(_cost, Unreachable);
         var open = new PriorityQueue<int, int>();
-        _cost[start] = 0;
-        open.Enqueue(start, 0);
+        foreach (int start in starts)
+        {
+            _cost[start] = 0;
+            open.Enqueue(start, 0);
+        }
         while (open.TryDequeue(out int current, out int cost))
         {
             if (cost > _cost[current]) continue;

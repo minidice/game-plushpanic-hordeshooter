@@ -37,7 +37,14 @@ public partial class Stage : Node3D
     /// <summary>Tests turn this off so the director only spawns on request.</summary>
     public bool DirectorEnabled { get; set; } = true;
 
+    /// <summary>The local, human survivor (camera, HUD, input, objectives).</summary>
     public Player Player { get; private set; } = null!;
+    /// <summary>Every survivor in the stage: the local player first, then AI squadmates.</summary>
+    public List<Player> Players { get; } = new();
+    public IEnumerable<Player> AlivePlayers
+    {
+        get { foreach (var p in Players) if (IsInstanceValid(p) && !p.IsDead) yield return p; }
+    }
     public CameraRig Cam { get; private set; } = null!;
     public Effects Effects { get; private set; } = null!;
     public Sfx Sfx { get; private set; } = null!;
@@ -45,6 +52,25 @@ public partial class Stage : Node3D
     public VisionSystem Vision { get; private set; } = null!;
     public FlowField Flow { get; private set; } = null!;
     public CrowdGrid Crowd { get; } = new();
+    /// <summary>Route toward the safehouse: how far along the stage a point is (AI never walks ahead of the leader).</summary>
+    public FlowField ExitFlow { get; private set; } = null!;
+    /// <summary>Route toward the local player, for squadmates finding their way back.</summary>
+    public FlowField LeaderFlow { get; private set; } = null!;
+    /// <summary>Breadcrumbs of where the local player has walked (1 m apart, newest last).</summary>
+    public List<Vector3> Trail { get; } = new();
+    /// <summary>AI squadmate count. Null = the menu choice when this is the running game scene, none in test scenes.</summary>
+    public int? SquadOverride { get; set; }
+    public List<SquadBrain> Squad { get; } = new();
+    /// <summary>Bumped whenever walls or doors change, so copies of the flow layout know to refresh.</summary>
+    public int FlowVersion { get; private set; }
+    /// <summary>Game option "revive". Null = the saved setting when this is the running game scene, off in test scenes.</summary>
+    public bool? ReviveOverride { get; set; }
+    public bool ReviveEnabled { get; private set; }
+    /// <summary>The downed teammate the local player can pick up right now (for the prompt).</summary>
+    public Player? RevivePromptTarget { get; private set; }
+    private readonly List<(SquadRole Role, int Slot, string Species, float At)> _respawnQueue = new();
+    private readonly Dictionary<int, int> _respawnsUsed = new();
+    private bool _safehouseReached;
     public Hud Hud { get; private set; } = null!;
     public StageOneLayout Layout => _layout!;
 
@@ -71,6 +97,7 @@ public partial class Stage : Node3D
     private AudioStreamPlayer? _alarm;
     private float _groanTimer = 2f;
     private readonly List<Enemy> _pending = new();
+    private readonly List<Vector3> _flowTargets = new();
     private readonly RandomNumberGenerator _rng = new();
     private float _flickerTime;
 
@@ -89,6 +116,7 @@ public partial class Stage : Node3D
         AddChild(Effects);
         BuildEnvironment();
 
+        ReviveEnabled = ReviveOverride ?? (GetTree().CurrentScene == this && GameSettings.ReviveEnabled);
         _layout = StageOneLayout.Build(this);
 
         var def = CharacterCatalog.Player(CharacterOverride ?? GameSession.SelectedCharacterId);
@@ -96,7 +124,8 @@ public partial class Stage : Node3D
         Player.Setup(this, def);
         Player.Position = Layout.PlayerStart;
         AddChild(Player);
-        Player.Died += OnPlayerDied;
+        Players.Add(Player);
+        Player.Died += CheckWipe;
         ThemeId = StageTheme.Normalize(ThemeOverride ?? GameSession.SelectedTheme);
         CommonDefinition = MonsterDatabase.Get(StageTheme.Commons(ThemeId)[0]);
 
@@ -109,6 +138,10 @@ public partial class Stage : Node3D
         AddChild(_enemyRoot);
         Flow.Update(Player.GlobalPosition);
         Layout.Populate(this);
+        RefreshRouteFlows();
+        Trail.Add(Player.GlobalPosition);
+        // The menu's squad size applies to the real game scene; tests ask for squadmates explicitly.
+        SpawnSquad(SquadOverride ?? (GetTree().CurrentScene == this ? GameSession.SquadSize : 0));
 
         Hud = new Hud { Name = "Hud" };
         AddChild(Hud);
@@ -212,6 +245,168 @@ public partial class Stage : Node3D
         return look;
     }
 
+    private void RefreshRouteFlows()
+    {
+        // The route counts doors as open: progress and "forward" must exist before the shutter opens.
+        ExitFlow = Flow.CopyLayout();
+        Layout.ApplyFlow(ExitFlow, doors: false);
+        ExitFlow.Update(Layout.SafehouseCenter);
+        LeaderFlow = Flow.CopyLayout();
+        LeaderFlow.Update(Player.GlobalPosition);
+    }
+
+    /// <summary>Metres left to the safehouse along the route (smaller = further ahead). Off the route: by the +X axis.</summary>
+    public float Progress(Vector3 at)
+    {
+        int cost = ExitFlow.Distance(at);
+        return cost == FlowField.Unreachable ? Layout.SafehouseCenter.X - at.X : cost / 10f;
+    }
+
+    /// <summary>Direction the route continues from <paramref name="at"/> (the level runs along +X, level-design-rules.md).</summary>
+    public Vector3 RouteForward(Vector3 at)
+    {
+        var dir = ExitFlow.Direction(at);
+        return dir == Vector3.Zero ? Vector3.Right : dir;
+    }
+
+    /// <summary>
+    /// The nearest breadcrumb the local player already walked that is at least <paramref name="min"/> metres
+    /// behind them along the trail, off every screen and not inside a wall (searched up to <paramref name="max"/>).
+    /// Null if none fits yet.
+    /// </summary>
+    public Vector3? TrailSpotBehind(float min, float max)
+    {
+        float walked = 0;
+        for (int i = Trail.Count - 1; i > 0; i--)
+        {
+            walked += Trail[i].DistanceTo(Trail[i - 1]);
+            if (walked < min) continue;
+            if (walked > max) break;
+            var spot = Trail[i - 1];
+            if (Flow.IsBlocked(spot) || Effects.IsOnScreen(spot + Vector3.Up, 1.2f)) continue;
+            // Backtracking can put old breadcrumbs ahead on the route: never appear there.
+            if (!Player.IsDead && Progress(spot) < Progress(Player.GlobalPosition) - .5f) continue;
+            return spot;
+        }
+        return null;
+    }
+
+    private void SpawnSquad(int count)
+    {
+        var roles = SquadDatabase.Current.Roles;
+        if (count <= 0 || roles.Count == 0) return;
+        var rng = new RandomNumberGenerator();
+        rng.Randomize();
+        var species = new List<string> { "goose", "duck", "raccoon", "redpanda" };
+        species.Remove(Player.Definition.Id);
+        var offsets = new[] { new Vector3(-1.4f, 0, -1.3f), new Vector3(-1.4f, 0, 1.3f), new Vector3(-2.6f, 0, 0) };
+        for (int i = 0; i < count; i++)
+        {
+            // Three squadmates take one role each; a single one gets a random role.
+            var role = count >= roles.Count ? roles[i % roles.Count] : roles[rng.RandiRange(0, roles.Count - 1)];
+            var def = CharacterCatalog.Player(species[i % species.Count]);
+            var at = Layout.PlayerStart + offsets[i % offsets.Length];
+            if (Flow.IsBlocked(at)) at = Layout.PlayerStart;
+            var bot = AddSurvivor(def, at, true, $"Squad{i + 1}", new AppearanceProfile());
+            Squad.Add(SquadBrain.Attach(this, bot, role, i));
+            WatchSquadmate(bot, role, i);
+        }
+    }
+
+    private void WatchSquadmate(Player bot, SquadRole role, int slot)
+    {
+        bot.Died += () =>
+        {
+            CheckWipe();
+            // With revive on, a fallen squadmate walks back in from the walked route after a while (M-17, M-18).
+            var rules = SquadDatabase.Current.Rules;
+            if (!ReviveEnabled || State != StageState.Playing || _respawnsUsed.GetValueOrDefault(slot) >= rules.RespawnsPerStage) return;
+            _respawnsUsed[slot] = _respawnsUsed.GetValueOrDefault(slot) + 1;
+            _respawnQueue.Add((role, slot, bot.Definition.Id, Elapsed + rules.RespawnDelay));
+        };
+    }
+
+    public int RespawnsUsed(int slot) => _respawnsUsed.GetValueOrDefault(slot);
+
+    /// <summary>Checks only: makes queued squadmate respawns due now instead of after respawn_delay_s.</summary>
+    public void ExpediteRespawnsForTest()
+    {
+        for (int i = 0; i < _respawnQueue.Count; i++) _respawnQueue[i] = _respawnQueue[i] with { At = Elapsed };
+    }
+    public int PendingRespawns => _respawnQueue.Count;
+
+    private void UpdateRespawns()
+    {
+        if (_respawnQueue.Count == 0) return;
+        var rules = SquadDatabase.Current.Rules;
+        for (int i = _respawnQueue.Count - 1; i >= 0; i--)
+        {
+            var (role, slot, species, at) = _respawnQueue[i];
+            if (Elapsed < at || Player.IsDead) continue;
+            // Off screen, on a spot the leader already walked; wait if there is none yet.
+            if (TrailSpotBehind(rules.CatchupBehindMin, rules.CatchupBehindMax) is not { } spot) continue;
+            _respawnQueue.RemoveAt(i);
+            var old = Squad.Find(b => b.Slot == slot);
+            if (old != null)
+            {
+                Squad.Remove(old);
+                Players.Remove(old.Bot);
+                // The corpse is its own node; the dead survivor (and its brain) can go.
+                if (IsInstanceValid(old.Bot)) old.Bot.QueueFree();
+            }
+            var bot = AddSurvivor(CharacterCatalog.Player(species), spot, true, $"Squad{slot + 1}_{RespawnsUsed(slot)}", new AppearanceProfile());
+            bot.SetSpawnHealth(rules.RespawnHealth);
+            Squad.Add(SquadBrain.Attach(this, bot, role, slot));
+            WatchSquadmate(bot, role, slot);
+            ShowNotice(Loc.Format("fmt_squad_returned", Loc.Text(bot.Definition.DisplayName)), 3);
+        }
+    }
+
+    public static bool IsMedkit(Interactable item) => item.Name.ToString().StartsWith("Medkit");
+
+    /// <summary>A squadmate takes an ammo pile or a medkit (they never take weapons, decisions.md M-13).</summary>
+    public bool TakePickup(Interactable item, Player who)
+    {
+        if (!item.Enabled || !item.Visible) return false;
+        if (IsMedkit(item))
+        {
+            if (who.Medkits > 0) return false;
+            who.Medkits = 1;
+            item.Enabled = false;
+            item.Visible = false;
+            Sfx.PlayAt("pickup", who.GlobalPosition + Vector3.Up);
+            return true;
+        }
+        if (item.PromptKey == "ui_use_ammo") { RefillAmmo(who); return true; }
+        return false;
+    }
+
+    /// <summary>Adds another survivor (an AI squadmate) at <paramref name="at"/>.</summary>
+    public Player AddSurvivor(CharacterDefinition def, Vector3 at, bool bot, string name, AppearanceProfile? appearance = null)
+    {
+        // Appearance must be set before AddChild: _Ready applies it.
+        var survivor = new Player { IsBot = bot, ManualControl = bot, Appearance = appearance };
+        survivor.Setup(this, def);
+        survivor.Name = name;
+        survivor.Position = at;
+        AddChild(survivor);
+        Players.Add(survivor);
+        return survivor;
+    }
+
+    /// <summary>The living survivor closest to <paramref name="from"/> in a straight line, or null when all are down.</summary>
+    public Player? NearestAlivePlayer(Vector3 from)
+    {
+        Player? best = null;
+        float bestD = float.MaxValue;
+        foreach (var p in AlivePlayers)
+        {
+            float d = p.GlobalPosition.DistanceSquaredTo(from);
+            if (d < bestD) { bestD = d; best = p; }
+        }
+        return best;
+    }
+
     public int PendingEnemies => _pending.Count;
     public IEnumerable<Enemy> AllEnemies => System.Linq.Enumerable.Concat(Enemies, _pending);
 
@@ -219,6 +414,8 @@ public partial class Stage : Node3D
     public void RebuildFlow()
     {
         _layout?.ApplyFlow();
+        FlowVersion++;
+        if (ExitFlow != null) RefreshRouteFlows();
         if (Lure != null && LureFlow != null)
         {
             LureFlow = Flow.CopyLayout();
@@ -241,7 +438,18 @@ public partial class Stage : Node3D
         _pending.Clear();
         Enemies.RemoveAll(e => e.IsDead || !IsInstanceValid(e) || e.IsQueuedForDeletion());
         Crowd.Rebuild(Enemies);
-        if (!Player.IsDead) Flow.Update(Player.GlobalPosition);
+        _flowTargets.Clear();
+        foreach (var p in AlivePlayers) _flowTargets.Add(p.GlobalPosition);
+        if (_flowTargets.Count > 0) Flow.Update(_flowTargets);
+        if (!Player.IsDead)
+        {
+            LeaderFlow.Update(Player.GlobalPosition);
+            if (Trail.Count == 0 || Trail[^1].DistanceTo(Player.GlobalPosition) >= 1f)
+            {
+                Trail.Add(Player.GlobalPosition);
+                if (Trail.Count > 600) Trail.RemoveAt(0);
+            }
+        }
         NoticeTime = Mathf.Max(0, NoticeTime - dt);
 
         UpdateCrowdAudio(dt);
@@ -252,6 +460,7 @@ public partial class Stage : Node3D
         Elapsed += dt;
         UpdateObjective();
         UpdateInteraction();
+        UpdateRespawns();
     }
 
     /// <summary>Somebody out there is always moaning. Picks a random awake zombie near the player.</summary>
@@ -303,6 +512,9 @@ public partial class Stage : Node3D
             case Objective.ReachSafehouse:
                 if (Layout.InSafehouse(Player.GlobalPosition))
                 {
+                    if (!_safehouseReached)
+                        foreach (var survivor in AlivePlayers) if (!survivor.IsDowned) survivor.ResetDowns();
+                    _safehouseReached = true;
                     Objective = Objective.CloseSafehouse;
                     Layout.SafehouseSwitch.Enabled = true;
                     ShowNotice(Loc.Text("msg_stage_close_to_clear"));
@@ -321,7 +533,9 @@ public partial class Stage : Node3D
     private void UpdateInteraction()
     {
         FocusedInteractable = null;
-        if (Player.IsDead || Player.IsStunned || Player.IsRestrained) return;
+        RevivePromptTarget = null;
+        if (Player.IsDead || Player.IsDowned || Player.IsStunned || Player.IsRestrained) return;
+        RevivePromptTarget = Player.Reviving ?? Player.DownedTeammateInReach();
         float best = float.MaxValue;
         foreach (var item in Interactables)
         {
@@ -333,7 +547,8 @@ public partial class Stage : Node3D
                 FocusedInteractable = item;
             }
         }
-        if (FocusedInteractable != null && !Player.ManualControl && Input.IsActionJustPressed(GameInput.Interact))
+        // E next to a downed teammate means "pick them up", never also "use the thing on the floor".
+        if (FocusedInteractable != null && RevivePromptTarget == null && !Player.ManualControl && Input.IsActionJustPressed(GameInput.Interact))
             FocusedInteractable.Use();
     }
 
@@ -385,9 +600,37 @@ public partial class Stage : Node3D
         return true;
     }
 
+    /// <summary>
+    /// Game over when every human is dead, or when every survivor (squad included) is down or dead —
+    /// a downed player can still be picked up by a squadmate (doc/ai-squad-plan.md 6.3).
+    /// </summary>
+    private void CheckWipe()
+    {
+        if (State != StageState.Playing) return;
+        bool humanAlive = false, anyoneStanding = false;
+        foreach (var p in Players)
+        {
+            if (!IsInstanceValid(p)) continue;
+            if (!p.IsBot && !p.IsDead) humanAlive = true;
+            if (!p.IsDead && !p.IsDowned) anyoneStanding = true;
+        }
+        if (!humanAlive || !anyoneStanding) OnPlayerDied();
+    }
+
+    public void OnSurvivorDowned(Player who)
+    {
+        if (who == Player) ShowNotice(Loc.Text("msg_you_are_down"), 3);
+        CheckWipe();
+    }
+
     private void OnPlayerDied()
     {
-        Player.ReleaseRestraint();
+        foreach (var p in Players)
+        {
+            if (!IsInstanceValid(p)) continue;
+            p.ReleaseRestraint();
+            p.EndDowned();
+        }
         State = StageState.Dead;
         Director.Stop();
         _alarm?.QueueFree();
@@ -470,22 +713,25 @@ public partial class Stage : Node3D
     }
 
     /// <summary>Ammo piles refill slot 2 only, and never the rocket launcher or mortar.</summary>
-    public void RefillAmmo()
+    public void RefillAmmo() => RefillAmmo(Player);
+
+    public void RefillAmmo(Player who)
     {
-        var at = Player.GlobalPosition + Vector3.Up * 2.6f;
-        var primary = Player.Loadout.Primary;
+        bool local = who == Player;
+        var at = who.GlobalPosition + Vector3.Up * 2.6f;
+        var primary = who.Loadout.Primary;
         if (primary == null)
         {
-            ShowNotice(Loc.Text("msg_refill_no_primary"), 2);
+            if (local) ShowNotice(Loc.Text("msg_refill_no_primary"), 2);
             return;
         }
         if (!primary.Def.Refillable)
         {
-            ShowNotice(Loc.Format("fmt_refill_not_refillable", primary.Def.DisplayName), 2.5f);
+            if (local) ShowNotice(Loc.Format("fmt_refill_not_refillable", primary.Def.DisplayName), 2.5f);
             return;
         }
         int got = primary.Refill();
-        if (got > 0) Sfx.Play("reload_end");
+        if (got > 0) Sfx.PlayAt("reload_end", who.GlobalPosition + Vector3.Up);
         Effects.FloatingText(at, got > 0 ? Loc.Format("fmt_refill_got", got) : Loc.Text("msg_refill_full"), new Color("ffd36b"));
     }
 

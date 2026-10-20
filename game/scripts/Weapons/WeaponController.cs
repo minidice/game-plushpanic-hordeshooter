@@ -169,7 +169,7 @@ public partial class WeaponController : Node
         var state = Current;
         bool wasReloading = state.Reloading && _reloadWatch == state;
         state.Tick(dt, moving);
-        if (wasReloading && !state.Reloading) Stage.Sfx.Play("reload_end");
+        if (wasReloading && !state.Reloading) _player.PlayOwn("reload_end");
         _reloadWatch = state;
         if (blocked)
         {
@@ -178,8 +178,8 @@ public partial class WeaponController : Node
         }
         if (!state.IsMelee && state.Mag == 0 && !state.Reloading && (pressed || held))
         {
-            if (state.StartReload()) Stage.Sfx.Play("reload_start");
-            else if (pressed) Stage.Sfx.Play("dry_fire");
+            if (state.StartReload()) _player.PlayOwn("reload_start");
+            else if (pressed) _player.PlayOwn("dry_fire");
             if (!state.Reloading && pressed && state.IsEmpty && Loadout.ActiveSlot == 2)
             {
                 // Out of everything: fall back to slot 1 like L4D does.
@@ -229,7 +229,7 @@ public partial class WeaponController : Node
                 float cone = pellets > 1 ? def.PelletSpread : state.Spread;
                 for (int i = 0; i < pellets; i++)
                 {
-                    var end = Hitscan(def, origin, Spread(dir, cone), def.Damage / pellets, def.HitPower / pellets, out bool crit);
+                    var end = Hitscan(def, origin, Spread(dir, cone), def.Damage * _player.DamageMultiplier / pellets, def.HitPower / pellets, out bool crit);
                     anyCrit |= crit;
                     var from = MuzzlePosition;
                     if (origin.DistanceTo(end) < origin.DistanceTo(from)) from = origin;
@@ -243,7 +243,8 @@ public partial class WeaponController : Node
         _flashTime = .045f;
         _muzzleIndex++;
         // Every gun pushes its shooter back; power comes from the data, scale from the player's option.
-        if (def.RecoilPower > 0) _player.Shove(-dir * Knockback.Recoil(def.RecoilPower));
+        // Squadmates take a third of the push, so a shotgun does not leave them behind the leader.
+        if (def.RecoilPower > 0) _player.Shove(-dir * Knockback.Recoil(def.RecoilPower) * (_player.IsBot ? .3f : 1f));
         float shake = def.Category switch
         {
             WeaponCategory.Heavy => .3f,
@@ -251,7 +252,7 @@ public partial class WeaponController : Node
             WeaponCategory.Shotgun => .15f,
             _ => .06f,
         };
-        Stage.Cam.AddShake(shake);
+        if (!_player.IsBot) Stage.Cam.AddShake(shake);
         Stage.Director.MakeNoise(_player.GlobalPosition, def.Category == WeaponCategory.Heavy ? 26f : 16f);
     }
 
@@ -357,7 +358,7 @@ public partial class WeaponController : Node
         {
             var push = to.LengthSquared() > .001f ? to.Normalized() : dir;
             bool crit = enemy == _player.FocusTarget && _player.CritReady;
-            enemy.TakeHit(new HitInfo(def.Damage * (crit ? Player.CritMultiplier : 1f), push, enemy.GlobalPosition + Vector3.Up, crit, def.HitPower));
+            enemy.TakeHit(new HitInfo(def.Damage * _player.DamageMultiplier * (crit ? Player.CritMultiplier : 1f), push, enemy.GlobalPosition + Vector3.Up, crit, def.HitPower));
         }
         foreach (var prop in Stage.Props)
         {
@@ -371,7 +372,7 @@ public partial class WeaponController : Node
         {
             Stage.Effects.FloatingText(targets[0].e.GlobalPosition + Vector3.Up * 2.2f, "BONG!", new Color("ffe07a"));
             Stage.Sfx.PlayAt("pan_bong", targets[0].e.GlobalPosition + Vector3.Up);
-            Stage.Cam.AddShake(.12f);
+            if (!_player.IsBot) Stage.Cam.AddShake(.12f);
         }
         Stage.Director.MakeNoise(origin, 6f);
     }

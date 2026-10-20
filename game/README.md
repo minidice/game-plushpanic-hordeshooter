@@ -179,7 +179,7 @@ game/
   assets/characters/    GLB 모델
   scenes/               Menu.tscn(시작), Stage1.tscn
   scripts/Core|Audio|Characters|Player|Weapons|Enemies|World|UI
-  tests/                Integration(헤드리스 검사), InputCheck(창 모드 입력), Capture(렌더 캡처), MenuCheck(메뉴·설정) 외 전용 검사
+  tests/                Integration(헤드리스 검사), InputCheck(창 모드 입력), Capture(렌더 캡처), MenuCheck(메뉴·설정), SquadCheck(AI 분대·부활) 외 전용 검사
 ```
 
 ## 아직 없는 것

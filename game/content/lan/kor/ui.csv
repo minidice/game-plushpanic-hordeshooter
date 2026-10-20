@@ -129,3 +129,20 @@ settings_recoil,사격 반동 밀림
 settings_recoil_hint,총을 쏠 때 내가 뒤로 밀리는 정도입니다. 0%면 밀리지 않습니다. 적이 밀리는 정도는 바뀌지 않습니다.
 settings_saved_hint,바꾸면 바로 적용되고 저장됩니다.
 settings_not_saved_hint,테스트 실행이라 설정을 저장하지 않습니다.
+# 동료 목록 (HUD)
+hud_squad_dead,사망
+hud_squad_held,붙잡힘
+# AI 분대원 역할 (content/data/squad.csv)
+name_squad_assault,돌격
+name_squad_cover,엄호
+name_squad_support,지원
+# 쓰러짐 · 부활 (doc/ai-squad-plan.md 6장)
+settings_revive,부활 (쓰러진 동료 일으키기)
+settings_revive_hint,"켜면 체력이 0이 되어도 바로 죽지 않고 쓰러집니다. 동료가 옆에서 4초 동안 일으킬 수 있고, 한 생명에 2번까지입니다. AI 분대원은 죽어도 잠시 뒤 지나온 길에서 다시 합류합니다."
+fmt_hud_downed,쓰러짐 — 동료를 기다리는 중  {0}초
+hud_last_down,위험: 한 번 더 쓰러지면 사망 (구급상자로 회복)
+fmt_use_revive,[E 길게]  {0} 일으키기  {1}%
+fmt_hud_squad_down,쓰러짐 {0}
+msg_revived,일어났다!
+msg_you_are_down,쓰러졌습니다! 동료가 일으켜 줄 때까지 버티세요
+fmt_squad_returned,{0} 다시 합류

@@ -22,14 +22,20 @@ public partial class BullEnemy : Enemy
 
     private float _timer, _cooldown = 2.5f;
     private Vector3 _chargeDir = Vector3.Forward;
+    public Vector3 ChargeDirection => _chargeDir;
+    private Player? _windupVictim;
     private MeshInstance3D? _telegraph;
+    // Each survivor is bowled over at most once per charge.
+    private readonly System.Collections.Generic.HashSet<Player> _bowled = new();
     private StandardMaterial3D? _telegraphMat;
 
     protected override Vector3 Think(float dt)
     {
         _cooldown -= dt;
-        var player = Stage.Player;
-        var toPlayer = player.GlobalPosition - GlobalPosition;
+        // The telegraph points at one survivor; it does not swing to whoever is nearest mid-windup.
+        var player = State == Mode.Windup && _windupVictim is { IsDead: false } locked && IsInstanceValid(locked) ? locked : CurrentTarget(dt);
+        if (player == null && State == Mode.Chase) return base.Think(dt);
+        var toPlayer = player != null ? player.GlobalPosition - GlobalPosition : _chargeDir;
         toPlayer.Y = 0;
         float dist = toPlayer.Length();
 
@@ -56,7 +62,7 @@ public partial class BullEnemy : Enemy
                 return Vector3.Zero;
         }
 
-        if (Awake && !player.IsDead && _cooldown <= 0 && dist < Charge.TriggerRange && dist > Charge.MinRange && HasLineOfSight(dt))
+        if (Awake && player != null && _cooldown <= 0 && dist < Charge.TriggerRange && dist > Charge.MinRange && HasLineOfSight(dt))
         {
             StartWindup(toPlayer / dist);
             return Vector3.Zero;
@@ -72,6 +78,7 @@ public partial class BullEnemy : Enemy
         State = Mode.Windup;
         _timer = Charge.WindupTime;
         _chargeDir = direction.Normalized();
+        _windupVictim = Target ?? Stage.NearestAlivePlayer(GlobalPosition);
         Awake = true;
         ShowTelegraph();
         Stage.Sfx.PlayAt("bull_snort", GlobalPosition + Vector3.Up);
@@ -82,6 +89,7 @@ public partial class BullEnemy : Enemy
         State = Mode.Charge;
         _timer = Charge.ChargeTime;
         HitPlayerThisCharge = false;
+        _bowled.Clear();
         // Pass through the player body; the hit is resolved by distance so the bull keeps its momentum.
         CollisionMask = Layers.World | Layers.Props;
         HideTelegraph();
@@ -126,13 +134,14 @@ public partial class BullEnemy : Enemy
 
     private void RamThingsInPath()
     {
-        var player = Stage.Player;
-        if (!HitPlayerThisCharge && !player.IsDead)
+        foreach (var player in Stage.AlivePlayers)
         {
+            if (_bowled.Contains(player)) continue;
             var rel = player.GlobalPosition - GlobalPosition;
             rel.Y = 0;
             if (rel.Length() < Radius + player.Definition.ColliderRadius + .35f)
             {
+                _bowled.Add(player);
                 HitPlayerThisCharge = true;
                 player.TakeDamage(Charge.PlayerDamage, _chargeDir, 0);
                 player.Launch(_chargeDir * 10f + Vector3.Up * 7f, 1.5f);

@@ -26,10 +26,11 @@ public partial class RangedEnemy : Enemy
     protected override Vector3 Think(float dt)
     {
         _cooldown -= dt;
-        var to = Stage.Player.GlobalPosition - GlobalPosition;
+        var player = CurrentTarget(dt);
+        if (player == null) { AbortShot(); return base.Think(dt); }
+        var to = player.GlobalPosition - GlobalPosition;
         to.Y = 0;
         float distance = to.Length();
-        if (Stage.Player.IsDead) { AbortShot(); return Vector3.Zero; }
         if (WindingUp)
         {
             FaceOverride = _target - GlobalPosition;
@@ -53,7 +54,7 @@ public partial class RangedEnemy : Enemy
             return Vector3.Zero;
         }
         if (Awake && distance < Shot.Range && _cooldown <= 0 &&
-            Rays.Clear(this, GlobalPosition + Vector3.Up * .8f, Stage.Player.GlobalPosition + Vector3.Up * .8f, Layers.World | Layers.Props))
+            Rays.Clear(this, GlobalPosition + Vector3.Up * .8f, player.GlobalPosition + Vector3.Up * .8f, Layers.World | Layers.Props))
         { StartWindup(); return Vector3.Zero; }
         if (Awake && distance > 3 && distance < Shot.Range && _cooldown > 0 && HasLineOfSight(dt))
         { FaceOverride = to; return Vector3.Zero; }
@@ -67,7 +68,8 @@ public partial class RangedEnemy : Enemy
         WindingUp = true;
         Awake = true;
         _timer = Shot.Windup;
-        _target = Stage.Player.GlobalPosition + Vector3.Up * .8f;
+        var victim = Target ?? Stage.NearestAlivePlayer(GlobalPosition) ?? Stage.Player;
+        _target = victim.GlobalPosition + Vector3.Up * .8f;
         var color = Shot.HazardSeconds > 0 ? new Color("b4df45") : new Color("ff6252");
         var flatTarget = new Vector3(_target.X, .055f, _target.Z);
         if (Shot.HazardSeconds > 0)

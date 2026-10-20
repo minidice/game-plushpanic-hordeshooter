@@ -1,0 +1,21 @@
+{
+  "description": "AI squadmate and revive rules (doc/ai-squad-plan.md, decisions.md M-12..M-18). Distances in metres, times in seconds. Catch-up uses the nearest off-screen spot of the walked trail at least catchup_behind_min_m behind the leader, searching up to catchup_behind_max_m.",
+  "catchup_distance_m": 18,
+  "catchup_after_s": 8,
+  "catchup_behind_min_m": 8,
+  "catchup_behind_max_m": 42,
+  "heal_below": 0.4,
+  "heal_safe_radius_m": 6,
+  "pickup_radius_m": 8,
+  "ammo_low": 0.3,
+  "engage_range_m": 24,
+  "downs_per_life": 2,
+  "bleed_out_s": 30,
+  "bleed_hit_s": 3,
+  "revive_s": 4,
+  "revive_range_m": 1.5,
+  "revive_health": 30,
+  "respawn_delay_s": 60,
+  "respawns_per_stage": 2,
+  "respawn_health": 50
+}

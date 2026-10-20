@@ -19,7 +19,7 @@ public partial class EnemyProjectile : Node3D
 
     public override void _PhysicsProcess(double delta)
     {
-        if (_stage.Player.IsDead) { QueueFree(); return; }
+        if (_stage.NearestAlivePlayer(GlobalPosition) == null) { QueueFree(); return; }
         float travel = Mathf.Min(_remaining, _shot.ProjectileSpeed * (float)delta);
         var next = GlobalPosition + _direction * travel;
         var hit = Rays.Cast(this, GlobalPosition, next, Layers.World | Layers.Props | Layers.Player);

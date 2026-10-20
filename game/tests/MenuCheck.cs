@@ -120,6 +120,11 @@ public partial class MenuCheck : Node
         Ui<HSlider>("Settings_MasterVolume").Value = 0;
         Check(AudioServer.IsBusMute(AudioServer.GetBusIndex("Master")), "master volume 0% mutes");
         Ui<HSlider>("Settings_MasterVolume").Value = 100;
+        var revive = Ui<CheckButton>("Settings_Revive");
+        Check(revive.ButtonPressed && GameSettings.ReviveEnabled, "revive option is on by default");
+        revive.ButtonPressed = false;
+        Check(!GameSettings.ReviveEnabled, "revive option can be turned off");
+        revive.ButtonPressed = true;
         string koreanTitle = Loc.Text("menu_settings_title");
         var languageChoice = Ui<OptionButton>("Settings_Language");
         int english = GameSettings.Languages.ToList().IndexOf("eng");

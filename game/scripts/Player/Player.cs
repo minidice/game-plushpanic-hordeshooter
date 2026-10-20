@@ -30,7 +30,8 @@ public partial class Player : CharacterBody3D
     public int ShotsFired => Weapons.ShotsFired;
     public int Health { get; private set; }
     public int MaxHealth => Definition.MaxHealth;
-    public bool IsDead => Health <= 0;
+    /// <summary>Dead for good. A downed survivor has 0 health but is not dead (see PlayerDowned).</summary>
+    public bool IsDead => Health <= 0 && !IsDowned;
     public int Medkits { get; set; }
     public bool IsHealing { get; private set; }
     public float HealProgress => IsHealing ? _healTime / HealDuration : 0;
@@ -44,11 +45,19 @@ public partial class Player : CharacterBody3D
     public Vector3 AimDirection { get; private set; } = Vector3.Right;
     public Enemy? FocusTarget { get; private set; }
     public float FocusTime { get; private set; }
-    public bool CritReady => FocusTarget != null && FocusTime >= CritFocusTime;
+    public bool CritReady => !IsBot && FocusTarget != null && FocusTime >= CritFocusTime;
     public RigidBody3D? Corpse { get; private set; }
     public float DamageFlash { get; private set; }
     public bool ManualControl { get; set; }
     public bool Invulnerable { get; set; }
+    /// <summary>An AI squadmate: driven through the same controls, no audio listener, no crits.</summary>
+    public bool IsBot { get; set; }
+    /// <summary>Scales this survivor's weapon damage (AI squadmates hit softer, decisions.md M-12).</summary>
+    public float DamageMultiplier { get; set; } = 1f;
+    /// <summary>Look to wear instead of the saved one for this species (AI squadmates use the default look).</summary>
+    public AppearanceProfile? Appearance { get; set; }
+    /// <summary>Name shown in the teammate list (empty = species name).</summary>
+    public string DisplayLabel { get; set; } = "";
 
     public event Action? Died;
 
@@ -85,7 +94,7 @@ public partial class Player : CharacterBody3D
         AddChild(_shape);
 
         Rig = CharacterRig.Create(Definition);
-        Rig.ApplyAppearance(AppearanceStore.ReadProfile(Definition.Id));
+        Rig.ApplyAppearance(Appearance ?? AppearanceStore.ReadProfile(Definition.Id));
         AddChild(Rig);
 
         // Flashlight sits just in front of the body so the body never shadows its own beam.
@@ -97,9 +106,10 @@ public partial class Player : CharacterBody3D
             SpotAngle = 52,
             SpotRange = 26,
             SpotAttenuation = .7f,
-            LightEnergy = 5.5f,
             LightColor = new Color("fff0cf"),
-            ShadowEnabled = true,
+            // Squadmates' beams stay unshadowed: four shadowed spotlights cost more than they add.
+            ShadowEnabled = !IsBot,
+            LightEnergy = IsBot ? 3f : 5.5f,
         });
         Rig.AddChild(new OmniLight3D
         {
@@ -111,9 +121,12 @@ public partial class Player : CharacterBody3D
         });
 
         // Ears on the goose, not on the camera 34 m up: zombies behind you sound behind you.
-        var ears = new AudioListener3D { Name = "Ears", Position = Vector3.Up * 1.5f };
-        AddChild(ears);
-        ears.MakeCurrent();
+        if (!IsBot)
+        {
+            var ears = new AudioListener3D { Name = "Ears", Position = Vector3.Up * 1.5f };
+            AddChild(ears);
+            ears.MakeCurrent();
+        }
 
         Weapons = new WeaponController();
         Weapons.Setup(this);
@@ -165,6 +178,7 @@ public partial class Player : CharacterBody3D
         if (Input.IsActionJustPressed(GameInput.NextThrowable)) _cycle = 1;
         if (Input.IsActionJustPressed(GameInput.PrevThrowable)) _cycle = -1;
         _rollPressed |= Input.IsActionJustPressed(GameInput.Dodge);
+        _reviveHeld = Input.IsActionPressed(GameInput.Interact);
         if (Input.IsActionJustPressed(GameInput.DebugEscape)) DebugEscapeRestraint();
         if (Input.IsActionJustPressed(GameInput.Slot1)) _slotPressed = 1;
         if (Input.IsActionJustPressed(GameInput.Slot2)) _slotPressed = 2;
@@ -188,6 +202,7 @@ public partial class Player : CharacterBody3D
         _honkCooldown -= dt;
         UpdateRestraint(dt);
         if (IsDead) return;
+        if (IsDowned) { UpdateDowned(dt); return; }
 
         if (!ManualControl) ReadInput();
         HeliumTime = Mathf.Max(0, HeliumTime - dt);
@@ -198,7 +213,8 @@ public partial class Player : CharacterBody3D
         UpdateHealing(dt, stunned);
 
         if (_rollPressed) TryStartRoll(stunned);
-        bool busy = stunned || IsRolling || IsHealing || IsRestrained;
+        UpdateReviving(dt, _move.LengthSquared() > .01f);
+        bool busy = stunned || IsRolling || IsHealing || IsRestrained || Reviving != null;
 
         if (_slotPressed != 0 && !stunned && !IsRestrained) Weapons.SelectSlot(_slotPressed);
         if (_throwPressed && !busy)
@@ -208,9 +224,9 @@ public partial class Player : CharacterBody3D
         }
         if (_cancelPressed) Weapons.EndThrowAim();
         if (_cycle != 0 && !IsRestrained) Weapons.CycleThrowable(_cycle);
-        if (_reloadPressed && !busy && !Weapons.AimingThrow && Gun.StartReload()) Stage.Sfx.Play("reload_start");
+        if (_reloadPressed && !busy && !Weapons.AimingThrow && Gun.StartReload()) PlayOwn("reload_start");
 
-        var move = stunned || IsRestrained ? Vector3.Zero : new Vector3(_move.X, 0, _move.Y).LimitLength(1);
+        var move = stunned || IsRestrained || Reviving != null ? Vector3.Zero : new Vector3(_move.X, 0, _move.Y).LimitLength(1);
         float speed = Definition.MoveSpeed * (IsHealing ? .35f : 1f) * (Gun.Reloading ? .85f : 1f);
         bool grounded = IsOnFloor() && Velocity.Y <= 0;
         _push = _push.MoveToward(Vector3.Zero, dt * (grounded ? 10f : 1.2f));
@@ -282,7 +298,8 @@ public partial class Player : CharacterBody3D
         Health = Math.Min(MaxHealth, Health + gain);
         Medkits--;
         IsHealing = false;
-        Stage.Sfx.Play("heal");
+        ResetDowns();
+        PlayOwn("heal");
         Stage.Effects.FloatingText(GlobalPosition + Vector3.Up * 2.6f, $"+{gain}", new Color("7dff9a"));
     }
 
@@ -352,6 +369,8 @@ public partial class Player : CharacterBody3D
     public void TakeDamage(float amount, Vector3 direction, float push = 2.5f)
     {
         if (IsDead || Invulnerable || IsRolling || amount <= 0) return;
+        if (IsDowned) { BleedFromHit(); return; }
+        StopReviving();
         int damage = Mathf.CeilToInt(amount);
         Health = Math.Max(0, Health - damage);
         Rig.FlashHit();
@@ -369,19 +388,38 @@ public partial class Player : CharacterBody3D
             _honkCooldown = .4f;
             Stage.Sfx.PlayAt("honk", GlobalPosition + Vector3.Up * 1.5f);
         }
-        if (Health <= 0) Die(direction);
+        if (Health <= 0)
+        {
+            if (CanGoDown()) GoDown();
+            else Die(direction);
+        }
     }
 
     /// <summary>Slapstick launch (charger hits, explosions). Stuns and tumbles the character.</summary>
     public void Launch(Vector3 impulse, float stun)
     {
-        if (IsDead || IsRolling) return;
+        if (IsDead || IsDowned || IsRolling) return;
         _push = new Vector3(impulse.X, 0, impulse.Z);
         Velocity = new Vector3(Velocity.X, impulse.Y, Velocity.Z);
         StunTime = Mathf.Max(StunTime, stun);
         IsHealing = false;
         var flat = new Vector3(impulse.X, 0, impulse.Z);
         _tumbleDirection = flat.LengthSquared() > .01f ? flat.Normalized() : -AimDirection;
+    }
+
+    /// <summary>The local player hears their own sounds in the ear; a squadmate's come from where they stand.</summary>
+    public void PlayOwn(string id)
+    {
+        if (IsBot) Stage.Sfx.PlayAt(id, GlobalPosition + Vector3.Up);
+        else Stage.Sfx.Play(id);
+    }
+
+    /// <summary>Moves the survivor instantly (AI catch-up); clears momentum so it does not slide on arrival.</summary>
+    public void TeleportTo(Vector3 at)
+    {
+        GlobalPosition = at;
+        Velocity = Vector3.Zero;
+        _push = Vector3.Zero;
     }
 
     /// <summary>Recoil push from heavy weapons (no stun).</summary>
@@ -427,6 +465,9 @@ public partial class Player : CharacterBody3D
 
     private void Die(Vector3 direction)
     {
+        IsDowned = false;
+        Health = 0;
+        StopReviving();
         ReleaseRestraint();
         IsHealing = false;
         StunTime = 0;
@@ -461,7 +502,7 @@ public partial class Player : CharacterBody3D
         body.ApplyTorqueImpulse(new Vector3(_rng.RandfRange(-3, 3), _rng.RandfRange(-1, 1), _rng.RandfRange(-3, 3)));
         Corpse = body;
         Stage.Sfx.PlayAt("honk_long", GlobalPosition + Vector3.Up * 1.5f);
-        Stage.Cam.AddShake(.5f);
+        if (!IsBot) Stage.Cam.AddShake(.5f);
         Died?.Invoke();
     }
 }

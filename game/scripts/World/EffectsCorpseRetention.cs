@@ -82,6 +82,14 @@ public partial class Effects
         }
         return false;
     }
+    /// <summary>On any registered observer's screen (no distance rule). With no observers yet, assume visible.</summary>
+    public bool IsOnScreen(Vector3 at,float radius)
+    {
+        if(_corpseObservers.Count==0)return true;
+        foreach(var observer in _corpseObservers)
+            if(IsInstanceValid(observer.Camera)&&observer.Camera!.IsInsideTree()&&OverlapsCorpseView(observer.Camera,at,radius))return true;
+        return false;
+    }
     private static bool OverlapsCorpseView(Camera3D camera,Vector3 center,float radius)
     {
         // Plane/bounds overlap also handles bodies straddling the camera plane far off to its side.

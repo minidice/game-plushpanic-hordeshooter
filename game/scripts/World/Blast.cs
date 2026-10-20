@@ -27,11 +27,11 @@ public static class Blast
             enemy.Shove(away, 40f + (knockbackPower - 40f) * falloff, damage * falloff + 15f);
         }
 
-        var player = stage.Player;
-        var toPlayer = player.GlobalPosition - at;
-        float pd = toPlayer.Length();
-        if (!player.IsDead && pd < radius)
+        foreach (var player in System.Linq.Enumerable.ToList(stage.AlivePlayers))
         {
+            var toPlayer = player.GlobalPosition - at;
+            float pd = toPlayer.Length();
+            if (pd >= radius) continue;
             float falloff = 1 - pd / radius;
             player.TakeDamage(damage * selfShare * falloff, toPlayer, 0);
             toPlayer.Y = 0;

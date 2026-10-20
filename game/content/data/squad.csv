@@ -1,0 +1,5 @@
+role,name,follow_distance_m,chase_ahead_m,damage_multiplier,primary_pool,secondary
+# 역할 ID,이름 키,리더와의 거리(m),전투 중 리더보다 앞설 수 있는 거리(m),공격력 배율,주무기 풀(무기id:가중치;...),보조 무기
+assault,name_squad_assault,2.2,6,0.7,r870:3;benelli_m4:2;mp5:2,m1911
+cover,name_squad_cover,3.5,3,0.7,m4:3;ak47:2;m16:2;svd:1,glock17
+support,name_squad_support,2.8,4,0.7,mp5:3;m4:2,m1911

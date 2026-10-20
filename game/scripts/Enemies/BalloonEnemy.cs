@@ -31,10 +31,10 @@ public partial class BalloonEnemy : Enemy
             if (_inflate >= PopTrait.InflateTime) Pop();
             return Vector3.Zero;
         }
-        var player = Stage.Player;
-        var toPlayer = player.GlobalPosition - GlobalPosition;
+        var player = Stage.NearestAlivePlayer(GlobalPosition);
+        var toPlayer = player != null ? player.GlobalPosition - GlobalPosition : Vector3.Inf;
         toPlayer.Y = 0;
-        if (Awake && !player.IsDead && toPlayer.Length() < PopTrait.TriggerRange)
+        if (Awake && player != null && toPlayer.Length() < PopTrait.TriggerRange)
         {
             _inflate = 0;
             Stage.Sfx.PlayAt("balloon_inflate", GlobalPosition + Vector3.Up * 1.5f);
@@ -72,15 +72,18 @@ public partial class BalloonEnemy : Enemy
             if (away.Length() < pop.Radius * .8f) other.Shove(away, pop.KnockbackPower, 0);
         }
 
-        var player = Stage.Player;
-        var toPlayer = player.GlobalPosition - at;
-        toPlayer.Y = 0;
-        if (!player.IsDead && toPlayer.Length() < pop.Radius)
+        bool summoned = false;
+        foreach (var player in System.Linq.Enumerable.ToList(Stage.AlivePlayers))
         {
+            var toPlayer = player.GlobalPosition - at;
+            toPlayer.Y = 0;
+            if (toPlayer.Length() >= pop.Radius) continue;
             player.ApplyHelium(pop.HeliumTime);
             player.Launch(toPlayer.Normalized() * 5f + Vector3.Up * 4f, .5f);
             Stage.Effects.FloatingText(player.GlobalPosition + Vector3.Up * 2.8f, "HELIUM!", new Color("ff9ccc"));
-            Stage.Director.SummonAround(player.GlobalPosition, pop.SummonCount);
+            // One summon per pop, around the first survivor caught in it.
+            if (!summoned) Stage.Director.SummonAround(player.GlobalPosition, pop.SummonCount);
+            summoned = true;
         }
 
         if (Rig.Head != null) Rig.Head.Visible = false;

@@ -56,6 +56,24 @@ public partial class Enemy : CharacterBody3D
     private float _losTimer, _wanderTimer;
     private Vector3 _wander;
     private float _meleeTime = -1;
+    private Player? _meleeTarget;
+    private float _targetTimer;
+
+    /// <summary>The survivor this enemy is after (nearest living one, re-picked a few times a second).</summary>
+    protected Player? Target { get; private set; }
+    /// <summary>Who this enemy is currently after (read by AI squadmates to protect teammates).</summary>
+    public Player? Victim => IsDead ? null : Target;
+
+    protected Player? CurrentTarget(float dt)
+    {
+        _targetTimer -= dt;
+        if (_targetTimer <= 0 || Target == null || !IsInstanceValid(Target) || Target.IsDead)
+        {
+            _targetTimer = .3f;
+            Target = Stage.NearestAlivePlayer(GlobalPosition);
+        }
+        return Target;
+    }
     private bool _meleeHit;
     private Vector3 _meleeDirection;
 
@@ -130,7 +148,7 @@ public partial class Enemy : CharacterBody3D
             desired = toLure;
         }
         else desired = Think(dt);
-        if (SpecialAttackActive || Stage.Player.IsDead) CancelMelee();
+        if (SpecialAttackActive || (IsMeleeAttacking && _meleeTarget is not { IsDead: false })) CancelMelee();
         TickMelee(dt);
         if (FlinchTime > 0)
         {
@@ -166,12 +184,12 @@ public partial class Enemy : CharacterBody3D
             FaceOverride = _meleeDirection;
             return Vector3.Zero;
         }
-        var player = Stage.Player;
+        var player = CurrentTarget(dt);
+        if (player == null) return Wander(dt);
         var toPlayer = player.GlobalPosition - GlobalPosition;
         toPlayer.Y = 0;
         float dist = toPlayer.Length();
 
-        if (player.IsDead) return Wander(dt);
         if (!Awake)
         {
             if (dist < Monster.WakeRange || (dist < 12f && IsSeen && HasLineOfSight(dt))) Awake = true;
@@ -266,8 +284,10 @@ public partial class Enemy : CharacterBody3D
         _losTimer -= dt;
         if (_losTimer > 0) return _los;
         _losTimer = .25f;
+        var target = Target ?? Stage.NearestAlivePlayer(GlobalPosition);
+        if (target == null) { _los = false; return false; }
         var from = GlobalPosition + Vector3.Up;
-        var to = Stage.Player.GlobalPosition + Vector3.Up;
+        var to = target.GlobalPosition + Vector3.Up;
         _los = Rays.Clear(this, from, to, Layers.SightMask);
         return _los;
     }
@@ -277,6 +297,7 @@ public partial class Enemy : CharacterBody3D
         if (AttackCooldown > 0 || IsMeleeAttacking || StunTime > 0 || FlinchTime > 0 || player.IsDead || SpecialAttackActive) return;
         if (!Rays.Clear(this, GlobalPosition + Vector3.Up * .7f, player.GlobalPosition + Vector3.Up * .7f, Layers.World | Layers.Props)) return;
         AttackCooldown = Mathf.Max(AttackInterval, MeleeWindup + MeleeRecovery);
+        _meleeTarget = player;
         _meleeTime = 0;
         _meleeHit = false;
         toPlayer.Y = 0;
@@ -293,7 +314,8 @@ public partial class Enemy : CharacterBody3D
         {
             _meleeHit = true;
             Kick = 1;
-            var player = Stage.Player;
+            var player = _meleeTarget;
+            if (player == null || !IsInstanceValid(player)) { CancelMelee(); return; }
             var to = player.GlobalPosition - GlobalPosition;
             float height = Mathf.Abs(to.Y);
             to.Y = 0;
@@ -312,6 +334,7 @@ public partial class Enemy : CharacterBody3D
     {
         _meleeTime = -1;
         _meleeHit = false;
+        _meleeTarget = null;
         Rig?.ResetEnemyAttackPose();
     }
 

@@ -10,7 +10,7 @@ public partial class Player
 
     public bool TryRestrain(Enemy owner)
     {
-        if (IsDead || IsRolling || IsRestrained || owner.IsDead || owner.StunTime > 0 || owner.IsQueuedForDeletion()) return false;
+        if (IsDead || IsDowned || IsRolling || IsRestrained || owner.IsDead || owner.StunTime > 0 || owner.IsQueuedForDeletion()) return false;
         RestrainingEnemy = owner;
         RestraintPullTarget = null;
         IsHealing = false;

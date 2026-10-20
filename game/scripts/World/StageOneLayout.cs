@@ -25,6 +25,7 @@ public sealed class StageOneLayout
 
     private static readonly Rect2 SafehouseRect = new(116.4f, -3.8f, 9.4f, 7.6f);
     public bool InSafehouse(Vector3 p) => SafehouseRect.HasPoint(new Vector2(p.X, p.Z));
+    public Vector3 SafehouseCenter => new(SafehouseRect.GetCenter().X, 0, SafehouseRect.GetCenter().Y);
     /// <summary>Inside, or close enough to the doorway to be shoved in when the door slams.</summary>
     public bool NearSafehouse(Vector3 p) => SafehouseRect.Grow(.6f).HasPoint(new Vector2(p.X, p.Z));
 
@@ -49,13 +50,15 @@ public sealed class StageOneLayout
     private readonly System.Collections.Generic.List<(Vector3 center, Vector3 size)> _solids = new();
 
     /// <summary>Everything starts blocked; floors are carved out, then walls and doors are stamped back in.</summary>
-    public void ApplyFlow()
+    public void ApplyFlow() => ApplyFlow(_stage.Flow, doors: true);
+
+    /// <summary>Stamps walls into <paramref name="flow"/>; without doors it is the stage's route, not what is walkable now.</summary>
+    public void ApplyFlow(FlowField flow, bool doors)
     {
-        var flow = _stage.Flow;
         flow.SetBlocked(new Vector3(63, 0, 0), new Vector3(140, 0, 30), 0, true);
         foreach (var (center, size) in _floors) flow.SetBlocked(center, size, -.05f, false);
         foreach (var (center, size) in _solids) flow.SetBlocked(center, size, Stage.WallPad, true);
-        foreach (var door in new[] { StartDoor, Shutter, SafehouseDoor }) door.StampFlow();
+        if (doors) foreach (var door in new[] { StartDoor, Shutter, SafehouseDoor }) door.StampFlow();
     }
 
     // ---------- zones ----------
