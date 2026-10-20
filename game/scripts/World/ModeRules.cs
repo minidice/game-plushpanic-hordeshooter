@@ -5,15 +5,12 @@ using System.Linq;
 namespace HordeShooter;
 
 /// <summary>
-/// Rules of a mode other than Scenario, played on the Stage 1 map from the warehouse hall
-/// (doc/menu-multiplayer-plan.md 3.1): who comes when, how the match ends and the HUD's top bar.
+/// Rules of a mode other than Scenario on the stage's <see cref="StageMap"/> (doc/menu-multiplayer-plan.md 3.1):
+/// who comes when, how the match ends and the HUD's top bar. Where the base and the doorways are is the map's.
 /// The offline game or the host decides; a client only shows the clock-driven text and the bar it is sent.
 /// </summary>
 public abstract partial class ModeRules : Node
 {
-    /// <summary>Both modes start in the middle of the warehouse, between its two doorways.</summary>
-    public static readonly Vector3 Start = new(66, 0, 1.6f);
-
     public static ModeRules? Create(GameMode mode) => mode switch
     {
         GameMode.Survival => new SurvivalRules { Name = "SurvivalRules" },

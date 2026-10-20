@@ -11,6 +11,7 @@
 - [x] 난전(구 서바이버) 1차: 선반 없는 창고 홀, 사방 화면 밖에서 약한 무리(점점 커짐), 2분 30초에 스킬 보스(돌진·빨간 원 내려찍기·소환·격노), 보스 막대, 보스 처치 클리어 (M-22)
 - [x] 개편 2단계(2026-10-21, T-21·M-24): 몬스터 등급 boss, 모드별 몬스터 테이블(`modes/<mode>_spawns.csv`), 보스 페이즈·스킬 데이터(`bosses/<id>.json`, 3페이즈·부채꼴 탄막 추가), 난전 named 처치 후 정비 시간 ([규격](mode-monster-tables.md))
 - [x] 개편 3단계(2026-10-21, A-17): 난전 보스 전용 모델 `boss.glb`(Codex 제작, 삼각형 4,466) 적용, 지시문 → Codex → Blender 최적화 → 게임 연결 흐름 ([지시문](model-briefs/boss.md))
+- [x] 개편 4단계(2026-10-21, L-13): 맵 인터페이스 `StageMap`(Stage 1은 그 하위 클래스, 모드별 맵 선택 자리, 검사용 맵 교체) ([레벨 규칙](level-design-rules.md))
 - [ ] 거점·난전 다음: 레벨업 능력 선택, 인벤토리·파밍·탈출, 전용 맵·전용 보스 모델, 멀티에서 보스 연출 동기화(I-77), 수치 플레이 조정
 - [x] 멀티 메뉴: 방 만들기, 주소로 참가(2인 테스트). 방 코드·공개방은 준비 중
 - [x] 멀티 테스트 실행: 한 PC 두 창(`Start-Multi-Test.cmd`), 방장 LAN 주소 안내, 다른 PC용 Windows 실행 파일(`Export-Game.cmd` → `build/HordeShooter-windows.zip`)
@@ -137,3 +138,8 @@
 - Blender 최적화 assert 통과(삼각형 4,466 < 4,500, 두 팔 피벗·메시). C# 빌드 경고·오류 0. `ModeCheck` 67개 통과(헤드리스·창 모드, 보스가 `boss.glb`의 팔 피벗을 씀), `Start-Game.ps1 -Test`(Integration) 148(적 정의 목록 검사에 `boss` 추가), `EnemyExpansion` 60, `HitFlashCheck`, `EnemyAttackCheck` 79, `CorpseTierCheck` 36, `NetCodecCheck` 11 통과. `CharacterSurfaceCheck`는 창 모드 전용이라 헤드리스 실행이 "렌더된 화면 필요"로 멈췄고, 플레이어 표면 검사라 이번 변경과 무관해 다시 돌리지 않음.
 - 렌더: `output/mode-survivor-boss-close.png`(확대), `mode-survivor-slam.png`(기본 크기)에서 보스 표시(금관·코뚜레·어깨 보호대·큰 주먹)가 읽힘. 손으로 해 본 전투 체감은 미확인(I-26).
 
+
+### 이번 변경 확인 기록 — 2026-10-21 (개편 4단계, 맵 인터페이스)
+
+- C# 빌드 경고·오류 0. `MapCheck` 17개 통과(헤드리스·창 모드), `Integration` 148, `ModeCheck` 67, `MenuCheck` 39, `NetSyncCheck` 28, `NetCodecCheck` 11, `SpawnCheck` 41, `SquadCheck` 50, `SupplyCheck` 12, `AudioLevelCheck` 4, `LobbyCheck` 31, `WeaponHandlingCheck` 30, `CombatPacingCheck` 44, `VisionTierCheck` 23, `CorpseRetentionCheck` 16, `EnemyAttackCheck` 79 통과.
+- 창 모드 렌더 `output/map-flat-onslaught.png`: 부품 없는 평지 검사 맵에서 난전이 돌고 HUD 이름이 모드 이름만 보임. Stage 1은 이전과 같은 화면(ModeCheck·MenuCheck 렌더 경로 그대로).

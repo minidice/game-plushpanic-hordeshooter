@@ -121,11 +121,11 @@ public partial class ModeCheck : Node
         var rules = stage.ModeRules as SurvivalRules;
         Check(rules != null && stage.Objective == Objective.ModeGoal, "survival runs its own rules");
         var r = rules!.Rules;
-        Check(stage.Player.GlobalPosition.DistanceTo(ModeRules.Start) < .5f && stage.Layout.Shutter.IsOpen && !stage.Layout.StartDoor.IsOpen,
+        Check(stage.Player.GlobalPosition.DistanceTo(stage.Map.PlayerStart) < .5f && stage.Layout.Shutter.IsOpen && !stage.Layout.StartDoor.IsOpen,
             "survival starts in the warehouse with the shutter raised");
         Check(stage.Director.Encounters == null && !stage.AllEnemies.Any(), "nothing is pre-placed");
         var core = rules.Core!;
-        Check(core.Alive && core.GlobalPosition.DistanceTo(SurvivalRules.CorePosition) < .01f && core.Health == r.CoreHp, "the generator stands in the hall at full health");
+        Check(core.Alive && core.GlobalPosition.DistanceTo(stage.Map.CoreSpot) < .01f && core.Health == r.CoreHp, "the generator stands in the hall at full health");
         Check(stage.Hud.FindChild("ModeBar", true, false) is Control { Visible: true } && rules.BarLabel.Contains("100"), "the HUD shows the base bar at 100%");
         Check(rules.Phase(0) == (-1, false, r.Prep) && rules.Phase(r.Prep + 1).Wave == 0 && rules.Phase(r.Prep + 1).Running,
             "the clock starts with preparation, then wave 1");
@@ -148,10 +148,10 @@ public partial class ModeCheck : Node
         foreach (var e in stage.AllEnemies.ToList()) e.QueueFree();
         await Frames(2);
         stage.Player.GlobalPosition = new Vector3(4, 0, 0); // inside the closed safe room
-        for (int i = 0; i < 6; i++) stage.SpawnCommon(SurvivalRules.CorePosition + new Vector3(4 + i * .4f, 0, i % 2 == 0 ? .8f : -.8f), awake: true);
+        for (int i = 0; i < 6; i++) stage.SpawnCommon(stage.Map.CoreSpot + new Vector3(4 + i * .4f, 0, i % 2 == 0 ? .8f : -.8f), awake: true);
         await Until(() => core.Health < core.MaxHealth, "commons walk to the generator and hit it");
         await Shot("survival-core");
-        core.TakeDamage(core.MaxHealth, SurvivalRules.CorePosition + Vector3.Right);
+        core.TakeDamage(core.MaxHealth, stage.Map.CoreSpot + Vector3.Right);
         await Frames(2);
         Check(!core.Alive && stage.State == StageState.Dead && rules.ResultText.Length > 0, "a broken generator loses the match");
         await Frames(10);

@@ -40,10 +40,10 @@ public partial class Hud
         var objectiveBox = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
         objectiveBox.AddThemeConstantOverride("separation", 6);
         objectivePanel.AddChild(objectiveBox);
-        // Survival / Survivor name the mode in front of the map so a recording shows which one it is.
-        var stageTitle = Stage.ModeRules is { } rules
-            ? Loc.Format("fmt_hud_mode_stage", Loc.Text("mode_" + rules.Mode.ToString().ToLowerInvariant()), Loc.Text("ui_hud_stage"))
-            : Loc.Text("ui_hud_stage");
+        // Outpost / Onslaught name the mode in front of the map so a recording shows which one it is.
+        var mapName = Stage.Map.TitleKey is { Length: > 0 } key ? Loc.Text(key) : "";
+        var modeName = Stage.ModeRules is { } rules ? Loc.Text("mode_" + rules.Mode.ToString().ToLowerInvariant()) : "";
+        var stageTitle = modeName.Length > 0 && mapName.Length > 0 ? Loc.Format("fmt_hud_mode_stage", modeName, mapName) : modeName + mapName;
         objectiveBox.AddChild(HudLabel(stageTitle, 12, HudMuted));
         _objective = HudLabel("", 17);
         _objective.Name = "ObjectiveText";

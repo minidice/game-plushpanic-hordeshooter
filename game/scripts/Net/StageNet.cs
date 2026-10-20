@@ -141,7 +141,7 @@ public partial class StageNet : Node
     }
 
     /// <summary>Where a client's survivor starts: beside the host's.</summary>
-    public static Vector3 ClientStart(Stage stage) => stage.Layout.PlayerStart + new Vector3(1.2f, 0, 1.2f);
+    public static Vector3 ClientStart(Stage stage) => stage.Map.PlayerStart + new Vector3(1.2f, 0, 1.2f);
 
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, TransferMode = MultiplayerPeer.TransferModeEnum.UnreliableOrdered, TransferChannel = 1)]
     private void ClientInput(byte[] data)
@@ -329,7 +329,7 @@ public partial class StageNet : Node
         w.U16(p.NetId); w.U16(NetIds.Weapon(p.Weapon!.Id)); w.Pos(p.GlobalPosition); w.U16(p.State?.Mag ?? -1 & 0xFFFF); w.U16(p.State?.Reserve ?? 0);
     }
 
-    /// <summary>Objective, doors, the car alarm and every usable thing's on/off state.</summary>
+    /// <summary>Objective, doors (bit i = the map's door i), the alarm (the bit after the doors) and every usable thing's on/off state.</summary>
     private byte[] World()
     {
         var w = new NetWriter();
@@ -339,11 +339,12 @@ public partial class StageNet : Node
 
     private void WriteWorld(NetWriter w)
     {
-        var layout = _stage.Layout;
+        var map = _stage.Map;
         w.U8((int)_stage.Objective);
         w.U8((int)_stage.State);
-        int bits = (layout.StartDoor.IsOpen ? 1 : 0) | (layout.Shutter.IsOpen ? 2 : 0) | (layout.SafehouseDoor.IsOpen ? 4 : 0) |
-                   (layout.AlarmCar.Triggered ? 8 : 0);
+        int bits = 0;
+        for (int i = 0; i < map.Doors.Count; i++) if (map.Doors[i].IsOpen) bits |= 1 << i;
+        if (map.AlarmDevice is { Triggered: true }) bits |= 1 << map.Doors.Count;
         w.U8(bits);
         w.U16(_stage.Interactables.Count);
         foreach (var i in _stage.Interactables) { w.U16(i.NetId); w.U8((i.Enabled ? 1 : 0) | (i.Visible ? 2 : 0)); }
@@ -445,7 +446,7 @@ public partial class StageNet : Node
                 string hostCharacter = r.Str();
                 if (!Peers.ContainsKey(HostPeer))
                 {
-                    Peers[HostPeer] = _stage.AddRemoteSurvivor(CharacterCatalog.Player(hostCharacter), _stage.Layout.PlayerStart, HostPeer);
+                    Peers[HostPeer] = _stage.AddRemoteSurvivor(CharacterCatalog.Player(hostCharacter), _stage.Map.PlayerStart, HostPeer);
                     Started = true;
                     GD.Print($"[net] synced with the host ({hostCharacter})");
                 }
@@ -578,12 +579,15 @@ public partial class StageNet : Node
         var objective = (Objective)r.U8();
         var state = (StageState)r.U8();
         int bits = r.U8();
-        var layout = _stage.Layout;
+        var map = _stage.Map;
         _stage.ApplyNetObjective(objective);
-        if ((bits & 1) != 0 != layout.StartDoor.IsOpen) layout.StartDoor.SetOpen((bits & 1) != 0);
-        if ((bits & 2) != 0 != layout.Shutter.IsOpen) layout.Shutter.SetOpen((bits & 2) != 0, 1.2f);
-        if ((bits & 4) != 0 != layout.SafehouseDoor.IsOpen) layout.SafehouseDoor.SetOpen((bits & 4) != 0);
-        if ((bits & 8) != 0) layout.AlarmCar.Sound();
+        for (int i = 0; i < map.Doors.Count; i++)
+        {
+            var door = map.Doors[i];
+            bool open = (bits & (1 << i)) != 0;
+            if (open != door.IsOpen) door.SetOpen(open, door.OpenSeconds);
+        }
+        if ((bits & (1 << map.Doors.Count)) != 0) map.AlarmDevice?.Sound();
         int n = r.U16();
         var listed = new HashSet<int>();
         for (int i = 0; i < n; i++)

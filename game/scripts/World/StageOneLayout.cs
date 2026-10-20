@@ -1,5 +1,5 @@
 using Godot;
-using System.Linq;
+using System.Collections.Generic;
 
 namespace HordeShooter;
 
@@ -9,15 +9,15 @@ namespace HordeShooter;
 /// The camera looks toward -Z, so walls on the -Z side are tall facades and walls on the +Z side are low
 /// fences that never hide the action. Who waits where and where waves come in is data
 /// (content/data/stages/stage1_encounters.json, read by <see cref="HordeDirector"/>).
+/// Outpost and Onslaught reuse it from the warehouse hall (doc/menu-multiplayer-plan.md 3.1).
 /// </summary>
-public sealed class StageOneLayout
+public sealed class StageOneLayout : StageMap
 {
     public const float TallWall = 3.4f;
     public const float LowWall = 1.1f;
 
-    public Vector3 PlayerStart { get; private set; } = new(4, 0, 0);
-    /// <summary>Survival and Survivor reuse this map from the warehouse hall (doc/menu-multiplayer-plan.md 3.1).</summary>
-    public GameMode Mode { get; private set; } = GameMode.Scenario;
+    /// <summary>Outpost and Onslaught start in the middle of the warehouse, between its two doorways.</summary>
+    public static readonly Vector3 ModeStart = new(66, 0, 1.6f);
     public float CrescendoSeconds { get; set; } = 50f;
     public Door StartDoor { get; private set; } = null!;
     public Door Shutter { get; private set; } = null!;
@@ -33,23 +33,32 @@ public sealed class StageOneLayout
     /// <summary>Inside, or close enough to the doorway to be shoved in when the door slams.</summary>
     public bool NearSafehouse(Vector3 p) => SafehouseRect.Grow(.6f).HasPoint(new Vector2(p.X, p.Z));
 
-    private Stage _stage = null!;
-    private readonly RandomNumberGenerator _rng = new();
+    public override Rect2 Area => new(-2, -12, 130, 24);
+    public override string TitleKey => "ui_hud_stage";
+    public override bool HasRoute => Mode == GameMode.Scenario;
+    public override Vector3 RouteGoal => SafehouseCenter;
+    public override EncounterSet? Encounters => SpawnDatabase.Current.Stage1;
+    public override IReadOnlyList<Door> Doors => new[] { StartDoor, Shutter, SafehouseDoor };
+    public override AlarmCar? AlarmDevice => AlarmCar;
+    /// <summary>The generator stands in the open lane between the hall's shelves.</summary>
+    public override Vector3 CoreSpot => new(68, 0, 1.6f);
+    /// <summary>Far enough from the doorways that a group is off screen while the player guards the core.</summary>
+    public override IReadOnlyList<Vector3[]> Gates { get; } = new[] { Spots(40, 49, -4.5f, 4.5f), Spots(89, 99, -5.5f, 5.5f) };
 
-    public static StageOneLayout Build(Stage stage, GameMode mode = GameMode.Scenario)
+    protected override void BuildMap()
     {
-        var layout = new StageOneLayout { _stage = stage, Mode = mode };
-        layout._rng.Seed = 1;
-        layout.BuildSafeRoom();
-        layout.BuildStreet();
-        layout.BuildWarehouse();
-        layout.BuildYard();
-        layout.BuildSafehouse();
-        if (mode == GameMode.Scenario) layout.PlaceSupplies(StageSupplies.Stage1);
-        else layout.PrepareModeArena();
-        layout.ApplyFlow();
-        return layout;
+        PlayerStart = new Vector3(4, 0, 0);
+        BuildSafeRoom();
+        BuildStreet();
+        BuildWarehouse();
+        BuildYard();
+        BuildSafehouse();
+        if (Mode == GameMode.Scenario) PlaceSupplies(StageSupplies.Stage1);
+        else PrepareModeArena();
     }
+
+    /// <summary>Indoor rooms (safe room, warehouse, safehouse) get tiles; the street and the yard do not.</summary>
+    protected override bool IndoorFloor(float x0) => x0 < 10 || (x0 >= 52 && x0 < 84.4f) || x0 >= 116;
 
     /// <summary>
     /// Survival / Survivor: start in the warehouse with both doorways open (street side and the raised shutter),
@@ -58,7 +67,7 @@ public sealed class StageOneLayout
     /// </summary>
     private void PrepareModeArena()
     {
-        PlayerStart = ModeRules.Start;
+        PlayerStart = ModeStart;
         Shutter.SetOpen(true, 0);
         ShutterPanel.Enabled = false;
         StartDoorSwitch.Enabled = false;
@@ -86,21 +95,6 @@ public sealed class StageOneLayout
             Throwable(new Vector3(70f, 0, -3.8f), "frag");
             Throwable(new Vector3(62f, 0, -4f), "molotov");
         }
-    }
-
-    private readonly System.Collections.Generic.List<(Vector3 center, Vector3 size)> _floors = new();
-    private readonly System.Collections.Generic.List<(Vector3 center, Vector3 size)> _solids = new();
-
-    /// <summary>Everything starts blocked; floors are carved out, then walls and doors are stamped back in.</summary>
-    public void ApplyFlow() => ApplyFlow(_stage.Flow, doors: true);
-
-    /// <summary>Stamps walls into <paramref name="flow"/>; without doors it is the stage's route, not what is walkable now.</summary>
-    public void ApplyFlow(FlowField flow, bool doors)
-    {
-        flow.SetBlocked(new Vector3(63, 0, 0), new Vector3(140, 0, 30), 0, true);
-        foreach (var (center, size) in _floors) flow.SetBlocked(center, size, -.05f, false);
-        foreach (var (center, size) in _solids) flow.SetBlocked(center, size, Stage.WallPad, true);
-        if (doors) foreach (var door in new[] { StartDoor, Shutter, SafehouseDoor }) door.StampFlow();
     }
 
     // ---------- zones ----------
@@ -135,7 +129,7 @@ public sealed class StageOneLayout
         Solid(new Vector3(17, .65f, -3.8f), new Vector3(4.2f, 1.3f, 2f), "6d5a45");
         // The one with the blinking dash light: shoot it and the whole street hears (spawn-design.md 4장).
         AlarmCar = AlarmCar.Create(_stage, new Vector3(29, .65f, 3.6f), new Vector3(4.2f, 1.3f, 2f), "54657a");
-        _solids.Add((AlarmCar.Position, new Vector3(4.2f, 1.3f, 2f)));
+        BlockFlow(AlarmCar.Position, new Vector3(4.2f, 1.3f, 2f));
         Solid(new Vector3(42, .65f, -3.1f), new Vector3(4.2f, 1.3f, 2f), "7a4e48");
         Solid(new Vector3(22, .55f, 1.5f), new Vector3(1.2f, 1.1f, 1.2f), "8a7755");
         Solid(new Vector3(35, .6f, -.8f), new Vector3(1.4f, 1.2f, 1.4f), "8a7755");
@@ -164,6 +158,7 @@ public sealed class StageOneLayout
         Wall(84, 84.4f, -10.4f, -3, 3.8f, "5e5a50");
         Wall(84, 84.4f, 3, 10.4f, 3.8f, "5e5a50");
         Shutter = Door.Create(_stage, new Vector3(84.2f, 0, 0), new Vector3(.4f, 3.2f, 6f), new Color("6f7468"), new Vector3(0, 3.1f, 0));
+        Shutter.OpenSeconds = 1.2f;
 
         // Survivor wants an open hall to kite the swarm in; the other modes keep the shelves.
         if (Mode != GameMode.Survivor)
@@ -236,100 +231,15 @@ public sealed class StageOneLayout
         FloorText(new Vector3(121, 0, 2), "ui_floor_safehouse", "c8ffd0");
     }
 
-    /// <summary>Weapons, throwables, ammo and medkits from the stage's supply points (decisions.md L-12).</summary>
-    private void PlaceSupplies(StageSupplies supplies)
-    {
-        foreach (var item in supplies.Points.SelectMany(p => p.Items))
-            switch (item.Kind)
-            {
-                case SupplyItemKind.Weapon: Weapon(item.At, item.Id); break;
-                case SupplyItemKind.Throwable: Throwable(item.At, item.Id); break;
-                case SupplyItemKind.Ammo: AmmoPile(item.At); break;
-                case SupplyItemKind.Medkit: Medkit(item.At); break;
-            }
-    }
-
-    // ---------- building blocks ----------
-
-    private void Floor(float x0, float x1, float z0, float z1, string color)
-    {
-        var center = new Vector3((x0 + x1) / 2, -.2f, (z0 + z1) / 2);
-        var size = new Vector3(x1 - x0, .4f, z1 - z0);
-        var body = new StaticBody3D { Name = "Floor", Position = center, CollisionLayer = Layers.World, CollisionMask = 0 };
-        _stage.AddChild(body);
-        body.AddChild(new CollisionShape3D { Shape = new BoxShape3D { Size = size } });
-        StageArt.Floor(body, size, x0 < 10 || (x0 >= 52 && x0 < 84.4f) || x0 >= 116);
-        _floors.Add((center, size));
-    }
-
-    private StaticBody3D Wall(float x0, float x1, float z0, float z1, float height, string color, bool drawWall = true)
-    {
-        var wallSize = new Vector3(x1 - x0, height, z1 - z0);
-        var body = Solid(new Vector3((x0 + x1) / 2, height / 2, (z0 + z1) / 2), wallSize, color, false);
-        if (drawWall) StageArt.Wall(body, wallSize);
-        // Low camera-side fences get an invisible tall collider so nobody gets launched out of the map.
-        if (height < 2f)
-        {
-            var size = new Vector3(x1 - x0, 4f, z1 - z0);
-            body.AddChild(new CollisionShape3D { Shape = new BoxShape3D { Size = size }, Position = new Vector3(0, 2f - height / 2, 0) });
-        }
-        return body;
-    }
-
-    private StaticBody3D Solid(Vector3 center, Vector3 size, string color, bool drawCargo = true)
-    {
-        var body = new StaticBody3D { Name = "Solid", Position = center, CollisionLayer = Layers.World, CollisionMask = 0 };
-        _stage.AddChild(body);
-        body.AddChild(new CollisionShape3D { Shape = new BoxShape3D { Size = size } });
-        if (drawCargo) StageArt.Cargo(body, size, color);
-        _solids.Add((center, size));
-        return body;
-    }
+    // ---------- Stage 1 pieces ----------
 
     private void Shelf(float x0, float x1, float z)
     {
         var body = Wall(x0, x1, z - .6f, z + .6f, 2.2f, "5a4a3a", false);
-        var colors = new System.Collections.Generic.List<string>();
+        var colors = new List<string>();
         for (float x = x0 + .8f; x < x1 - .4f; x += 1.6f)
             colors.Add(_rng.Randf() < .5f ? "ae8c62" : "82917c");
         StageArt.Shelf(body, x1 - x0, colors.ToArray());
-    }
-
-    private void Barrel(Vector3 at) => ExplosiveBarrel.Create(_stage, at);
-
-    private void Weapon(Vector3 at, string id) => WeaponPickup.ForWeapon(_stage, at, ArmoryCatalog.Weapon(id));
-
-    private void Throwable(Vector3 at, string id) => WeaponPickup.ForThrowable(_stage, at, ArmoryCatalog.Throwable(id));
-
-    private void Boxes(Vector3 at, int count)
-    {
-        for (int i = 0; i < count; i++)
-        {
-            var box = new RigidBody3D
-            {
-                Name = "Box",
-                Mass = .6f,
-                Position = at + new Vector3(i * .75f, .3f + (i == 2 ? .62f : 0), i == 2 ? 0 : _rng.RandfRange(-.2f, .2f)),
-                CollisionLayer = Layers.Props,
-                CollisionMask = Layers.World | Layers.Props | Layers.Player | Layers.Enemy,
-            };
-            box.AddChild(new CollisionShape3D { Shape = new BoxShape3D { Size = Vector3.One * .6f } });
-            StageArt.Carton(box, Vector3.Zero, Vector3.One * .6f);
-            _stage.AddChild(box);
-            _stage.Props.Add(box);
-        }
-    }
-
-    private OmniLight3D Lamp(Vector3 at, string color, float energy, float range, bool flicker)
-    {
-        var light = new OmniLight3D { Position = at, LightColor = new Color(color), LightEnergy = energy, OmniRange = range, ShadowEnabled = false };
-        light.SetMeta("base_energy", energy);
-        // Enemies in a lamp's glow show as silhouettes (decisions.md C-23).
-        light.AddToGroup(VisionSystem.LightGroup);
-        _stage.AddChild(light);
-        StageArt.Fixture(light, color);
-        if (flicker) _stage.FlickerLights.Add(light);
-        return light;
     }
 
     private void Windows(float x0, float x1, float z)
@@ -345,63 +255,12 @@ public sealed class StageOneLayout
         }
     }
 
-    private void Decal(Vector3 at, Vector3 size, string color) => Mat.Box(_stage, at + Vector3.Up * .01f, size, Mat.Solid(color, .9f));
-
-    private void FloorText(Vector3 at, string textKey, string color)
+    private static Vector3[] Spots(float x0, float x1, float z0, float z1)
     {
-        _stage.AddChild(new Label3D
-        {
-            Text = Loc.Text(textKey),
-            Position = at + Vector3.Up * .03f,
-            RotationDegrees = new Vector3(-90, 0, 0),
-            FontSize = 72,
-            PixelSize = .012f,
-            Modulate = new Color(color, .8f),
-            OutlineSize = 0,
-        });
-    }
-
-    private Interactable Use(Vector3 at, string promptKey, System.Action action)
-    {
-        var item = new Interactable { Name = "Use", Position = at, Prompt = promptKey, OnUse = _ => action() };
-        _stage.AddChild(item);
-        _stage.AddInteractable(item);
-        return item;
-    }
-
-    private void AmmoPile(Vector3 at)
-    {
-        var node = new Node3D { Name = "Ammo", Position = at + Vector3.Up * .2f };
-        _stage.AddChild(node);
-        StageArt.Ammo(node);
-        var use = Use(at, "ui_use_ammo", () => { });
-        use.OnUse = who => _stage.RefillAmmo(who ?? _stage.Player);
-        use.Radius = 1.6f;
-    }
-
-    private void Medkit(Vector3 at)
-    {
-        var node = new Interactable { Name = "Medkit", Position = at, Prompt = "ui_use_medkit", Radius = 1.6f };
-        _stage.AddChild(node);
-        _stage.AddInteractable(node);
-        StageArt.Box(node, new Vector3(0, .15f, 0), new Vector3(.6f, .3f, .45f), "d3d8cc", true);
-        StageArt.Box(node, new Vector3(0, .15f, .229f), new Vector3(.5f, .025f, .025f), "557a79");
-        Mat.Box(node, new Vector3(0, .31f, 0), new Vector3(.36f, .02f, .1f), Mat.Glow(new Color("ff4040"), 1.5f));
-        Mat.Box(node, new Vector3(0, .31f, 0), new Vector3(.1f, .02f, .3f), Mat.Glow(new Color("ff4040"), 1.5f));
-        node.OnUse = who =>
-        {
-            var taker = who ?? _stage.Player;
-            if (taker.Medkits > 0)
-            {
-                if (taker.IsLocal) _stage.ShowNotice(Loc.Text("msg_pickup_medkit_full"), 2);
-                return;
-            }
-            taker.Medkits = 1;
-            node.Enabled = false;
-            node.Visible = false;
-            if (!taker.IsLocal) { _stage.Sfx.PlayAt("pickup", taker.GlobalPosition + Vector3.Up); return; }
-            _stage.Sfx.Play("pickup");
-            _stage.ShowNotice(Loc.Text("msg_pickup_medkit"), 3);
-        };
+        var spots = new List<Vector3>();
+        for (float x = x0; x <= x1; x += 1.5f)
+            for (float z = z0; z <= z1; z += 1.5f)
+                spots.Add(new Vector3(x, 0, z));
+        return spots.ToArray();
     }
 }

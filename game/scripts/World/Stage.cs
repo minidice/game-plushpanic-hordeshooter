@@ -26,7 +26,7 @@ public enum StageState
 /// <summary>
 /// Owns one playable stage: systems (flow field, director, vision, effects), the player, enemies,
 /// and the L4D campaign beat: safe room → route → crescendo → safehouse. Geometry comes from
-/// <see cref="StageOneLayout"/>; a second stage would be another layout class.
+/// <see cref="StageMap"/> (Stage 1 is <see cref="StageOneLayout"/>); the scenario beats below use Stage 1's doors and panels.
 /// </summary>
 public partial class Stage : Node3D
 {
@@ -40,6 +40,8 @@ public partial class Stage : Node3D
     public GameMode? ModeOverride { get; set; }
     /// <summary>The mode being played: the menu or room choice in the running game scene, Scenario in test scenes.</summary>
     public GameMode Mode { get; private set; } = GameMode.Scenario;
+    /// <summary>Set before adding to the tree to play another map than the mode's own (checks, a generated map).</summary>
+    public StageMap? MapOverride { get; set; }
     /// <summary>Survival / Survivor rules (null in Scenario).</summary>
     public ModeRules? ModeRules { get; private set; }
     /// <summary>Tests turn this off so the director only spawns on request.</summary>
@@ -119,7 +121,10 @@ public partial class Stage : Node3D
     private readonly Dictionary<int, int> _respawnsUsed = new();
     private bool _safehouseReached;
     public Hud Hud { get; private set; } = null!;
-    public StageOneLayout Layout => _layout!;
+    /// <summary>The ground being played (any mode).</summary>
+    public StageMap Map => _map!;
+    /// <summary>Stage 1's doors, panels and safehouse, for the scenario beats (and checks) that need them.</summary>
+    public StageOneLayout Layout => _map as StageOneLayout ?? throw new System.InvalidOperationException("this stage is not played on Stage 1");
 
     public List<Enemy> Enemies { get; } = new();
     public List<RigidBody3D> Props { get; } = new();
@@ -141,7 +146,7 @@ public partial class Stage : Node3D
     public string Notice { get; private set; } = "";
     public float NoticeTime { get; private set; }
 
-    private StageOneLayout? _layout;
+    private StageMap? _map;
     private Node3D _enemyRoot = null!;
     private AudioStreamPlayer? _alarm;
     private float _groanTimer = 2f;
@@ -153,7 +158,11 @@ public partial class Stage : Node3D
     public override void _Ready()
     {
         GameInput.Ensure();
-        Flow = new FlowField(-2, -12, 128, 12);
+        Mode = ModeOverride ?? (GetTree().CurrentScene == this ? GameSession.Mode : GameMode.Scenario);
+        // The map sizes the flow field before it builds into it.
+        var map = MapOverride ?? StageMap.Create(Mode);
+        var area = map.Area;
+        Flow = new FlowField(area.Position.X, area.Position.Y, area.End.X, area.End.Y);
         Sfx = new Sfx();
         AddChild(Sfx);
         Sfx.Bed("ambience_loop", AudioSetup.AmbienceBus);
@@ -167,13 +176,13 @@ public partial class Stage : Node3D
 
         if (Role == NetRole.Offline && GetTree().CurrentScene == this) Role = NetLaunch.Pending;
         ReviveEnabled = ReviveOverride ?? (GetTree().CurrentScene == this && GameSettings.ReviveEnabled);
-        Mode = ModeOverride ?? (GetTree().CurrentScene == this ? GameSession.Mode : GameMode.Scenario);
-        _layout = StageOneLayout.Build(this, Mode);
+        map.Build(this, Mode);
+        _map = map;
 
         var def = CharacterCatalog.Player(CharacterOverride ?? GameSession.SelectedCharacterId);
         Player = new Player();
         Player.Setup(this, def);
-        Player.Position = Layout.PlayerStart;
+        Player.Position = Map.PlayerStart;
         AddChild(Player);
         Players.Add(Player);
         Player.Died += CheckWipe;
@@ -182,7 +191,7 @@ public partial class Stage : Node3D
 
         Cam = new CameraRig { Name = "Camera", Target = Player, Player = Player };
         AddChild(Cam);
-        Cam.SnapTo(Layout.PlayerStart);
+        Cam.SnapTo(Map.PlayerStart);
         Effects.RegisterCorpseObserver(Player, Cam);
 
         _enemyRoot = new Node3D { Name = "Enemies" };
@@ -190,7 +199,7 @@ public partial class Stage : Node3D
         Flow.Update(Player.GlobalPosition);
         RefreshRouteFlows();
         // Scenario fills areas ahead and sends waves from the stage's entries; the other modes spawn by their own rules.
-        if (Mode == GameMode.Scenario) Director.UseEncounters(SpawnDatabase.Current.Stage1);
+        if (Mode == GameMode.Scenario && Map.Encounters is { } encounters) Director.UseEncounters(encounters);
         ModeRules = ModeRules.Create(Mode);
         if (ModeRules != null)
         {
@@ -323,22 +332,28 @@ public partial class Stage : Node3D
     {
         // The route counts doors as open: progress and "forward" must exist before the shutter opens.
         ExitFlow = Flow.CopyLayout();
-        Layout.ApplyFlow(ExitFlow, doors: false);
-        ExitFlow.Update(Layout.SafehouseCenter);
+        Map.ApplyFlow(ExitFlow, doors: false);
+        ExitFlow.Update(Map.RouteGoal);
         LeaderFlow = Flow.CopyLayout();
         LeaderFlow.Update(Player.GlobalPosition);
     }
 
-    /// <summary>Metres left to the safehouse along the route (smaller = further ahead). Off the route: by the +X axis.</summary>
+    /// <summary>
+    /// Metres left to the route's goal (smaller = further ahead). Off the route: by the +X axis.
+    /// A map without a route (open field) has no ahead or behind: every spot is 0.
+    /// </summary>
     public float Progress(Vector3 at)
     {
+        if (!Map.HasRoute) return 0;
         int cost = ExitFlow.Distance(at);
-        return cost == FlowField.Unreachable ? Layout.SafehouseCenter.X - at.X : cost / 10f;
+        return cost == FlowField.Unreachable ? Map.RouteGoal.X - at.X : cost / 10f;
     }
 
     /// <summary>Direction the route continues from <paramref name="at"/> (the level runs along +X, level-design-rules.md).</summary>
     public Vector3 RouteForward(Vector3 at)
     {
+        // Without a route, "forward" is where the local player is looking.
+        if (!Map.HasRoute) return Player.AimDirection;
         var dir = ExitFlow.Direction(at);
         return dir == Vector3.Zero ? Vector3.Right : dir;
     }
@@ -379,8 +394,8 @@ public partial class Stage : Node3D
             // Three squadmates take one role each; a single one gets a random role.
             var role = count >= roles.Count ? roles[i % roles.Count] : roles[rng.RandiRange(0, roles.Count - 1)];
             var def = CharacterCatalog.Player(species[i % species.Count]);
-            var at = Layout.PlayerStart + offsets[i % offsets.Length];
-            if (Flow.IsBlocked(at)) at = Layout.PlayerStart;
+            var at = Map.PlayerStart + offsets[i % offsets.Length];
+            if (Flow.IsBlocked(at)) at = Map.PlayerStart;
             var bot = AddSurvivor(def, at, true, $"Squad{i + 1}", new AppearanceProfile());
             Squad.Add(SquadBrain.Attach(this, bot, role, i));
             WatchSquadmate(bot, role, i);
@@ -493,7 +508,7 @@ public partial class Stage : Node3D
     /// <summary>Re-stamp the whole flow grid (doors opening or closing). Layout is null while it is still being built.</summary>
     public void RebuildFlow()
     {
-        _layout?.ApplyFlow();
+        _map?.ApplyFlow();
         FlowVersion++;
         if (ExitFlow != null) RefreshRouteFlows();
         if (Lure != null && LureFlow != null)

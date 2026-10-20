@@ -45,6 +45,9 @@ public partial class Door : Node3D
         return door;
     }
 
+    /// <summary>How long it takes to swing or roll open when another PC is told it opened (the shutter is slower).</summary>
+    public float OpenSeconds { get; set; } = .5f;
+
     public void SetOpen(bool open, float seconds = .5f)
     {
         IsOpen = open;

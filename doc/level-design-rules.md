@@ -29,3 +29,22 @@
 - [ ] 선택형 탐색과 전투용 후퇴 공간 확보
 
 구현: `game/scripts/World/CameraRig.cs`, `StageOneLayout.cs`. 아이템 배치 데이터: `game/content/data/stages/stage1_supplies.json`(L-12), 몬스터 배치·등장 지점: `stage1_encounters.json`(L-7). 관련 검사: `game/tests/CombatPacingCheck.tscn`. 전체 기능 현황은 [기능 체크리스트](feature-checklist.md).
+
+## 맵 인터페이스 (2026-10-21 구현, L-13)
+
+모든 맵은 `game/scripts/World/StageMap.cs`의 `StageMap`을 상속한다. Stage는 맵 종류를 모르고 아래만 쓴다. 바닥·벽·상자·드럼통·조명·줍기 물건·보급 지점 같은 조립 블록과 흐름장 찍기(전부 막고 → 바닥을 뚫고 → 벽·문을 다시 막음)도 이 기반 클래스에 있다.
+
+| 맵이 정하는 것 | 쓰는 곳 | Stage 1 값 |
+|---|---|---|
+| `Area` | 흐름장 크기 | x −2~128, z −12~12 |
+| `PlayerStart` | 시작·파티원 합류·분대원 위치 | 세이프룸(4, 0), 거점·난전은 창고 가운데(66, 1.6) |
+| `HasRoute` · `RouteGoal` | 진행도(분대원이 앞서지 않기, 지나온 길) | 시나리오만 경로 있음, 목표 = 세이프하우스 |
+| `Encounters` | 시나리오 디렉터의 미리 배치·웨이브 입구 | `stages/stage1_encounters.json` |
+| `Doors` · `AlarmDevice` | 멀티 세계 상태(문 i = i번째 비트, 경보 = 문 다음 비트), `Door.OpenSeconds` | 세이프룸 문·셔터(1.2초)·세이프하우스 문, 차 경보기 |
+| `CoreSpot` · `Gates` | 거점의 발전기 자리, 웨이브가 들어오는 입구 묶음(없으면 발전기 둘레 16~24m) | (68, 1.6), 거리 쪽·야적장 쪽 |
+| `TitleKey` | HUD 왼쪽 위 이름(비면 모드 이름만) | `ui_hud_stage` |
+
+- 어느 맵을 쓸지는 `StageMap.Create(mode)`가 정한다. 지금은 모든 모드가 Stage 1이고, 난전의 넓은 평지(다음 단계)는 여기서 갈린다.
+- 시나리오의 진행(세이프룸 문·셔터·크레센도·세이프하우스)은 아직 Stage 1의 부품(`Stage.Layout`)을 직접 쓴다. 다른 맵에서 시나리오를 하려면 그 부분도 맵 쪽으로 옮겨야 한다(I-79).
+- 검사: `game/tests/MapCheck.tscn` — Stage 1이 그대로인지, 부품 없는 평지 검사 맵에서 난전·거점이 도는지(창 모드면 `output/map-*.png`).
+

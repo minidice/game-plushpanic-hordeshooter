@@ -13,13 +13,6 @@ namespace HordeShooter;
 /// </summary>
 public partial class SurvivalRules : ModeRules
 {
-    /// <summary>The generator stands in the open lane between the hall's shelves.</summary>
-    public static readonly Vector3 CorePosition = new(68, 0, 1.6f);
-
-    // Far enough from the doorways that a group is off screen while the player guards the core.
-    private static readonly Vector3[] StreetGate = Spots(40, 49, -4.5f, 4.5f);
-    private static readonly Vector3[] YardGate = Spots(89, 99, -5.5f, 5.5f);
-
     public override GameMode Mode => GameMode.Survival;
     public override BaseCore? Core => _core;
     public SurvivalTuning Rules => Tuning.Survival;
@@ -37,7 +30,7 @@ public partial class SurvivalRules : ModeRules
     public override void _Ready()
     {
         base._Ready();
-        _core = BaseCore.Create(Stage, CorePosition, Rules.CoreHp);
+        _core = BaseCore.Create(Stage, Stage.Map.CoreSpot, Rules.CoreHp);
         _core.Destroyed += () =>
         {
             if (Stage.Authoritative) Stage.EndMode(false, "msg_survival_core_lost");
@@ -132,7 +125,7 @@ public partial class SurvivalRules : ModeRules
     {
         foreach (var row in Table.NamedDue(after, upTo, Stage.ThemeId))
         {
-            if (PickSpot(Rng.Randf() < .5f ? StreetGate : YardGate) is not { } at) continue;
+            if (PickSpot(Gate()) is not { } at) continue;
             for (int i = 0; i < row.Count; i++) ModeSpawnTable.Spawn(Stage, row, at);
             NamedSent += row.Count;
         }
@@ -144,8 +137,7 @@ public partial class SurvivalRules : ModeRules
         int alive = Stage.AllEnemies.Count(e => !e.IsDead);
         int count = Mathf.Min(wave.Group, Rules.MaxAlive - alive);
         if (count <= 0) return 0;
-        var gate = Rng.Randf() < .5f ? StreetGate : YardGate;
-        if (PickSpot(gate) is not { } at) return 0;
+        if (PickSpot(Gate()) is not { } at) return 0;
         int spawned = 0;
         for (int i = 0; i < count; i++)
         {
@@ -157,12 +149,10 @@ public partial class SurvivalRules : ModeRules
         return spawned;
     }
 
-    private static Vector3[] Spots(float x0, float x1, float z0, float z1)
+    /// <summary>One of the map's doorways at random; with none, a ring 16–24 m around the generator.</summary>
+    private IEnumerable<Vector3> Gate()
     {
-        var spots = new List<Vector3>();
-        for (float x = x0; x <= x1; x += 1.5f)
-            for (float z = z0; z <= z1; z += 1.5f)
-                spots.Add(new Vector3(x, 0, z));
-        return spots.ToArray();
+        var gates = Stage.Map.Gates;
+        return gates.Count > 0 ? gates[Rng.RandiRange(0, gates.Count - 1)] : Stage.Flow.OpenCellsNear(_core.GlobalPosition, 16, 24);
     }
 }
