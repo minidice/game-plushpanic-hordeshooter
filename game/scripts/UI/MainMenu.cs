@@ -37,6 +37,13 @@ public partial class MainMenu : Control
     private VBoxContainer _lobbyPlayers = null!;
     private readonly Dictionary<GameMode, Button> _lobbyModes = new();
     private NetLobby? _lobby;
+    // The public room list (RoomDirectory): refreshed while the multiplayer page is open.
+    private VBoxContainer _roomList = null!;
+    private Label _roomStatus = null!, _lobbyNetwork = null!;
+    private double _roomTimer;
+    private bool _roomBusy;
+    private PortOpener.Result _shownPort;
+    public const double RoomRefresh = 5;
 
     public IReadOnlyList<CharacterDefinition> Characters => _characters;
     public CharacterDefinition Selected => _characters[_index];
@@ -139,6 +146,7 @@ public partial class MainMenu : Control
         _previewTools.Visible = page == MenuPage.Customize;
         _description.Visible = page != MenuPage.Customize;
         if (page == MenuPage.Lobby) RefreshLobby();
+        if (page == MenuPage.Multi) _roomTimer = 0; // list right away
         if (page == MenuPage.Single && _characters.Count > 0) _singleCharacter.Text = Loc.Format("fmt_menu_single_character", Loc.Text(Selected.DisplayName));
         // Enter presses the focused button, so each page focuses the action Enter should take.
         var focus = page switch
@@ -283,31 +291,92 @@ public partial class MainMenu : Control
             ShowPage(MenuPage.Lobby);
         };
         page.AddChild(host);
+
+        // Rooms on lobby.minidice.net: press one to join (other versions are shown but locked).
+        var roomsHeader = new HBoxContainer();
+        var roomsTitle = Section("menu_rooms_title");
+        roomsTitle.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        roomsHeader.AddChild(roomsTitle);
+        var refresh = new Button { Name = "Rooms_Refresh", Text = Loc.Text("menu_rooms_refresh"), Disabled = !RoomDirectory.Enabled };
+        refresh.Pressed += () => { _sfx.Play("ui_click"); RefreshRooms(); };
+        roomsHeader.AddChild(refresh);
+        page.AddChild(roomsHeader);
+        _roomStatus = Hint(Loc.Text(RoomDirectory.Enabled ? "menu_rooms_loading" : "menu_rooms_off"));
+        _roomStatus.Name = "Rooms_Status";
+        page.AddChild(_roomStatus);
+        var scroll = new ScrollContainer { Name = "Rooms_Scroll", CustomMinimumSize = new Vector2(0, 150), SizeFlagsVertical = SizeFlags.ExpandFill, HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
+        _roomList = new VBoxContainer { Name = "Rooms_List", SizeFlagsHorizontal = SizeFlags.ExpandFill };
+        _roomList.AddThemeConstantOverride("separation", 6);
+        scroll.AddChild(_roomList);
+        page.AddChild(scroll);
+
+        page.AddChild(Section("menu_multi_by_address"));
         var join = new HBoxContainer();
         // Empty until a first join: a ready-made 127.0.0.1 invited typing the host's last digits after it (I-76).
         _address = new LineEdit { Name = "Multi_Address", Text = NetLaunch.LastAddress, PlaceholderText = Loc.Text("menu_multi_address"), MaxLength = 64, SizeFlagsHorizontal = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(0, 48) };
-        _address.TextSubmitted += JoinRoom;
+        _address.TextSubmitted += text => JoinRoom(text);
         join.AddChild(_address);
         _joinButton = new Button { Name = "Multi_Join", Text = Loc.Text("menu_multi_join"), CustomMinimumSize = new Vector2(220, 48) };
         _joinButton.Pressed += () => JoinRoom(_address.Text);
         join.AddChild(_joinButton);
         page.AddChild(join);
         page.AddChild(_multiStatus);
-        page.AddChild(BigButton("Multi_Public", Loc.Format("fmt_menu_coming_soon", Loc.Text("menu_multi_public")), disabled: true));
         page.AddChild(Hint(Loc.Text("menu_multi_test_hint")));
-        page.AddChild(new Control { SizeFlagsVertical = SizeFlags.ExpandFill });
         page.AddChild(BackButton(MenuPage.Multi));
         return page;
     }
 
-    public void JoinRoom(string address)
+    private async void RefreshRooms()
+    {
+        if (_roomBusy || !RoomDirectory.Enabled) return;
+        _roomBusy = true;
+        _roomTimer = RoomRefresh;
+        var rooms = await RoomDirectory.List();
+        _roomBusy = false;
+        if (!IsInstanceValid(this) || !IsInsideTree()) return;
+        ShowRooms(rooms);
+    }
+
+    /// <summary>Rows for the rooms on the list: same version first, other versions locked with the reason.</summary>
+    public void ShowRooms(IReadOnlyList<RoomDirectory.Room>? rooms)
+    {
+        foreach (var child in _roomList.GetChildren()) { _roomList.RemoveChild(child); child.QueueFree(); }
+        _roomStatus.Text = !RoomDirectory.Enabled ? Loc.Text("menu_rooms_off")
+            : rooms == null ? Loc.Text("menu_rooms_unreachable")
+            : rooms.Count == 0 ? Loc.Text("menu_rooms_empty")
+            : Loc.Format("fmt_menu_rooms_count", rooms.Count);
+        if (rooms == null) return;
+        foreach (var room in rooms.OrderBy(r => r.SameVersion ? 0 : 1))
+        {
+            var row = new HBoxContainer { Name = "Room_" + room.Id };
+            string state = Loc.Text(room.Playing ? "menu_room_playing" : "menu_room_waiting");
+            string text = Loc.Format("fmt_menu_room", room.Name, room.Players, room.MaxPlayers, state);
+            if (room.SameNetwork) text += " · " + Loc.Text("menu_room_same_network");
+            var label = UiTheme.Label(text, 17, room.SameVersion ? null : UiTheme.Muted);
+            label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            label.ClipText = true;
+            row.AddChild(label);
+            var join = new Button
+            {
+                Name = "Room_Join_" + room.Id, CustomMinimumSize = new Vector2(150, 40),
+                Disabled = !room.SameVersion || room.Full,
+                Text = Loc.Text(!room.SameVersion ? "menu_room_other_version" : room.Full ? "menu_room_full" : "menu_multi_join"),
+                TooltipText = room.SameVersion ? "" : Loc.Format("fmt_menu_room_version", room.Version, NetLobby.Version),
+            };
+            join.Pressed += () => { _sfx.Play("ui_click"); JoinRoom(room.JoinAddress, room.Port); };
+            row.AddChild(join);
+            _roomList.AddChild(row);
+        }
+    }
+
+    public void JoinRoom(string address, int port = NetLaunch.Port)
     {
         address = address.Trim();
         if (address.Length == 0) { _multiStatus.Text = Loc.Text("menu_multi_need_address"); return; }
         _address.Text = address;
         _joinButton.Disabled = true;
         _multiStatus.Text = Loc.Format("fmt_menu_multi_joining", address);
-        NetLaunch.Join(GetTree(), address, ok =>
+        NetLaunch.Join(GetTree(), address, port: port, done: ok =>
         {
             if (!IsInstanceValid(this) || !IsInsideTree()) return;
             GameSettings.Save(); // remembers the address for next time
@@ -327,6 +396,9 @@ public partial class MainMenu : Control
         _lobbyInfo = Hint("");
         _lobbyInfo.Name = "Lobby_Info";
         page.AddChild(_lobbyInfo);
+        _lobbyNetwork = Hint("");
+        _lobbyNetwork.Name = "Lobby_Network";
+        page.AddChild(_lobbyNetwork);
 
         // Only the host picks; everyone sees the choice, and a new one clears everyone's ready.
         page.AddChild(Section("menu_mode_label"));
@@ -403,6 +475,20 @@ public partial class MainMenu : Control
         _lobbyInfo.Text = host
             ? Loc.Format("fmt_net_hosting", lan.Length > 0 ? string.Join(" / ", lan) : "127.0.0.1", NetLaunch.Port)
             : Loc.Format("fmt_lobby_joined", NetLaunch.LastAddress);
+        // Host: is the room on the public list, and can someone outside this router reach it?
+        _shownPort = PortOpener.State;
+        _lobbyNetwork.Visible = host && _lobby.Advertise;
+        if (_lobbyNetwork.Visible)
+        {
+            string list = Loc.Text(_lobby.Listed ? "lobby_listed" : _lobby.ListFailed ? "lobby_list_failed" : "lobby_listing");
+            string port = PortOpener.State switch
+            {
+                PortOpener.Result.Opened => Loc.Format("fmt_lobby_port_open", NetLaunch.Port),
+                PortOpener.Result.Failed => Loc.Format("fmt_lobby_port_failed", NetLaunch.Port),
+                _ => Loc.Text("lobby_port_trying"),
+            };
+            _lobbyNetwork.Text = list + "\n" + port;
+        }
         foreach (var (mode, button) in _lobbyModes)
         {
             button.SetPressedNoSignal(mode == _lobby.Mode);
@@ -680,6 +766,8 @@ public partial class MainMenu : Control
     {
         float dt = (float)delta;
         _time += dt;
+        if (Page == MenuPage.Multi && RoomDirectory.Enabled && (_roomTimer -= dt) <= 0) RefreshRooms();
+        if (Page == MenuPage.Lobby && PortOpener.State != _shownPort) RefreshLobby();
         if (_autoRotate.ButtonPressed)
         {
             _turntable.RotateY(dt * .22f);

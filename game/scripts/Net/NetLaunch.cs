@@ -34,6 +34,7 @@ public static class NetLaunch
         join = null;
         if (_argsUsed) return false;
         _argsUsed = true;
+        RoomDirectory.ReadArgs();
         foreach (var arg in OS.GetCmdlineUserArgs())
         {
             if (arg == "--host")
@@ -59,6 +60,7 @@ public static class NetLaunch
             Lobby.QueueFree();
         }
         Lobby = null;
+        PortOpener.Close();
         var api = tree.GetMultiplayer();
         if (api.MultiplayerPeer is ENetMultiplayerPeer peer) peer.Close();
         api.MultiplayerPeer = null;
@@ -88,20 +90,23 @@ public static class NetLaunch
         Pending = NetRole.Host;
         GD.Print($"[net] hosting on UDP {Port}");
         OpenLobby(tree, NetRole.Host);
+        // On the public room list, reachable from outside the house if the router agrees to open the port.
+        Lobby!.Advertise = RoomDirectory.Enabled;
+        if (RoomDirectory.Enabled) PortOpener.Open(Port);
         return true;
     }
 
     /// <param name="done">Called once: true when connected (the room is open), false when the host could not be reached.</param>
-    public static void Join(SceneTree tree, string address, System.Action<bool>? done = null)
+    public static void Join(SceneTree tree, string address, System.Action<bool>? done = null, int port = Port)
     {
         Reset(tree);
         LastAddress = address;
         var peer = new ENetMultiplayerPeer();
-        var error = peer.CreateClient(address, Port);
+        var error = peer.CreateClient(address, port);
         if (error != Error.Ok) { GD.PushWarning($"[net] could not connect to {address}: {error}"); done?.Invoke(false); return; }
         var api = tree.GetMultiplayer();
         api.MultiplayerPeer = peer;
-        GD.Print($"[net] joining {address}:{Port}");
+        GD.Print($"[net] joining {address}:{port}");
         // One attempt, one answer: both handlers are removed as soon as either fires (or the attempt is cancelled).
         System.Action ok = null!, fail = null!;
         void Detach() { api.ConnectedToServer -= ok; api.ConnectionFailed -= fail; }
@@ -117,7 +122,7 @@ public static class NetLaunch
         {
             Detach();
             _cancelJoin = null;
-            GD.PushWarning($"[net] could not reach {address}:{Port}");
+            GD.PushWarning($"[net] could not reach {address}:{port}");
             api.MultiplayerPeer = null;
             done?.Invoke(false);
         };
@@ -129,6 +134,8 @@ public static class NetLaunch
     private static void OpenLobby(SceneTree tree, NetRole role)
     {
         Lobby = NetLobby.Create(role, GameSession.SelectedCharacterId);
+        try { Lobby.ListName = Loc.Text(CharacterCatalog.Player(GameSession.SelectedCharacterId).DisplayName); }
+        catch (System.Exception) { Lobby.ListName = GameSession.SelectedCharacterId; }
         tree.Root.AddChild(Lobby);
     }
 }

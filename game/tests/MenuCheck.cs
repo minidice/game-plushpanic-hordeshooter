@@ -30,6 +30,7 @@ public partial class MenuCheck : Node
             Remove(SettingsPath);
             Remove(AppearancePath);
             GameSettings.Reset();
+            RoomDirectory.Url = ""; // no network: rooms are fed in below (RoomDirectoryCheck covers the server)
             GameSession.SquadSize = GameSession.DefaultSquadSize;
             GameSession.Mode = GameMode.Scenario;
             await Run();
@@ -100,8 +101,27 @@ public partial class MenuCheck : Node
         Click("Menu_Multi");
         await Frames(2);
         Check(!Ui<Button>("Multi_Host").Disabled && !Ui<Button>("Multi_Join").Disabled && Ui<LineEdit>("Multi_Address").Editable &&
-              Ui<LineEdit>("Multi_Address").Text == "" && Ui<Button>("Multi_Public").Disabled,
-            "multiplayer page: host and join by address work (address empty, I-76), public rooms still coming soon");
+              Ui<LineEdit>("Multi_Address").Text == "",
+            "multiplayer page: host and join by address work (address empty, I-76)");
+        Check(Ui<Label>("Rooms_Status").Text == Loc.Text("menu_rooms_off") && Ui<Button>("Rooms_Refresh").Disabled,
+            "with the room list off the page says so");
+        RoomDirectory.Url = "http://127.0.0.1:9/hordeshooter"; // only for the rows below: nothing is fetched
+        _menu.ShowRooms(new[]
+        {
+            new RoomDirectory.Room("old", "거위", "p0-00000000", 1, 2, "lobby", "203.0.113.5", 24680, false, Array.Empty<string>()),
+            new RoomDirectory.Room("open", "라쿤", NetLobby.Version, 1, 2, "playing", "203.0.113.6", 24680, true, new[] { "192.168.0.14" }),
+            new RoomDirectory.Room("full", "오리", NetLobby.Version, 2, 2, "lobby", "203.0.113.7", 24680, false, Array.Empty<string>()),
+        });
+        RoomDirectory.Url = "";
+        var rows = Ui<Container>("Rooms_List").GetChildren().Select(n => n.Name.ToString()).ToArray();
+        Check(rows.SequenceEqual(new[] { "Room_open", "Room_full", "Room_old" }) && Ui<Label>("Rooms_Status").Text == Loc.Format("fmt_menu_rooms_count", 3),
+            "rooms list same-version rooms first");
+        Check(Ui<Button>("Room_Join_open") is { Disabled: false } && Ui<Button>("Room_Join_full") is { Disabled: true } &&
+              Ui<Button>("Room_Join_old") is { Disabled: true } old && old.Text == Loc.Text("menu_room_other_version") && old.TooltipText.Contains(NetLobby.Version),
+            "a room of another version is locked and says why before any connection; a full room is locked");
+        Check(new RoomDirectory.Room("x", "", "", 1, 2, "lobby", "203.0.113.6", 24680, true, new[] { "192.168.0.14" }).JoinAddress == "192.168.0.14" &&
+              new RoomDirectory.Room("x", "", "", 1, 2, "lobby", "203.0.113.6", 24680, false, Array.Empty<string>()).JoinAddress == "203.0.113.6",
+            "behind the same router a room is joined on its LAN address, otherwise on its public one");
         Click("Multi_Join");
         Check(Ui<Label>("Multi_Status").Text == Loc.Text("menu_multi_need_address") && !Ui<Button>("Multi_Join").Disabled,
             "joining with no address asks for one instead of connecting");

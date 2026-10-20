@@ -147,13 +147,15 @@
 
 **한 PC에서 빠르게**: `game/Start-Multi-Test.cmd` 더블클릭(= `Start-Game.ps1 -NetPair`) — 빌드 한 번, 방장 창이 뜨고 4초 뒤 참가 창이 자동으로 붙는다.
 
-**다른 PC와(같은 공유기)**: 방장이 방을 만들면 화면 안내와 일시정지 화면에 `192.168.x.x` 같은 주소가 나온다. 다른 PC는 메뉴 → 멀티에서 그 주소로 참가. 처음 방을 만들 때 Windows 방화벽이 묻으면 **개인 네트워크 허용**. 다른 PC에도 같은 버전의 게임이 필요하다: 개발 PC에서 `game/Export-Game.cmd`를 실행하면 `build/HordeShooter-windows.zip`이 생긴다. 이 압축을 다른 PC에 풀고 `HordeShooter.exe`를 실행(Godot·.NET SDK 불필요, 폴더 안 파일은 함께 둘 것). 코드나 데이터가 바뀌면 두 PC 모두 다시 내보낸 같은 버전을 써야 한다(다르면 참가 거절). 인터넷 너머는 ③ 방 코드 단계.
+**다른 PC와(같은 공유기)**: 방장이 방을 만들면 화면 안내와 일시정지 화면에 `192.168.x.x` 같은 주소가 나온다. 다른 PC는 메뉴 → 멀티에서 그 주소로 참가. 처음 방을 만들 때 Windows 방화벽이 묻으면 **개인 네트워크 허용**. 다른 PC에도 같은 버전의 게임이 필요하다: 개발 PC에서 `game/Export-Game.cmd`를 실행하면 `build/HordeShooter-windows.zip`이 생긴다. 이 압축을 다른 PC에 풀고 `HordeShooter.exe`를 실행(Godot·.NET SDK 불필요, 폴더 안 파일은 함께 둘 것). 코드나 데이터가 바뀌면 두 PC 모두 다시 내보낸 같은 버전을 써야 한다(다르면 참가 거절). 인터넷 너머는 아래 방 목록.
 
-**실행**: 메뉴 → 멀티 → **방 만들기**(방장 창), 다른 창에서 주소(같은 PC면 `127.0.0.1`, 다른 PC면 방 화면의 `192.168.x.x` — `127.`로 시작하는 주소는 언제나 자기 PC) 입력 → **참가** → 방에서 파티원 [준비] → 방장 [시작]. 또는 `Start-Game.ps1 -NetHost` / `-NetJoin 127.0.0.1`, `Godot --path . -- --host` / `-- --join=주소`. UDP 24680. 접속에 실패하면 메뉴에 이유와 확인할 것(방 만들었는지·주소·방화벽)을 보여 준다. 방 코드·공개방은 ③ 단계.
+**방 목록(2026-10-21, M-6)**: 방장이 방을 만들면 `https://lobby.minidice.net/hordeshooter/rooms`에 올라간다(`Net/RoomDirectory`, 15초마다 갱신, 인원·대기/게임 중 변화는 1초 안에 반영). 멀티 화면은 5초마다 목록을 받아 보여 주고, 누르면 방장에게 직접 접속한다: 같은 공인 주소(같은 공유기)면 서버가 준 방장 LAN 주소, 아니면 공인 주소. **버전** `NetLobby.Version` = `p<Protocol>-<데이터 지문>`이 다른 방은 "다른 버전"으로 잠겨 접속 자체를 하지 않고, 주소로 직접 들어와도 방장이 첫 인사에서 거절한다. 메시지 모양을 바꾸면 `NetLobby.Protocol`을 올린다. 다른 집에서 들어오려면 방장 공유기의 UDP 24680이 열려야 한다: 방장 게임이 UPnP로 자동 열기를 시도하고(`Net/PortOpener`) 방 화면에 결과를 보여 준다. 안 되면 공유기에서 포트포워딩을 한 번 해야 한다. 서버 계약은 Minidice `docs/LOBBY_SPEC.md`. `-- --lobby=URL`로 다른 목록 서버(로컬 검사)를 쓴다.
+
+**실행**: 메뉴 → 멀티 → **방 만들기**(방장 창), 다른 창에서 주소(같은 PC면 `127.0.0.1`, 다른 PC면 방 화면의 `192.168.x.x` — `127.`로 시작하는 주소는 언제나 자기 PC) 입력 → **참가** → 방에서 파티원 [준비] → 방장 [시작]. 또는 `Start-Game.ps1 -NetHost` / `-NetJoin 127.0.0.1`, `Godot --path . -- --host` / `-- --join=주소`. UDP 24680. 접속에 실패하면 메뉴에 이유와 확인할 것(방 만들었는지·주소·방화벽)을 보여 준다. 목록에 방이 있으면 주소 입력 없이 방을 눌러 참가.
 
 | 구분 | 코드 |
 |---|---|
-| 역할·연결 | `Net/NetRole`, `Net/NetLaunch`, `Net/NetLobby`(방), `Stage.Role`·`Stage.Authoritative` |
+| 역할·연결 | `Net/NetRole`, `Net/NetLaunch`, `Net/NetLobby`(방), `Net/RoomDirectory`(방 목록), `Net/PortOpener`(UPnP), `Stage.Role`·`Stage.Authoritative` |
 | 묶기·풀기·보간 | `Net/NetCodec`, `Net/NetMessages`, `Net/NetTrack` |
 | 동기화 | `Net/StageNet`(Stage/Net 노드) |
 | 꼭두각시 적 | `Enemies/EnemyPuppet` |

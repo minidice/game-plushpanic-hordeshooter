@@ -121,19 +121,40 @@ squad_3,3명 (영상 촬영용 4인)
 menu_squad_hint,"아직 게임에 나오지 않습니다. 선택은 저장되고, AI 분대원 작업 때 적용됩니다. 멀티플레이에는 AI가 없습니다."
 menu_test_options,테스트 옵션
 menu_multi_title,멀티플레이
-menu_multi_rules,최대 6명 · 비공개방(방 코드로만 참가) · AI 분대원 없음 · 아군 오사는 방 옵션(기본 꺼짐)
+menu_multi_rules,테스트 빌드 · 지금은 2명 · 열린 방은 모두 방 목록에 보임 · AI 분대원 없음
 menu_multi_host,방 만들기
 menu_multi_code,방 코드 6자리
 menu_multi_join,참가
 menu_multi_public,공개방 찾기
 menu_multi_soon_hint,멀티플레이는 준비 중입니다. 2인 동기화와 방 코드 접속을 만든 뒤 열립니다.
 menu_multi_address,방장 주소 (방장 화면의 192.168.x.x · 같은 PC면 127.0.0.1)
-menu_multi_test_hint,2인 테스트: 한 창에서 [방 만들기] → 다른 창에서 방장 주소를 넣고 [참가] (UDP 24680). 방 코드는 다음 단계에서 열립니다.
+menu_multi_test_hint,방 목록에서 방을 골라 [참가]. 목록에 없으면 방장 주소로 직접 참가 (UDP 24680). 같은 버전의 게임끼리만 들어갈 수 있습니다.
 fmt_menu_multi_joining,{0}에 접속하는 중...
 fmt_menu_multi_failed,{0}에 접속하지 못했습니다. 방장이 방을 만들었는지와 주소·방화벽(UDP 24680)을 확인하세요.
 fmt_menu_multi_host_failed,방을 만들지 못했습니다. 이 PC에서 이미 다른 게임이 UDP {0}를 쓰고 있는지 확인하세요.
 menu_multi_need_address,방장 주소를 입력하세요. 방장의 방 화면에 나온 192.168.x.x 주소입니다.
 menu_multi_loopback_hint,127.로 시작하는 주소는 언제나 이 PC 자신입니다. 다른 PC의 방에는 방장 화면에 나온 192.168.x.x 주소로 참가하세요.
+menu_rooms_title,방 목록
+menu_rooms_refresh,새로고침
+menu_rooms_off,방 목록이 꺼져 있습니다
+menu_rooms_loading,방 목록을 불러오는 중...
+menu_rooms_unreachable,방 목록 서버(lobby.minidice.net)에 연결하지 못했습니다. 아래 주소로 참가는 됩니다.
+menu_rooms_empty,열린 방이 없습니다. [방 만들기]로 방을 열 수 있습니다.
+fmt_menu_rooms_count,열린 방 {0}개
+fmt_menu_room,{0}의 방 · {1}/{2} · {3}
+menu_room_waiting,대기 중
+menu_room_playing,게임 중
+menu_room_same_network,같은 공유기
+menu_room_other_version,다른 버전
+menu_room_full,가득 참
+fmt_menu_room_version,방 버전 {0} · 내 버전 {1} — 같은 버전의 게임이 필요합니다
+menu_multi_by_address,주소로 직접 참가
+lobby_listed,방 목록에 올라 있습니다.
+lobby_listing,방 목록에 올리는 중...
+lobby_list_failed,방 목록 서버에 연결하지 못했습니다. 주소로 참가는 됩니다.
+lobby_port_trying,다른 집에서 참가: 공유기 포트를 여는 중...
+fmt_lobby_port_open,다른 집에서도 참가할 수 있습니다 (공유기가 UDP {0}을 열었습니다).
+fmt_lobby_port_failed,같은 공유기에서만 참가할 수 있습니다. 다른 집에서 들어오려면 공유기에서 UDP {0} 포트포워딩이 필요합니다.
 menu_lobby_title,방
 fmt_lobby_joined,{0}의 방에 들어왔습니다
 fmt_lobby_players,참가자 {0}/{1}

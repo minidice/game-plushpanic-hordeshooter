@@ -121,19 +121,40 @@ squad_3,3 (4-player shots for video)
 menu_squad_hint,Not in the game yet. Your choice is saved and will apply once AI squadmates are added. Multiplayer has no AI.
 menu_test_options,Test options
 menu_multi_title,Multiplayer
-menu_multi_rules,Up to 6 players · private rooms (join by code only) · no AI squadmates · friendly fire is a room option (off by default)
+menu_multi_rules,Test build · 2 players for now · every open room is on the room list · no AI squadmates
 menu_multi_host,Create Room
 menu_multi_code,6-character room code
 menu_multi_join,Join
 menu_multi_public,Browse Public Rooms
 menu_multi_soon_hint,Multiplayer is coming soon. It opens once two-player sync and room-code joining are built.
 menu_multi_address,Host address (the host's 192.168.x.x · 127.0.0.1 on the same PC)
-menu_multi_test_hint,Two-player test: [Create Room] in one window → enter the host address and [Join] in another (UDP 24680). Room codes come next.
+menu_multi_test_hint,Pick a room on the list and press [Join]. Not listed? Join by the host address (UDP 24680). Only the same game version can join.
 fmt_menu_multi_joining,Connecting to {0}...
 fmt_menu_multi_failed,Could not reach {0}. Check that the host created a room · the address · the firewall (UDP 24680).
 fmt_menu_multi_host_failed,Could not create the room. Check whether another game on this PC already uses UDP {0}.
 menu_multi_need_address,Enter the host address: the 192.168.x.x shown on the host's room screen.
 menu_multi_loopback_hint,An address starting with 127. is always this PC. To join another PC use the 192.168.x.x shown on the host's screen.
+menu_rooms_title,Rooms
+menu_rooms_refresh,Refresh
+menu_rooms_off,The room list is off
+menu_rooms_loading,Loading rooms...
+menu_rooms_unreachable,Could not reach the room list (lobby.minidice.net). Joining by address below still works.
+menu_rooms_empty,No open rooms. [Create Room] opens one.
+fmt_menu_rooms_count,{0} open room(s)
+fmt_menu_room,{0}'s room · {1}/{2} · {3}
+menu_room_waiting,In the room
+menu_room_playing,Playing
+menu_room_same_network,same router
+menu_room_other_version,Other version
+menu_room_full,Full
+fmt_menu_room_version,Room version {0} · yours {1} — both need the same game version
+menu_multi_by_address,Join by address
+lobby_listed,Listed in the room list.
+lobby_listing,Putting the room on the list...
+lobby_list_failed,Could not reach the room list server. Joining by address still works.
+lobby_port_trying,Joining from other homes: opening the router port...
+fmt_lobby_port_open,Players in other homes can join (the router opened UDP {0}).
+fmt_lobby_port_failed,Only players on this router can join. For other homes forward UDP {0} on the router.
 menu_lobby_title,Room
 fmt_lobby_joined,In {0}'s room
 fmt_lobby_players,Players {0}/{1}

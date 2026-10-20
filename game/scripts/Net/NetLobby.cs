@@ -14,6 +14,12 @@ public partial class NetLobby : Node
 {
     public const string NodeName = "NetLobby";
     public const int HostPeer = 1;
+    /// <summary>Bump when lobby or match messages change shape: older builds then show as another version.</summary>
+    public const int Protocol = 2;
+    /// <summary>Two PCs can play together only on the same version: messages and data ids (multiplayer-sync-design.md 6장).</summary>
+    public static string Version => $"p{Protocol}-{(uint)NetIds.DataHash():x8}";
+    /// <summary>Seconds between the host's refreshes of its room on the public list (it expires after 45 s).</summary>
+    public const double AdInterval = 15;
 
     public sealed class Member
     {
@@ -36,6 +42,12 @@ public partial class NetLobby : Node
     public Member? Mine => Members.FirstOrDefault(m => m.Peer == Me);
     /// <summary>Everyone but the host is ready. The host alone may start too.</summary>
     public bool CanStart => Role == NetRole.Host && !InMatch && Members.Where(m => m.Peer != HostPeer).All(m => m.Ready);
+    /// <summary>Host: put this room on the public list (RoomDirectory). Off in tests.</summary>
+    public bool Advertise { get; set; }
+    /// <summary>Host: the list has this room right now.</summary>
+    public bool Listed => _listing != null;
+    /// <summary>Host: the list server could not be reached on the last try.</summary>
+    public bool ListFailed { get; private set; }
 
     /// <summary>The roster, mode or match state changed.</summary>
     public event Action? Changed;
@@ -62,9 +74,14 @@ public partial class NetLobby : Node
     };
 
     private string _character = "";
+    private RoomDirectory.Listing? _listing;
+    private double _adTimer;
+    private bool _adBusy, _adDirty;
 
     public override void _Ready()
     {
+        // The room keeps refreshing its listing while the stage (or its pause menu) runs.
+        ProcessMode = ProcessModeEnum.Always;
         if (Role == NetRole.Host)
         {
             Members.Add(new Member { Peer = HostPeer, Character = _character, Ready = true });
@@ -73,12 +90,15 @@ public partial class NetLobby : Node
         else
         {
             Multiplayer.ServerDisconnected += OnHostLeft;
-            RpcId(HostPeer, MethodName.Hello, _character, NetIds.DataHash());
+            RpcId(HostPeer, MethodName.Hello, _character, Version);
         }
     }
 
     public override void _ExitTree()
     {
+        // Off the list at once rather than after the 45 s expiry.
+        if (_listing != null) _ = RoomDirectory.Remove(_listing);
+        _listing = null;
         // The multiplayer API outlives this node: leave nothing pointing at it.
         if (Role == NetRole.Host) Multiplayer.PeerDisconnected -= OnPeerLeft;
         else Multiplayer.ServerDisconnected -= OnHostLeft;
@@ -89,14 +109,14 @@ public partial class NetLobby : Node
     // =====================================================================
 
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
-    private void Hello(string character, int dataHash)
+    private void Hello(string character, string version)
     {
         if (Role != NetRole.Host) return;
         int peer = Multiplayer.GetRemoteSenderId();
-        // Another build or other data would read our ids differently (multiplayer-sync-design.md 6장).
-        if (dataHash != NetIds.DataHash())
+        // Another build or other data would read our messages and ids differently (multiplayer-sync-design.md 6장).
+        if (version != Version)
         {
-            GD.PushWarning($"[lobby] refused peer {peer}: different data");
+            GD.PushWarning($"[lobby] refused peer {peer}: version {version}, ours {Version}");
             RpcId(peer, MethodName.Refused, "msg_net_peer_refused");
             return;
         }
@@ -178,7 +198,51 @@ public partial class NetLobby : Node
         foreach (var m in Members) { w.I32(m.Peer); w.Str(m.Character); w.U8(m.Ready ? 1 : 0); }
         var bytes = w.ToArray();
         foreach (var m in Members.Where(m => m.Peer != HostPeer)) RpcId(m.Peer, MethodName.Roster, bytes);
+        _adDirty = true;
         Changed?.Invoke();
+    }
+
+    // ----- the public room list -----
+
+    public override void _Process(double delta)
+    {
+        if (!Advertise || Role != NetRole.Host || _adBusy) return;
+        _adTimer -= delta;
+        // Player count and state go out soon after they change, but no more than once a second.
+        if (_adTimer > 0 && !(_adDirty && _adTimer < AdInterval - 1)) return;
+        _adDirty = false;
+        _adTimer = AdInterval;
+        UpdateListing();
+    }
+
+    private RoomDirectory.Ad Ad() => new(Version, ListName, Members.Count, NetLaunch.MaxPlayers, InMatch ? "playing" : "lobby",
+        NetLaunch.Port, NetLaunch.LanAddresses().Take(4).ToArray());
+
+    /// <summary>The host's character in this PC's language (the list shows it as the room name).</summary>
+    public string ListName { get; set; } = "";
+
+    private async void UpdateListing()
+    {
+        _adBusy = true;
+        bool wasListed = Listed, wasFailed = ListFailed;
+        try
+        {
+            var ad = Ad();
+            bool? kept = _listing == null ? false : await RoomDirectory.Refresh(_listing, ad);
+            if (!IsInsideTree()) return;
+            if (kept == false)
+            {
+                // New room, or the list forgot it (server restart, long pause): register again.
+                var listing = await RoomDirectory.Register(ad);
+                if (!IsInsideTree()) { if (listing != null) _ = RoomDirectory.Remove(listing); return; }
+                _listing = listing;
+                kept = listing != null ? true : null;
+                if (listing != null) GD.Print($"[rooms] listed as {listing.Id} ({Version})");
+            }
+            ListFailed = kept == null;
+            if (ListFailed != wasFailed || Listed != wasListed) Changed?.Invoke();
+        }
+        finally { _adBusy = false; }
     }
 
     // =====================================================================
