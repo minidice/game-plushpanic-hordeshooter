@@ -14,8 +14,23 @@ public partial class EnemyProjectile : Node3D
         _stage = stage; Position = from; _shot = shot; _damage = damage;
         _direction = (target - from).Normalized(); _remaining = from.DistanceTo(target);
     }
-    public override void _Ready() => Mat.Mesh(this, new SphereMesh { Radius = .13f, Height = .26f }, Vector3.Zero,
-        Mat.Glow(_shot.HazardSeconds > 0 ? new Color("b1df3a") : new Color("ffc768")));
+    /// <summary>Gunshots are a thin streak trailing behind the bullet's head (I-66).</summary>
+    public const float TracerLength = .5f, TracerRadius = .025f;
+
+    public override void _Ready()
+    {
+        // Vomit is a slow blob you are meant to watch and step away from.
+        if (_shot.HazardSeconds > 0)
+        {
+            Mat.Mesh(this, new SphereMesh { Radius = .13f, Height = .26f }, Vector3.Zero, Mat.Glow(new Color("b1df3a")));
+            return;
+        }
+        // Gunshots: the windup is the warning (C-13). The bullet itself is fast and should not glow like a ball.
+        if (Mathf.Abs(_direction.Dot(Vector3.Up)) < .99f) LookAt(GlobalPosition + _direction, Vector3.Up);
+        var streak = Mat.Mesh(this, new CylinderMesh { TopRadius = TracerRadius, BottomRadius = TracerRadius * .4f, Height = TracerLength, RadialSegments = 6, Rings = 1 },
+            new Vector3(0, 0, TracerLength * .5f), Mat.Glow(new Color("f2dcb0"), 1.1f));
+        streak.RotationDegrees = new Vector3(-90, 0, 0);
+    }
 
     public override void _PhysicsProcess(double delta)
     {
