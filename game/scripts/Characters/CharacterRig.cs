@@ -66,6 +66,7 @@ public partial class CharacterRig : Node3D
         PrepareEars();
         PrepareBodyTones();
         PrepareColors();
+        ApplyBodyTones(new AppearanceProfile());
         if (def.IsZombie) Zombify(def);
         HidePart(def.Id + "_beret");
         HidePart(def.Id + "_headset");

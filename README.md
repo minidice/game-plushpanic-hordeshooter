@@ -17,6 +17,7 @@ Windows에서 Godot 4.7.2 .NET과 .NET SDK를 준비한 뒤 `game/Start-Game.cmd
 - `game/`: 게임 소스, 설정 데이터, 실행용 에셋, 검사 장면.
 - `prototypes/character-lab/`: 캐릭터 비교/제작 도구와 Blender·GLB 생성 스크립트. [사용법](prototypes/character-lab/README.md).
 - [기능 체크리스트](doc/feature-checklist.md): 구현 현황.
+- [플레이어 동물 가이드](doc/player-species-guide.md), [몬스터 가이드](doc/monster-design-guide.md): 종별 특징·적 역할·새 모델 추가 양식. 기술 계약은 [모델 규격](doc/character-model-spec.md).
 - [결정 기록](doc/decisions.md), [이슈 기록](doc/issues.md): 결정 이유와 버그·제약·재발 방지 이력.
 - [작업 규칙](AGENTS.md): 기능 추가·버그 수정 때 함께 갱신할 문서와 검증 기준.
 

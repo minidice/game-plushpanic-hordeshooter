@@ -4,25 +4,14 @@ using System.Collections.Generic;
 
 namespace HordeShooter;
 
-/// <summary>
-/// Two/three-tone body colors. The skin's vertex colors were painted by the model generator
-/// (prototypes/character-lab/src/model.mjs `beanSkin`) as a blend of the species palette:
-/// main fur shaded by height, a belly patch on the lower front, and face patches for the mammals.
-/// The same formula, evaluated at each vertex position, gives how much of each tone a vertex holds.
-/// A new tone adds (new − old) × that weight on top of the original color, so untouched tones and
-/// the default look stay exactly as imported.
-/// </summary>
+/// <summary>Continuous body/face masks evaluated per fragment. Palette edits only change uniforms;
+/// geometry, shadows and other characters' materials stay untouched.</summary>
 public partial class CharacterRig
 {
     private MeshInstance3D? _skin;
     private ArrayMesh? _skinOriginal;
     private string _toneSpecies="";
-    private Godot.Collections.Array? _skinArrays;
-    private Color[]? _skinColors;
-    private ArrayMesh? _skinToned;
-    private (string,string,string) _skinTonesShown=("","","");
-    // Per-species tone weights for the imported skin (plain arrays, not Godot resources).
-    private static readonly Dictionary<string,Vector3[]> ToneWeights=new();
+    private ShaderMaterial? _skinMaterial;
 
     public string ToneSpecies=>_toneSpecies;
 
@@ -40,56 +29,37 @@ public partial class CharacterRig
     private void ApplyBodyTones(AppearanceProfile p)
     {
         if(_skin==null||_skinOriginal==null||AppearanceCatalog.Palette(_toneSpecies) is not { } palette)return;
-        var overrideMaterial=_skin.GetSurfaceOverrideMaterial(0);
-        var tones=(p.Body,p.BodySecondary,p.BodyMarking);
-        if(!p.HasCustomBodyTones)
+        if(_skinMaterial==null)
         {
-            if(_skin.Mesh!=_skinOriginal){_skin.Mesh=_skinOriginal;_skin.SetSurfaceOverrideMaterial(0,overrideMaterial);}
-            _skinTonesShown=tones;
-            return;
+            _skinMaterial=new ShaderMaterial { Shader=(Shader)ContentCache.Load("res://shaders/character_skin.gdshader")! };
+            _skinMaterial.SetShaderParameter("species",_toneSpecies=="raccoon"?1:_toneSpecies=="redpanda"?2:0);
+            _skinMaterial.SetShaderParameter("body_height",_toneSpecies=="goose"?1.74f:1.62f);
+            _skin.SetSurfaceOverrideMaterial(0,_skinMaterial);
         }
-        // Sliders re-apply the whole profile on every tick; only rebuild when a tone actually changed.
-        if(tones==_skinTonesShown&&_skinToned!=null&&_skin.Mesh==_skinToned)return;
-        // Reading a surface back can stall the renderer, so the imported arrays are fetched once per rig.
-        _skinArrays??=_skinOriginal.SurfaceGetArrays(0);
-        var arrays=_skinArrays.Duplicate();
-        var positions=arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array();
-        _skinColors??=arrays[(int)Mesh.ArrayType.Color].AsColorArray();
-        var colors=(Color[])_skinColors.Clone();
-        if(colors.Length!=positions.Length)return;
-        var weights=Weights(_toneSpecies,positions);
-        // Vertex colors are linear; palette and picked colors are sRGB.
-        Vector3 Delta(string chosen,Color own){var a=Tone(chosen,own).SrgbToLinear();var b=own.SrgbToLinear();return new Vector3(a.R-b.R,a.G-b.G,a.B-b.B);}
-        var dPrimary=Delta(p.Body,palette.Primary);
-        var dSecondary=Delta(p.BodySecondary,palette.Secondary);
-        var dMarking=palette.Marking is { } marking?Delta(p.BodyMarking,marking):Vector3.Zero;
-        for(int i=0;i<colors.Length;i++)
-        {
-            var w=weights[i];
-            var d=dPrimary*w.X+dSecondary*w.Y+dMarking*w.Z;
-            var c=colors[i];
-            colors[i]=new Color(Mathf.Clamp(c.R+d.X,0,1),Mathf.Clamp(c.G+d.Y,0,1),Mathf.Clamp(c.B+d.Z,0,1),c.A);
-        }
-        arrays[(int)Mesh.ArrayType.Color]=colors;
-        _skinToned??=new ArrayMesh();
-        _skinToned.ClearSurfaces();
-        // Uncompressed, and no shadow mesh: Godot also draws the shadow mesh in the depth pre-pass, and the
-        // import's compressed one sits a hair off this rebuilt surface, which blacked out patches of skin (I-52).
-        _skinToned.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles,arrays);
-        _skinToned.SurfaceSetMaterial(0,_skinOriginal.SurfaceGetMaterial(0));
-        _skin.Mesh=_skinToned;
-        _skin.SetSurfaceOverrideMaterial(0,overrideMaterial);
-        _skinTonesShown=tones;
+        _skinMaterial.SetShaderParameter("marking_softness",p.MarkingSoftness);
+        _skinMaterial.SetShaderParameter("eye_spacing",p.EyeSpacing);
+        _skinMaterial.SetShaderParameter("primary_color",Tone(p.Body,palette.Primary));
+        _skinMaterial.SetShaderParameter("secondary_color",Tone(p.BodySecondary,palette.Secondary));
+        _skinMaterial.SetShaderParameter("marking_color",Tone(p.BodyMarking,palette.Marking??palette.Secondary));
     }
 
-    /// <summary>Exposed for checks: (primary, secondary, marking) weight of each skin vertex.</summary>
-    public Vector3[] SkinToneWeights()=>_skinOriginal==null?Array.Empty<Vector3>():(Vector3[])Weights(_toneSpecies,_skinOriginal.SurfaceGetArrays(0)[(int)Mesh.ArrayType.Vertex].AsVector3Array()).Clone();
-    public Color[] SkinColors()=>_skin?.Mesh is ArrayMesh m?m.SurfaceGetArrays(0)[(int)Mesh.ArrayType.Color].AsColorArray():Array.Empty<Color>();
-
-    private static Vector3[] Weights(string species,Vector3[] positions)
+    /// <summary>CPU reference samples of the continuous shader, for palette/save regression checks.
+    /// These are not vertex colors used by the renderer. GPU mask precision has a separate render check.</summary>
+    public Vector3[] SkinToneWeights()=>_skinOriginal==null?Array.Empty<Vector3>():(Vector3[])Weights(_toneSpecies,_skinOriginal.SurfaceGetArrays(0)[(int)Mesh.ArrayType.Vertex].AsVector3Array(),_appliedAppearance??new AppearanceProfile()).Clone();
+    public Color[] SkinColors()
     {
-        string key=species+":"+positions.Length;
-        if(ToneWeights.TryGetValue(key,out var cached))return cached;
+        if(AppearanceCatalog.Palette(_toneSpecies) is not { } palette)return Array.Empty<Color>();
+        var p=_appliedAppearance??new AppearanceProfile();
+        var a=Tone(p.Body,palette.Primary).SrgbToLinear();
+        var b=Tone(p.BodySecondary,palette.Secondary).SrgbToLinear();
+        var c=Tone(p.BodyMarking,palette.Marking??palette.Secondary).SrgbToLinear();
+        var weights=SkinToneWeights();var colors=new Color[weights.Length];
+        for(int i=0;i<weights.Length;i++){var w=weights[i];colors[i]=new Color(a.R*w.X+b.R*w.Y+c.R*w.Z,a.G*w.X+b.G*w.Y+c.G*w.Z,a.B*w.X+b.B*w.Y+c.B*w.Z,1);}
+        return colors;
+    }
+
+    private static Vector3[] Weights(string species,Vector3[] positions,AppearanceProfile profile)
+    {
         var weights=new Vector3[positions.Length];
         // Generator defaults (head, width, height, neck = 1). The goose has a taller neck.
         float total=1.62f+(species=="goose"?.12f:0f);
@@ -106,30 +76,22 @@ public partial class CharacterRig
             float cream=0,dark=0;
             if(mammal)
             {
-                float u=at.X,v=at.Y-1.34f;
-                float Ellipse(float cx,float cy,float rx,float ry)=>1-Step(Sq((u-cx)/rx)+Sq((v-cy)/ry),.85f,1.12f);
-                float patch=species=="raccoon"?Ellipse(0,-.045f,.43f,.24f)
-                    :Mathf.Max(Mathf.Max(Ellipse(-.26f,-.06f,.17f,.17f),Ellipse(.26f,-.06f,.17f,.17f)),Mathf.Max(Ellipse(0,-.12f,.23f,.11f),Mathf.Max(Ellipse(-.19f,.13f,.11f,.055f),Ellipse(.19f,.13f,.11f,.055f))));
-                cream=patch*front;fur*=1-cream;belly*=1-cream;
-                if(species=="raccoon")
-                {
-                    dark=Mathf.Max(Mathf.Max(Ellipse(-.20f,.055f,.18f,.105f),Ellipse(.20f,.055f,.18f,.105f)),Ellipse(0,.04f,.20f,.045f))*front;
-                    fur*=1-dark;belly*=1-dark;cream*=1-dark;
-                }
+                float faceFront=Step(radius>1e-5f?at.Z/(.86f*radius):0,.02f,.35f);
+                var regions=CharacterFacePattern.Regions(species,new Vector2(at.X/profile.EyeSpacing,at.Y-1.34f),profile.MarkingSoftness);
+                cream=regions.X*faceFront;fur*=1-cream;belly*=1-cream;
+                dark=regions.Y*faceFront;fur*=1-dark;belly*=1-dark;cream*=1-dark;
             }
             // Roles: raccoon face cream is the belly color; red panda's belly is dark and its cheeks cream.
             weights[i]=species switch
             {
                 "raccoon"=>new Vector3(fur,belly+cream,dark),
-                "redpanda"=>new Vector3(fur,belly,cream),
+                "redpanda"=>new Vector3(fur+dark*.50f,belly+dark*.50f,cream),
                 _=>new Vector3(fur,belly,0),
             };
         }
-        ToneWeights[key]=weights;
         return weights;
     }
 
-    private static float Sq(float x)=>x*x;
     private static float Step(float x,float a,float b)
     {
         if(x<=a)return 0;if(x>=b)return 1;

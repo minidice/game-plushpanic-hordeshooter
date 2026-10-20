@@ -17,8 +17,8 @@ export function line(parent,name,points,radius,color,finish='cloth',closed=false
   const curve=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p)),closed);
   return add(parent,name,new THREE.TubeGeometry(curve,Math.max(12,points.length*3),radius,6,closed),surface(color,finish));
 }
-export function oval(parent,name,pos,size,color,finish='cloth'){
-  const o=add(parent,name,new THREE.SphereGeometry(1,24,16),surface(color,finish),pos);o.scale.set(...size);return o;
+export function oval(parent,name,pos,size,color,finish='cloth',segments=24,rings=16){
+  const o=add(parent,name,new THREE.SphereGeometry(1,segments,rings),surface(color,finish),pos);o.scale.set(...size);return o;
 }
 export function ear(parent,name,color,inner){
   const s=new THREE.Shape();s.moveTo(-.12,0);s.bezierCurveTo(-.18,.13,-.10,.29,-.015,.30);s.bezierCurveTo(.07,.29,.16,.10,.12,0);s.quadraticCurveTo(0,-.06,-.12,0);

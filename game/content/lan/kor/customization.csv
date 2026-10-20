@@ -111,3 +111,5 @@ custom_preset_raccoon_snow,눈 라쿤
 custom_preset_raccoon_midnight,한밤 라쿤
 custom_preset_redpanda_ember,짙은 털
 custom_preset_redpanda_pale,옅은 털
+custom_marking_softness,무늬 경계 번짐
+custom_marking_softness_hint,경계만 조절합니다. 0%는 선명하게 · 100%는 부드럽게

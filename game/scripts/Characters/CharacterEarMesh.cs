@@ -12,18 +12,19 @@ namespace HordeShooter;
 /// </summary>
 internal static class CharacterEarMesh
 {
-    private const int Rows=16,Cols=14;
+    private const int Cols=48;
+    private static readonly float[] Rings={0,.16f,.32f,.48f,.60f,.72f,.82f,.90f,.95f,.985f,1};
     private const float Base=-.05f;
 
-    /// <summary>Width, height, how square the shoulders are, how fast the sides close in, cup depth, forward fold (radians).</summary>
-    private readonly record struct Shape(float Width,float Height,float Shoulder,float Taper,float Cup,float Fold);
+    /// <summary>Width, height, narrowing toward the tip, cup depth, forward fold (radians).</summary>
+    private readonly record struct Shape(float Width,float Height,float Taper,float Cup,float Fold);
 
-    private static Shape For(int style)=>style switch
+    private static Shape For(string species,int style)=>style switch
     {
-        1=>new Shape(.37f,.27f,2.3f,.55f,.050f,0f),    // round
-        2=>new Shape(.27f,.42f,1.0f,.95f,.040f,0f),    // pointed
-        3=>new Shape(.31f,.35f,1.7f,.72f,.045f,1.35f), // folded tip
-        _=>new Shape(.31f,.33f,1.7f,.72f,.048f,0f),    // default: rounded triangle
+        1=>new Shape(.37f,.27f,.06f,.050f,0f),    // round
+        2=>new Shape(.27f,.42f,.48f,.040f,0f),    // pointed
+        3=>new Shape(.31f,.35f,.30f,.045f,1.35f), // folded tip
+        _=>species=="redpanda"?new Shape(.35f,.35f,.40f,.048f,0f):new Shape(.32f,.28f,.10f,.048f,0f),    // default: rounded triangle
     };
 
     // Shared by every rig of a species (per-character colors are surface overrides). Cleared on quit.
@@ -33,31 +34,24 @@ internal static class CharacterEarMesh
     public static ArrayMesh Get(string species,int style,Material[] materials)
     {
         if(Cache.TryGetValue((species,style),out var mesh))return mesh;
-        return Cache[(species,style)]=Build(style,materials);
+        return Cache[(species,style)]=Build(species,style,materials);
     }
 
-    private static ArrayMesh Build(int style,Material[] materials)
+    private static ArrayMesh Build(string species,int style,Material[] materials)
     {
-        var s=For(style);
+        var s=For(species,style);
         var vertices=new[]{new List<Vector3>(),new List<Vector3>()};
         var normals=new[]{new List<Vector3>(),new List<Vector3>()};
         for(int layer=0;layer<2;layer++)
         {
             float side=layer==0?1:-1; // 0 = front (hollow), 1 = back (fur)
-            for(int r=0;r<Rows;r++)for(int c=0;c<Cols;c++)
+            for(int r=0;r<Rings.Length-1;r++)for(int c=0;c<Cols;c++)
             {
-                float u0=(float)r/Rows,u1=(float)(r+1)/Rows,v0=-1+2f*c/Cols,v1=-1+2f*(c+1)/Cols;
-                float um=(u0+u1)*.5f,vm=(v0+v1)*.5f;
-                int surface=layer==0&&Mathf.Abs(vm)<.62f&&um<.80f?1:0;
+                float u0=Rings[r],u1=Rings[r+1],v0=Mathf.Tau*c/Cols,v1=Mathf.Tau*(c+1)/Cols;
+                // Concentric rings put the cream/fur boundary on a rounded contour, not a grid staircase.
+                int surface=layer==0&&u1<=.72f?1:0;
                 Quad(surface,side,(u0,v0),(u0,v1),(u1,v1),(u1,v0));
             }
-        }
-        // Close the base (hidden inside the head) so the shell has no open edge.
-        for(int c=0;c<Cols;c++)
-        {
-            float v0=-1+2f*c/Cols,v1=-1+2f*(c+1)/Cols;
-            var a=Point(s,0,v0,1);var b=Point(s,0,v1,1);var d=Point(s,0,v0,-1);var e=Point(s,0,v1,-1);
-            Triangle(0,a,b,e,Vector3.Down,Vector3.Down,Vector3.Down);Triangle(0,a,e,d,Vector3.Down,Vector3.Down,Vector3.Down);
         }
         var mesh=new ArrayMesh();
         for(int surface=0;surface<2;surface++)
@@ -92,13 +86,16 @@ internal static class CharacterEarMesh
 
     private static Vector3 Point(Shape s,float u,float v,float side)
     {
-        u=Mathf.Clamp(u,0,1);v=Mathf.Clamp(v,-1,1);
-        float half=s.Width*.5f*Mathf.Pow(Mathf.Max(0,1-Mathf.Pow(u,s.Shoulder)),s.Taper);
-        float across=Mathf.Sqrt(Mathf.Max(0,1-v*v));
-        // Thickness closes to zero at the rim, so front and back meet without a seam.
-        float thick=.034f*across*Mathf.Sqrt(Mathf.Max(0,1-u));
-        float cup=-s.Cup*across*Mathf.Sin(Mathf.Pi*Mathf.Min(1,u*1.1f+.05f));
-        var p=new Vector3(v*half,Base+u*s.Height,cup+(side>0?thick*.35f:-thick*.65f)-.005f);
+        float r=Mathf.Clamp(u,0,1),cs=Mathf.Cos(v),sn=Mathf.Sin(v);
+        float taper=s.Taper;
+        var center=new Vector2(0,Base+s.Height*.43f);
+        var outline=new Vector2(sn*s.Width*.5f*(1-taper*cs),Base+s.Height*(cs+1)*.5f);
+        var xy=center.Lerp(outline,r);
+        float round=Mathf.Sqrt(Mathf.Max(0,1-r*r));
+        // The plump rolled rim and cupped center meet the back on the same continuous outline.
+        float z=side>0?.070f*round-(.070f+s.Cup*.42f)*round*round:-.060f*round-.035f*round*round;
+        var p=new Vector3(xy.X,xy.Y,z);
+        u=Mathf.Clamp((p.Y-Base)/s.Height,0,1);
         if(s.Fold>0&&u>.5f)
         {
             // Bend the upper half forward around a hinge at mid height.
@@ -112,11 +109,11 @@ internal static class CharacterEarMesh
 
     private static Vector3 Normal(Shape s,float u,float v,float side)
     {
-        u=Mathf.Clamp(u,.001f,.985f);v=Mathf.Clamp(v,-.985f,.985f);
-        var du=Point(s,u+.002f,v,side)-Point(s,u-.002f,v,side);
-        var dv=Point(s,u,v+.002f,side)-Point(s,u,v-.002f,side);
+        if(u<.001f)return side>0?Vector3.Back:Vector3.Forward;
+        u=Mathf.Clamp(u,.001f,.999f);
+        var du=Point(s,u+.0005f,v,side)-Point(s,u-.0005f,v,side);
+        var dv=Point(s,u,v+.001f,side)-Point(s,u,v-.001f,side);
         var n=dv.Cross(du).Normalized();
-        // dv × du points to +Z on the flat front; the back layer faces the other way.
         return side>0?n:-n;
     }
 

@@ -111,3 +111,5 @@ custom_preset_raccoon_snow,Snow raccoon
 custom_preset_raccoon_midnight,Midnight raccoon
 custom_preset_redpanda_ember,Ember
 custom_preset_redpanda_pale,Pale
+custom_marking_softness,Marking edge softness
+custom_marking_softness_hint,Edge blending only. 0% crisp · 100% soft

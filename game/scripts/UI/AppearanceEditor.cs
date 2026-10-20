@@ -160,10 +160,11 @@ public partial class AppearanceEditor : VBoxContainer
     private void AddScale(VBoxContainer parent, string key, string labelKey, float min, float max, string unit = "×")
     {
         var row = Row(parent, labelKey);
-        string Show(double v) => unit == "°" ? $"{v:+0;-0;0}°" : $"{v:0.00}{unit}";
+        string Show(double v) => key=="marking_softness"?$"{v*100:0}%":unit == "°" ? $"{v:+0;-0;0}°" : $"{v:0.00}{unit}";
         var valueLabel = UiTheme.Label(Show(_profile.ScaleFor(key)), 15, UiTheme.Muted);
         valueLabel.CustomMinimumSize = new Vector2(58, 0);
         var slider = new HSlider { Name = "Scale_" + key, MinValue = min, MaxValue = max, Step = unit == "°" ? 1 : .01, Value = _profile.ScaleFor(key), SizeFlagsHorizontal = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(100, 32) };
+        if(key=="marking_softness")slider.TooltipText=Loc.Text("custom_marking_softness_hint");
         slider.ValueChanged += value => { _profile.SetScale(key, (float)value); valueLabel.Text = Show(value); Apply(); };
         row.AddChild(slider);
         row.AddChild(valueLabel);

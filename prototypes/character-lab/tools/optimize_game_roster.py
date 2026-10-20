@@ -54,8 +54,10 @@ for kind in SELECTED:
         bpy.context.view_layer.objects.active=obj
         if player and len(obj.data.polygons)>100:
             mod=obj.modifiers.new('Game simplification','DECIMATE')
-            # Thin curved headset tubing needs more segments to retain its rounded arch.
-            mod.ratio=.70 if '_headset_band' in obj.name else .50 if obj.name.endswith('continuous_skin') or '_mic_boom' in obj.name else .19
+            # Faces are inspected close up in the workshop. Preserve the silhouette of eyes,
+            # muzzles and bird bills instead of applying the equipment's aggressive reduction.
+            face_detail=any(part in obj.name for part in ['_eye_', '_brow_', '_muzzle', '_nose', '_smile', '_bill_', '_nostril_'])
+            mod.ratio=.75 if obj.name.endswith('continuous_skin') else .70 if face_detail or '_headset_band' in obj.name else .50 if '_mic_boom' in obj.name else .19
             bpy.ops.object.modifier_apply(modifier=mod.name)
         elif not player and len(obj.data.polygons)>60:
             mod=obj.modifiers.new('Crowd budget','DECIMATE')

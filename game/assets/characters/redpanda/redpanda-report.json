@@ -1,7 +1,7 @@
 {
   "id": "redpanda",
-  "source_triangles": 100824,
-  "triangles": 22456,
+  "source_triangles": 101976,
+  "triangles": 28204,
   "meshes": 23,
   "materials": [
     "custom_beak_2.003",
@@ -56,7 +56,7 @@
     "detail_50",
     "detail_9.001"
   ],
-  "bytes": 1129136,
+  "bytes": 1256052,
   "nodes": [
     "redpanda_root",
     "redpanda_body",

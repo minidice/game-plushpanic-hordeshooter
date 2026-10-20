@@ -20,6 +20,7 @@ public sealed class AppearanceProfile
     public string HairColor {get;set;}="";
     public float BodyWidth {get;set;}=1;
     public float BodyHeight {get;set;}=1;
+    public float MarkingSoftness {get;set;}=.25f;
     public float EyeSize {get;set;}=1;
     public float EyeSpacing {get;set;}=1;
     public float BeakSize {get;set;}=1;
@@ -45,12 +46,12 @@ public sealed class AppearanceProfile
     public void SetColor(string channel,string color)
     {switch(channel){case "body":Body=color;break;case "body2":BodySecondary=color;break;case "body3":BodyMarking=color;break;case "beak":Beak=color;break;case "hat":HatColor=color;break;case "vest":VestColor=color;break;case "pack":PackColor=color;break;case "wing":Wing=color;break;case "tail":Tail=color;break;case "feet":Feet=color;break;case "eyes":Eyes=color;break;case "hair":HairColor=color;break;}}
     public float ScaleFor(string key)=>key switch
-    {"body_width"=>BodyWidth,"body_height"=>BodyHeight,"eye_size"=>EyeSize,"eye_spacing"=>EyeSpacing,"beak_size"=>BeakSize,"ear_size"=>EarSize,"ear_angle"=>EarAngle,"wing_size"=>WingSize,"feet_size"=>FeetSize,"tail_size"=>TailSize,_=>1};
+    {"marking_softness"=>MarkingSoftness,"body_width"=>BodyWidth,"body_height"=>BodyHeight,"eye_size"=>EyeSize,"eye_spacing"=>EyeSpacing,"beak_size"=>BeakSize,"ear_size"=>EarSize,"ear_angle"=>EarAngle,"wing_size"=>WingSize,"feet_size"=>FeetSize,"tail_size"=>TailSize,_=>1};
     public void SetScale(string key,float value)
     {
         foreach(var option in AppearanceCatalog.Scales)if(option.Key==key)
         {value=float.IsFinite(value)?Math.Clamp(value,option.Min,option.Max):option.Default;break;}
-        switch(key){case "body_width":BodyWidth=value;break;case "body_height":BodyHeight=value;break;case "eye_size":EyeSize=value;break;case "eye_spacing":EyeSpacing=value;break;case "beak_size":BeakSize=value;break;case "ear_size":EarSize=value;break;case "ear_angle":EarAngle=value;break;case "wing_size":WingSize=value;break;case "feet_size":FeetSize=value;break;case "tail_size":TailSize=value;break;}
+        switch(key){case "marking_softness":MarkingSoftness=value;break;case "body_width":BodyWidth=value;break;case "body_height":BodyHeight=value;break;case "eye_size":EyeSize=value;break;case "eye_spacing":EyeSpacing=value;break;case "beak_size":BeakSize=value;break;case "ear_size":EarSize=value;break;case "ear_angle":EarAngle=value;break;case "wing_size":WingSize=value;break;case "feet_size":FeetSize=value;break;case "tail_size":TailSize=value;break;}
     }
     public void Normalize()
     {

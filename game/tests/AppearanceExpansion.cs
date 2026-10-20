@@ -18,7 +18,11 @@ public partial class AppearanceExpansion : Node
                 var profile=new AppearanceProfile{Body="#70b9e8",Beak="#dd704a",Hat=2,Vest=false,Pack=false};
                 first.ApplyAppearance(profile);
                 var skin=first.Model.FindChild(id+"_torso_mesh",true,false) as MeshInstance3D;
-                Require(skin!=null && skin.GetActiveMaterial(0) is StandardMaterial3D{VertexColorUseAsAlbedo:true},id+" skin markings use imported vertex colors");
+                Require(skin!=null && skin.GetActiveMaterial(0) is ShaderMaterial painted && painted.GetShaderParameter("primary_color").AsColor().IsEqualApprox(new Color(profile.Body)),id+" skin uses the chosen palette in a continuous mask material");
+                var secondSkin=(MeshInstance3D)second.Model.FindChild(id+"_torso_mesh",true,false)!;
+                Require(skin!.Mesh==secondSkin.Mesh && skin.GetActiveMaterial(0)!=secondSkin.GetActiveMaterial(0)
+                    && ((ShaderMaterial)secondSkin.GetActiveMaterial(0)).GetShaderParameter("primary_color").AsColor().IsEqualApprox(original),
+                    id+" characters share geometry but keep separate GPU palette values");
                 Require(first.ChannelColor("body").IsEqualApprox(new Color(profile.Body)),id+" main body tone applied");
                 Require(second.ChannelColor("body").IsEqualApprox(original)&&second.SkinColors().Length>0&&!first.SkinColors().SequenceEqual(second.SkinColors()),
                     id+" recoloring one character leaves another of the same species unchanged");

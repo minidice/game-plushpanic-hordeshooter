@@ -39,7 +39,7 @@ public partial class CustomizationToneCheck : Node
             Check(weights.Count(w => w.Y > .3f) > 30 && weights.Count(w => w.Y < .001f) > 300, $"{id}: the belly region exists and most of the back has none of it");
             if (AppearanceCatalog.HasMarking(id)) Check(weights.Count(w => w.Z > .5f) > 10, $"{id}: face markings have their own region");
 
-            // Secondary tone: belly moves, the back stays exactly as imported.
+            // Secondary tone: belly moves, the back keeps its baseline color.
             rig.ApplyAppearance(new AppearanceProfile { BodySecondary = "#1e7a3c" });
             var toned = rig.SkinColors();
             int back = Enumerable.Range(0, weights.Length).First(i => weights[i].Y < .001f && weights[i].Z < .001f);
@@ -74,7 +74,7 @@ public partial class CustomizationToneCheck : Node
             rig.ApplyAppearance(new AppearanceProfile { BodySecondary = AppearanceCatalog.IsBird(id) ? "#202020" : "" , BodyMarking = "" });
             if (AppearanceCatalog.IsBird(id)) Check(rig.HandColor.IsEqualApprox(def.HandColor), $"{id}: changing only the belly leaves the hands alone");
             rig.ApplyAppearance(new AppearanceProfile());
-            Check(rig.SkinColors().SequenceEqual(imported) && rig.HandColor.IsEqualApprox(def.HandColor), $"{id}: default tones restore the imported look");
+            Check(rig.SkinColors().SequenceEqual(imported) && rig.HandColor.IsEqualApprox(def.HandColor), $"{id}: default tones restore the baseline palette");
 
             // Presets: shared shapes plus this species' own color presets, each visibly different.
             var presets = AppearancePresets.For(id);
@@ -127,9 +127,11 @@ public partial class CustomizationToneCheck : Node
 
         // Save file keeps the new fields; old color-only files still load.
         const string path = "user://custom-tone-check.cfg";
-        var saved = new AppearanceProfile { Body = "#112233", BodySecondary = "#445566", BodyMarking = "#778899", EarStyle = 3, EarAngle = -12, TailStyle = 4 };
+        var saved = new AppearanceProfile { Body = "#112233", BodySecondary = "#445566", BodyMarking = "#778899", EarStyle = 3, EarAngle = -12, TailStyle = 4, MarkingSoftness=.73f };
         AppearanceStore.SaveProfile("raccoon", saved, path);
         var loaded = AppearanceStore.ReadProfile("raccoon", path);
+        Check(Mathf.IsEqualApprox(loaded.MarkingSoftness,.73f)&&Mathf.IsEqualApprox(AppearanceStore.ReadProfile("redpanda",path).MarkingSoftness,.25f),"marking softness persists per species and old/absent settings default to 25%");
+        loaded.MarkingSoftness=float.NaN;loaded.Normalize();Check(Mathf.IsEqualApprox(loaded.MarkingSoftness,.25f),"invalid marking softness restores the safe default");
         Check(loaded.BodySecondary == saved.BodySecondary && loaded.BodyMarking == saved.BodyMarking && loaded.EarStyle == 3 && Mathf.IsEqualApprox(loaded.EarAngle, -12) && loaded.TailStyle == 4,
             "two-tone colors, ear style/angle and tail style survive save and load");
         DirAccess.RemoveAbsolute(ProjectSettings.GlobalizePath(path));
@@ -163,6 +165,14 @@ public partial class CustomizationToneCheck : Node
         AddChild(shown);
         reselect.ShowRig(shown);
         Check(reselect.FindChild("PresetChoice", true, false) is OptionButton { AllowReselect: true }, "the shown preset can be picked again to undo edits");
+        Check(reselect.FindChild("Scale_marking_softness",true,false)==null,"birds do not show a mammal face-pattern control");
+        var panda=CharacterRig.Create(CharacterCatalog.Player("redpanda"));AddChild(panda);reselect.ShowRig(panda);
+        var softness=reselect.FindChild("Scale_marking_softness",true,false) as HSlider;
+        Check(softness!=null,"mammal editor shows marking softness");
+        softness!.Value=.8;
+        var material=(ShaderMaterial)((MeshInstance3D)panda.Model.FindChild("redpanda_torso_mesh",true,false)!).GetActiveMaterial(0);
+        Check(Mathf.IsEqualApprox(material.GetShaderParameter("marking_softness").AsSingle(),.8f)&&Mathf.IsEqualApprox(AppearanceStore.ReadProfile("redpanda",reselect.ProfilePath).MarkingSoftness,.8f),"softness slider updates the rendered material and saves it");
+        DirAccess.RemoveAbsolute(ProjectSettings.GlobalizePath(reselect.ProfilePath));panda.QueueFree();
         reselect.QueueFree();
         shown.QueueFree();
 

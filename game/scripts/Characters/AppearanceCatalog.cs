@@ -20,6 +20,7 @@ public static class AppearanceCatalog
     public const int TailStyleCount=5;  // 기본 · 풍성 · 길고 가는 · 짧고 동근 · 말린
     public static readonly IReadOnlyList<AppearanceScaleOption> Scales=new[]
     {
+        new AppearanceScaleOption("marking_softness","custom_marking_softness","face",0,1,.25f,"",MammalOnly:true),
         new AppearanceScaleOption("body_width","custom_body_width","body",.88f,1.12f),
         new AppearanceScaleOption("body_height","custom_body_height","body",.90f,1.10f),
         new AppearanceScaleOption("eye_size","custom_eye_size","face",.70f,1.45f),
@@ -36,8 +37,8 @@ public static class AppearanceCatalog
     {
         "goose"=>new BodyPalette(new Color("e5e1cf"),new Color("f5ebd0"),null),
         "duck"=>new BodyPalette(new Color("bb7934"),new Color("edbd68"),null),
-        "raccoon"=>new BodyPalette(new Color("78858a"),new Color("e6d7b9"),new Color("30383b")),
-        "redpanda"=>new BodyPalette(new Color("aa4b2c"),new Color("382e2a"),new Color("efd6a7")),
+        "raccoon"=>new BodyPalette(new Color("78858a"),new Color("e8e5dc"),new Color("30383b")),
+        "redpanda"=>new BodyPalette(new Color("aa4b2c"),new Color("382e2a"),new Color("f3e4cb")),
         _=>null,
     };
     public static bool HasMarking(string species)=>Palette(species)?.Marking!=null;

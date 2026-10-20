@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { faceRegions } from './face-pattern.mjs';
 import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import { equipment, ear, webfoot, oval, line, rounded } from './sculpt.mjs';
 
@@ -6,8 +7,8 @@ export const species = ['raccoon', 'redpanda', 'duck', 'goose'];
 export const names = { raccoon: '라쿤', redpanda: '랫서판다', duck: '오리', goose: '거위' };
 export const defaults = Object.fromEntries(species.map(s => [s, { head: 1, width: 1, height: 1, tail: 1, beak: 1, neck: 1, helmet: 1, bounce: 1 }]));
 const palette = {
-  raccoon: { fur: '#78858a', cream: '#e6d7b9', dark: '#30383b', accent: '#a6ada2' },
-  redpanda: { fur: '#aa4b2c', cream: '#efd6a7', dark: '#382e2a', accent: '#c5743e' },
+  raccoon: { fur: '#78858a', cream: '#e8e5dc', dark: '#30383b', accent: '#a6ada2' },
+  redpanda: { fur: '#aa4b2c', cream: '#f3e4cb', dark: '#382e2a', accent: '#c5743e' },
   duck: { fur: '#bb7934', cream: '#edbd68', dark: '#b87124', accent: '#df9c34' },
   goose: { fur: '#e5e1cf', cream: '#f5ebd0', dark: '#c58429', accent: '#e0a343' },
 };
@@ -42,13 +43,11 @@ function beanSkin(kind, p, c) {
     const color = fur.clone().multiplyScalar(.88+.12*t).lerp(belly,mix);
     if(kind==='raccoon'||kind==='redpanda'){
       const u=x*factor/(p.head*p.width),v=(bottom+t*total-(.22+1.12*p.height))/(p.head*p.width);
-      const ellipse=(cx,cy,rx,ry)=>1-THREE.MathUtils.smoothstep(((u-cx)/rx)**2+((v-cy)/ry)**2,.85,1.12);
-      const cream=kind==='raccoon'?ellipse(0,-.045,.43,.24):Math.max(ellipse(-.26,-.06,.17,.17),ellipse(.26,-.06,.17,.17),ellipse(0,-.12,.23,.11),ellipse(-.19,.13,.11,.055),ellipse(.19,.13,.11,.055));
-      color.lerp(new THREE.Color(c.cream),cream*front);
-      if(kind==='raccoon'){
-        const mask=Math.max(ellipse(-.20,.055,.18,.105),ellipse(.20,.055,.18,.105),ellipse(0,.04,.20,.045));
-        color.lerp(new THREE.Color(c.dark),mask*front);
-      }
+      const [cream,dark]=faceRegions(kind,u,v);
+      const faceFront=THREE.MathUtils.smoothstep(z/(round||1),.02,.35);
+      color.lerp(new THREE.Color(c.cream),cream*faceFront);
+      const ink=kind==='raccoon'?new THREE.Color(c.dark):new THREE.Color(c.fur).lerp(new THREE.Color(c.dark),.5);
+      color.lerp(ink,dark*faceFront);
     }
     colors.push(color.r,color.g,color.b);
   }
@@ -116,8 +115,8 @@ export function createCharacter(kind, config = {}, suffix = '') {
   } else {
     const beak = pivot('beak', head, [0,-.075,faceDepth(0,-.075)]); beak.scale.set(1,1,p.beak);
     const bw=kind==='goose'?.16:.225;
-    oval(beak,`${prefix}_bill_lower`,[0,-.035,.105],[bw*.95,.042,.18],'#bd7427','beak');
-    oval(beak,`${prefix}_bill_upper`,[0,.005,.105],[bw,.058,.19],c.accent,'beak');
+    oval(beak,`${prefix}_bill_lower`,[0,-.035,.105],[bw*.95,.042,.18],'#bd7427','beak',48,24);
+    oval(beak,`${prefix}_bill_upper`,[0,.005,.105],[bw,.058,.19],c.accent,'beak',48,24);
     line(beak,`${prefix}_bill_lip`,[[-bw*.87,-.012,.18],[0,-.018,.29],[bw*.87,-.012,.18]],.006,'#8a5429','beak');
     for(const side of [-1,1])oval(beak,`${prefix}_nostril_${side}`,[side*.075,.056,.10],[.012,.004,.020],'#8c5c2c','beak');
     const tail = pivot('tail', torso, [0, .55*p.height, -.30*p.width]); tail.scale.setScalar(p.tail);
@@ -128,7 +127,12 @@ export function createCharacter(kind, config = {}, suffix = '') {
     oval(head,`${prefix}_eye_${side}`,[side*ex,ey,ez+.018],[.043,kind==='goose'?.043:.056,.028],'#242924','lens');
     oval(head,`${prefix}_eye_glint_${side}`,[side*ex-.01,ey+.019,ez+.042],[.009,.010,.004],'#eee1bf','lens');
     const by=kind==='goose'?.11:.14;
+    if(kind==='redpanda'){
+      const brow=oval(head,`${prefix}_brow_${side}`,[side*ex,.19,faceDepth(side*ex,.19)+.009],[.060,.031,.018],c.cream,'fur');
+      brow.rotation.z=side*.15;
+    }else{
     line(head,`${prefix}_brow_${side}`,[[side*(ex-.055),by-.018,faceDepth(side*(ex-.055),by)+.025],[side*ex,by,faceDepth(side*ex,by)+.025],[side*(ex+.055),by+.005,faceDepth(side*(ex+.055),by)+.025]],bird?.015:.010,bird?c.fur:c.cream,'fur');
+    }
     const foot=pivot(side<0?'leftFoot':'rightFoot',torso,[side*.20*p.width,bird?.055:.105,.055]);
     if(bird)webfoot(foot,`${prefix}_webfoot_${side}`,c.accent);
     else{

@@ -90,7 +90,7 @@ public partial class CharacterRig
             bool chosen=value.Length>0&&Color.HtmlIsValid(value);
             item.Material.AlbedoColor=item.Channel switch
             {
-                // The skin keeps a white albedo; its tones live in the vertex colors (ApplyBodyTones).
+                // Body-colored attachments follow the palette; the skin uses its own continuous mask shader.
                 "body"=>FollowBody(item.Original,profile),
                 // Arms always match the body (old saved arm colors are ignored).
                 "wing" or "brow"=>FollowBody(item.Original,profile),

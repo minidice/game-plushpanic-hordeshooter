@@ -1,7 +1,7 @@
 {
   "id": "goose",
-  "source_triangles": 97336,
-  "triangles": 21796,
+  "source_triangles": 100312,
+  "triangles": 29556,
   "meshes": 21,
   "materials": [
     "custom_beak_1",
@@ -52,7 +52,7 @@
     "detail_44",
     "detail_45"
   ],
-  "bytes": 1080148,
+  "bytes": 1258472,
   "nodes": [
     "goose_root",
     "goose_body",

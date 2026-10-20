@@ -1,7 +1,7 @@
 {
   "id": "raccoon",
   "source_triangles": 100824,
-  "triangles": 22457,
+  "triangles": 27398,
   "meshes": 23,
   "materials": [
     "custom_beak_2.002",
@@ -54,7 +54,7 @@
     "detail_47",
     "detail_9"
   ],
-  "bytes": 1131356,
+  "bytes": 1244204,
   "nodes": [
     "raccoon_root",
     "raccoon_body",
