@@ -234,8 +234,11 @@ public partial class Player : CharacterBody3D
         _push = _push.MoveToward(Vector3.Zero, dt * (grounded ? 10f : 1.2f));
         var horizontal = IsRestrained ? RestraintVelocity() : IsRolling ? _rollDirection * RollSpeed : move * speed + _push;
         Velocity = new Vector3(horizontal.X, grounded ? -.1f : Velocity.Y - Gravity * dt, horizontal.Z);
+        var beforeMove = GlobalPosition;
         MoveAndSlide();
         PushProps();
+        if (dt > 0)
+            Stage.Effects.PushCorpses(_shape, (GlobalPosition - beforeMove) / dt, IsRolling);
         if (IsRolling) UpdateRoll(dt);
         else if (grounded && !stunned) Footsteps(dt);
 

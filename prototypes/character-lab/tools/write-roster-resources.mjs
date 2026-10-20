@@ -39,7 +39,7 @@ StuffingColor = Color(1, 0.97, 0.88, 1)
 `;
   await fs.writeFile(new URL(`content/characters/${kind}.tres`,game),text);
 }
-for(const [kind,radius,height,speed,health] of [['humanoid',.36,1.8,3.7,35],['crawler',.43,.9,4.9,28],['tether',.36,1.8,3.0,90],['leaper',.40,1.5,4.8,85],['spitter',.52,1.8,2.7,110]]) {
+for(const [kind,radius,height,speed,health] of [['humanoid',.40,1.8,3.7,35],['crawler',.43,.9,4.9,28],['tether',.40,1.8,3.0,90],['leaper',.48,1.5,4.8,85],['spitter',.52,1.8,2.7,110]]) {
   await fs.writeFile(new URL(`content/enemies/${kind}.tres`,game),`[gd_resource type="Resource" script_class="CharacterDefinition" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/Characters/CharacterDefinition.cs" id="1_def"]

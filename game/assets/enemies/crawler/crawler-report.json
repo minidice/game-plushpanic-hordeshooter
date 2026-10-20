@@ -11,13 +11,14 @@
     "infected_skin.001",
     "infected_trim.001"
   ],
-  "bytes": 113028,
+  "bytes": 113032,
   "nodes": [
     "crawler_root",
     "Body",
     "Deform",
     "Head",
     "Head_mesh",
+    "Muzzle",
     "Deform_mesh",
     "LeftFoot",
     "LeftFoot_mesh",
@@ -26,7 +27,6 @@
     "RightFoot_mesh",
     "crawler_rightArm_mesh",
     "Weapon",
-    "Muzzle",
     "crawler_leftArm",
     "crawler_rightArm"
   ],

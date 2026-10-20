@@ -14,8 +14,10 @@ export function createInfected(kind) {
   const root=group(`${kind}_root`),body=group('Body',root),deform=group('Deform',body);
   const head=group('Head',deform,low?[0,.55,.43]:leap?[0,1.02,.18]:[0,1.36,.04]);
   const hs=low?.78:1;
-  head.scale.setScalar(hs);
-  ell(deform,'bean_torso',low?[0,.43,-.21]:leap?[0,.65,-.12]:[0,.77,-.04],low?[.35,.26,.48]:fat?[.47,.44,.34]:[.36,.42,.29],cloth);
+  // Round out the skull in depth; its face, hair, hood and tongue follow the same surface.
+  // Keep width/height and the existing limb pivots. The crawler already has a long torso.
+  head.scale.set(hs,hs,hs*1.18);
+  ell(deform,'bean_torso',low?[0,.43,-.21]:leap?[0,.65,-.12]:[0,.77,-.04],low?[.35,.26,.48]:fat?[.47,.44,.40]:[.36,.42,.35],cloth);
   ell(head,'big_soft_face',[0,0,0],[.43,.41,.33],skin);
   ell(head,'chin',[0,-.245,.12],[.29,.15,.22],skin);
   for(const side of [-1,1]) {
@@ -53,8 +55,8 @@ export function createInfected(kind) {
   if(kind==='humanoid') {
     ell(head,'crooked_hair',[.07,.34,-.035],[.35,.105,.245],trim);
     ell(head,'single_cowlick',[-.21,.392,.04],[.075,.10,.07],trim).rotation.z=-.35;
-    for(const y of [.65,.82,.99])ell(deform,`oversized_button_${y}`,[.025,y,.255],[.038,.039,.022],white);
-    ell(deform,'shirt_pocket',[-.20,.93,.245],[.095,.09,.025],trim);
+    for(const y of [.65,.82,.99])ell(deform,`oversized_button_${y}`,[.025,y,.31],[.038,.039,.022],white);
+    ell(deform,'shirt_pocket',[-.20,.93,.295],[.095,.09,.025],trim);
   } else if(kind==='crawler') {
     ell(head,'sleepy_forehead_patch',[.07,.32,-.015],[.26,.095,.22],trim);
     ell(deform,'round_back_patch',[0,.63,-.22],[.23,.055,.24],trim);
@@ -62,12 +64,14 @@ export function createInfected(kind) {
     ell(head,'soft_hood_back',[0,.055,-.15],[.445,.405,.27],trim);
     for(const side of [-1,1])ell(head,`hood_nub_${side}`,[side*.28,.38,-.17],[.10,.12,.10],cloth);
   } else if(fat) {
-    ell(deform,'round_belly',[0,.75,.22],[.39,.33,.17],skin);
-    ell(deform,'belly_button',[.02,.65,.383],[.043,.035,.012],trim);
+    ell(deform,'round_belly',[0,.75,.28],[.39,.33,.20],skin);
+    ell(deform,'belly_button',[.02,.65,.473],[.043,.035,.012],trim);
     for(const side of [-1,1])ell(head,`puffed_cheek_${side}`,[side*.29,-.135,.23],[.17,.15,.105],skin);
     ell(head,'tiny_hair_tuft',[.08,.39,-.03],[.12,.085,.10],trim);
   }
-  const weapon=group('Weapon',deform,[0,.85,.56]);group('Muzzle',weapon,[0,.035,.81]);
+  group('Weapon',deform,[0,.85,.56]);
+  // Mouth effects follow head depth, yaw and bobbing, including future proportion edits.
+  group('Muzzle',head,[.02,-.207,.39]);
   root.userData.style='plush-comedy-v3';
   return root;
 }

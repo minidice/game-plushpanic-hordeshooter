@@ -178,16 +178,53 @@ public partial class Effects : Node3D
         body.AddChild(new CollisionShape3D { Shape = new CapsuleShape3D { Radius = radius, Height = Mathf.Max(height, radius * 2.05f) } });
         AddChild(body);
         var origin = rig.GlobalPosition;
+        if (monster?.Tier == MonsterTier.Named)
+        {
+            var ground = Rays.Cast(this, origin + Vector3.Up * .5f, origin + Vector3.Down * 100, Layers.World);
+            if (ground.HasValue) origin = ground.Value.Position;
+        }
         body.GlobalPosition = origin + Vector3.Up * height * .5f;
         rig.ResetPose();
         rig.Visible = true; // corpses are scenery, even if the enemy died outside the vision cone
+        rig.ShowAs(VisionSystem.Visibility.Visible);
         rig.Reparent(body);
         rig.Position = Vector3.Down * height * .5f;
         body.Rig = rig;
         TrackCorpse(body, Mathf.Max(3f, height * 2f), monster, origin);
-        body.ApplyCentralImpulse(impulse);
-        body.ApplyTorqueImpulse(torque);
+        if (body.NamedRecord == null)
+        {
+            body.ApplyCentralImpulse(impulse);
+            body.ApplyTorqueImpulse(torque);
+        }
+        else
+        {
+            // Deterministic resting pose: no local settling or death impulse can move a named body.
+            float yaw = rig.GlobalRotation.Y;
+            body.Rotation = new Vector3(-Mathf.Pi * .5f, yaw, 0);
+            body.GlobalPosition = origin + Vector3.Up * radius;
+            rig.Rotation = Vector3.Zero;
+            body.FreezeMode = RigidBody3D.FreezeModeEnum.Static;
+            body.Freeze = true;
+            rig.SetSquash(.2f);
+            float bottom = RestingMeshBottom(rig);
+            if (float.IsFinite(bottom))
+                body.GlobalPosition += Vector3.Up * Mathf.Max(0, origin.Y + .02f - bottom);
+            body.NamedRecord.DeathYaw = yaw;
+        }
         return body;
+    }
+
+    private static float RestingMeshBottom(Node node)
+    {
+        float bottom = float.PositiveInfinity;
+        if (node is MeshInstance3D mesh && mesh.IsVisibleInTree())
+        {
+            var bounds = mesh.GetAabb();
+            for (int corner = 0; corner < 8; corner++)
+                bottom = Mathf.Min(bottom, (mesh.GlobalTransform * bounds.GetEndpoint(corner)).Y);
+        }
+        foreach (Node child in node.GetChildren()) bottom = Mathf.Min(bottom, RestingMeshBottom(child));
+        return bottom;
     }
 
     private void Burst(Vector3 at, Vector3 direction, Color color, int amount, float speed, float size)

@@ -41,6 +41,12 @@ public partial class Effects
     }
     public override void _Process(double delta) => AdvanceCorpseCleanup(delta);
 
+    /// <summary>
+    /// A common corpse below this height has left the level (a blast threw it over a wall): it would fall forever,
+    /// never sleep and never be seen again, so the next pass removes it whatever the count or camera (I-70).
+    /// </summary>
+    public const float FellOutY = -8f;
+
     // Also used by deterministic tests without waiting ten wall-clock seconds.
     internal void AdvanceCorpseCleanup(double delta)
     {
@@ -57,6 +63,8 @@ public partial class Effects
             // Independent lifetime: neither camera protection nor common count can change this deadline.
             record.QueueFree();_namedCorpses.RemoveAt(i);
         }
+        for(int i=_corpses.Count-1;i>=0;i--)
+            if(_corpses[i].Body.GlobalPosition.Y<FellOutY){_corpses[i].Body.QueueFree();_corpses.RemoveAt(i);}
         int removed=0;
         // Insertion order is death order. Protected older corpses do not block eligible newer ones.
         for(int i=0;i<_corpses.Count;i++)

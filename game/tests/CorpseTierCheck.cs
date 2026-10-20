@@ -44,8 +44,8 @@ public partial class CorpseTierCheck : Node3D
             Check(stage.Effects.NamedCorpses.Select(r=>r.CorpseId).Distinct().Count()==6,"each named death receives a unique stage-local ID");
             var record=stage.Effects.NamedCorpses.First(r=>r.MonsterId=="bull");
             Check(record.ExpiresAt-record.CreatedAt==300,"named deadline is captured at death");
-            var anchor=record.GlobalPosition;record.Visual!.GlobalPosition+=Vector3.Right*8;
-            Check(record.GlobalPosition==anchor&&record.GetChildren().OfType<CollisionObject3D>().All(c=>c.CollisionMask==Corpse.SceneryCollisionMask),"death anchor stays fixed while cosmetic body moves and cannot affect gameplay");
+            var anchor=record.GlobalPosition;
+            Check(record.Visual!.Freeze&&record.GetChildren().OfType<CollisionObject3D>().All(c=>c.CollisionMask==Corpse.SceneryCollisionMask),"named visual is fixed and cannot affect gameplay");
             record.Visual.QueueFree();await ToSignal(GetTree(),SceneTree.SignalName.ProcessFrame);
             Check(record.Visual==null&&!record.IsQueuedForDeletion(),"named metadata survives removal of its cosmetic body");
             stage.Effects.CorpseTargetCount=1;stage.Player.Position=new Vector3(120,0,0);stage.Cam.SnapTo(stage.Player.Position);
@@ -68,7 +68,7 @@ public partial class CorpseTierCheck : Node3D
             var probe=(Corpse)stage.Effects.SpawnCorpse(probeRig,.3f,1,Vector3.Right*4,Vector3.Zero,new MonsterDefinition{Id="named_common_behavior",Tier=MonsterTier.Named});
             probe.GravityScale=0;var start=probe.GlobalPosition;var fixedAnchor=probe.NamedRecord!.GlobalPosition;
             for(int i=0;i<8;i++)await ToSignal(GetTree(),SceneTree.SignalName.PhysicsFrame);
-            Check(probe.GlobalPosition.X>start.X+.05f&&probe.NamedRecord.GlobalPosition==fixedAnchor,"named visual keeps its impulse after reparenting while death anchor stays fixed");
+            Check(probe.Freeze&&probe.GlobalPosition==start&&probe.NamedRecord.GlobalPosition==fixedAnchor,"named visual and death anchor stay fixed despite spawn impulse");
             stage.QueueFree();await ToSignal(GetTree(),SceneTree.SignalName.ProcessFrame);
             GD.Print("CORPSE_TIER_PASS "+_checks);QuitHygiene.Collect();GetTree().Quit();
         }

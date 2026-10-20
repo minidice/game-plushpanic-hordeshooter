@@ -11,13 +11,14 @@
     "infected_skin.003",
     "infected_trim.003"
   ],
-  "bytes": 116832,
+  "bytes": 116872,
   "nodes": [
     "leaper_root",
     "Body",
     "Deform",
     "Head",
     "Head_mesh",
+    "Muzzle",
     "Deform_mesh",
     "LeftFoot",
     "LeftFoot_mesh",
@@ -26,7 +27,6 @@
     "RightFoot_mesh",
     "leaper_rightArm_mesh",
     "Weapon",
-    "Muzzle",
     "leaper_leftArm",
     "leaper_rightArm"
   ],

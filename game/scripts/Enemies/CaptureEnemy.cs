@@ -101,8 +101,14 @@ public partial class CaptureEnemy : Enemy
     }
 
     private bool ClearToPlayer() => _victim != null && ClearTo(_victim);
-    private bool ClearTo(Player player) => Rays.Clear(this, GlobalPosition + Vector3.Up * .7f,
-        player.GlobalPosition + Vector3.Up * .7f, Layers.World | Layers.Props);
+    private bool ClearTo(Player player)
+    {
+        var body = GlobalPosition + Vector3.Up * .7f;
+        if (!Rays.Clear(this, body, player.GlobalPosition + Vector3.Up * .7f, Layers.World | Layers.Props))
+            return false;
+        return IsLeaper || (Rays.Clear(this, body, Rig.Muzzle.GlobalPosition, Layers.World | Layers.Props) &&
+            Rays.Clear(this, Rig.Muzzle.GlobalPosition, player.GlobalPosition + Vector3.Up * .8f, Layers.World | Layers.Props));
+    }
 
     /// <summary>The survivor currently held (null when not holding anyone).</summary>
     public Player? Held => State == Mode.Holding ? _victim : null;
@@ -142,7 +148,8 @@ public partial class CaptureEnemy : Enemy
 
     private void DrawLine(Vector3 target, float width, Color color)
     {
-        var from = GlobalPosition + Vector3.Up * (State == Mode.Holding ? .8f : .04f);
+        var from = State == Mode.Holding && !IsLeaper ? Rig.Muzzle.GlobalPosition
+            : GlobalPosition + Vector3.Up * (State == Mode.Holding ? .8f : .04f);
         float distance = from.DistanceTo(target);
         if (_marker == null)
             _marker = Mat.Box(Stage.Effects, Vector3.Zero, Vector3.One, Mat.Fade(new Color(color, .65f)));

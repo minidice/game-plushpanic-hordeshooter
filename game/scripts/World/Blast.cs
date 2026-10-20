@@ -29,6 +29,9 @@ public static class Blast
             enemy.Shove(away, 40f + (knockbackPower - 40f) * falloff, damage * falloff + 15f);
         }
 
+        // Include corpses created by the damage above, even before the next physics broadphase.
+        stage.Effects.BlastCorpses(at, radius, knockbackPower, source);
+
         foreach (var player in System.Linq.Enumerable.ToList(stage.AlivePlayers))
         {
             var toPlayer = player.GlobalPosition - at;

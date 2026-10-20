@@ -11,13 +11,14 @@
     "infected_skin.004",
     "infected_trim.004"
   ],
-  "bytes": 120480,
+  "bytes": 120524,
   "nodes": [
     "spitter_root",
     "Body",
     "Deform",
     "Head",
     "Head_mesh",
+    "Muzzle",
     "Deform_mesh",
     "LeftFoot",
     "LeftFoot_mesh",
@@ -26,7 +27,6 @@
     "RightFoot_mesh",
     "spitter_rightArm_mesh",
     "Weapon",
-    "Muzzle",
     "spitter_leftArm",
     "spitter_rightArm"
   ],

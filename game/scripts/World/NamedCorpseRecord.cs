@@ -9,6 +9,7 @@ public partial class NamedCorpseRecord : Node3D
     public string MonsterId { get; internal set; }="";
     public double CreatedAt { get; internal set; }
     public double ExpiresAt { get; internal set; }
+    public float DeathYaw { get; internal set; }
     private Corpse? _visual;
     public Corpse? Visual { get=>IsInstanceValid(_visual)&&!_visual!.IsQueuedForDeletion()?_visual:null; internal set=>_visual=value; }
 }

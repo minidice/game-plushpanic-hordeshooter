@@ -39,8 +39,11 @@ public partial class RangedEnemy : Enemy
             if (_timer <= 0)
             {
                 // Check the locked aim point again: closing a door during windup stops the shot.
-                var from = GlobalPosition + Vector3.Up * .8f;
-                if (Rays.Clear(this, from, _target, Layers.World | Layers.Props))
+                var body = GlobalPosition + Vector3.Up * .8f;
+                var from = Monster.Behavior == MonsterBehavior.Spitter ? Rig.Muzzle.GlobalPosition : body;
+                // A protruding mouth must not spawn a projectile on the far side of cover.
+                if ((from.IsEqualApprox(body) || Rays.Clear(this, body, from, Layers.World | Layers.Props)) &&
+                    Rays.Clear(this, from, _target, Layers.World | Layers.Props))
                 {
                     var projectile = new EnemyProjectile();
                     projectile.Setup(Stage, from, _target, Shot, AttackDamage);

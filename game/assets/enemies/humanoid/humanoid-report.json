@@ -11,13 +11,14 @@
     "infected_skin",
     "infected_trim"
   ],
-  "bytes": 123360,
+  "bytes": 123404,
   "nodes": [
     "humanoid_root",
     "Body",
     "Deform",
     "Head",
     "Head_mesh",
+    "Muzzle",
     "Deform_mesh",
     "LeftFoot",
     "LeftFoot_mesh",
@@ -26,7 +27,6 @@
     "RightFoot_mesh",
     "humanoid_rightArm_mesh",
     "Weapon",
-    "Muzzle",
     "humanoid_leftArm",
     "humanoid_rightArm"
   ],

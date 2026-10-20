@@ -11,13 +11,14 @@
     "infected_skin.002",
     "infected_trim.002"
   ],
-  "bytes": 115204,
+  "bytes": 115248,
   "nodes": [
     "tether_root",
     "Body",
     "Deform",
     "Head",
     "Head_mesh",
+    "Muzzle",
     "Deform_mesh",
     "LeftFoot",
     "LeftFoot_mesh",
@@ -26,7 +27,6 @@
     "RightFoot_mesh",
     "tether_rightArm_mesh",
     "Weapon",
-    "Muzzle",
     "tether_leftArm",
     "tether_rightArm"
   ],
