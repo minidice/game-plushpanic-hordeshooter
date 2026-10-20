@@ -4,6 +4,8 @@ config_version=5
 config/name="Horde Shooter - Stage 1"
 run/main_scene="res://scenes/Menu.tscn"
 config/features=PackedStringArray("4.7", "C#", "Forward Plus")
+config/icon="res://assets/branding/app-icon.png"
+config/windows_native_icon="res://assets/branding/app-icon.ico"
 
 [display]
 window/size/viewport_width=1600
