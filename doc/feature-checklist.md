@@ -12,6 +12,7 @@
 - [x] 개편 2단계(2026-10-21, T-21·M-24): 몬스터 등급 boss, 모드별 몬스터 테이블(`modes/<mode>_spawns.csv`), 보스 페이즈·스킬 데이터(`bosses/<id>.json`, 3페이즈·부채꼴 탄막 추가), 난전 named 처치 후 정비 시간 ([규격](mode-monster-tables.md))
 - [x] 개편 3단계(2026-10-21, A-17): 난전 보스 전용 모델 `boss.glb`(Codex 제작, 삼각형 4,466) 적용, 지시문 → Codex → Blender 최적화 → 게임 연결 흐름 ([지시문](model-briefs/boss.md))
 - [x] 개편 4단계(2026-10-21, L-13): 맵 인터페이스 `StageMap`(Stage 1은 그 하위 클래스, 모드별 맵 선택 자리, 검사용 맵 교체) ([레벨 규칙](level-design-rules.md))
+- [x] 개편 5단계(2026-10-21, M-26): 난전 전용 들판(나무·돌기둥 무작위 산포, 방에서는 같은 씨앗), 바닥 진열대로 무기 2개 고르기, 예비탄 무제한, 3번 칸 종류 25초 충전, 네임드 처치 시 강화 진열대, 화면 밖 팀원·보스 화살표
 - [ ] 거점·난전 다음: 레벨업 능력 선택, 인벤토리·파밍·탈출, 전용 맵·전용 보스 모델, 멀티에서 보스 연출 동기화(I-77), 수치 플레이 조정
 - [x] 멀티 메뉴: 방 만들기, 주소로 참가(2인 테스트). 방 코드·공개방은 준비 중
 - [x] 멀티 테스트 실행: 한 PC 두 창(`Start-Multi-Test.cmd`), 방장 LAN 주소 안내, 다른 PC용 Windows 실행 파일(`Export-Game.cmd` → `build/HordeShooter-windows.zip`)
@@ -143,3 +144,8 @@
 
 - C# 빌드 경고·오류 0. `MapCheck` 17개 통과(헤드리스·창 모드), `Integration` 148, `ModeCheck` 67, `MenuCheck` 39, `NetSyncCheck` 28, `NetCodecCheck` 11, `SpawnCheck` 41, `SquadCheck` 50, `SupplyCheck` 12, `AudioLevelCheck` 4, `LobbyCheck` 31, `WeaponHandlingCheck` 30, `CombatPacingCheck` 44, `VisionTierCheck` 23, `CorpseRetentionCheck` 16, `EnemyAttackCheck` 79 통과.
 - 창 모드 렌더 `output/map-flat-onslaught.png`: 부품 없는 평지 검사 맵에서 난전이 돌고 HUD 이름이 모드 이름만 보임. Stage 1은 이전과 같은 화면(ModeCheck·MenuCheck 렌더 경로 그대로).
+
+### 이번 변경 확인 기록 — 2026-10-21 (개편 5단계, 난전 들판)
+
+- C# 빌드 경고·오류 0. `ModeCheck` 81개(창 모드, 화면 밖 화살표 포함)·79개(헤드리스), `MapCheck` 25, `WeaponHandlingCheck` 30, `Integration` 148, `NetSyncCheck` 28, `NetCodecCheck` 11, `LobbyCheck` 31, `MenuCheck` 39, `SquadCheck` 50, `SpawnCheck` 41, `CombatPacingCheck` 44, `ReloadPoseCheck` 279, `EnemyAttackCheck` 79, `VisionTierCheck` 23 통과.
+- 렌더: `output/map-open-field.png`·`mode-survivor-rack.png`(들판·진열대·바닥 글씨·무장 목표), `mode-survivor-arrow.png`(화면 밖 팀원 화살표, `∞` 탄약, "난전 · 들판"). 실제 손으로 하는 난이도·들판 성능은 미확인(I-26·I-80). 2인 멀티로 들판·진열대를 해 보지는 않음.

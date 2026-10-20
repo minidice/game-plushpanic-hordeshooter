@@ -31,6 +31,23 @@
     "boss_group_scale": 0.5,
     "spawn_min_m": 14,
     "spawn_max_m": 22,
-    "rest_after_named_s": 12
+    "rest_after_named_s": 12,
+    "weapon_pool": [
+      "mp5",
+      "m4",
+      "ak47",
+      "m16",
+      "m249",
+      "r870",
+      "benelli_m4",
+      "double_barrel",
+      "svd",
+      "awm",
+      "alabong",
+      "mortar",
+      "railgun"
+    ],
+    "rack_size": 3,
+    "special_cooldown_s": 25
   }
 }

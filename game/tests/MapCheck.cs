@@ -79,7 +79,8 @@ public partial class MapCheck : Node
     {
         // ---------- Stage 1 behind the interface ----------
         foreach (var mode in Enum.GetValues<GameMode>())
-            Check(StageMap.Create(mode) is StageOneLayout, $"{mode} still plays Stage 1 (Onslaught's own field comes next)");
+            Check(mode == GameMode.Survivor ? StageMap.Create(mode) is OpenFieldMap : StageMap.Create(mode) is StageOneLayout,
+                $"{mode} plays {(mode == GameMode.Survivor ? "its open field" : "Stage 1")}");
         var stage = await NewStage(GameMode.Scenario);
         var map = stage.Map;
         Check(map is StageOneLayout && map.HasRoute && map.Doors.Count == 3 && map.AlarmDevice != null && map.Encounters != null,
@@ -93,6 +94,24 @@ public partial class MapCheck : Node
         Check(!stage.Map.HasRoute && stage.Progress(new Vector3(100, 0, 0)) == 0 && stage.Map.Gates.Count == 2,
             "Outpost on Stage 1 has no route to stay behind and two doorways to come in from");
 
+        // ---------- Onslaught's open field (M-26) ----------
+        stage = await NewStage(GameMode.Survivor, new OpenFieldMap { Seed = 7 });
+        var field = (OpenFieldMap)stage.Map;
+        var spots = field.Obstacles;
+        Check(spots.Count >= 40 && field.Trees > 0 && field.Pillars > 0, $"the field scatters trees and pillars ({field.Trees} + {field.Pillars})");
+        Check(spots.All(p => p.Length() >= OpenFieldMap.StartClear) && spots.All(p => spots.Where(q => q != p).All(q => q.DistanceTo(p) >= OpenFieldMap.Spacing - .01f)),
+            "none in the start circle, none closer than the spacing");
+        Check(!stage.Flow.IsBlocked(new Vector3(0, 0, 5)) && stage.Flow.IsBlocked(spots[0]) && stage.Flow.IsBlocked(new Vector3(OpenFieldMap.Half + .5f, 0, 0)),
+            "open ground, blocked trunks and a closed edge");
+        Check(stage.Flow.Width == 92 && !stage.Map.HasRoute && stage.Map.Gates.Count == 0, "a 92 m flow area with no route and no doorways");
+        await Frames(30);
+        await Shot("open-field");
+        var firstSpots = spots.ToList();
+        stage = await NewStage(GameMode.Survivor, new OpenFieldMap { Seed = 7 });
+        Check(((OpenFieldMap)stage.Map).Obstacles.SequenceEqual(firstSpots), "the same seed builds the same field (every PC in a match)");
+        stage = await NewStage(GameMode.Survivor, new OpenFieldMap { Seed = 8 });
+        Check(!((OpenFieldMap)stage.Map).Obstacles.SequenceEqual(firstSpots), "another seed builds another field");
+
         // ---------- a different map plugs in ----------
         stage = await NewStage(GameMode.Survivor, new FlatTestMap());
         Check(stage.Map is FlatTestMap && stage.Player.GlobalPosition.DistanceTo(Vector3.Zero) < .5f, "a flat test map builds and the player starts on it");
@@ -103,7 +122,13 @@ public partial class MapCheck : Node
         Check(stage.Hud.FindChild("ObjectivePanel", true, false) is Control panel && !Labels(panel).Contains(Loc.Text("ui_hud_stage")),
             "the HUD title does not call another map Stage 1");
         var survivor = (SurvivorRules)stage.ModeRules!;
-        await Until(() => survivor.SpawnedThisMatch > 0, "Onslaught's swarm comes in on the flat map");
+        for (int pick = 0; pick < SurvivorRules.ArmingPicks; pick++)
+        {
+            Check(survivor.RackItems.Count > 0, $"rack {pick + 1} lies on the flat map");
+            survivor.RackItems[0].Use(stage.Player);
+            await Frames(2);
+        }
+        await Until(() => survivor.SpawnedThisMatch > 0, "Onslaught's swarm comes in on the flat map once armed");
         Check(stage.AllEnemies.All(e => Mathf.Abs(e.GlobalPosition.X) < 21 && Mathf.Abs(e.GlobalPosition.Z) < 21), "the swarm stays on the map");
         await Frames(60);
         await Shot("flat-onslaught");

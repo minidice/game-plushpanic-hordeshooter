@@ -11,6 +11,8 @@ public static class GameSession
     public static string SelectedCharacterId { get; set; } = DefaultCharacterId;
     public static string SelectedTheme { get; set; } = "zombie";
     public static GameMode Mode { get; set; } = GameMode.Scenario;
+    /// <summary>The host's map seed for this match, sent with the start (0 = none: offline picks its own).</summary>
+    public static int MapSeed { get; set; }
 
     /// <summary>
     /// Modes the current build can actually start; any other would be listed in the menu as "coming soon".

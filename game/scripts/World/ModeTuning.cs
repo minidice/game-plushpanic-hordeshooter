@@ -14,7 +14,7 @@ public sealed record SurvivalTuning(float CoreHp, float Prep, float Break, int M
 }
 
 public sealed record SurvivorTuning(float BossAt, float SpawnEvery, int GroupStart, int GroupEnd, float BossGroupScale,
-    float SpawnMin, float SpawnMax, float RestAfterNamed);
+    float SpawnMin, float SpawnMax, float RestAfterNamed, IReadOnlyList<string> WeaponPool, int RackSize, float SpecialCooldown);
 
 /// <summary>
 /// Survival and Survivor timing from content/data/mode_rules.json (doc/menu-multiplayer-plan.md 3.1). Which monsters come
@@ -28,12 +28,14 @@ public sealed class ModeTuning
     private static readonly string[] SurvivalKeys = { "core_hp", "prep_s", "break_s", "max_alive", "waves" };
     private static readonly string[] WaveKeys = { "duration_s", "every_s", "group" };
     private static readonly string[] SurvivorKeys =
-        { "boss_at_s", "spawn_every_s", "group_start", "group_end", "boss_group_scale", "spawn_min_m", "spawn_max_m", "rest_after_named_s" };
+        { "boss_at_s", "spawn_every_s", "group_start", "group_end", "boss_group_scale", "spawn_min_m", "spawn_max_m", "rest_after_named_s",
+          "weapon_pool", "rack_size", "special_cooldown_s" };
+    private static readonly string[] DefaultPool = { "mp5", "m4", "ak47", "m249", "r870", "benelli_m4", "svd", "alabong", "railgun" };
 
     private static readonly SurvivalWave DefaultWave = new(40, 4.5f, 5);
 
     public SurvivalTuning Survival { get; private set; } = new(900, 8, 10, 60, new[] { DefaultWave });
-    public SurvivorTuning Survivor { get; private set; } = new(150, 1.3f, 3, 8, .5f, 14, 22, 12);
+    public SurvivorTuning Survivor { get; private set; } = new(150, 1.3f, 3, 8, .5f, 14, 22, 12, DefaultPool, 3, 25);
 
     private readonly List<string> _errors = new();
     public IReadOnlyList<string> Errors => _errors;
@@ -101,6 +103,22 @@ public sealed class ModeTuning
         Positive(where, ("core_hp", Survival.CoreHp), ("prep_s", Survival.Prep), ("break_s", Survival.Break), ("max_alive", Survival.MaxAlive));
     }
 
+    /// <summary>The rack pool: weapon ids that exist and are not melee (doc/mode-monster-tables.md 5장).</summary>
+    private IReadOnlyList<string> ReadPool(JsonElement s, string where, IReadOnlyList<string> fallback)
+    {
+        if (!s.TryGetProperty("weapon_pool", out var list)) return fallback;
+        if (list.ValueKind != JsonValueKind.Array) { _errors.Add($"{where}: weapon_pool must be a list of weapon ids"); return fallback; }
+        var pool = new List<string>();
+        foreach (var item in list.EnumerateArray())
+        {
+            var id = item.ValueKind == JsonValueKind.String ? item.GetString() ?? "" : "";
+            if (!WeaponDatabase.Current.Weapons.TryGetValue(id, out var def) || def.Mode == FireMode.Melee)
+                _errors.Add($"{where}: weapon_pool '{id}' is not a gun in weapons.csv");
+            else pool.Add(id);
+        }
+        return pool.Count > 0 ? pool : fallback;
+    }
+
     private void ReadSurvivor(JsonElement s)
     {
         const string where = "mode_rules.json survivor";
@@ -109,7 +127,10 @@ public sealed class ModeTuning
         var f = new JsonFields(s, where, _errors);
         Survivor = new SurvivorTuning(f.Float("boss_at_s", d.BossAt), f.Float("spawn_every_s", d.SpawnEvery), f.Int("group_start", d.GroupStart),
             f.Int("group_end", d.GroupEnd), f.Float("boss_group_scale", d.BossGroupScale),
-            f.Float("spawn_min_m", d.SpawnMin), f.Float("spawn_max_m", d.SpawnMax), f.Float("rest_after_named_s", d.RestAfterNamed));
+            f.Float("spawn_min_m", d.SpawnMin), f.Float("spawn_max_m", d.SpawnMax), f.Float("rest_after_named_s", d.RestAfterNamed),
+            ReadPool(s, where, d.WeaponPool), f.Int("rack_size", d.RackSize), f.Float("special_cooldown_s", d.SpecialCooldown));
+        if (Survivor.RackSize < 1 || Survivor.RackSize > Survivor.WeaponPool.Count) _errors.Add($"{where}: rack_size must be between 1 and the weapon_pool size");
+        if (Survivor.SpecialCooldown <= 0) _errors.Add($"{where}: special_cooldown_s must be positive");
         Positive(where, ("boss_at_s", Survivor.BossAt), ("spawn_every_s", Survivor.SpawnEvery), ("group_start", Survivor.GroupStart),
             ("spawn_min_m", Survivor.SpawnMin));
         if (Survivor.RestAfterNamed < 0) _errors.Add($"{where}: rest_after_named_s must not be negative");

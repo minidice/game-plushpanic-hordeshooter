@@ -48,6 +48,54 @@ public sealed class Loadout
 
     public Loadout(WeaponDefinition startSecondary) => Secondary = new WeaponState(startSecondary);
 
+    private bool _unlimited;
+    private float _specialCooldown;
+
+    /// <summary>
+    /// Onslaught (decisions.md M-26): every weapon carried keeps unlimited reserves, and slot-3 kinds recharge for
+    /// <paramref name="specialCooldown"/> seconds after a shot. Applied to what is carried now and to everything picked up later.
+    /// </summary>
+    public void UseOnslaughtAmmo(float specialCooldown)
+    {
+        _unlimited = true;
+        _specialCooldown = specialCooldown;
+        foreach (var state in new[] { Secondary, Primary, Special }) AdoptMaybe(state);
+    }
+
+    private WeaponState Adopt(WeaponState state)
+    {
+        AdoptMaybe(state);
+        return state;
+    }
+
+    private WeaponState? AdoptMaybe(WeaponState? state)
+    {
+        if (state == null || !_unlimited) return state;
+        state.UnlimitedReserve = true;
+        state.ShotCooldown = state.Def.Slot == WeaponSlot.Special ? _specialCooldown : 0;
+        return state;
+    }
+
+    /// <summary>Recharging weapons that are put away keep counting down (the one in hand ticks itself).</summary>
+    public void TickIdle(float dt)
+    {
+        foreach (var state in new[] { Secondary, Primary, Special })
+            if (state != null && state != Current) state.TickCooldown(dt);
+    }
+
+    /// <summary>
+    /// Onslaught's racks: put <paramref name="def"/> in slot 1 or 2 whatever kind it is (a rocket launcher can be slot 1),
+    /// replacing what was there, and take it in hand.
+    /// </summary>
+    public void SetSlot(int slot, WeaponDefinition def)
+    {
+        Current.Holster();
+        var state = Adopt(new WeaponState(def));
+        if (slot == 1) Secondary = state;
+        else Primary = state;
+        ActiveSlot = slot == 1 ? 1 : 2;
+    }
+
     /// <summary>
     /// Client, own player: take the host's weapons, ammo and throwables. Returns true when a weapon changed
     /// (the caller rebuilds the model in hand). The slot follows the host only when a pickup swapped a weapon.
@@ -56,10 +104,10 @@ public sealed class Loadout
         WeaponDefinition? special, int speMag, int speReserve, int slot, IReadOnlyList<(ThrowableDefinition def, int count)> throwables)
     {
         bool changed = false;
-        if (Secondary.Def.Id != secondary.Id) { Secondary = new WeaponState(secondary, secMag, secReserve); changed = true; }
+        if (Secondary.Def.Id != secondary.Id) { Secondary = Adopt(new WeaponState(secondary, secMag, secReserve)); changed = true; }
         else Secondary.SetAmmo(secMag, secReserve);
-        Primary = ApplySlot(Primary, primary, priMag, priReserve, ref changed);
-        Special = ApplySlot(Special, special, speMag, speReserve, ref changed);
+        Primary = AdoptMaybe(ApplySlot(Primary, primary, priMag, priReserve, ref changed));
+        Special = AdoptMaybe(ApplySlot(Special, special, speMag, speReserve, ref changed));
         if (changed) ActiveSlot = InSlot(slot) != null ? slot : 1;
         if (InSlot(ActiveSlot) == null) ActiveSlot = 1;
         // Same kinds, counts and order (G throws the first): a cycle the host refused must not stick.
@@ -106,7 +154,7 @@ public sealed class Loadout
             bool same = Secondary.Def.BaseId == def.BaseId;
             if (same && !Secondary.Def.Dual && !def.Dual && def.DualVariant is { } dual)
             {
-                Secondary = new WeaponState(dual);
+                Secondary = Adopt(new WeaponState(dual));
                 Primary?.Holster();
             Special?.Holster();
                 ActiveSlot = 1;
@@ -116,7 +164,7 @@ public sealed class Loadout
             var droppedSecondary = Secondary;
             droppedSecondary.Holster();
             state?.Holster();
-            Secondary = state ?? new WeaponState(def);
+            Secondary = Adopt(state ?? new WeaponState(def));
             Primary?.Holster();
             Special?.Holster();
             ActiveSlot = 1;
@@ -139,7 +187,7 @@ public sealed class Loadout
         held?.Holster();
         state?.Holster();
         Current.Holster();
-        var taken = state ?? new WeaponState(def);
+        var taken = Adopt(state ?? new WeaponState(def));
         if (special) Special = taken;
         else Primary = taken;
         ActiveSlot = (int)def.Slot;

@@ -51,6 +51,10 @@ void fragment() {
         var modeBar = Place(new Paint { Name = "ModeBar", Painter = DrawModeBar, CustomMinimumSize = new Vector2(440, 30) }, .5f, 0, new Vector2(0, 26), true, false, centerX: true);
         modeBar.Visible = Stage.ModeRules != null;
 
+        var arrows = new Paint { Name = "OffscreenArrows", Painter = DrawOffscreenArrows };
+        arrows.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+        _root.AddChild(arrows);
+
         var reticle = new Paint { Name = "Reticle", Painter = DrawReticle };
         reticle.SetAnchorsPreset(Control.LayoutPreset.FullRect);
         _root.AddChild(reticle);
@@ -142,22 +146,23 @@ void fragment() {
         _hp.Text = player.IsHealing ? Loc.Format("fmt_hud_healing", (int)(player.HealProgress * 100)) : Loc.Text(player.Definition.DisplayName);
         _medkit.UpdateSlot(Loc.Text("hud_medkit"), player.IsHealing ? $"{(int)(player.HealProgress * 100)}%" : $"×{player.Medkits}", "", "medkit", player.IsHealing, player.Medkits > 0);
         _ammo.Text = gun.IsMelee ? Loc.Text("hud_melee")
+            : gun.CooldownLeft > 0 ? Loc.Format("fmt_hud_cooldown", Mathf.CeilToInt(gun.CooldownLeft))
             : gun.Reloading ? Loc.Text("ui_hud_reload")
-            : $"{gun.Mag:00} / {(gun.Def.InfiniteReserve ? "∞" : gun.Reserve.ToString("00"))}";
+            : $"{gun.Mag:00} / {(gun.HasInfiniteReserve ? "∞" : gun.Reserve.ToString("00"))}";
         bool low = !gun.IsMelee && gun.Mag <= Mathf.Max(1, gun.Def.MagSize / 6);
         _ammo.AddThemeColorOverride("font_color", low ? UiTheme.Danger : HudWhite);
         _reserve.Text = gun.Def.DisplayName;
-        _ammoHint.Text = Loc.Text(gun.IsMelee ? "hud_melee_hint" : !gun.Def.InfiniteReserve && !gun.Def.Refillable ? "hud_no_refill_hint" : "hud_ammo_hint");
+        _ammoHint.Text = Loc.Text(gun.IsMelee ? "hud_melee_hint" : !gun.HasInfiniteReserve && !gun.Def.Refillable ? "hud_no_refill_hint" : "hud_ammo_hint");
 
         var loadout = player.Loadout;
         var secondary = loadout.Secondary;
-        _slot1.UpdateSlot(secondary.Def.DisplayName, secondary.IsMelee ? "" : $"{secondary.Mag} / ∞", secondary.Def.IconPath,
+        _slot1.UpdateSlot(secondary.Def.DisplayName, secondary.IsMelee ? "" : SlotAmmo(secondary), secondary.Def.IconPath,
             secondary.IsMelee ? "melee" : "pistol", loadout.ActiveSlot == 1, true);
         var primary = loadout.Primary;
-        _slot2.UpdateSlot(primary?.Def.DisplayName ?? Loc.Text("hud_empty"), primary == null ? "" : $"{primary.Mag} / {primary.Reserve}",
+        _slot2.UpdateSlot(primary?.Def.DisplayName ?? Loc.Text("hud_empty"), primary == null ? "" : SlotAmmo(primary),
             primary?.Def.IconPath ?? "", "rifle", loadout.ActiveSlot == 2, primary != null);
         var special = loadout.Special;
-        _slot3.UpdateSlot(special?.Def.DisplayName ?? Loc.Text("hud_special"), special == null ? "" : $"{special.Mag} / {special.Reserve}",
+        _slot3.UpdateSlot(special?.Def.DisplayName ?? Loc.Text("hud_special"), special == null ? "" : SlotAmmo(special),
             special?.Def.IconPath ?? "", "rifle", loadout.ActiveSlot == 3, special != null);
         var throwable = loadout.CurrentThrowable;
         _throwables.UpdateSlot(throwable?.DisplayName ?? Loc.Text("hud_throwable"), throwable == null ? "—" : $"×{loadout.Count(throwable)}",
@@ -188,6 +193,11 @@ void fragment() {
         var mode = captured ? Input.MouseModeEnum.Hidden : Input.MouseModeEnum.Visible;
         if (Input.MouseMode != mode) Input.MouseMode = mode;
     }
+
+    /// <summary>"12 / 300", "30 / ∞", or a recharging weapon's seconds left.</summary>
+    private static string SlotAmmo(WeaponState state) => state.CooldownLeft > 0
+        ? $"{Mathf.CeilToInt(state.CooldownLeft)}s"
+        : $"{state.Mag} / {(state.HasInfiniteReserve ? "∞" : state.Reserve.ToString())}";
 
     private void UpdateEndPanel(Stage stage, Player player)
     {
@@ -246,6 +256,53 @@ void fragment() {
     }
 
     // ---------- painters ----------
+
+    /// <summary>Arrows drawn on the last frame (checks): one per teammate or boss off screen.</summary>
+    public IReadOnlyList<string> OffscreenArrows { get; private set; } = new List<string>();
+
+    /// <summary>
+    /// Teammates (and the boss) off screen: a translucent arrow on the screen edge pointing their way, with the name
+    /// (decisions.md M-26). In a wide field the team spreads out of view.
+    /// </summary>
+    private void DrawOffscreenArrows(Control c)
+    {
+        var stage = Stage;
+        var shown = new List<string>();
+        OffscreenArrows = shown;
+        if (stage.State != StageState.Playing || stage.Player.IsDead) return;
+        var targets = new List<(Vector3 At, string Name, Color Color)>();
+        foreach (var p in stage.Players)
+        {
+            if (p == stage.Player || !IsInstanceValid(p) || p.IsDead) continue;
+            var name = p.DisplayLabel.Length > 0 ? p.DisplayLabel : Loc.Text(p.Definition.DisplayName);
+            targets.Add((p.GlobalPosition + Vector3.Up, name, p.IsDowned ? UiTheme.Danger : UiTheme.Heal));
+        }
+        if (stage.ModeRules is SurvivorRules { Boss: { IsDead: false } boss } && IsInstanceValid(boss))
+            targets.Add((boss.GlobalPosition + Vector3.Up * 2, Loc.Text(boss.Monster.NameKey), UiTheme.Danger));
+        const float inset = 52f;
+        var size = c.Size;
+        var center = size / 2;
+        var font = c.GetThemeDefaultFont();
+        foreach (var (at, name, color) in targets)
+        {
+            var screen = stage.Cam.UnprojectPosition(at);
+            if (screen.X > inset && screen.X < size.X - inset && screen.Y > inset && screen.Y < size.Y - inset) continue;
+            var dir = screen - center;
+            if (dir.LengthSquared() < 1) continue;
+            dir = dir.Normalized();
+            float tx = Mathf.Abs(dir.X) > .001f ? ((dir.X > 0 ? size.X - inset : inset) - center.X) / dir.X : float.MaxValue;
+            float ty = Mathf.Abs(dir.Y) > .001f ? ((dir.Y > 0 ? size.Y - inset : inset) - center.Y) / dir.Y : float.MaxValue;
+            var edge = center + dir * Mathf.Min(tx, ty);
+            var side = new Vector2(-dir.Y, dir.X);
+            var tip = edge + dir * 16;
+            var arrow = new[] { tip, edge - dir * 8 + side * 12, edge - dir * 8 - side * 12 };
+            c.DrawColoredPolygon(arrow, new Color(color, .72f));
+            c.DrawPolyline(new[] { arrow[0], arrow[1], arrow[2], arrow[0] }, new Color(0, 0, 0, .5f), 2, true);
+            var label = edge - dir * 30;
+            c.DrawString(font, label + new Vector2(-70, 6), name, HorizontalAlignment.Center, 140, 14, new Color(Hud.HudWhite, .82f));
+            shown.Add(name);
+        }
+    }
 
     private void DrawModeBar(Control c)
     {

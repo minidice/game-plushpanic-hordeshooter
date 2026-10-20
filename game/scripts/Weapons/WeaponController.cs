@@ -195,6 +195,7 @@ public partial class WeaponController : Node
 
     public void Tick(float dt, bool moving, bool pressed, bool held, bool blocked)
     {
+        Loadout.TickIdle(dt);
         TickActions(dt,moving,pressed,held,blocked);
         // Sample AFTER auto reload, shell insertion and trigger cancellation. Never advance a second timer.
         _player.Rig.SetReloadPose(dt,blocked||AimingThrow||_player.IsDead||_player.IsStunned ? null : Current);
@@ -570,6 +571,15 @@ public partial class WeaponController : Node
         Stage.Net?.OnThrow(_player, def, hand, _player.AimPoint);
         EndThrowAim();
         return item;
+    }
+
+    /// <summary>Onslaught's racks: <paramref name="def"/> goes to slot 1 or 2 and into the hand.</summary>
+    public void PlaceInSlot(int slot, WeaponDefinition def)
+    {
+        EndThrowAim();
+        CancelWindup();
+        Loadout.SetSlot(slot, def);
+        RefreshVisual();
     }
 
     /// <summary>Picks up a weapon; returns the weapon that fell out of that slot, if any.</summary>

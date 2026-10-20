@@ -15,7 +15,7 @@ public partial class NetLobby : Node
     public const string NodeName = "NetLobby";
     public const int HostPeer = 1;
     /// <summary>Bump when lobby or match messages change shape: older builds then show as another version.</summary>
-    public const int Protocol = 3;
+    public const int Protocol = 4;
     /// <summary>Two PCs can play together only on the same version: messages and data ids (multiplayer-sync-design.md 6장).</summary>
     public static string Version => $"p{Protocol}-{(uint)NetIds.DataHash():x8}";
     /// <summary>Seconds between the host's refreshes of its room on the public list (it expires after 45 s).</summary>
@@ -125,7 +125,7 @@ public partial class NetLobby : Node
         GD.Print($"[lobby] peer {peer} came in as {character}");
         Broadcast();
         // A match is already running: join it (the stage gives late survivors a place beside the host).
-        if (Live) RpcId(peer, MethodName.MatchStarted, (int)Mode);
+        if (Live) RpcId(peer, MethodName.MatchStarted, (int)Mode, GameSession.MapSeed);
     }
 
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
@@ -155,6 +155,8 @@ public partial class NetLobby : Node
         GD.Print($"[lobby] starting {Mode} with {Members.Count} player(s)");
         Broadcast();
         GameSession.Mode = Mode;
+        // One seed for the whole room: a scattered map comes out the same on every PC.
+        GameSession.MapSeed = (int)(GD.Randi() % 1000000) + 1;
         EnterMatch(this);
         return true;
     }
@@ -164,7 +166,7 @@ public partial class NetLobby : Node
     {
         if (Role != NetRole.Host || !InMatch || Live) return;
         Live = true;
-        foreach (var m in Members.Where(m => m.Peer != HostPeer)) RpcId(m.Peer, MethodName.MatchStarted, (int)Mode);
+        foreach (var m in Members.Where(m => m.Peer != HostPeer)) RpcId(m.Peer, MethodName.MatchStarted, (int)Mode, GameSession.MapSeed);
     }
 
     /// <summary>
@@ -270,12 +272,13 @@ public partial class NetLobby : Node
     }
 
     [Rpc(MultiplayerApi.RpcMode.Authority, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
-    private void MatchStarted(int mode)
+    private void MatchStarted(int mode, int seed)
     {
         if (Role != NetRole.Client) return;
         InMatch = true;
         Mode = (GameMode)mode;
         GameSession.Mode = Mode;
+        GameSession.MapSeed = seed;
         Changed?.Invoke();
         EnterMatch(this);
     }

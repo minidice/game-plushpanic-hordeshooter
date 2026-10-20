@@ -14,6 +14,8 @@ public enum Objective
     Cleared,
     /// <summary>Survival / Survivor: the mode's own rules give the goal (<see cref="Stage.ModeRules"/>).</summary>
     ModeGoal,
+    /// <summary>Onslaught: picking weapons from the floor racks before the swarm starts.</summary>
+    ModeArming,
 }
 
 public enum StageState
@@ -176,6 +178,9 @@ public partial class Stage : Node3D
 
         if (Role == NetRole.Offline && GetTree().CurrentScene == this) Role = NetLaunch.Pending;
         ReviveEnabled = ReviveOverride ?? (GetTree().CurrentScene == this && GameSettings.ReviveEnabled);
+        // A random field per match offline; in a match everyone builds the host's (GameSession.MapSeed from the room; 1 without a room).
+        if (MapOverride == null && GetTree().CurrentScene == this)
+            map.Seed = Role == NetRole.Offline ? (int)(GD.Randi() % 1000000) + 1 : GameSession.MapSeed != 0 ? GameSession.MapSeed : 1;
         map.Build(this, Mode);
         _map = map;
 
@@ -203,8 +208,8 @@ public partial class Stage : Node3D
         ModeRules = ModeRules.Create(Mode);
         if (ModeRules != null)
         {
+            Objective = ModeRules.InitialObjective;
             AddChild(ModeRules);
-            Objective = Objective.ModeGoal;
         }
         if (Role == NetRole.Client) Player.Position = StageNet.ClientStart(this);
         Trail.Add(Player.GlobalPosition);
@@ -858,6 +863,7 @@ public partial class Stage : Node3D
 
     public void PickUp(WeaponPickup pickup, Player who)
     {
+        if (ModeRules?.TakePickup(pickup, who) == true) return;
         var at = who.GlobalPosition + Vector3.Up * 2.6f;
         bool local = who.IsLocal;
         if (pickup.Throwable is { } throwable)
@@ -914,6 +920,15 @@ public partial class Stage : Node3D
         else Sfx.PlayAt("pickup", who.GlobalPosition + Vector3.Up);
     }
 
+    /// <summary>A mode's own pickups (Onslaught's racks) leave the world the same way a taken weapon does.</summary>
+    public void RemovePickupFromWorld(WeaponPickup pickup) => RemovePickup(pickup);
+
+    /// <summary>The deciding PC moves a mode on (Onslaught: arming → fighting). Clients follow the world message.</summary>
+    public void SetModeObjective(Objective objective)
+    {
+        if (ModeRules != null && Authoritative) Objective = objective;
+    }
+
     private void RemovePickup(WeaponPickup pickup)
     {
         Interactables.Remove(pickup);
@@ -956,7 +971,7 @@ public partial class Stage : Node3D
         Objective.HoldOut => Loc.Format("fmt_objective_hold_out", Mathf.CeilToInt(Mathf.Max(0, Director.CrescendoRemaining))),
         Objective.ReachSafehouse => Loc.Text("ui_objective_reach_safehouse"),
         Objective.CloseSafehouse => Loc.Text("ui_objective_close_safehouse"),
-        Objective.ModeGoal when ModeRules != null => ModeRules.ObjectiveText,
+        Objective.ModeGoal or Objective.ModeArming when ModeRules != null => ModeRules.ObjectiveText,
         _ => Loc.Text("ui_objective_cleared"),
     };
 

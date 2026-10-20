@@ -80,6 +80,8 @@ public partial class Hud
         _throwables = new HudEquipmentSlot("ThrowableSlot", "G");
         _medkit = new HudEquipmentSlot("MedkitSlot", "Q");
         foreach (var slot in new[] { _slot1, _slot2, _slot3, _throwables, _medkit }) dock.AddChild(slot);
+        // Onslaught's racks fill slots 1 and 2 only (decisions.md M-26).
+        _slot3.Visible = Stage.ModeRules is not SurvivorRules;
 
         var ammoPanel = new PanelContainer { Name = "AmmoPanel", CustomMinimumSize = new Vector2(174, 0), SizeFlagsVertical = Control.SizeFlags.ShrinkCenter, MouseFilter = Control.MouseFilterEnum.Ignore };
         ammoPanel.AddThemeStyleboxOverride("panel", HudPlate(pad: 10));

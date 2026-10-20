@@ -27,6 +27,8 @@ public abstract partial class ModeRules : Node
     protected float Time => Stage.Elapsed;
 
     public abstract GameMode Mode { get; }
+    /// <summary>The stage objective while this mode runs (<see cref="Objective.ModeGoal"/>, or arming first).</summary>
+    public virtual Objective InitialObjective => Objective.ModeGoal;
     public abstract string ObjectiveText { get; }
     /// <summary>Text over the top bar; empty hides the bar.</summary>
     public virtual string BarLabel => "";
@@ -53,6 +55,9 @@ public abstract partial class ModeRules : Node
 
     /// <summary>The deciding PC only: spawning and the end of the match.</summary>
     protected abstract void Step(float dt);
+
+    /// <summary>The deciding PC: a mode may take a floor weapon its own way (Onslaught's racks). True = handled.</summary>
+    public virtual bool TakePickup(WeaponPickup pickup, Player who) => false;
 
     /// <summary>Client: the host's bar value from the snapshot.</summary>
     public virtual void ApplyNetBar(float fraction) => BarFraction = fraction;

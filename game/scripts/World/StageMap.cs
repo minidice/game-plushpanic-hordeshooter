@@ -18,8 +18,11 @@ public abstract class StageMap
     private readonly List<(Vector3 center, Vector3 size)> _floors = new();
     private readonly List<(Vector3 center, Vector3 size)> _solids = new();
 
-    /// <summary>The map for a mode. Every mode plays Stage 1 for now; Onslaught gets its own open field next (doc/mode-weapon-direction.md 10장).</summary>
-    public static StageMap Create(GameMode mode) => new StageOneLayout();
+    /// <summary>The map for a mode: Onslaught plays its open field, the others Stage 1 (doc/mode-weapon-direction.md 10장).</summary>
+    public static StageMap Create(GameMode mode) => mode == GameMode.Survivor ? new OpenFieldMap() : new StageOneLayout();
+
+    /// <summary>Random layout seed (maps that scatter things). Set before <see cref="Build"/>; every PC in a match uses the host's.</summary>
+    public int Seed { get; set; } = 1;
 
     public GameMode Mode { get; private set; } = GameMode.Scenario;
     public Vector3 PlayerStart { get; protected set; }

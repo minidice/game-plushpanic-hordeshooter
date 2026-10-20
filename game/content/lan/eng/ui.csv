@@ -234,3 +234,12 @@ fmt_objective_survivor_rest,Rest — {0}s (boss in {1})
 ui_objective_survivor_named,Take down the strong ones
 fmt_survivor_rest,Strong ones down! {0}s to restock
 msg_survivor_named,Strong enemies incoming!
+ui_map_open_field,Open Field
+fmt_objective_survivor_arm,Pick a weapon ({0}/{1}) — press E on one on the floor
+ui_floor_rack,PICK A WEAPON
+ui_floor_rack_upgrade,UPGRADE
+fmt_use_rack,Take {0} → slot {1}
+fmt_use_rack_upgrade,Swap the weapon in hand for {0}
+msg_survivor_armed,Armed! Here they come from every side
+msg_rack_upgrade,Upgrades dropped! Pick one to swap
+fmt_hud_cooldown,Recharge {0}s

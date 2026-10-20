@@ -16,6 +16,17 @@ public sealed class WeaponState
     public float Spread { get; private set; }
     public float ReloadElapsed { get; private set; }
 
+    /// <summary>Onslaught: reserves never run out, whatever the weapon (decisions.md M-26).</summary>
+    public bool UnlimitedReserve { get; set; }
+    /// <summary>
+    /// Onslaught's slot-3 kinds: after each shot the weapon recharges for this many seconds instead of reloading,
+    /// also while put away (<see cref="TickCooldown"/>). 0 = normal magazines.
+    /// </summary>
+    public float ShotCooldown { get; set; }
+    /// <summary>Seconds until a recharging weapon is ready again.</summary>
+    public float CooldownLeft { get; private set; }
+    public bool HasInfiniteReserve => Def.InfiniteReserve || UnlimitedReserve;
+
     private float _cooldown, _bloom, _burstTimer;
     private int _burstLeft;
     private bool _insertedShell;
@@ -36,18 +47,27 @@ public sealed class WeaponState
     }
 
     public bool IsMelee => Def.Mode == FireMode.Melee;
-    public bool CanFire => !Reloading && _cooldown <= 0 && (IsMelee || Mag > 0);
+    public bool CanFire => !Reloading && _cooldown <= 0 && CooldownLeft <= 0 && (IsMelee || Mag > 0);
     public float ReloadTime => _insertedShell && Def.ShellReloadTime > 0 ? Def.ShellReloadTime : Def.ReloadTime;
     public float ReloadFraction => Reloading ? ReloadElapsed / Math.Max(.001f, ReloadTime) : 0;
-    public bool IsEmpty => !IsMelee && Mag == 0 && (Def.InfiniteReserve || Reserve == 0);
+    public bool IsEmpty => !IsMelee && Mag == 0 && CooldownLeft <= 0 && ShotCooldown <= 0 && (HasInfiniteReserve || Reserve == 0);
     public int TotalAmmo => Mag + Reserve;
 
     /// <summary>Share of the normal cone left while aiming (decisions.md C-26); moving adds nothing then.</summary>
     public const float AimSpreadShare = .35f;
 
-    public void Tick(float dt, bool moving, bool aiming = false)
+    /// <summary>Recharging and the time between shots run in hand and put away alike.</summary>
+    public void TickCooldown(float dt)
     {
         _cooldown = Math.Max(0, _cooldown - dt);
+        if (CooldownLeft <= 0) return;
+        CooldownLeft = Math.Max(0, CooldownLeft - dt);
+        if (CooldownLeft <= 0) Mag = Def.MagSize;
+    }
+
+    public void Tick(float dt, bool moving, bool aiming = false)
+    {
+        TickCooldown(dt);
         _burstTimer = Math.Max(0, _burstTimer - dt);
         _bloom = Math.Max(0, _bloom - Def.SpreadRecovery * dt);
         Spread = aiming
@@ -64,9 +84,9 @@ public sealed class WeaponState
         {
             ReloadElapsed -= ReloadTime;
             Mag++;
-            if (!Def.InfiniteReserve) Reserve--;
+            if (!HasInfiniteReserve) Reserve--;
             _insertedShell = true;
-            if (Mag >= Def.MagSize || (!Def.InfiniteReserve && Reserve == 0)) Reloading = false;
+            if (Mag >= Def.MagSize || (!HasInfiniteReserve && Reserve == 0)) Reloading = false;
         }
     }
 
@@ -107,13 +127,14 @@ public sealed class WeaponState
     {
         if (IsMelee) return;
         Mag--;
+        if (ShotCooldown > 0 && Mag <= 0) CooldownLeft = ShotCooldown;
         _bloom = Math.Min(Def.MaxSpread, _bloom + Def.SpreadPerShot);
     }
 
     public bool StartReload()
     {
-        if (IsMelee || Reloading || Mag >= Def.MagSize) return false;
-        if (!Def.InfiniteReserve && Reserve <= 0) return false;
+        if (IsMelee || Reloading || Mag >= Def.MagSize || ShotCooldown > 0) return false;
+        if (!HasInfiniteReserve && Reserve <= 0) return false;
         Reloading = true;
         ReloadElapsed = 0;
         _insertedShell = false;
@@ -127,6 +148,7 @@ public sealed class WeaponState
     internal void Refund()
     {
         if (!IsMelee) Mag = Math.Min(Def.MagSize, Mag + 1);
+        CooldownLeft = 0;
     }
 
     /// <summary>Drop any unfinished burst (rolling, healing).</summary>
@@ -153,9 +175,9 @@ public sealed class WeaponState
     private void FinishReload()
     {
         int need = Def.MagSize - Mag;
-        int take = Def.InfiniteReserve ? need : Math.Min(need, Reserve);
+        int take = HasInfiniteReserve ? need : Math.Min(need, Reserve);
         Mag += take;
-        if (!Def.InfiniteReserve) Reserve -= take;
+        if (!HasInfiniteReserve) Reserve -= take;
         Reloading = false;
     }
 }

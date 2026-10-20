@@ -70,6 +70,25 @@ public partial class ModeCheck : Node
         var bad = ModeTuning.FromText("{\"survival\": {\"core_hp\": -1, \"waves\": [{\"every_s\": \"often\"}], \"spare\": 1}, \"survivor\": {\"spawn_min_m\": 9, \"spawn_max_m\": 4}}").Errors;
         Check(bad.Count == 4, "a negative core, a non-number, an unknown key and a backwards spawn ring are reported: " + string.Join(" / ", bad));
         Check(MonsterDatabase.Current.Errors.Count == 0, "monsters.csv (with the boss row) loads without errors" + string.Join("; ", MonsterDatabase.Current.Errors));
+        // ---------- Onslaught ammo: unlimited reserves, slot-3 kinds recharge (M-26) ----------
+        var kit = ArmoryCatalog.NewLoadout();
+        kit.UseOnslaughtAmmo(tuning.Survivor.SpecialCooldown);
+        kit.SetSlot(1, ArmoryCatalog.Weapon("m4"));
+        var rifle = kit.Secondary;
+        while (rifle.Mag > 0) { rifle.Trigger(true, true); rifle.Tick(1, false); }
+        Check(rifle.HasInfiniteReserve && rifle.StartReload(), "a rifle in slot 1 reloads from unlimited reserves");
+        rifle.Tick(10, false);
+        Check(rifle.Mag == rifle.Def.MagSize && !rifle.IsEmpty, "and is full again");
+        kit.SetSlot(2, ArmoryCatalog.Weapon("alabong"));
+        var rocket = kit.Primary!;
+        Check(rocket.Trigger(true, false) && rocket.Mag == 0 && rocket.CooldownLeft > 0 && !rocket.CanFire && !rocket.StartReload(),
+            $"a rocket launcher recharges for {tuning.Survivor.SpecialCooldown}s after a shot instead of reloading");
+        kit.SelectSlot(1);
+        for (int i = 0; i < 26; i++) kit.TickIdle(1);
+        Check(rocket.CooldownLeft == 0 && rocket.Mag == rocket.Def.MagSize && rocket.CanFire, "it recharges while put away too");
+        Check(tuning.Survivor.WeaponPool.Count >= tuning.Survivor.RackSize && tuning.Survivor.WeaponPool.All(id => ArmoryCatalog.Weapon(id).Mode != FireMode.Melee),
+            "the rack pool lists guns only");
+
         var bossDef = MonsterDatabase.Get(BossEnemy.MonsterId);
         Check(bossDef.Behavior == MonsterBehavior.Boss && bossDef.BullCharge != null && bossDef.IsSpecial && bossDef.Tier == MonsterTier.Boss,
             "the boss is a boss-tier special with a bull charge");
@@ -179,12 +198,29 @@ public partial class ModeCheck : Node
     {
         var stage = await NewStage(GameMode.Survivor);
         var rules = stage.ModeRules as SurvivorRules;
-        Check(rules != null && stage.Objective == Objective.ModeGoal && !stage.AllEnemies.Any(), "survivor runs its own rules and starts empty");
+        Check(rules != null && stage.Objective == Objective.ModeArming && rules.Arming && !stage.AllEnemies.Any(), "Onslaught opens with arming and no swarm");
         var r = rules!.Rules;
-        Check(!stage.Flow.IsBlocked(new Vector3(60, 0, -6.4f)) && !stage.Flow.IsBlocked(new Vector3(74, 0, 4.2f)), "the hall is open (no shelves) to kite in");
+        Check(stage.Map is OpenFieldMap && stage.Map.TitleKey == "ui_map_open_field", "Onslaught plays its own open field");
         Check(rules.GroupSize == r.GroupStart && rules.BarLabel.Length > 0 && !rules.BossArrived, "the bar counts down to the boss");
 
-        await Until(() => rules.SpawnedThisMatch > 0, "the swarm starts by itself");
+        // Arming: two racks of rack_size random weapons; each pick goes to its slot with unlimited reserves.
+        Check(rules.RackItems.Count == r.RackSize && rules.RackItems.All(i => r.WeaponPool.Contains(i.Weapon!.Id)), $"a rack of {r.RackSize} weapons from the pool lies on the floor");
+        await Shot("survivor-rack");
+        var first = rules.RackItems[0].Weapon!;
+        rules.RackItems[0].Use(stage.Player);
+        await Frames(2);
+        Check(stage.Player.Loadout.Secondary.Def == first && stage.Player.Loadout.ActiveSlot == 1 && rules.Arming && rules.RackItems.Count == r.RackSize,
+            $"the first pick ({first.Id}) becomes slot 1 and a second rack opens");
+        await Seconds(2);
+        Check(rules.SpawnedThisMatch == 0 && rules.MatchTime == 0, "nothing comes and the clock waits while arming");
+        var second = rules.RackItems[1].Weapon!;
+        rules.RackItems[1].Use(stage.Player);
+        await Frames(2);
+        Check(stage.Player.Loadout.Primary?.Def == second && !rules.Arming && stage.Objective == Objective.ModeGoal && rules.RackItems.Count == 0,
+            $"the second pick ({second.Id}) becomes slot 2 and the match starts");
+        Check(stage.Player.Loadout.Secondary.HasInfiniteReserve && stage.Player.Loadout.Primary!.HasInfiniteReserve, "both picks have unlimited reserves");
+
+        await Until(() => rules.SpawnedThisMatch > 0, "the swarm starts once armed");
         var start = stage.Player.GlobalPosition;
         var commons = stage.AllEnemies.Where(e => !e.IsSpecial).ToList();
         Check(commons.All(e => e.GlobalPosition.DistanceTo(start) is > 10 and < 26), "the swarm arrives on a ring around the player");
@@ -192,22 +228,51 @@ public partial class ModeCheck : Node
         Check(commons.All(e => e.Health <= e.Monster.Hp * weak + .01f), $"survivor commons get the table's hp_scale ({weak})");
 
         // A named wave, then a rest once they are down (M-24).
-        stage.AdvanceClockForTest(45.2f - stage.Elapsed);
+        stage.AdvanceClockForTest(45.2f - rules.MatchTime);
         await Until(() => rules.NamedSent >= 1, "a named monster arrives at its table time");
         Check(rules.ObjectiveText == Loc.Text("ui_objective_survivor_named"), "the objective asks to take it down");
         foreach (var e in stage.AllEnemies.Where(e => e.IsSpecial).ToList()) e.Burn(99999);
         await Until(() => rules.RestLeft > 0, "once the named are down the rest starts");
+        Check(rules.UpgradeRacks >= 1 && rules.RackItems.Count == r.RackSize, "a fallen named drops an upgrade rack");
+        var upgrade = rules.RackItems[0].Weapon!;
+        stage.Player.TeleportTo(rules.RackItems[0].GlobalPosition);
+        rules.RackItems[0].Use(stage.Player);
+        await Frames(2);
+        Check(stage.Player.Loadout.Current.Def == upgrade && stage.Player.Loadout.Current.HasInfiniteReserve && rules.RackItems.Count == 0,
+            $"the upgrade ({upgrade.Id}) replaces the weapon in hand and the rack is gone");
+
+        // Teammates off screen get an arrow on the screen edge (drawn only with a real window, like the hit arcs).
+        if (Windowed)
+        {
+            // Aim at your own feet so the camera centres on you (a mortar in hand leans it far toward the cursor).
+            stage.Player.SetControls(Vector2.Zero, stage.Player.GlobalPosition + Vector3.Up, false);
+            stage.Cam.SnapTo(stage.Player.GlobalPosition);
+            await Frames(20);
+            var mate = stage.AddSurvivor(CharacterCatalog.Player("duck"), stage.Player.GlobalPosition + new Vector3(30, 0, 0), true, "FarMate", new AppearanceProfile());
+            mate.ManualControl = true;
+            mate.Invulnerable = true;
+            mate.DisplayLabel = "FarMate";
+            for (int i = 0; i < 4; i++) await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+            Check(stage.Hud.OffscreenArrows.Contains("FarMate"), "a teammate off screen gets an edge arrow with the name");
+            await Shot("survivor-arrow");
+            mate.TeleportTo(stage.Player.GlobalPosition + new Vector3(1.5f, 0, 0));
+            // The arrows are worked out while drawing: wait for drawn frames, not physics ticks.
+            for (int i = 0; i < 4; i++) await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+            Check(!stage.Hud.OffscreenArrows.Contains("FarMate"), "on screen, the arrow goes away");
+            stage.Players.Remove(mate);
+            mate.QueueFree();
+        }
         int spawnedAtRest = rules.SpawnedThisMatch;
         await Seconds(2);
         Check(rules.SpawnedThisMatch == spawnedAtRest && rules.ObjectiveText.Length > 0 && !rules.ObjectiveText.StartsWith("fmt_"), "no swarm comes during the rest: " + rules.ObjectiveText);
         if (Windowed)
         {
             // Let a mid-match swarm build up for the render review.
-            stage.AdvanceClockForTest(90);
+            stage.AdvanceClockForTest(90 - rules.MatchTime);
             await Seconds(12);
             await Shot("survivor-swarm");
         }
-        stage.AdvanceClockForTest(r.BossAt - 1 - stage.Elapsed);
+        stage.AdvanceClockForTest(r.BossAt - 1 - rules.MatchTime);
         Check(rules.GroupSize == r.GroupEnd || rules.GroupSize == r.GroupEnd - 1, "groups grow toward the boss");
         await Until(() => rules.BossArrived && rules.Boss != null, "the boss arrives on time", 4);
         var boss = rules.Boss!;
