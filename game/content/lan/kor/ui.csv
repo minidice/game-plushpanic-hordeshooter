@@ -95,7 +95,7 @@ ui_floor_safehouse,SAFEHOUSE
 menu_home_customize,커스터마이징
 menu_home_customize_desc,"종 선택, 색·체형·장비 편집. 종마다 자동 저장"
 menu_home_single,싱글 플레이
-menu_home_single_desc,"시나리오 · 생존 · 서바이버 중 선택, AI 분대원 설정"
+menu_home_single_desc,"시나리오 · 거점 · 난전 중 선택, AI 분대원 설정"
 menu_home_multi,멀티플레이
 menu_home_multi_desc,최대 6명 비공개방 — 준비 중
 menu_home_settings,설정
@@ -107,11 +107,11 @@ menu_single_title,싱글 플레이
 fmt_menu_single_character,캐릭터: {0}   (커스터마이징에서 변경)
 menu_mode_label,모드
 mode_scenario,시나리오
-mode_survival,생존
-mode_survivor,서바이버
+mode_survival,거점
+mode_survivor,난전
 mode_scenario_desc,A에서 B로 일자 진행. 레벨 없이 바닥의 무기를 주워 달려드는 좀비를 뚫고 나갑니다.
-mode_survival_desc,인벤토리를 들고 거점을 지키는 디펜스. 총을 쓰는 적이 많습니다. (준비 중)
-mode_survivor_desc,"버티면서 레벨업마다 특수 능력을 고르고, 스킬을 쓰는 보스와 싸웁니다. (준비 중)"
+mode_survival_desc,"창고의 발전기를 웨이브 3번 동안 지키는 디펜스(첫 버전, 약 3분). 뒤 웨이브에는 총을 쓰는 적이 섞입니다. 인벤토리·파밍은 아직 없습니다."
+mode_survivor_desc,사방에서 몰려오는 약한 무리를 2분 30초 버티면 스킬을 쓰는 보스가 나옵니다(첫 버전). 레벨업 능력 선택은 아직 없습니다.
 fmt_menu_coming_soon,{0} · 준비 중
 menu_stage_auto,스테이지: STAGE 1 · 창고 지구 (지금은 하나뿐이라 자동 선택)
 menu_squad_label,AI 분대원
@@ -203,3 +203,29 @@ fmt_hud_squad_down,쓰러짐 {0}
 msg_revived,일어났다!
 msg_you_are_down,쓰러졌습니다! 동료가 일으켜 줄 때까지 버티세요
 fmt_squad_returned,{0} 다시 합류
+ui_floor_base,거점
+ui_objective_survival_cleared,거점 방어 성공
+fmt_objective_survival_prep,발전기(거점)를 지키세요 — 첫 웨이브까지 {0}초
+fmt_objective_survival_wave,웨이브 {0}/{1} — 발전기를 지키세요 ({2}초)
+fmt_objective_survival_break,웨이브 {0} 준비 — {1}초 (탄약·구급상자 보충)
+fmt_bar_core,거점 내구도 {0}%
+fmt_result_survival_clear,웨이브 {0}개를 모두 막았습니다 · 거점 {1}%
+fmt_result_survival_lost,웨이브 {0}/{1}에서 무너졌습니다
+fmt_survival_wave_start,웨이브 {0}/{1} 시작!
+msg_survival_wave_held,웨이브를 막았습니다! 잠깐 보충하세요
+msg_survival_clear,구조대 도착! 거점을 지켰습니다
+msg_survival_core_lost,발전기가 부서졌습니다...
+ui_objective_survivor_cleared,보스 처치!
+ui_objective_survivor_boss,보스를 쓰러뜨리세요
+fmt_objective_survivor_hold,몰려오는 무리를 버티세요 — 보스까지 {0}
+fmt_bar_boss,{0}  {1}%
+fmt_bar_boss_eta,보스 등장까지 {0}
+msg_result_survivor_clear,보스를 쓰러뜨렸습니다
+fmt_result_survivor_boss,보스 체력 {0}%를 남기고 쓰러졌습니다
+fmt_result_survivor_lost,{0} 버티고 쓰러졌습니다
+msg_survivor_boss,보스 등장! 빨간 원(내려찍기) 밖으로 피하세요
+msg_survivor_clear,보스 처치! 살아남았습니다
+boss_summon,소환!
+boss_enraged,격노!
+msg_boss_enraged,보스가 격노했습니다! 더 빠르고 더 자주 공격합니다
+fmt_hud_mode_stage,{0} · {1}

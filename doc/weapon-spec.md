@@ -4,6 +4,7 @@
 > **데이터**: `game/content/data/`
 > **로더**: `game/scripts/Weapons/WeaponDatabase.cs`
 > **투척물·몬스터**는 `doc/throwable-monster-spec.md`, **이름(다국어)** 은 `doc/localization.md`를 보세요.
+> **개편 방향**(2026-10-21 기획, 구현 전): 총기 5갈래·타입별 이동속도, 3번 특수무기 칸, 조준(우클릭/Ctrl)은 [무기·모드·몬스터 개편 방향](mode-weapon-direction.md) 1~3장(C-24~C-27). 이 문서는 구현될 때 갱신한다.
 
 ## 1. 파일 세 종류
 

@@ -47,6 +47,10 @@ void fragment() {
         _root.AddChild(hitArcs);
         Stage.Player.HitFrom += dir => _hits.Add((dir, HitArcSeconds));
 
+        // Survival's base health / Survivor's boss countdown and health, top center.
+        var modeBar = Place(new Paint { Name = "ModeBar", Painter = DrawModeBar, CustomMinimumSize = new Vector2(440, 30) }, .5f, 0, new Vector2(0, 26), true, false, centerX: true);
+        modeBar.Visible = Stage.ModeRules != null;
+
         var reticle = new Paint { Name = "Reticle", Painter = DrawReticle };
         reticle.SetAnchorsPreset(Control.LayoutPreset.FullRect);
         _root.AddChild(reticle);
@@ -190,8 +194,9 @@ void fragment() {
         int t = (int)stage.Elapsed;
         _endTitle.Text = Loc.Text(stage.State == StageState.Cleared ? "ui_end_clear" : "ui_end_over");
         _endTitle.AddThemeColorOverride("font_color", stage.State == StageState.Cleared ? UiTheme.Heal : UiTheme.Danger);
+        var result = stage.ModeRules?.ResultText is { Length: > 0 } line ? line + "\n" : "";
         _endBody.Text =
-            $"{Loc.Text(player.Definition.DisplayName)}\n" +
+            $"{Loc.Text(player.Definition.DisplayName)}\n" + result +
             Loc.Format("fmt_end_stats", t / 60, t % 60, stage.Kills, stage.SpecialKills, player.ShotsFired) + "\n\n" +
             Loc.Text(OnlineKey("ui_end_keys"));
     }
@@ -238,6 +243,18 @@ void fragment() {
     }
 
     // ---------- painters ----------
+
+    private void DrawModeBar(Control c)
+    {
+        if (Stage.ModeRules is not { } rules || rules.BarLabel.Length == 0) return;
+        var size = c.Size;
+        HealthTrack.Draw(c.GetCanvasItem(), new Rect2(Vector2.Zero, size));
+        float t = Mathf.Clamp(rules.BarFraction, 0, 1);
+        if (t > 0) c.DrawRect(new Rect2(3, 3, (size.X - 6) * t, size.Y - 6), new Color(rules.BarColor, .85f));
+        var font = c.GetThemeDefaultFont();
+        c.DrawString(font, new Vector2(1, 22), rules.BarLabel, HorizontalAlignment.Center, size.X, 16, new Color(0, 0, 0, .7f));
+        c.DrawString(font, new Vector2(0, 21), rules.BarLabel, HorizontalAlignment.Center, size.X, 16, HudWhite);
+    }
 
     private void DrawHealth(Control c)
     {

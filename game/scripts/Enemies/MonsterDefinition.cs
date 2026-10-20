@@ -20,6 +20,8 @@ public enum MonsterBehavior
     Leaper,
     Spitter,
     Shooter,
+    /// <summary>Survivor's skill boss (<see cref="BossEnemy"/>): a bull charge plus slam and summon, needs trait bull_charge.</summary>
+    Boss,
 }
 
 public sealed record BalloonPopTrait(float TriggerRange, float InflateTime, float Radius, float HeliumTime, int SummonCount, float KnockbackPower);
@@ -169,7 +171,7 @@ public sealed class MonsterDatabase
                         f.Float("hazard_ms", 0) / 1000f, f.Float("hazard_radius_m", 0));
             }
             if (m.Behavior == MonsterBehavior.Balloon && m.BalloonPop == null) db._errors.Add($"{where}: behavior balloon에는 balloon_pop 특성이 필요합니다");
-            if (m.Behavior == MonsterBehavior.Bull && m.BullCharge == null) db._errors.Add($"{where}: behavior bull에는 bull_charge 특성이 필요합니다");
+            if (m.Behavior is MonsterBehavior.Bull or MonsterBehavior.Boss && m.BullCharge == null) db._errors.Add($"{where}: behavior bull에는 bull_charge 특성이 필요합니다");
             if (m.Behavior is MonsterBehavior.Tether or MonsterBehavior.Leaper && m.Capture == null)
                 db._errors.Add($"{where}: capture trait required");
             if (m.Behavior is MonsterBehavior.Spitter or MonsterBehavior.Shooter && m.Ranged == null)

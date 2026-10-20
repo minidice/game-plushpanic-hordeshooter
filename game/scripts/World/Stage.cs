@@ -12,6 +12,8 @@ public enum Objective
     ReachSafehouse,
     CloseSafehouse,
     Cleared,
+    /// <summary>Survival / Survivor: the mode's own rules give the goal (<see cref="Stage.ModeRules"/>).</summary>
+    ModeGoal,
 }
 
 public enum StageState
@@ -34,6 +36,12 @@ public partial class Stage : Node3D
     public string? CharacterOverride { get; set; }
     public string? ThemeOverride { get; set; }
     public string ThemeId { get; private set; } = "zombie";
+    /// <summary>Set before adding to the tree to bypass the menu's mode (tests, captures).</summary>
+    public GameMode? ModeOverride { get; set; }
+    /// <summary>The mode being played: the menu or room choice in the running game scene, Scenario in test scenes.</summary>
+    public GameMode Mode { get; private set; } = GameMode.Scenario;
+    /// <summary>Survival / Survivor rules (null in Scenario).</summary>
+    public ModeRules? ModeRules { get; private set; }
     /// <summary>Tests turn this off so the director only spawns on request.</summary>
     public bool DirectorEnabled { get; set; } = true;
     /// <summary>Offline by default. Set before the stage enters the tree (multiplayer-sync-design.md).</summary>
@@ -159,7 +167,8 @@ public partial class Stage : Node3D
 
         if (Role == NetRole.Offline && GetTree().CurrentScene == this) Role = NetLaunch.Pending;
         ReviveEnabled = ReviveOverride ?? (GetTree().CurrentScene == this && GameSettings.ReviveEnabled);
-        _layout = StageOneLayout.Build(this);
+        Mode = ModeOverride ?? (GetTree().CurrentScene == this ? GameSession.Mode : GameMode.Scenario);
+        _layout = StageOneLayout.Build(this, Mode);
 
         var def = CharacterCatalog.Player(CharacterOverride ?? GameSession.SelectedCharacterId);
         Player = new Player();
@@ -180,7 +189,14 @@ public partial class Stage : Node3D
         AddChild(_enemyRoot);
         Flow.Update(Player.GlobalPosition);
         RefreshRouteFlows();
-        Director.UseEncounters(SpawnDatabase.Current.Stage1);
+        // Scenario fills areas ahead and sends waves from the stage's entries; the other modes spawn by their own rules.
+        if (Mode == GameMode.Scenario) Director.UseEncounters(SpawnDatabase.Current.Stage1);
+        ModeRules = ModeRules.Create(Mode);
+        if (ModeRules != null)
+        {
+            AddChild(ModeRules);
+            Objective = Objective.ModeGoal;
+        }
         if (Role == NetRole.Client) Player.Position = StageNet.ClientStart(this);
         Trail.Add(Player.GlobalPosition);
         // The menu's squad size applies to the real game scene; tests ask for squadmates explicitly.
@@ -192,7 +208,7 @@ public partial class Stage : Node3D
 
         Hud = new Hud { Name = "Hud" };
         AddChild(Hud);
-        ShowNotice(Loc.Text("msg_stage_start"));
+        if (ModeRules == null) ShowNotice(Loc.Text("msg_stage_start"));
     }
 
     private void BuildEnvironment()
@@ -251,6 +267,7 @@ public partial class Stage : Node3D
     {
         MonsterBehavior.Balloon => SpawnEnemy<BalloonEnemy>(monster, at, awake),
         MonsterBehavior.Bull => SpawnEnemy<BullEnemy>(monster, at, awake),
+        MonsterBehavior.Boss => SpawnEnemy<BossEnemy>(monster, at, awake),
         MonsterBehavior.Tether or MonsterBehavior.Leaper => SpawnEnemy<CaptureEnemy>(monster, at, awake),
         MonsterBehavior.Spitter or MonsterBehavior.Shooter => SpawnEnemy<RangedEnemy>(monster, at, awake),
         _ => SpawnEnemy<Enemy>(monster, at, awake),
@@ -287,6 +304,15 @@ public partial class Stage : Node3D
         {
             look = (CharacterDefinition)CharacterCatalog.Player(monster.Id == "wild_animal" ? "raccoon" : "redpanda").Duplicate();
             look.Role = CharacterRole.Enemy;
+        }
+        else if (monster.Behavior == MonsterBehavior.Boss)
+        {
+            // The boss is its look scaled up (mode_rules.json survivor.boss.scale), collider included.
+            look = (CharacterDefinition)baseLook.Duplicate();
+            float scale = ModeTuning.Current.Boss.Scale;
+            look.ModelScale *= scale;
+            look.ColliderRadius *= scale;
+            look.ColliderHeight *= scale;
         }
         else look = monster.MirrorPlayer ? CharacterDefinition.MakeZombie(Player.Definition, baseLook) : baseLook;
         _looks[monster.Id] = look;
@@ -382,6 +408,9 @@ public partial class Stage : Node3D
         for (int i = 0; i < _respawnQueue.Count; i++) _respawnQueue[i] = _respawnQueue[i] with { At = Elapsed };
     }
     public int PendingRespawns => _respawnQueue.Count;
+
+    /// <summary>Checks only: moves the stage clock forward (the mode schedules follow it).</summary>
+    public void AdvanceClockForTest(float seconds) => Elapsed += seconds;
 
     private void UpdateRespawns()
     {
@@ -491,6 +520,8 @@ public partial class Stage : Node3D
         Crowd.Rebuild(Enemies);
         _flowTargets.Clear();
         foreach (var p in AlivePlayers) _flowTargets.Add(p.GlobalPosition);
+        // Survival: the horde also paths to the base.
+        if (ModeRules?.Core is { Alive: true } core && _flowTargets.Count > 0) _flowTargets.Add(core.GlobalPosition);
         if (_flowTargets.Count > 0) Flow.Update(_flowTargets);
         if (!Player.IsDead)
         {
@@ -651,6 +682,11 @@ public partial class Stage : Node3D
     public void ApplyNetState(StageState state)
     {
         if (state == State) return;
+        if (ModeRules != null && State == StageState.Playing)
+        {
+            EndMode(state == StageState.Cleared, state == StageState.Cleared ? "ui_end_clear" : "msg_stage_down");
+            return;
+        }
         if (state == StageState.Cleared && State == StageState.Playing) PresentClear();
         else if (state == StageState.Dead && State == StageState.Playing) PresentWipe();
     }
@@ -759,7 +795,19 @@ public partial class Stage : Node3D
 
     private void OnPlayerDied() => PresentWipe();
 
-    private void PresentWipe()
+    /// <summary>Survival / Survivor: the match ends (cleared or lost) with the mode's own notice.</summary>
+    public void EndMode(bool cleared, string noticeKey)
+    {
+        if (State != StageState.Playing) return;
+        if (!cleared) { PresentWipe(noticeKey); return; }
+        State = StageState.Cleared;
+        Director.Stop();
+        foreach (var p in AlivePlayers) p.Invulnerable = true;
+        Sfx.Play("stage_clear");
+        ShowNotice(Loc.Text(noticeKey), 6);
+    }
+
+    private void PresentWipe(string noticeKey = "msg_stage_down")
     {
         foreach (var p in Players)
         {
@@ -772,7 +820,7 @@ public partial class Stage : Node3D
         _alarm?.QueueFree();
         _alarm = null;
         Sfx.Play("game_over");
-        ShowNotice(Loc.Text("msg_stage_down"));
+        ShowNotice(Loc.Text(noticeKey));
     }
 
     // ---------- lure and pickups ----------
@@ -893,6 +941,7 @@ public partial class Stage : Node3D
         Objective.HoldOut => Loc.Format("fmt_objective_hold_out", Mathf.CeilToInt(Mathf.Max(0, Director.CrescendoRemaining))),
         Objective.ReachSafehouse => Loc.Text("ui_objective_reach_safehouse"),
         Objective.CloseSafehouse => Loc.Text("ui_objective_close_safehouse"),
+        Objective.ModeGoal when ModeRules != null => ModeRules.ObjectiveText,
         _ => Loc.Text("ui_objective_cleared"),
     };
 

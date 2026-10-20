@@ -95,7 +95,7 @@ ui_floor_safehouse,SAFEHOUSE
 menu_home_customize,Customize
 menu_home_customize_desc,"Pick a species and edit colors, shape and gear. Saved per species."
 menu_home_single,Single Player
-menu_home_single_desc,"Choose Scenario, Survival or Survivor and set AI squadmates."
+menu_home_single_desc,"Choose Scenario, Outpost or Onslaught and set AI squadmates."
 menu_home_multi,Multiplayer
 menu_home_multi_desc,Private rooms for up to 6 players — coming soon
 menu_home_settings,Settings
@@ -107,11 +107,11 @@ menu_single_title,Single Player
 fmt_menu_single_character,Character: {0}   (change it in Customize)
 menu_mode_label,Mode
 mode_scenario,Scenario
-mode_survival,Survival
-mode_survivor,Survivor
+mode_survival,Outpost
+mode_survivor,Onslaught
 mode_scenario_desc,Push from A to B. No levels: grab weapons off the floor and break through the rushing horde.
-mode_survival_desc,Defend a base with an inventory. Many enemies carry guns. (Coming soon)
-mode_survivor_desc,"Survive, pick a special ability at every level-up, and fight skill-using bosses. (Coming soon)"
+mode_survival_desc,"Hold the warehouse generator through 3 waves (first version, about 3 min). Later waves bring armed enemies. No inventory or looting yet."
+mode_survivor_desc,"Hold out 2:30 against a swarm of weak enemies from every side, then fight a skill-using boss (first version). No level-up abilities yet."
 fmt_menu_coming_soon,{0} · Coming soon
 menu_stage_auto,"Stage: STAGE 1 · Warehouse District (only one for now, picked automatically)"
 menu_squad_label,AI Squadmates
@@ -203,3 +203,29 @@ fmt_hud_squad_down,Down {0}
 msg_revived,Back up!
 msg_you_are_down,You are down! Hold on until a teammate picks you up
 fmt_squad_returned,{0} rejoined
+ui_floor_base,BASE
+ui_objective_survival_cleared,Base held
+fmt_objective_survival_prep,Guard the generator (base) — first wave in {0}s
+fmt_objective_survival_wave,Wave {0}/{1} — guard the generator ({2}s)
+fmt_objective_survival_break,Wave {0} in {1}s (restock ammo and medkit)
+fmt_bar_core,Base {0}%
+fmt_result_survival_clear,Held all {0} waves · base {1}%
+fmt_result_survival_lost,Fell on wave {0}/{1}
+fmt_survival_wave_start,Wave {0}/{1}!
+msg_survival_wave_held,Wave held! Restock while you can
+msg_survival_clear,Rescue is here! The base held
+msg_survival_core_lost,The generator is destroyed...
+ui_objective_survivor_cleared,Boss down!
+ui_objective_survivor_boss,Take down the boss
+fmt_objective_survivor_hold,Hold out against the swarm — boss in {0}
+fmt_bar_boss,{0}  {1}%
+fmt_bar_boss_eta,Boss arrives in {0}
+msg_result_survivor_clear,You took down the boss
+fmt_result_survivor_boss,Fell with the boss at {0}%
+fmt_result_survivor_lost,Lasted {0}
+msg_survivor_boss,The boss is here! Stay out of the red circle (slam)
+msg_survivor_clear,Boss down! You survived
+boss_summon,SUMMON!
+boss_enraged,ENRAGED!
+msg_boss_enraged,The boss is enraged: faster and more skills
+fmt_hud_mode_stage,{0} · {1}

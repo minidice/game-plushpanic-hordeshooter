@@ -15,7 +15,9 @@ public sealed class StageOneLayout
     public const float TallWall = 3.4f;
     public const float LowWall = 1.1f;
 
-    public Vector3 PlayerStart { get; } = new(4, 0, 0);
+    public Vector3 PlayerStart { get; private set; } = new(4, 0, 0);
+    /// <summary>Survival and Survivor reuse this map from the warehouse hall (doc/menu-multiplayer-plan.md 3.1).</summary>
+    public GameMode Mode { get; private set; } = GameMode.Scenario;
     public float CrescendoSeconds { get; set; } = 50f;
     public Door StartDoor { get; private set; } = null!;
     public Door Shutter { get; private set; } = null!;
@@ -34,18 +36,56 @@ public sealed class StageOneLayout
     private Stage _stage = null!;
     private readonly RandomNumberGenerator _rng = new();
 
-    public static StageOneLayout Build(Stage stage)
+    public static StageOneLayout Build(Stage stage, GameMode mode = GameMode.Scenario)
     {
-        var layout = new StageOneLayout { _stage = stage };
+        var layout = new StageOneLayout { _stage = stage, Mode = mode };
         layout._rng.Seed = 1;
         layout.BuildSafeRoom();
         layout.BuildStreet();
         layout.BuildWarehouse();
         layout.BuildYard();
         layout.BuildSafehouse();
-        layout.PlaceSupplies(StageSupplies.Stage1);
+        if (mode == GameMode.Scenario) layout.PlaceSupplies(StageSupplies.Stage1);
+        else layout.PrepareModeArena();
         layout.ApplyFlow();
         return layout;
+    }
+
+    /// <summary>
+    /// Survival / Survivor: start in the warehouse with both doorways open (street side and the raised shutter),
+    /// so the horde comes from two sides. Survivor gets an open hall (no shelves); Survival keeps the shelves as cover
+    /// around the generator. Each gets its own small supply set instead of the scenario's route supplies.
+    /// </summary>
+    private void PrepareModeArena()
+    {
+        PlayerStart = ModeRules.Start;
+        Shutter.SetOpen(true, 0);
+        ShutterPanel.Enabled = false;
+        StartDoorSwitch.Enabled = false;
+        SafehouseSwitch.Enabled = false;
+        if (Mode == GameMode.Survival)
+        {
+            Weapon(new Vector3(66.5f, 0, -1.2f), "m4");
+            Weapon(new Vector3(69.5f, 0, -1.2f), "r870");
+            AmmoPile(new Vector3(64.2f, 0, 3.6f));
+            AmmoPile(new Vector3(71.8f, 0, .2f));
+            Medkit(new Vector3(68f, 0, 3.8f));
+            Throwable(new Vector3(65.4f, 0, 0), "frag");
+            Throwable(new Vector3(70.6f, 0, 2.6f), "molotov");
+        }
+        else
+        {
+            Weapon(new Vector3(67.6f, 0, -.6f), "m249");
+            Weapon(new Vector3(64.4f, 0, -.6f), "benelli_m4");
+            AmmoPile(new Vector3(56f, 0, -7.6f));
+            AmmoPile(new Vector3(80.5f, 0, 7.4f));
+            AmmoPile(new Vector3(68f, 0, 8f));
+            Medkit(new Vector3(57f, 0, 7.6f));
+            Medkit(new Vector3(80f, 0, -7.8f));
+            Throwable(new Vector3(66f, 0, 3.6f), "frag");
+            Throwable(new Vector3(70f, 0, -3.8f), "frag");
+            Throwable(new Vector3(62f, 0, -4f), "molotov");
+        }
     }
 
     private readonly System.Collections.Generic.List<(Vector3 center, Vector3 size)> _floors = new();
@@ -125,17 +165,27 @@ public sealed class StageOneLayout
         Wall(84, 84.4f, 3, 10.4f, 3.8f, "5e5a50");
         Shutter = Door.Create(_stage, new Vector3(84.2f, 0, 0), new Vector3(.4f, 3.2f, 6f), new Color("6f7468"), new Vector3(0, 3.1f, 0));
 
-        Shelf(56, 66, -6.4f);
-        Shelf(56, 66, 5.4f);
-        Shelf(70, 78, -3.6f);
-        Shelf(70, 78, 4.2f);
-        Solid(new Vector3(79, .6f, -1.3f), new Vector3(1.3f, 1.2f, 1.3f), "8a7755");
-        Solid(new Vector3(79.4f, .6f, 2.2f), new Vector3(1.3f, 1.2f, 1.3f), "8a7755");
+        // Survivor wants an open hall to kite the swarm in; the other modes keep the shelves.
+        if (Mode != GameMode.Survivor)
+        {
+            Shelf(56, 66, -6.4f);
+            Shelf(56, 66, 5.4f);
+            Shelf(70, 78, -3.6f);
+            Shelf(70, 78, 4.2f);
+            Solid(new Vector3(79, .6f, -1.3f), new Vector3(1.3f, 1.2f, 1.3f), "8a7755");
+            Solid(new Vector3(79.4f, .6f, 2.2f), new Vector3(1.3f, 1.2f, 1.3f), "8a7755");
+        }
 
         Barrel(new Vector3(60, 0, -8.6f));
         Barrel(new Vector3(74, 0, 8.4f));
         Barrel(new Vector3(81.5f, 0, 6.2f));
-        Boxes(new Vector3(67.5f, 0, -1), 3);
+        // The scenario's carton stack stands where Survival's generator goes.
+        if (Mode == GameMode.Scenario) Boxes(new Vector3(67.5f, 0, -1), 3);
+        if (Mode == GameMode.Survivor)
+        {
+            Barrel(new Vector3(62, 0, 5.5f));
+            Barrel(new Vector3(75, 0, -5f));
+        }
 
         // The crescendo trigger.
         var panel = Solid(new Vector3(83.4f, 1.1f, -6.2f), new Vector3(.6f, 1.4f, 1.2f), "3a4148");

@@ -84,8 +84,13 @@ public partial class LobbyCheck : Node
         client.SetReady(false);
         await Until(() => !host.CanStart, "cancelling ready closes [Start] again");
         Check(!client.Start() && !client.CanStart, "a member cannot start the match");
-        host.SetMode(GameMode.Survival);
-        Check(host.Mode == GameMode.Scenario, "a mode this build cannot play is ignored");
+        client.SetReady(true);
+        await Until(() => host.CanStart, "ready before the mode changes");
+        host.SetMode(GameMode.Survivor);
+        Check(host.Mode == GameMode.Survivor, "the host can pick a newly playable mode (Survivor follows GameSession.PlayableModes)");
+        await Until(() => client.Mode == GameMode.Survivor && !host.CanStart, "the client sees the new mode and the ready is cleared");
+        host.SetMode(GameMode.Scenario);
+        await Until(() => client.Mode == GameMode.Scenario, "back to Scenario for the match below");
         client.SetReady(true);
         await Until(() => host.CanStart, "ready again");
 

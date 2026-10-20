@@ -83,8 +83,14 @@ public partial class MenuCheck : Node
         Click("Menu_Single");
         await Frames(2);
         Check(_menu.Page == MenuPage.Single && PageVisible(MenuPage.Single) && !PageVisible(MenuPage.Home), "single page opens");
-        Check(Ui<Button>("Mode_scenario") is { Disabled: false, ButtonPressed: true } && Ui<Button>("Mode_survival").Disabled && Ui<Button>("Mode_survivor").Disabled,
-            "scenario is playable; survival and survivor are listed but locked");
+        Check(Ui<Button>("Mode_scenario") is { Disabled: false, ButtonPressed: true } && !Ui<Button>("Mode_survival").Disabled && !Ui<Button>("Mode_survivor").Disabled,
+            "all three modes are playable, scenario selected by default");
+        Check(Ui<Button>("Mode_survival").Text == Loc.Text("mode_survival") && Ui<Button>("Mode_survivor").Text == Loc.Text("mode_survivor"),
+            "survival and survivor are no longer marked coming soon");
+        Ui<Button>("Mode_survivor").EmitSignal(BaseButton.SignalName.Pressed);
+        Check(GameSession.Mode == GameMode.Survivor, "picking Survivor stores the mode for the stage");
+        Ui<Button>("Mode_scenario").EmitSignal(BaseButton.SignalName.Pressed);
+        Check(GameSession.Mode == GameMode.Scenario, "back to Scenario");
         var squad = Ui<OptionButton>("SquadChoice");
         Check(squad.ItemCount == 3 && squad.GetItemId(squad.Selected) == 1, "AI squadmates: none / 1 / 3, defaulting to 1");
         squad.Select(2);
@@ -135,8 +141,8 @@ public partial class MenuCheck : Node
             Check(_menu.Page == MenuPage.Lobby && PageVisible(MenuPage.Lobby), "Create Room opens the room page");
             Check(Ui<Button>("Lobby_Start") is { Visible: true, Disabled: false } && !Ui<Button>("Lobby_Ready").Visible,
                 "the host alone sees [Start] enabled and no [Ready]");
-            Check(Ui<Button>("Lobby_Mode_scenario") is { Disabled: false, ButtonPressed: true } && Ui<Button>("Lobby_Mode_survival").Disabled,
-                "the host picks the mode in the room; locked modes stay locked");
+            Check(Ui<Button>("Lobby_Mode_scenario") is { Disabled: false, ButtonPressed: true } && !Ui<Button>("Lobby_Mode_survival").Disabled && !Ui<Button>("Lobby_Mode_survivor").Disabled,
+                "the host picks the mode in the room; the new modes are offered too");
             Check(Ui<Container>("Lobby_Players").GetChildCount() == 1 && Ui<Label>("Lobby_Count").Text == Loc.Format("fmt_lobby_players", 1, NetLaunch.MaxPlayers),
                 "the player list shows the host");
             await Shot("menu-lobby");

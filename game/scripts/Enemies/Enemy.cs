@@ -55,7 +55,9 @@ public partial class Enemy : CharacterBody3D
     public float StunTime { get; private set; }
     /// <summary>Short stagger after a hit: own movement is slowed, so even small hits read as a flinch.</summary>
     public float FlinchTime { get; private set; }
-    public float Speed => Monster.MoveSpeed;
+    public float Speed => Monster.MoveSpeed * SpeedScale;
+    /// <summary>Multiplies the data speed (an enraged boss).</summary>
+    protected float SpeedScale { get; set; } = 1;
     public bool IsMeleeAttacking => _meleeTime >= 0;
 
     /// <summary>Melee reach measured from body edge to body edge.</summary>
@@ -74,6 +76,8 @@ public partial class Enemy : CharacterBody3D
     private Vector3 _wander;
     private float _meleeTime = -1;
     private Player? _meleeTarget;
+    /// <summary>The base this swing is aimed at instead of a survivor (Survival).</summary>
+    private BaseCore? _meleeCore;
     private float _targetTimer;
 
     /// <summary>The survivor this enemy is after (nearest living one, re-picked a few times a second).</summary>
@@ -97,6 +101,7 @@ public partial class Enemy : CharacterBody3D
     // Specials can enter their own windups before base.Think runs, including scripted starts.
     private bool SpecialAttackActive => this switch
     {
+        BossEnemy { Casting: true } => true,
         BullEnemy bull => bull.State != BullEnemy.Mode.Chase,
         CaptureEnemy captor => captor.State != CaptureEnemy.Mode.Chase,
         RangedEnemy ranged => ranged.WindingUp,
@@ -168,7 +173,7 @@ public partial class Enemy : CharacterBody3D
             desired = toLure;
         }
         else desired = Think(dt);
-        if (SpecialAttackActive || (IsMeleeAttacking && _meleeTarget is not { IsDead: false })) CancelMelee();
+        if (SpecialAttackActive || (IsMeleeAttacking && _meleeCore == null && _meleeTarget is not { IsDead: false })) CancelMelee();
         TickMelee(dt);
         if (FlinchTime > 0)
         {
@@ -217,6 +222,9 @@ public partial class Enemy : CharacterBody3D
                 (Reaction == Reaction.Watcher && dist < Stage.Director.Rules.SightRange && HasLineOfSight(dt))) Wake();
             else return Wander(dt);
         }
+        // Survival: a common goes for the base when it is closer than any survivor.
+        if (Monster.Behavior == MonsterBehavior.Common && Stage.ModeRules?.Core is { Alive: true } core && CoreChase(core, dist, dt) is { } toCore)
+            return toCore;
         if (dist <= Radius + player.Definition.ColliderRadius + AttackReach)
         {
             FaceOverride = toPlayer;
@@ -227,6 +235,32 @@ public partial class Enemy : CharacterBody3D
     }
 
     protected virtual void AfterMove(float dt) { }
+
+    /// <summary>Walk to and hit the base when it is nearer than the survivor <paramref name="playerDist"/> away; null = go for the survivor.</summary>
+    private Vector3? CoreChase(BaseCore core, float playerDist, float dt)
+    {
+        var toCore = core.GlobalPosition - GlobalPosition;
+        toCore.Y = 0;
+        float dist = toCore.Length();
+        if (dist >= playerDist) return null;
+        if (dist <= Radius + BaseCore.Radius + AttackReach + .15f)
+        {
+            FaceOverride = toCore;
+            if (AttackCooldown <= 0 && !IsMeleeAttacking && StunTime <= 0 && FlinchTime <= 0)
+            {
+                AttackCooldown = Mathf.Max(AttackInterval, MeleeWindup + MeleeRecovery);
+                _meleeCore = core;
+                _meleeTime = 0;
+                _meleeHit = false;
+                _meleeDirection = dist > .001f ? toCore / dist : Rig.Forward;
+                Stage.Net?.OnEnemyAttack(this, NetAttack.Melee, null, core.GlobalPosition);
+            }
+            return Vector3.Zero;
+        }
+        if (dist < 4f) return toCore / dist * Speed;
+        var flow = Stage.Flow.Direction(GlobalPosition);
+        return (flow != Vector3.Zero ? flow : toCore / Mathf.Max(dist, .001f)) * Speed;
+    }
 
     /// <summary>Shuffling feet for awake zombies close enough to matter; the voice limit keeps a horde from roaring.</summary>
     private void Footsteps(float moved)
@@ -357,6 +391,12 @@ public partial class Enemy : CharacterBody3D
         {
             _meleeHit = true;
             Kick = 1;
+            if (_meleeCore is { } core)
+            {
+                if (!IsDead && StunTime <= 0 && core.GlobalPosition.DistanceTo(GlobalPosition) <= Radius + BaseCore.Radius + AttackReach + .4f)
+                    core.TakeDamage(AttackDamage, GlobalPosition);
+                return;
+            }
             var player = _meleeTarget;
             if (player == null || !IsInstanceValid(player)) { CancelMelee(); return; }
             var to = player.GlobalPosition - GlobalPosition;
@@ -378,8 +418,12 @@ public partial class Enemy : CharacterBody3D
         _meleeTime = -1;
         _meleeHit = false;
         _meleeTarget = null;
+        _meleeCore = null;
         Rig?.ResetEnemyAttackPose();
     }
+
+    /// <summary>Weaker (or tougher) than the data says, set right after spawning (Survivor's weak masses).</summary>
+    public void ScaleHealth(float factor) => Health *= factor;
 
     public virtual void TakeHit(HitInfo hit)
     {

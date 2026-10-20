@@ -1,0 +1,14 @@
+{
+  "kind": "bull_charge",
+  "description": "서바이버 보스의 돌진. 황소 돌진과 같은 규칙이고 더 멀리서 더 세게 들이받는다. 내려찍기·소환은 mode_rules.json survivor.boss",
+  "trigger_range_m": 14,
+  "min_range_m": 5,
+  "windup_ms": 1000,
+  "speed_mps": 13.5,
+  "duration_ms": 1300,
+  "dazed_ms": 1700,
+  "cooldown_ms": 7000,
+  "player_damage": 25,
+  "dazed_damage_multiplier": 1.6,
+  "bowl_power": 150
+}

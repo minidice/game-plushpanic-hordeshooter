@@ -279,7 +279,10 @@ public partial class StageNet : Node
         _snapshotTimer -= dt;
         if (_snapshotTimer > 0) return;
         _snapshotTimer += SnapshotInterval;
-        var snap = new NetSnapshot { Time = Clock, Shutter = _stage.Objective == Objective.HoldOut ? 1 - _stage.Director.CrescendoRemaining / Mathf.Max(.01f, _stage.Director.CrescendoDuration) : 0 };
+        // The shutter's progress in Scenario; the HUD bar (base health, boss health) in the other modes.
+        float bar = _stage.ModeRules?.BarFraction
+            ?? (_stage.Objective == Objective.HoldOut ? 1 - _stage.Director.CrescendoRemaining / Mathf.Max(.01f, _stage.Director.CrescendoDuration) : 0);
+        var snap = new NetSnapshot { Time = Clock, Shutter = bar };
         foreach (var p in Peers.Values) if (IsInstanceValid(p)) snap.Players.Add(p.CaptureNetState());
         if (_snapshotIndex++ % 2 == 0)
         {
@@ -411,6 +414,7 @@ public partial class StageNet : Node
                 if (_enemies.TryGetValue(e.Id, out var enemy) && IsInstanceValid(enemy) && !enemy.IsDead)
                     enemy.Track!.Push(snap.Time, e.Position, e.Facing, (int)e.Flags);
         if (_stage.Objective == Objective.HoldOut) _stage.Layout.Shutter.SetProgress(snap.Shutter);
+        _stage.ModeRules?.ApplyNetBar(snap.Shutter);
     }
 
     [Rpc(MultiplayerApi.RpcMode.Authority, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]

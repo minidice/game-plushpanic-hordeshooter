@@ -12,8 +12,11 @@ public static class GameSession
     public static string SelectedTheme { get; set; } = "zombie";
     public static GameMode Mode { get; set; } = GameMode.Scenario;
 
-    /// <summary>Modes the current build can actually start. The others are listed in the menu as "coming soon".</summary>
-    public static readonly GameMode[] PlayableModes = { GameMode.Scenario };
+    /// <summary>
+    /// Modes the current build can actually start; any other would be listed in the menu as "coming soon".
+    /// Survival and Survivor are first versions on the Stage 1 map (doc/menu-multiplayer-plan.md 3.1).
+    /// </summary>
+    public static readonly GameMode[] PlayableModes = { GameMode.Scenario, GameMode.Survival, GameMode.Survivor };
 
     /// <summary>
     /// AI squadmates in single player (decisions.md M-11): none, one (default) or three for 4-player video shots.
