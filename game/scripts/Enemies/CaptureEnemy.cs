@@ -94,6 +94,7 @@ public partial class CaptureEnemy : Enemy
         State = Mode.Windup;
         _timer = Capture.Windup;
         RevealTo(victim, Capture.Windup + VisionSystem.RevealAfterHit);
+        Stage.Net?.OnEnemyAttack(this, NetAttack.Capture, victim, victim.GlobalPosition);
         _target = victim.GlobalPosition;
         Awake = true;
         DrawLine(_target + Vector3.Up * .04f, IsLeaper ? .65f : .24f, new Color("f9b34c"));
@@ -124,6 +125,7 @@ public partial class CaptureEnemy : Enemy
 
     private void CancelCapture()
     {
+        if (State != Mode.Chase) Stage.Net?.OnEnemyAttackEnd(this);
         ReleaseAll();
         _victim = null;
         State = Mode.Chase;

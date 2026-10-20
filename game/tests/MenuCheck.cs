@@ -96,11 +96,12 @@ public partial class MenuCheck : Node
         await Frames(2);
         Check(_menu.Page == MenuPage.Home, "Esc goes back to the home page");
 
-        // Multi: a shell for now.
+        // Multi: two-player test by address (room codes and public rooms come later).
         Click("Menu_Multi");
         await Frames(2);
-        Check(Ui<Button>("Multi_Host").Disabled && Ui<Button>("Multi_Join").Disabled && Ui<Button>("Multi_Public").Disabled && !Ui<LineEdit>("Multi_Code").Editable,
-            "multiplayer page shows host, join-by-code and public rooms, all marked coming soon");
+        Check(!Ui<Button>("Multi_Host").Disabled && !Ui<Button>("Multi_Join").Disabled && Ui<LineEdit>("Multi_Address").Editable &&
+              Ui<LineEdit>("Multi_Address").Text == "127.0.0.1" && Ui<Button>("Multi_Public").Disabled,
+            "multiplayer page: host and join by address work, public rooms still coming soon");
         await Shot("menu-multi");
         Click("Back_Multi");
         await Frames(2);

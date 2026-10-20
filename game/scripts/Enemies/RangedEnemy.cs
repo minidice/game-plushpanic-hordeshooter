@@ -48,6 +48,7 @@ public partial class RangedEnemy : Enemy
                     var projectile = new EnemyProjectile();
                     projectile.Setup(Stage, from, _target, Shot, AttackDamage);
                     Stage.AddChild(projectile);
+                    Stage.Net?.OnEnemyProjectile(this, from, _target);
                     ProjectilesFired++;
                     Kick = 1;
                     Stage.Sfx.PlayAt(Monster.Behavior == MonsterBehavior.Shooter ? "shot_rifle" : "zombie_hit", from);
@@ -64,17 +65,19 @@ public partial class RangedEnemy : Enemy
         return base.Think(dt);
     }
 
-    public void StartWindup()
+    /// <param name="victim">Client puppet: the survivor the host's enemy is aiming at.</param>
+    public void StartWindup(Player? victim = null)
     {
         if (IsDead || StunTime > 0) return;
         AbortShot();
         WindingUp = true;
         Awake = true;
         _timer = Shot.Windup;
-        var victim = Target ?? Stage.NearestAlivePlayer(GlobalPosition) ?? Stage.Player;
+        victim ??= Target ?? Stage.NearestAlivePlayer(GlobalPosition) ?? Stage.Player;
         _target = victim.GlobalPosition + Vector3.Up * .8f;
         // Shooting at you from the dark: you see who it is from the windup until a moment after the shot (C-23).
         RevealTo(victim, Shot.Windup + 1f + VisionSystem.RevealAfterHit);
+        Stage.Net?.OnEnemyAttack(this, NetAttack.Ranged, victim, _target);
         var color = Shot.HazardSeconds > 0 ? new Color("b4df45") : new Color("ff6252");
         var flatTarget = new Vector3(_target.X, .055f, _target.Z);
         if (Shot.HazardSeconds > 0)
@@ -90,6 +93,7 @@ public partial class RangedEnemy : Enemy
 
     private void AbortShot()
     {
+        if (WindingUp) Stage.Net?.OnEnemyAttackEnd(this);
         WindingUp = false;
         _cooldown = Shot.Cooldown;
         if (IsInstanceValid(_marker)) _marker!.QueueFree();

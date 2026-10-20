@@ -71,7 +71,7 @@ public partial class Player
         Velocity = new Vector3(0, IsOnFloor() ? -.1f : Velocity.Y - Gravity * dt, 0);
         MoveAndSlide();
         Rig.Pose.Rotation = new Vector3(-1.35f, 0, 0);
-        if (BleedLeft <= 0) Die(Vector3.Zero);
+        if (BleedLeft <= 0 && Stage.Authoritative) Die(Vector3.Zero);
     }
 
     /// <summary>Hit while downed: no health to lose, the bleed-out runs faster instead.</summary>
@@ -82,7 +82,7 @@ public partial class Player
         _lastBleedHit = _bleedClock;
         BleedLeft -= Rules.BleedHit;
         Rig.FlashHit();
-        if (BleedLeft <= 0) Die(Vector3.Zero);
+        if (BleedLeft <= 0 && Stage.Authoritative) Die(Vector3.Zero);
     }
 
     /// <summary>Back on their feet with a little health.</summary>
@@ -122,7 +122,8 @@ public partial class Player
         target.RevivedBy = this;
         Reviving = target;
         target.ReviveProgress += dt / Mathf.Max(.1f, Rules.ReviveTime);
-        if (target.ReviveProgress >= 1)
+        // A client fills the bar but the host decides when the teammate is back up.
+        if (target.ReviveProgress >= 1 && Stage.Authoritative)
         {
             target.Revive();
             Reviving = null;

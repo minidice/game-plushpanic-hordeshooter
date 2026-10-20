@@ -58,7 +58,14 @@ public partial class AlarmCar : StaticBody3D
     /// <summary>Sets the alarm off. Only once per car.</summary>
     public void Trigger()
     {
-        if (Triggered || _stage.State != StageState.Playing) return;
+        if (Triggered || _stage.State != StageState.Playing || !_stage.Authoritative) return;
+        Sound();
+    }
+
+    /// <summary>Sets the alarm off for real, or on a client because the host said so.</summary>
+    internal void Sound()
+    {
+        if (Triggered) return;
         Triggered = true;
         _left = _stage.Director.Rules.AlarmTime;
         // Loud for the monsters (noise_alarm_m), quiet for the ears: the siren plays at its plain recipe volume.

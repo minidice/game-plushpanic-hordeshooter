@@ -54,6 +54,33 @@ public partial class WeaponController : Node
 
     public Vector3 MuzzlePosition => _muzzles.Count > 0 ? _muzzles[_muzzleIndex % _muzzles.Count].GlobalPosition : _player.Rig.Muzzle.GlobalPosition;
 
+    /// <summary>
+    /// Client: someone else fired on the host. Their tracers, flash and sound only; the host already decided the hits.
+    /// </summary>
+    public void ShowNetShot(WeaponDefinition def, Vector3 from, Vector3 aim, System.Collections.Generic.IReadOnlyList<Vector3> ends)
+    {
+        Stage.Sfx.PlayAt(def.ShotSound, from);
+        Kick = def.Category == WeaponCategory.Heavy ? 1 : .6f;
+        switch (def.Mode)
+        {
+            case FireMode.Melee:
+                var flat = aim - _player.GlobalPosition;
+                flat.Y = 0;
+                if (flat.LengthSquared() > .01f)
+                    Stage.Effects.Swoosh(_player.GlobalPosition + Vector3.Up * Player.AimHeight, flat.Normalized(), def.MeleeRange, def.MeleeArc);
+                return;
+            case FireMode.Projectile:
+                if (ends.Count > 0) Rocket.Launch(Stage, from, (ends[0] - from).Normalized(), def, _player.GetRid());
+                return;
+            case FireMode.Lob:
+                if (ends.Count > 0) MortarShell.Fire(Stage, from, ends[0], def);
+                return;
+        }
+        foreach (var end in ends) Stage.Effects.Tracer(from, end, false);
+        _flashTime = .045f;
+        _muzzleIndex++;
+    }
+
     /// <summary>Rebuild the in-hand model if the active weapon changed.</summary>
     public void RefreshVisual()
     {
@@ -210,9 +237,12 @@ public partial class WeaponController : Node
                 _swingElapsed = 0;
                 _swingHit = false;
                 _player.Rig.SetMeleePose(0);
+                Stage.Net?.OnShot(_player, def, MuzzlePosition, System.Array.Empty<Vector3>(), _player.AimPoint);
                 return;
             case FireMode.Projectile:
-                Rocket.Launch(Stage, MuzzlePosition, Spread(dir, state.Spread), def, _player.GetRid());
+                var rocketDir = Spread(dir, state.Spread);
+                Rocket.Launch(Stage, MuzzlePosition, rocketDir, def, _player.GetRid());
+                Stage.Net?.OnShot(_player, def, MuzzlePosition, new[] { MuzzlePosition + rocketDir }, _player.AimPoint);
                 break;
             case FireMode.Lob:
                 var flat = _player.AimPoint - _player.GlobalPosition;
@@ -220,6 +250,7 @@ public partial class WeaponController : Node
                 float dist = Mathf.Clamp(flat.Length(), def.MinRange, def.MaxRange);
                 var target = _player.GlobalPosition + (flat.LengthSquared() > .01f ? flat.Normalized() : dir) * dist;
                 MortarShell.Fire(Stage, MuzzlePosition, target, def);
+                Stage.Net?.OnShot(_player, def, MuzzlePosition, new[] { target }, _player.AimPoint);
                 break;
             default:
                 bool anyCrit = false;
@@ -227,6 +258,7 @@ public partial class WeaponController : Node
                 // Pellets split the shot's damage and push: all of them hitting = the full number.
                 int pellets = Mathf.Max(1, def.Pellets);
                 float cone = pellets > 1 ? def.PelletSpread : state.Spread;
+                var ends = Stage.Net != null ? new System.Collections.Generic.List<Vector3>(pellets) : null;
                 for (int i = 0; i < pellets; i++)
                 {
                     var end = Hitscan(def, origin, Spread(dir, cone), def.Damage * _player.DamageMultiplier / pellets, def.HitPower / pellets, out bool crit);
@@ -234,7 +266,9 @@ public partial class WeaponController : Node
                     var from = MuzzlePosition;
                     if (origin.DistanceTo(end) < origin.DistanceTo(from)) from = origin;
                     Stage.Effects.Tracer(from, end, crit);
+                    ends?.Add(end);
                 }
+                if (ends != null) Stage.Net!.OnShot(_player, def, MuzzlePosition, ends, _player.AimPoint);
                 Stage.Effects.Shell(MuzzlePosition, _player.Rig.GlobalTransform.Basis.X);
                 if (anyCrit) Stage.Effects.FloatingText(_player.AimPoint + Vector3.Up * .6f, "CRIT!", new Color("ffd65c"));
                 break;
@@ -252,7 +286,7 @@ public partial class WeaponController : Node
             WeaponCategory.Shotgun => .15f,
             _ => .06f,
         };
-        if (!_player.IsBot) Stage.Cam.AddShake(shake);
+        if (_player.IsLocal) Stage.Cam.AddShake(shake);
         Stage.Director.MakeNoise(_player.GlobalPosition, def.Noise);
     }
 
@@ -377,7 +411,7 @@ public partial class WeaponController : Node
         {
             Stage.Effects.FloatingText(targets[0].e.GlobalPosition + Vector3.Up * 2.2f, "BONG!", new Color("ffe07a"));
             Stage.Sfx.PlayAt("pan_bong", targets[0].e.GlobalPosition + Vector3.Up);
-            if (!_player.IsBot) Stage.Cam.AddShake(.12f);
+            if (_player.IsLocal) Stage.Cam.AddShake(.12f);
         }
         Stage.Director.MakeNoise(origin, def.Noise);
     }
@@ -398,7 +432,8 @@ public partial class WeaponController : Node
         var hand = HandPosition();
         Kick = .6f;
         Stage.Sfx.PlayAt("throw", hand);
-        var item = ThrownItem.Throw(Stage, def, hand, _player.AimPoint);
+        var item = ThrownItem.Throw(Stage, def, hand, _player.AimPoint, _player);
+        Stage.Net?.OnThrow(_player, def, hand, _player.AimPoint);
         EndThrowAim();
         return item;
     }

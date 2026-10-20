@@ -20,6 +20,7 @@ Windows에서 Godot 4.7.2 .NET과 .NET SDK를 준비한 뒤 `game/Start-Game.cmd
 - [용어 사전](doc/glossary.md): 모드·캠페인·스테이지·구역의 구분과 2단계/3단계 비교.
 - [시나리오 레벨 디자인 목표](doc/scenario-level-design.md): 시간·전투 흐름·아이템 배치 추천 초안. **생존·서바이버에는 적용하지 않음.** 기존 확정 기준은 [레벨 디자인 규칙](doc/level-design-rules.md).
 - [플레이어 동물 가이드](doc/player-species-guide.md), [몬스터 가이드](doc/monster-design-guide.md): 종별 특징·적 역할·새 모델 추가 양식. 기술 계약은 [모델 규격](doc/character-model-spec.md).
+- [멀티 2인 동기화](doc/multiplayer-sync-design.md): 누가 결정하고 무엇을 보내는지, 검사 방법, 구현 결과(MVP, 명령줄 실행).
 - [결정 기록](doc/decisions.md), [이슈 기록](doc/issues.md): 결정 이유와 버그·제약·재발 방지 이력.
 - [작업 규칙](AGENTS.md): 기능 추가·버그 수정 때 함께 갱신할 문서와 검증 기준.
 

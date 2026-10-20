@@ -2,7 +2,10 @@ param(
     [string]$GodotDir = 'D:\Util\Godot\Godot_v4.7.2-stable_mono_win64',
     [switch]$Test,
     [switch]$InputCheck,
-    [switch]$Capture
+    [switch]$Capture,
+    # Two-player test (doc/multiplayer-sync-design.md): one window hosts, another joins.
+    [switch]$NetHost,
+    [string]$NetJoin
 )
 $ErrorActionPreference = 'Stop'
 $console = Join-Path $GodotDir 'Godot_v4.7.2-stable_mono_win64_console.exe'
@@ -25,6 +28,10 @@ try {
     } elseif ($Capture) {
         & $console --path $PSScriptRoot res://tests/Capture.tscn
         if ($LASTEXITCODE -ne 0) { throw 'Capture failed.' }
+    } elseif ($NetHost) {
+        Start-Process -FilePath $windowed -ArgumentList '--path', ('"' + $PSScriptRoot + '"'), '--', '--host' -WorkingDirectory $PSScriptRoot
+    } elseif ($NetJoin) {
+        Start-Process -FilePath $windowed -ArgumentList '--path', ('"' + $PSScriptRoot + '"'), '--', ('--join=' + $NetJoin) -WorkingDirectory $PSScriptRoot
     } else {
         Start-Process -FilePath $windowed -ArgumentList '--path', ('"' + $PSScriptRoot + '"') -WorkingDirectory $PSScriptRoot
     }

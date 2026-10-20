@@ -36,6 +36,45 @@ public partial class Stage : Node3D
     public string ThemeId { get; private set; } = "zombie";
     /// <summary>Tests turn this off so the director only spawns on request.</summary>
     public bool DirectorEnabled { get; set; } = true;
+    /// <summary>Offline by default. Set before the stage enters the tree (multiplayer-sync-design.md).</summary>
+    public NetRole Role { get; set; } = NetRole.Offline;
+    /// <summary>This PC decides the game: offline or the host. A client only shows the host's decisions.</summary>
+    public bool Authoritative => Role != NetRole.Client;
+    /// <summary>Raised by the host when an enemy dies, with the direction and force of its fall.</summary>
+    public event System.Action<Enemy, Vector3, float>? EnemyKilled;
+    /// <summary>A client asks the host to use an interactable instead of using it itself.</summary>
+    public System.Action<Interactable>? RequestUse { get; set; }
+    private int _nextInteractableId;
+    internal int NextPropId;
+    /// <summary>The network link when this stage is part of a match (null offline).</summary>
+    public StageNet? Net { get; private set; }
+
+    /// <summary>Registers a usable thing with the next id in build order (the same on every PC).</summary>
+    public void AddInteractable(Interactable item)
+    {
+        if (item.NetId == 0) item.NetId = ++_nextInteractableId;
+        else _nextInteractableId = System.Math.Max(_nextInteractableId, item.NetId);
+        Interactables.Add(item);
+    }
+
+    internal void RaiseEnemyKilled(Enemy enemy, Vector3 direction, float force)
+    {
+        EnemyKilled?.Invoke(enemy, direction, force);
+        Net?.OnEnemyKilled(enemy, direction, force);
+    }
+
+    /// <summary>Another person's survivor (multiplayer). Never a bot: it counts as a human for every rule.</summary>
+    public Player AddRemoteSurvivor(CharacterDefinition def, Vector3 at, int peer)
+    {
+        var survivor = new Player { IsRemote = true, ManualControl = true, PeerId = peer };
+        survivor.Setup(this, def);
+        survivor.Name = "Peer" + peer;
+        survivor.Position = at;
+        AddChild(survivor);
+        Players.Add(survivor);
+        survivor.Died += CheckWipe; // the last human dying ends the match, whoever it is (I-73)
+        return survivor;
+    }
 
     /// <summary>The local, human survivor (camera, HUD, input, objectives).</summary>
     public Player Player { get; private set; } = null!;
@@ -118,6 +157,7 @@ public partial class Stage : Node3D
         AddChild(Effects);
         BuildEnvironment();
 
+        if (Role == NetRole.Offline && GetTree().CurrentScene == this) Role = NetLaunch.Pending;
         ReviveEnabled = ReviveOverride ?? (GetTree().CurrentScene == this && GameSettings.ReviveEnabled);
         _layout = StageOneLayout.Build(this);
 
@@ -141,9 +181,14 @@ public partial class Stage : Node3D
         Flow.Update(Player.GlobalPosition);
         RefreshRouteFlows();
         Director.UseEncounters(SpawnDatabase.Current.Stage1);
+        if (Role == NetRole.Client) Player.Position = StageNet.ClientStart(this);
         Trail.Add(Player.GlobalPosition);
         // The menu's squad size applies to the real game scene; tests ask for squadmates explicitly.
-        SpawnSquad(SquadOverride ?? (GetTree().CurrentScene == this ? GameSession.SquadSize : 0));
+        // No AI squadmates in a network match (M-11).
+        SpawnSquad(SquadOverride ?? (GetTree().CurrentScene == this && Role == NetRole.Offline ? GameSession.SquadSize : 0));
+
+        // Multiplayer: after the level and the start fill exist, so ids and the welcome list are complete.
+        if (Role != NetRole.Offline) Net = StageNet.Attach(this, Role);
 
         Hud = new Hud { Name = "Hud" };
         AddChild(Hud);
@@ -196,6 +241,7 @@ public partial class Stage : Node3D
         enemy.Position = new Vector3(at.X, Mathf.Max(at.Y, .05f), at.Z);
         _enemyRoot.AddChild(enemy);
         if (Player != null) Vision.Apply(enemy);
+        Net?.OnEnemySpawned(enemy);
         _pending.Add(enemy);
         return enemy;
     }
@@ -466,9 +512,10 @@ public partial class Stage : Node3D
 
         if (State != StageState.Playing) return;
         Elapsed += dt;
-        UpdateObjective();
+        // A client gets objectives and respawns from the host (multiplayer-sync-design.md 3장).
+        if (Authoritative) UpdateObjective();
         UpdateInteraction();
-        UpdateRespawns();
+        if (Authoritative) UpdateRespawns();
     }
 
     /// <summary>Somebody out there is always moaning. Picks a random awake zombie near the player.</summary>
@@ -507,18 +554,10 @@ public partial class Stage : Node3D
         {
             case Objective.HoldOut:
                 Layout.Shutter.SetProgress(1 - Director.CrescendoRemaining / Director.CrescendoDuration);
-                if (!Director.CrescendoActive)
-                {
-                    _alarm?.QueueFree();
-                    _alarm = null;
-                    Sfx.PlayAt("shutter", Layout.Shutter.GlobalPosition + Vector3.Up * 1.5f);
-                    Layout.Shutter.SetOpen(true, 1.2f);
-                    Objective = Objective.ReachSafehouse;
-                    ShowNotice(Loc.Text("msg_stage_shutter_open"));
-                }
+                if (!Director.CrescendoActive) OpenShutter();
                 break;
             case Objective.ReachSafehouse:
-                if (Layout.InSafehouse(Player.GlobalPosition))
+                if (HumansInSafehouse())
                 {
                     if (!_safehouseReached)
                         foreach (var survivor in AlivePlayers) if (!survivor.IsDowned) survivor.ResetDowns();
@@ -529,13 +568,91 @@ public partial class Stage : Node3D
                 }
                 break;
             case Objective.CloseSafehouse:
-                if (!Layout.InSafehouse(Player.GlobalPosition))
+                if (!HumansInSafehouse())
                 {
                     Objective = Objective.ReachSafehouse;
                     Layout.SafehouseSwitch.Enabled = false;
                 }
                 break;
         }
+    }
+
+    /// <summary>Every living person (not AI squadmates) is inside; alone it is just you (multiplayer-sync-design.md 5장).</summary>
+    private bool HumansInSafehouse()
+    {
+        bool any = false;
+        foreach (var p in AlivePlayers)
+        {
+            if (p.IsBot) continue;
+            if (!Layout.InSafehouse(p.GlobalPosition)) return false;
+            any = true;
+        }
+        return any;
+    }
+
+    /// <summary>The living person furthest along the route: waves and noise are placed around them.</summary>
+    public Player Leader
+    {
+        get
+        {
+            Player? best = null;
+            float bestLeft = float.MaxValue;
+            foreach (var p in AlivePlayers)
+            {
+                if (p.IsBot) continue;
+                float left = Progress(p.GlobalPosition);
+                if (left < bestLeft) { bestLeft = left; best = p; }
+            }
+            return best ?? Player;
+        }
+    }
+
+    private void OpenShutter()
+    {
+        _alarm?.QueueFree();
+        _alarm = null;
+        Sfx.PlayAt("shutter", Layout.Shutter.GlobalPosition + Vector3.Up * 1.5f);
+        Layout.Shutter.SetOpen(true, 1.2f);
+        Objective = Objective.ReachSafehouse;
+        ShowNotice(Loc.Text("msg_stage_shutter_open"));
+    }
+
+    /// <summary>
+    /// Client: step the objective to where the host is, playing each step's sounds and notices on the way.
+    /// The host decided every step; nothing here can change the game.
+    /// </summary>
+    public void ApplyNetObjective(Objective to)
+    {
+        for (int guard = 0; guard < 8 && Objective != to; guard++)
+        {
+            switch (Objective)
+            {
+                case Objective.LeaveSafeRoom: LeaveSafeRoom(); break;
+                case Objective.ReachShutter:
+                    if (to == Objective.HoldOut) StartCrescendo();
+                    else { Objective = Objective.HoldOut; }
+                    break;
+                case Objective.HoldOut: Director.Stop(); OpenShutter(); break;
+                case Objective.ReachSafehouse:
+                    Objective = Objective.CloseSafehouse;
+                    Layout.SafehouseSwitch.Enabled = true;
+                    ShowNotice(Loc.Text("msg_stage_close_to_clear"));
+                    break;
+                case Objective.CloseSafehouse:
+                    if (to == Objective.ReachSafehouse) { Objective = Objective.ReachSafehouse; Layout.SafehouseSwitch.Enabled = false; }
+                    else PresentClear();
+                    break;
+                default: Objective = to; break;
+            }
+        }
+    }
+
+    /// <summary>Client: the host's stage ended (cleared or wiped).</summary>
+    public void ApplyNetState(StageState state)
+    {
+        if (state == State) return;
+        if (state == StageState.Cleared && State == StageState.Playing) PresentClear();
+        else if (state == StageState.Dead && State == StageState.Playing) PresentWipe();
     }
 
     private void UpdateInteraction()
@@ -557,8 +674,12 @@ public partial class Stage : Node3D
         }
         // E next to a downed teammate means "pick them up", never also "use the thing on the floor".
         if (FocusedInteractable != null && RevivePromptTarget == null && !Player.ManualControl && Input.IsActionJustPressed(GameInput.Interact))
-            FocusedInteractable.Use();
+        {
+            if (Authoritative) FocusedInteractable.Use(Player);
+            else RequestUse?.Invoke(FocusedInteractable);
+        }
     }
+
 
     // ---------- objective beats (called by layout interactables) ----------
 
@@ -596,6 +717,12 @@ public partial class Stage : Node3D
                 return false;
             }
         }
+        PresentClear();
+        return true;
+    }
+
+    private void PresentClear()
+    {
         Layout.SafehouseDoor.SetOpen(false);
         Layout.SafehouseSwitch.Enabled = false;
         Sfx.PlayAt("door", Layout.SafehouseDoor.GlobalPosition + Vector3.Up);
@@ -605,16 +732,15 @@ public partial class Stage : Node3D
         Director.Stop();
         Player.Invulnerable = true;
         ShowNotice(Loc.Text("ui_end_clear"));
-        return true;
     }
 
     /// <summary>
     /// Game over when every human is dead, or when every survivor (squad included) is down or dead —
     /// a downed player can still be picked up by a squadmate (doc/ai-squad-plan.md 6.3).
     /// </summary>
-    private void CheckWipe()
+    internal void CheckWipe()
     {
-        if (State != StageState.Playing) return;
+        if (State != StageState.Playing || !Authoritative) return;
         bool humanAlive = false, anyoneStanding = false;
         foreach (var p in Players)
         {
@@ -631,7 +757,9 @@ public partial class Stage : Node3D
         CheckWipe();
     }
 
-    private void OnPlayerDied()
+    private void OnPlayerDied() => PresentWipe();
+
+    private void PresentWipe()
     {
         foreach (var p in Players)
         {
@@ -663,30 +791,33 @@ public partial class Stage : Node3D
         LureFlow = null;
     }
 
-    public void PickUp(WeaponPickup pickup)
+    public void PickUp(WeaponPickup pickup) => PickUp(pickup, Player);
+
+    public void PickUp(WeaponPickup pickup, Player who)
     {
-        var at = Player.GlobalPosition + Vector3.Up * 2.6f;
+        var at = who.GlobalPosition + Vector3.Up * 2.6f;
+        bool local = who.IsLocal;
         if (pickup.Throwable is { } throwable)
         {
-            if (!Player.Loadout.AddThrowable(throwable))
+            if (!who.Loadout.AddThrowable(throwable))
             {
-                ShowNotice(Loc.Format("fmt_pickup_throwable_max", throwable.DisplayName, throwable.MaxCarry), 2);
+                if (local) ShowNotice(Loc.Format("fmt_pickup_throwable_max", throwable.DisplayName, throwable.MaxCarry), 2);
                 return;
             }
             Effects.FloatingText(at, Loc.Format("fmt_pickup_throwable", throwable.DisplayName), new Color("8dff9c"));
-            Sfx.Play("pickup");
+            PickupSound(who);
             RemovePickup(pickup);
             return;
         }
         if (pickup.Weapon is not { } weapon) return;
-        var (result, dropped) = Player.Weapons.Pickup(weapon, pickup.State);
+        var (result, dropped) = who.Weapons.Pickup(weapon, pickup.State);
         switch (result)
         {
             case PickupResult.Full:
-                ShowNotice(Loc.Text("msg_pickup_full"), 2);
+                if (local) ShowNotice(Loc.Text("msg_pickup_full"), 2);
                 return;
             case PickupResult.Upgraded:
-                Effects.FloatingText(at, Loc.Format("fmt_pickup_upgraded", Player.Gun.Def.DisplayName), new Color("6fb6ff"));
+                Effects.FloatingText(at, Loc.Format("fmt_pickup_upgraded", who.Gun.Def.DisplayName), new Color("6fb6ff"));
                 break;
             case PickupResult.Refilled:
                 Effects.FloatingText(at, Loc.Text("msg_pickup_ammo"), new Color("ffd36b"));
@@ -703,15 +834,21 @@ public partial class Stage : Node3D
                 Effects.FloatingText(at, weapon.DisplayName, new Color("ffb347"));
                 break;
         }
-        Sfx.Play("pickup");
+        PickupSound(who);
         RemovePickup(pickup);
         if (dropped != null)
         {
-            var back = -Player.AimDirection * .9f;
-            var spot = Player.GlobalPosition + back;
-            if (Flow.IsBlocked(spot)) spot = Player.GlobalPosition;
+            var back = -who.AimDirection * .9f;
+            var spot = who.GlobalPosition + back;
+            if (Flow.IsBlocked(spot)) spot = who.GlobalPosition;
             WeaponPickup.ForWeapon(this, spot, dropped.Def, dropped);
         }
+    }
+
+    private void PickupSound(Player who)
+    {
+        if (who.IsLocal) Sfx.Play("pickup");
+        else Sfx.PlayAt("pickup", who.GlobalPosition + Vector3.Up);
     }
 
     private void RemovePickup(WeaponPickup pickup)
@@ -725,7 +862,7 @@ public partial class Stage : Node3D
 
     public void RefillAmmo(Player who)
     {
-        bool local = who == Player;
+        bool local = who.IsLocal;
         var at = who.GlobalPosition + Vector3.Up * 2.6f;
         var primary = who.Loadout.Primary;
         if (primary == null)
@@ -759,7 +896,12 @@ public partial class Stage : Node3D
         _ => Loc.Text("ui_objective_cleared"),
     };
 
-    public void Restart() => GetTree().ReloadCurrentScene();
+    /// <summary>Offline only: in a match both PCs would have to restart together, so it goes back to the menu (I-73).</summary>
+    public void Restart()
+    {
+        if (Role != NetRole.Offline) { BackToMenu(); return; }
+        GetTree().ReloadCurrentScene();
+    }
 
     public void BackToMenu() => GetTree().ChangeSceneToFile("res://scenes/Menu.tscn");
 

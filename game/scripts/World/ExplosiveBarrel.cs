@@ -27,14 +27,19 @@ public partial class ExplosiveBarrel : RigidBody3D
         barrel.AddChild(new CollisionShape3D { Shape = new CylinderShape3D { Radius = .38f, Height = 1.4f }, Position = Vector3.Up * .7f });
         Mat.Mesh(barrel, new CylinderMesh { TopRadius = .38f, BottomRadius = .38f, Height = 1.0f }, Vector3.Up * .5f, Mat.Solid("b8392e", .5f));
         Mat.Mesh(barrel, new CylinderMesh { TopRadius = .39f, BottomRadius = .39f, Height = .12f }, Vector3.Up * .62f, Mat.Solid("e8c547", .5f));
+        barrel.NetId = ++stage.NextPropId;
         stage.AddChild(barrel);
         stage.Props.Add(barrel);
         return barrel;
     }
 
+    /// <summary>Same on every PC (build order), so the host can say which barrel blew up.</summary>
+    public int NetId { get; private set; }
+
     public void Ignite(float fuse = .12f)
     {
-        if (Ignited || Exploded) return;
+        // On a client the host's explosion arrives as an event and calls Explode directly.
+        if (Ignited || Exploded || !_stage.Authoritative) return;
         Ignited = true;
         _fuse = fuse;
     }
@@ -50,6 +55,7 @@ public partial class ExplosiveBarrel : RigidBody3D
     {
         if (Exploded) return;
         Exploded = true;
+        _stage.Net?.OnBarrelExplode(this);
         Blast.Explode(_stage, GlobalPosition, Radius, 125f, new Color("ff9a3c"), this, knockbackPower: 140f);
         _stage.Props.Remove(this);
         QueueFree();

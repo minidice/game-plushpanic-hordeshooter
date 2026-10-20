@@ -5,7 +5,7 @@ namespace HordeShooter;
 public partial class Player
 {
     public Enemy? RestrainingEnemy { get; private set; }
-    public bool IsRestrained => RestrainingEnemy != null;
+    public bool IsRestrained => RestrainingEnemy != null || NetRestrained;
     public Vector3? RestraintPullTarget { get; set; }
 
     public bool TryRestrain(Enemy owner)

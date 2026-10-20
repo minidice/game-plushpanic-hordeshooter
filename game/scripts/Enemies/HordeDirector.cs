@@ -64,7 +64,7 @@ public partial class HordeDirector : Node
         CrescendoDuration = CrescendoRemaining = duration;
         _waveTimer = 1.5f;
         _crescendoSpecials = 0;
-        MakeNoise(Stage.Player.GlobalPosition, Rules.NoiseAlarm);
+        MakeNoise(Stage.Leader.GlobalPosition, Rules.NoiseAlarm);
     }
 
     /// <summary>A loud device went off at <paramref name="at"/>: wakes the area and sends hunters for a while.</summary>
@@ -81,7 +81,8 @@ public partial class HordeDirector : Node
     {
         float dt = (float)delta;
         Intensity = Mathf.Max(0, Intensity - dt * .04f);
-        if (Stage.Player.IsDead) return;
+        // Runs while any survivor lives (the host may be dead while the party plays on, I-73).
+        if (!Stage.AlivePlayers.Any()) return;
 
         // Alarms are the survivors' own doing, so they run even before the director's timers start.
         // Tests that switch the director off still hear the alarm but get no waves.
@@ -142,6 +143,7 @@ public partial class HordeDirector : Node
 
     public int SpawnMob(int count)
     {
+        if (!Stage.Authoritative) return 0;
         var entry = PickEntry(14, 36);
         if (entry == null) return 0;
         MobsSpawned++;
@@ -151,6 +153,7 @@ public partial class HordeDirector : Node
     /// <summary>Summon a mob from around the player (balloon pop): off screen and out of sight where possible.</summary>
     public int SummonAround(Vector3 center, int count)
     {
+        if (!Stage.Authoritative) return 0;
         // Shuffle and stop after a handful of good cells: a pop can be inside a 600-cell radius.
         var cells = Stage.Flow.OpenCellsNear(center, 9, 14).OrderBy(_ => _rng.Randi()).ToList();
         var options = cells.Where(p => !OnScreen(p) && !Stage.Vision.CanSee(p) && !IsProtected(p)).Take(12).ToList();
@@ -170,6 +173,7 @@ public partial class HordeDirector : Node
     /// <summary>Sends <paramref name="count"/> hunters in from <paramref name="entry"/> (ledges jump down).</summary>
     public int SpawnWave(SpawnEntry entry, int count)
     {
+        if (!Stage.Authoritative) return 0;
         int room = MaxCommons - AliveCommons;
         count = Mathf.Min(count, room);
         // A ledge drop spreads along the wall top; the others bunch around the spot.
@@ -191,6 +195,7 @@ public partial class HordeDirector : Node
 
     public Enemy? SpawnSpecial()
     {
+        if (!Stage.Authoritative) return null;
         if (AliveSpecials >= MaxSpecials) return null;
         // Specials walk in; jumping off a wall is for the commons.
         var entry = PickEntry(16, 34, ledges: false);
@@ -206,7 +211,7 @@ public partial class HordeDirector : Node
     /// </summary>
     public SpawnEntry? PickEntry(float minDist, float maxDist, bool ledges = true)
     {
-        var player = Stage.Player.GlobalPosition;
+        var player = Stage.Leader.GlobalPosition;
         var candidates = new List<SpawnEntry>();
         foreach (var e in Entries)
         {
@@ -274,6 +279,8 @@ public partial class HordeDirector : Node
     /// </summary>
     public void UpdateAreas()
     {
+        // Only the host places monsters; a client gets them as spawn events (multiplayer-sync-design.md 3장).
+        if (!Stage.Authoritative) return;
         if (Encounters == null || Encounters.Areas.Count == 0) return;
         int furthest = 0;
         foreach (var p in Stage.AlivePlayers)

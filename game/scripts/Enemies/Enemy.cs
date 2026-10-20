@@ -152,6 +152,7 @@ public partial class Enemy : CharacterBody3D
         Kick = Mathf.MoveToward(Kick, 0, dt * 5);
         AttackCooldown -= dt;
         FaceOverride = null;
+        if (IsPuppet) { PuppetStep(dt); return; }
 
         Vector3 desired;
         if (StunTime > 0)
@@ -273,7 +274,7 @@ public partial class Enemy : CharacterBody3D
     /// <summary>Flashbang: stand there dazed.</summary>
     public void Stun(float seconds)
     {
-        if (IsDead) return;
+        if (IsDead || IsPuppet) return;
         CancelMelee();
         StunTime = Mathf.Max(StunTime, seconds);
         Wake();
@@ -288,6 +289,7 @@ public partial class Enemy : CharacterBody3D
     public void Burn(float damage)
     {
         if (IsDead || damage <= 0) return;
+        if (IsPuppet) { Rig.FlashHit(); return; }
         Health -= damage;
         Rig.FlashHit();
         Wake();
@@ -339,6 +341,7 @@ public partial class Enemy : CharacterBody3D
         _meleeTarget = player;
         _meleeTime = 0;
         RevealTo(player, MeleeWindup + MeleeRecovery + VisionSystem.RevealAfterHit);
+        Stage.Net?.OnEnemyAttack(this, NetAttack.Melee, player, player.GlobalPosition);
         _meleeHit = false;
         toPlayer.Y = 0;
         _meleeDirection = toPlayer.LengthSquared() > .0001f ? toPlayer.Normalized() : Rig.Forward;
@@ -381,6 +384,8 @@ public partial class Enemy : CharacterBody3D
     public virtual void TakeHit(HitInfo hit)
     {
         if (IsDead) return;
+        if (IsPuppet) { PuppetHit(hit.Point, hit.Direction, hit.Crit); return; }
+        Stage.Net?.OnEnemyHit(this, hit.Point, hit.Direction);
         Health -= hit.Damage;
         if (hit.Damage > 0) Rig.FlashHit();
         Hurt = 1;
@@ -411,6 +416,7 @@ public partial class Enemy : CharacterBody3D
         if (IsDead) return;
         direction.Y = 0;
         direction = direction.LengthSquared() > .0001f ? direction.Normalized() : Vector3.Forward;
+        if (IsPuppet) { if (damage > 0) Rig.FlashHit(); Hurt = 1; return; }
         Wake();
         Health -= damage;
         if (damage > 0) Rig.FlashHit();
@@ -425,6 +431,7 @@ public partial class Enemy : CharacterBody3D
         CancelMelee();
         IsDead = true;
         Stage.OnEnemyDied(this);
+        Stage.RaiseEnemyKilled(this, direction, force);
         CollisionLayer = 0;
         CollisionMask = 0;
         Shape.SetDeferred(CollisionShape3D.PropertyName.Disabled, true);

@@ -45,13 +45,29 @@ public partial class Player : CharacterBody3D
     public Vector3 AimDirection { get; private set; } = Vector3.Right;
     public Enemy? FocusTarget { get; private set; }
     public float FocusTime { get; private set; }
-    public bool CritReady => !IsBot && FocusTarget != null && FocusTime >= CritFocusTime;
+    // Focus needs this PC's own view of the enemies, so only the local player can line up a crit.
+    /// <summary>Client: a hit the host reported (the arc on the HUD; health arrives with the snapshot).</summary>
+    public void ShowNetHit(Vector3 direction)
+    {
+        direction.Y = 0;
+        if (direction.LengthSquared() > .0001f) HitFrom?.Invoke(direction.Normalized());
+    }
+
+    public bool CritReady => IsLocal && FocusTarget != null && FocusTime >= CritFocusTime;
     public RigidBody3D? Corpse { get; private set; }
     public float DamageFlash { get; private set; }
     public bool ManualControl { get; set; }
     public bool Invulnerable { get; set; }
     /// <summary>An AI squadmate: driven through the same controls, no audio listener, no crits.</summary>
     public bool IsBot { get; set; }
+    /// <summary>Another person's survivor in a network match (set before it enters the tree).</summary>
+    public bool IsRemote { get; set; }
+    /// <summary>This PC's own human player: owns the camera, the ears, the HUD and screen shake.</summary>
+    public bool IsLocal => !IsBot && !IsRemote;
+    /// <summary>Network peer of the person playing this survivor (0 offline or for squadmates).</summary>
+    public int PeerId { get; set; }
+    /// <summary>True while the network layer applies the host's decisions (health, downs) on a client.</summary>
+    internal bool NetApplying { get; set; }
     /// <summary>Scales this survivor's weapon damage (AI squadmates hit softer, decisions.md M-12).</summary>
     public float DamageMultiplier { get; set; } = 1f;
     /// <summary>Look to wear instead of the saved one for this species (AI squadmates use the default look).</summary>
@@ -123,7 +139,7 @@ public partial class Player : CharacterBody3D
         });
 
         // Ears on the goose, not on the camera 34 m up: zombies behind you sound behind you.
-        if (!IsBot)
+        if (IsLocal)
         {
             var ears = new AudioListener3D { Name = "Ears", Position = Vector3.Up * 1.5f };
             AddChild(ears);
@@ -207,6 +223,8 @@ public partial class Player : CharacterBody3D
         if (IsDowned) { UpdateDowned(dt); return; }
 
         if (!ManualControl) ReadInput();
+        // A client's own presses are kept until its next input message to the host.
+        if (IsLocal && Stage.Role == NetRole.Client) RecordNetEdges();
         HeliumTime = Mathf.Max(0, HeliumTime - dt);
         RollCooldownLeft = Mathf.Max(0, RollCooldownLeft - dt);
         bool stunned = StunTime > 0;
@@ -233,6 +251,8 @@ public partial class Player : CharacterBody3D
         bool grounded = IsOnFloor() && Velocity.Y <= 0;
         _push = _push.MoveToward(Vector3.Zero, dt * (grounded ? 10f : 1.2f));
         var horizontal = IsRestrained ? RestraintVelocity() : IsRolling ? _rollDirection * RollSpeed : move * speed + _push;
+        // On the host a remote survivor's reported spot loses to the host's own pull (grab, launch, down).
+        if (NetMotion is { } follow && !(Stage.Authoritative && HostMovesMe)) horizontal = FollowVelocity(follow, dt);
         Velocity = new Vector3(horizontal.X, grounded ? -.1f : Velocity.Y - Gravity * dt, horizontal.Z);
         var beforeMove = GlobalPosition;
         MoveAndSlide();
@@ -376,6 +396,8 @@ public partial class Player : CharacterBody3D
 
     public void TakeDamage(float amount, Vector3 direction, float push = 2.5f)
     {
+        // On a client only the host decides damage; local blasts and hazards are just pictures (M-20).
+        if (!Stage.Authoritative && !NetApplying) return;
         if (IsDead || Invulnerable || IsRolling || amount <= 0) return;
         if (IsDowned) { BleedFromHit(); return; }
         StopReviving();
@@ -392,6 +414,7 @@ public partial class Player : CharacterBody3D
             HitFrom?.Invoke(direction.Normalized());
         }
         Stage.Director.ReportDamage(damage);
+        if (direction.LengthSquared() > .0001f) Stage.Net?.OnPlayerHit(this, direction.Normalized());
         if (Health > 0 && _honkCooldown <= 0)
         {
             _honkCooldown = .4f;
@@ -407,6 +430,7 @@ public partial class Player : CharacterBody3D
     /// <summary>Slapstick launch (charger hits, explosions). Stuns and tumbles the character.</summary>
     public void Launch(Vector3 impulse, float stun)
     {
+        if (!Stage.Authoritative && !NetApplying) return;
         if (IsDead || IsDowned || IsRolling) return;
         _push = new Vector3(impulse.X, 0, impulse.Z);
         Velocity = new Vector3(Velocity.X, impulse.Y, Velocity.Z);
@@ -419,7 +443,7 @@ public partial class Player : CharacterBody3D
     /// <summary>The local player hears their own sounds in the ear; a squadmate's come from where they stand.</summary>
     public void PlayOwn(string id)
     {
-        if (IsBot) Stage.Sfx.PlayAt(id, GlobalPosition + Vector3.Up);
+        if (!IsLocal) Stage.Sfx.PlayAt(id, GlobalPosition + Vector3.Up);
         else Stage.Sfx.Play(id);
     }
 
@@ -511,7 +535,7 @@ public partial class Player : CharacterBody3D
         body.ApplyTorqueImpulse(new Vector3(_rng.RandfRange(-3, 3), _rng.RandfRange(-1, 1), _rng.RandfRange(-3, 3)));
         Corpse = body;
         Stage.Sfx.PlayAt("honk_long", GlobalPosition + Vector3.Up * 1.5f);
-        if (!IsBot) Stage.Cam.AddShake(.5f);
+        if (IsLocal) Stage.Cam.AddShake(.5f);
         Died?.Invoke();
     }
 }

@@ -28,6 +28,13 @@ public sealed class WeaponState
         Spread = def.BaseSpread;
     }
 
+    /// <summary>Client: the host's ammo count wins (multiplayer-sync-design.md 3장).</summary>
+    internal void SetAmmo(int mag, int reserve)
+    {
+        Mag = Math.Clamp(mag, 0, Def.MagSize);
+        if (!Def.InfiniteReserve) Reserve = Math.Max(0, reserve);
+    }
+
     public bool IsMelee => Def.Mode == FireMode.Melee;
     public bool CanFire => !Reloading && _cooldown <= 0 && (IsMelee || Mag > 0);
     public float ReloadTime => _insertedShell && Def.ShellReloadTime > 0 ? Def.ShellReloadTime : Def.ReloadTime;

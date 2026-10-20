@@ -313,9 +313,9 @@ public sealed class StageOneLayout
 
     private Interactable Use(Vector3 at, string promptKey, System.Action action)
     {
-        var item = new Interactable { Name = "Use", Position = at, Prompt = promptKey, OnUse = action };
+        var item = new Interactable { Name = "Use", Position = at, Prompt = promptKey, OnUse = _ => action() };
         _stage.AddChild(item);
-        _stage.Interactables.Add(item);
+        _stage.AddInteractable(item);
         return item;
     }
 
@@ -324,7 +324,8 @@ public sealed class StageOneLayout
         var node = new Node3D { Name = "Ammo", Position = at + Vector3.Up * .2f };
         _stage.AddChild(node);
         StageArt.Ammo(node);
-        var use = Use(at, "ui_use_ammo", _stage.RefillAmmo);
+        var use = Use(at, "ui_use_ammo", () => { });
+        use.OnUse = who => _stage.RefillAmmo(who ?? _stage.Player);
         use.Radius = 1.6f;
     }
 
@@ -332,22 +333,24 @@ public sealed class StageOneLayout
     {
         var node = new Interactable { Name = "Medkit", Position = at, Prompt = "ui_use_medkit", Radius = 1.6f };
         _stage.AddChild(node);
-        _stage.Interactables.Add(node);
+        _stage.AddInteractable(node);
         StageArt.Box(node, new Vector3(0, .15f, 0), new Vector3(.6f, .3f, .45f), "d3d8cc", true);
         StageArt.Box(node, new Vector3(0, .15f, .229f), new Vector3(.5f, .025f, .025f), "557a79");
         Mat.Box(node, new Vector3(0, .31f, 0), new Vector3(.36f, .02f, .1f), Mat.Glow(new Color("ff4040"), 1.5f));
         Mat.Box(node, new Vector3(0, .31f, 0), new Vector3(.1f, .02f, .3f), Mat.Glow(new Color("ff4040"), 1.5f));
-        node.OnUse = () =>
+        node.OnUse = who =>
         {
-            if (_stage.Player.Medkits > 0)
+            var taker = who ?? _stage.Player;
+            if (taker.Medkits > 0)
             {
-                _stage.ShowNotice(Loc.Text("msg_pickup_medkit_full"), 2);
+                if (taker.IsLocal) _stage.ShowNotice(Loc.Text("msg_pickup_medkit_full"), 2);
                 return;
             }
-            _stage.Player.Medkits = 1;
-            _stage.Sfx.Play("pickup");
+            taker.Medkits = 1;
             node.Enabled = false;
             node.Visible = false;
+            if (!taker.IsLocal) { _stage.Sfx.PlayAt("pickup", taker.GlobalPosition + Vector3.Up); return; }
+            _stage.Sfx.Play("pickup");
             _stage.ShowNotice(Loc.Text("msg_pickup_medkit"), 3);
         };
     }

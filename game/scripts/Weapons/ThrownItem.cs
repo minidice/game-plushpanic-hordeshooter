@@ -9,6 +9,7 @@ namespace HordeShooter;
 /// </summary>
 public partial class ThrownItem : RigidBody3D
 {
+    private Player? _thrower;
     public ThrowableDefinition Def { get; private set; } = null!;
     public bool Landed { get; private set; }
     public bool Done { get; private set; }
@@ -52,7 +53,8 @@ public partial class ThrownItem : RigidBody3D
         return from + v * t + Vector3.Down * (.5f * Gravity * t * t);
     }
 
-    public static ThrownItem Throw(Stage stage, ThrowableDefinition def, Vector3 from, Vector3 target)
+    /// <param name="thrower">Who threw it: only they can be blinded by watching their own flashbang.</param>
+    public static ThrownItem Throw(Stage stage, ThrowableDefinition def, Vector3 from, Vector3 target, Player? thrower = null)
     {
         target = ClampTarget(from, target, def.MaxRange);
         var item = new ThrownItem
@@ -60,6 +62,7 @@ public partial class ThrownItem : RigidBody3D
             Name = "Thrown_" + def.Id,
             Def = def,
             _stage = stage,
+            _thrower = thrower,
             Mass = .4f,
             ContinuousCd = true,
             ContactMonitor = true,
@@ -206,7 +209,8 @@ public partial class ThrownItem : RigidBody3D
     /// <summary>Watching your own flashbang is a classic: close + looking at it = white screen.</summary>
     private void BlindThrower(Vector3 at, BlindSelfEffect blind)
     {
-        var player = _stage.Player;
+        var player = _thrower != null && IsInstanceValid(_thrower) ? _thrower : _stage.Player;
+        if (!player.IsLocal) return; // a teammate's flashbang never whites out your screen for their mistake
         var to = at - player.GlobalPosition;
         to.Y = 0;
         float dist = to.Length();

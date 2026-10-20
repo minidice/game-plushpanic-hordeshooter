@@ -49,6 +49,8 @@ ui_objective_cleared,스테이지 클리어
 msg_stage_start,세이프룸 — 문을 열고 출발하세요
 msg_stage_find_shutter,창고 끝의 셔터 제어판을 찾으세요
 msg_stage_alarm,경보 작동! 셔터가 열릴 때까지 버티세요
+msg_net_host_left,방장과의 연결이 끊겼습니다
+msg_net_peer_refused,게임 버전이 달라 참가할 수 없습니다
 msg_car_alarm,차 경보기가 울린다! 몰려온다
 msg_stage_shutter_open,셔터가 열렸습니다! 세이프하우스로 달리세요
 msg_stage_close_to_clear,문을 닫으면 스테이지 클리어
@@ -119,6 +121,11 @@ menu_multi_code,방 코드 6자리
 menu_multi_join,참가
 menu_multi_public,공개방 찾기
 menu_multi_soon_hint,멀티플레이는 준비 중입니다. 2인 동기화와 방 코드 접속을 만든 뒤 열립니다.
+menu_multi_address,방장 주소 (같은 PC면 127.0.0.1)
+menu_multi_test_hint,2인 테스트: 한 창에서 [방 만들기] → 다른 창에서 방장 주소를 넣고 [참가] (UDP 24680). 방 코드는 다음 단계에서 열립니다.
+fmt_menu_multi_joining,{0}에 접속하는 중...
+fmt_menu_multi_failed,{0}에 접속하지 못했습니다. 방장이 방을 만들었는지와 주소·방화벽(UDP 24680)을 확인하세요.
+fmt_menu_multi_host_failed,방을 만들지 못했습니다. 이 PC에서 이미 다른 게임이 UDP {0}를 쓰고 있는지 확인하세요.
 menu_settings_title,설정
 settings_language,언어
 settings_sound,소리

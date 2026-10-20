@@ -80,6 +80,7 @@ public partial class BullEnemy : Enemy
         _chargeDir = direction.Normalized();
         _windupVictim = Target ?? Stage.NearestAlivePlayer(GlobalPosition);
         RevealTo(_windupVictim, Charge.WindupTime + 1.5f + VisionSystem.RevealAfterHit);
+        Stage.Net?.OnEnemyAttack(this, NetAttack.Charge, _windupVictim, GlobalPosition + _chargeDir * 6f);
         Awake = true;
         ShowTelegraph();
         Stage.Sfx.PlayAt("bull_snort", GlobalPosition + Vector3.Up);
@@ -99,6 +100,7 @@ public partial class BullEnemy : Enemy
 
     private void EndCharge(bool wall)
     {
+        Stage.Net?.OnEnemyAttackEnd(this);
         CollisionMask = Layers.World | Layers.Player | Layers.Props;
         _cooldown = Charge.Cooldown;
         if (!wall)

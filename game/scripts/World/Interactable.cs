@@ -18,10 +18,13 @@ public partial class Interactable : Node3D
     public string PromptKey => _prompt;
     public float Radius { get; set; } = 1.9f;
     public bool Enabled { get; set; } = true;
-    public Action? OnUse { get; set; }
+    /// <summary>Called with the survivor who used it; null means this PC's player.</summary>
+    public Action<Player?>? OnUse { get; set; }
+    /// <summary>Same on every PC: level items get it in build order, dropped weapons from the host (multiplayer-sync-design.md 4.4).</summary>
+    public int NetId { get; set; }
 
-    public void Use()
+    public void Use(Player? who = null)
     {
-        if (Enabled) OnUse?.Invoke();
+        if (Enabled) OnUse?.Invoke(who);
     }
 }

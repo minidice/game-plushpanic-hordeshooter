@@ -13,6 +13,8 @@ Godot **4.7.2 .NET (C#) + Jolt**. 기획 기준은 [`doc/idea.md`](../doc/idea.m
 ./Start-Game.ps1 -Test        # 헤드리스 통합 검사 147개 → output/integration-report.json, 효과음 44종 → output/sounds/*.wav
 ./Start-Game.ps1 -InputCheck  # 창 모드 입력 경로 검사 14개 (이동·조준·E·1/2·사격·R·G 조준/우클릭 취소/클릭 투척·Space·Esc)
 ./Start-Game.ps1 -Capture     # 장면 10개 렌더 → output/*.png
+./Start-Game.ps1 -NetHost     # 멀티 2인 테스트: 방장 창 (UDP 24680)
+./Start-Game.ps1 -NetJoin 127.0.0.1  # 멀티 2인 테스트: 파티원 창 (같은 PC면 127.0.0.1)
 ./Start-Game.ps1 -GodotDir 'C:/다른/경로'     # Godot 위치가 다를 때
 ```
 
@@ -184,7 +186,7 @@ game/
   assets/characters/    GLB 모델
   scenes/               Menu.tscn(시작), Stage1.tscn
   scripts/Core|Audio|Characters|Player|Weapons|Enemies|World|UI
-  tests/                Integration(헤드리스 검사), InputCheck(창 모드 입력), Capture(렌더 캡처), MenuCheck(메뉴·설정), SquadCheck(AI 분대·부활), SpawnCheck(몬스터 등장·반응·경보), SupplyCheck(보급 배치), SupplyCapture(보급 지점 전후 렌더), AudioLevelCheck(효과음 레시피 크기), AudioMixCheck(창 모드 실제 출력 녹음), CaptureEnemyShots(적 탄 렌더), VisionTierCheck(보임·실루엣·숨김) 외 전용 검사
+  tests/                Integration(헤드리스 검사), InputCheck(창 모드 입력), Capture(렌더 캡처), MenuCheck(메뉴·설정), SquadCheck(AI 분대·부활), SpawnCheck(몬스터 등장·반응·경보), SupplyCheck(보급 배치), SupplyCapture(보급 지점 전후 렌더), AudioLevelCheck(효과음 레시피 크기), AudioMixCheck(창 모드 실제 출력 녹음), CaptureEnemyShots(적 탄 렌더), VisionTierCheck(보임·실루엣·숨김), NetCodecCheck·NetSyncCheck(멀티 동기화) 외 전용 검사
 ```
 
 ## 아직 없는 것

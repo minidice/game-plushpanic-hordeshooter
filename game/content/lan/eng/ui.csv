@@ -49,6 +49,8 @@ ui_objective_cleared,Stage clear
 msg_stage_start,Safe room — open the door to set out
 msg_stage_find_shutter,Find the shutter panel at the end of the warehouse
 msg_stage_alarm,Alarm! Hold out until the shutter opens
+msg_net_host_left,Lost the connection to the host
+msg_net_peer_refused,Different game version: cannot join
 msg_car_alarm,Car alarm! They are coming
 msg_stage_shutter_open,The shutter is open! Run to the safehouse
 msg_stage_close_to_clear,Close the door to clear the stage
@@ -119,6 +121,11 @@ menu_multi_code,6-character room code
 menu_multi_join,Join
 menu_multi_public,Browse Public Rooms
 menu_multi_soon_hint,Multiplayer is coming soon. It opens once two-player sync and room-code joining are built.
+menu_multi_address,Host address (127.0.0.1 on the same PC)
+menu_multi_test_hint,Two-player test: [Create Room] in one window → enter the host address and [Join] in another (UDP 24680). Room codes come next.
+fmt_menu_multi_joining,Connecting to {0}...
+fmt_menu_multi_failed,Could not reach {0}. Check that the host created a room · the address · the firewall (UDP 24680).
+fmt_menu_multi_host_failed,Could not create the room. Check whether another game on this PC already uses UDP {0}.
 menu_settings_title,Settings
 settings_language,Language
 settings_sound,Sound

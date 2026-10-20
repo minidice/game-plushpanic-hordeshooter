@@ -223,7 +223,8 @@ void fragment() {
     public void SetPaused(bool paused)
     {
         Paused = paused;
-        GetTree().Paused = paused;
+        // Online the world keeps running for everyone; only the menu opens (multiplayer-sync-design.md 3장).
+        GetTree().Paused = paused && Stage.Role == NetRole.Offline;
     }
 
     // ---------- painters ----------

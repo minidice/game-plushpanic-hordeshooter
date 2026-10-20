@@ -43,6 +43,17 @@ public partial class MainMenu : Control
         Input.MouseMode = Input.MouseModeEnum.Visible;
         // The real game boots into this scene; test scenes add the menu under their own root and keep defaults.
         if (!GameSettings.Loaded && GetTree().CurrentScene == this) GameSettings.Load();
+        // Two-player test from the command line (--host / --join=address) skips the menu (multiplayer-sync-design.md 6장).
+        if (GetTree().CurrentScene == this)
+        {
+            if (NetLaunch.TryStartFromArgs(GetTree()))
+            {
+                SetProcess(false); // the menu was never built
+                return;
+            }
+            // Coming back from a match: close the link and play offline again (I-73).
+            NetLaunch.Reset(GetTree());
+        }
         Theme = UiTheme.Get();
         SetAnchorsPreset(LayoutPreset.FullRect);
         var speciesOrder = new[] { "goose", "duck", "raccoon", "redpanda" };
@@ -244,13 +255,34 @@ public partial class MainMenu : Control
         var page = new VBoxContainer();
         page.AddChild(Title("menu_multi_title"));
         page.AddChild(Hint(Loc.Text("menu_multi_rules")));
-        page.AddChild(BigButton("Multi_Host", Loc.Format("fmt_menu_coming_soon", Loc.Text("menu_multi_host")), disabled: true));
+        // Two-player test (multiplayer-sync-design.md 6장): host on this PC, join by address. Room codes come in step ③.
+        var status = new Label { Name = "Multi_Status", AutowrapMode = TextServer.AutowrapMode.WordSmart };
+        var host = BigButton("Multi_Host", Loc.Text("menu_multi_host"), disabled: false);
+        host.Pressed += () =>
+        {
+            if (!NetLaunch.Host(GetTree())) status.Text = Loc.Format("fmt_menu_multi_host_failed", NetLaunch.Port);
+        };
+        page.AddChild(host);
         var join = new HBoxContainer();
-        join.AddChild(new LineEdit { Name = "Multi_Code", PlaceholderText = Loc.Text("menu_multi_code"), Editable = false, MaxLength = 6, SizeFlagsHorizontal = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(0, 48) });
-        join.AddChild(new Button { Name = "Multi_Join", Text = Loc.Format("fmt_menu_coming_soon", Loc.Text("menu_multi_join")), Disabled = true, CustomMinimumSize = new Vector2(220, 48) });
+        var address = new LineEdit { Name = "Multi_Address", Text = "127.0.0.1", PlaceholderText = Loc.Text("menu_multi_address"), MaxLength = 64, SizeFlagsHorizontal = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(0, 48) };
+        join.AddChild(address);
+        var joinButton = new Button { Name = "Multi_Join", Text = Loc.Text("menu_multi_join"), CustomMinimumSize = new Vector2(220, 48) };
+        join.AddChild(joinButton);
         page.AddChild(join);
+        joinButton.Pressed += () =>
+        {
+            joinButton.Disabled = true;
+            status.Text = Loc.Format("fmt_menu_multi_joining", address.Text.Trim());
+            NetLaunch.Join(GetTree(), address.Text.Trim(), ok =>
+            {
+                if (ok || !IsInstanceValid(joinButton)) return;
+                joinButton.Disabled = false;
+                status.Text = Loc.Format("fmt_menu_multi_failed", address.Text.Trim());
+            });
+        };
+        page.AddChild(status);
         page.AddChild(BigButton("Multi_Public", Loc.Format("fmt_menu_coming_soon", Loc.Text("menu_multi_public")), disabled: true));
-        page.AddChild(Hint(Loc.Text("menu_multi_soon_hint")));
+        page.AddChild(Hint(Loc.Text("menu_multi_test_hint")));
         page.AddChild(new Control { SizeFlagsVertical = SizeFlags.ExpandFill });
         page.AddChild(BackButton(MenuPage.Multi));
         return page;

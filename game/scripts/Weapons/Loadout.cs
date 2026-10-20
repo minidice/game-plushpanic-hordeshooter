@@ -38,6 +38,36 @@ public sealed class Loadout
 
     public Loadout(WeaponDefinition startSecondary) => Secondary = new WeaponState(startSecondary);
 
+    /// <summary>
+    /// Client, own player: take the host's weapons, ammo and throwables. Returns true when a weapon changed
+    /// (the caller rebuilds the model in hand). The slot follows the host only when a pickup swapped a weapon.
+    /// </summary>
+    internal bool ApplyNet(WeaponDefinition secondary, int secMag, int secReserve, WeaponDefinition? primary, int priMag, int priReserve,
+        int slot, IReadOnlyList<(ThrowableDefinition def, int count)> throwables)
+    {
+        bool changed = false;
+        if (Secondary.Def.Id != secondary.Id) { Secondary = new WeaponState(secondary, secMag, secReserve); changed = true; }
+        else Secondary.SetAmmo(secMag, secReserve);
+        if (primary == null) { if (Primary != null) { Primary = null; changed = true; } }
+        else if (Primary == null || Primary.Def.Id != primary.Id) { Primary = new WeaponState(primary, priMag, priReserve); changed = true; }
+        else Primary.SetAmmo(priMag, priReserve);
+        if (changed) ActiveSlot = slot == 2 && Primary != null ? 2 : 1;
+        if (ActiveSlot == 2 && Primary == null) ActiveSlot = 1;
+        // Same kinds, counts and order (G throws the first): a cycle the host refused must not stick.
+        var mine = Throwables.Select(t => (t.def.Id, t.count)).ToList();
+        if (!mine.SequenceEqual(throwables.Select(t => (t.def.Id, t.count))))
+        {
+            _throwCounts.Clear();
+            _throwOrder.Clear();
+            foreach (var (def, count) in throwables.Reverse())
+            {
+                _throwCounts[def.Id] = count;
+                _throwOrder.Add(def);
+            }
+        }
+        return changed;
+    }
+
     public bool SelectSlot(int slot)
     {
         if (slot == ActiveSlot) return false;

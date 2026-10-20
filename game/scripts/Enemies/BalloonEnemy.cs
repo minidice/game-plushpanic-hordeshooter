@@ -51,6 +51,7 @@ public partial class BalloonEnemy : Enemy
         IsDead = true;
         Popped = true;
         Stage.OnEnemyDied(this);
+        Stage.RaiseEnemyKilled(this, Vector3.Up, 0);
         CollisionLayer = 0;
         CollisionMask = 0;
         Shape.SetDeferred(CollisionShape3D.PropertyName.Disabled, true);

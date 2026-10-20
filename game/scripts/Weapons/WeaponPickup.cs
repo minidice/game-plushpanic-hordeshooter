@@ -17,11 +17,13 @@ public partial class WeaponPickup : Interactable
     private Label3D _label = null!;
     private float _time;
 
-    public static WeaponPickup ForWeapon(Stage stage, Vector3 at, WeaponDefinition def, WeaponState? state = null)
+    /// <param name="netId">Client: the id the host gave this dropped weapon.</param>
+    public static WeaponPickup ForWeapon(Stage stage, Vector3 at, WeaponDefinition def, WeaponState? state = null, int netId = 0)
     {
-        var pickup = Create(stage, at, def.DisplayName, def.Slot == WeaponSlot.Secondary ? new Color("6fb6ff") : new Color("ffb347"));
+        var pickup = Create(stage, at, def.DisplayName, def.Slot == WeaponSlot.Secondary ? new Color("6fb6ff") : new Color("ffb347"), netId);
         pickup.Weapon = def;
         pickup.State = state;
+        stage.Net?.OnPickupSpawn(pickup);
         pickup.Prompt = Loc.Format("fmt_use_pickup_weapon", def.DisplayName, (int)def.Slot);
         var look = WeaponVisual.Build(def, null).Root;
         look.Position = new Vector3(0, 0, -def.Length * .45f);
@@ -40,12 +42,12 @@ public partial class WeaponPickup : Interactable
         return pickup;
     }
 
-    private static WeaponPickup Create(Stage stage, Vector3 at, string name, Color color)
+    private static WeaponPickup Create(Stage stage, Vector3 at, string name, Color color, int netId = 0)
     {
-        var pickup = new WeaponPickup { Name = "Pickup", Position = new Vector3(at.X, 0, at.Z), Radius = 1.5f };
-        pickup.OnUse = () => stage.PickUp(pickup);
+        var pickup = new WeaponPickup { Name = "Pickup", Position = new Vector3(at.X, 0, at.Z), Radius = 1.5f, NetId = netId };
+        pickup.OnUse = who => stage.PickUp(pickup, who ?? stage.Player);
         stage.AddChild(pickup);
-        stage.Interactables.Add(pickup);
+        stage.AddInteractable(pickup);
         var ringMat = Mat.Fade(new Color(color, .55f));
         Mat.Mesh(pickup, new TorusMesh { InnerRadius = .42f, OuterRadius = .5f, Rings = 24, RingSegments = 4 }, Vector3.Up * .03f, ringMat);
         pickup._display = new Node3D { Position = Vector3.Up * .35f };
