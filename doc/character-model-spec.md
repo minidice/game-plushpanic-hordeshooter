@@ -197,3 +197,9 @@ node prototypes/character-lab/tools/validate-game-roster.mjs
 실제 피해를 받으면 약 0.1초간 흰색 오버레이가 감쇠한다. 최고 불투명도는 0.72이며 기존 색과 좀비 오버레이를 복원한다. 동적으로 생성한 팔도 포함한다. 피해가 무효인 회피/무적 상태에서는 점멸하지 않는다.
 
 검사: `TailMeleeCheck`, `EnemyAttackCheck`, `HitFlashCheck`. 실제 렌더: `output/tails-rear-quarter.png`, `melee-pose-sequence.png`, `enemy-attack-sequence.png`, `hit-feedback-comparison.png`.
+
+## 9. 플레이어 장전 자세
+
+네 동물 모두 `CharacterReloadPose`의 공통 탄창식/개별 탄 삽입 모션을 쓴다. 오른손은 손잡이를 유지하고, 왼손은 기존 손 메시를 잠시 장전 접촉점으로 이동한다. 별도 팔을 덧붙이지 않는다. 총을 몸 앞쪽으로 옮겨 조끼와 부리를 피하고, 장전 종료·취소 뒤 원래 변환으로 복구한다. 체형 조절은 기존 Model 변환을 함께 따르며 피격 캡슐은 유지한다.
+
+현재 적용 무기·타이밍·중단 규칙·미구현 범위는 [무기 규격 6.1](weapon-spec.md#61-손총-장전-모션-2026-10-20)이 기준이다. 새 종/무기를 추가하면 `ReloadPoseCheck`의 종·무기 목록도 갱신한다. 정면 가까운 쿼터뷰에서 기본형/장비형의 손 왕복을 확인하고 실제 게임 거리에서도 총 기울기와 손 움직임이 읽히는지 확인한다. `CaptureReloadPose`의 M4·R870 네 종 비교 렌더를 재사용한다.

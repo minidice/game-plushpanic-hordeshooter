@@ -84,6 +84,7 @@ public partial class WeaponController : Node
         CancelMeleeSwing();
         AimingThrow = true;
         Current.Holster();
+        _player.Rig.ResetReloadPose();
         if (_visual != null) _visual.Visible = false;
         _preview = ThrowPreview.Create(Stage.Effects);
         ShowHeldThrowable();
@@ -138,6 +139,13 @@ public partial class WeaponController : Node
 
     public void Tick(float dt, bool moving, bool pressed, bool held, bool blocked)
     {
+        TickActions(dt,moving,pressed,held,blocked);
+        // Sample AFTER auto reload, shell insertion and trigger cancellation. Never advance a second timer.
+        _player.Rig.SetReloadPose(dt,blocked||AimingThrow||_player.IsDead||_player.IsStunned ? null : Current);
+    }
+
+    private void TickActions(float dt, bool moving, bool pressed, bool held, bool blocked)
+    {
         Kick = Mathf.MoveToward(Kick, 0, dt * 7);
         _flashTime -= dt;
         _flash.LightEnergy = _flashTime > 0 ? 4 : 0;
@@ -187,6 +195,7 @@ public partial class WeaponController : Node
 
     private void Fire(WeaponState state)
     {
+        _player.Rig.ResetReloadPose();
         // A queued burst can fire after input is released; lower its muzzle before using its transform.
         _player.Rig.SetLocomotionPose(0,0,true);
         var def = state.Def;

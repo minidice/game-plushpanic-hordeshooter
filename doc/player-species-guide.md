@@ -64,4 +64,4 @@
 | 구현 경로 | 정의·GLB·생성기·종별 런타임 처리 |
 | 검증 / 남은 제약 | 실행한 검사·캡처 위치·미검증 상태 |
 
-확인 경로: `CharacterSurfaceCheck`, `CustomizationToneCheck`, `ModularCustomization`, `WeaponGripCheck`, `TailMeleeCheck`, `HitFlashCheck`. 필요한 장면과 새 종 검사 항목을 선택하며 실제 렌더를 함께 확인한다. 이번 문서 정리에서는 게임 검사를 다시 실행하지 않았다.
+확인 경로: `CharacterSurfaceCheck`, `CustomizationToneCheck`, `ModularCustomization`, `WeaponGripCheck`, `ReloadPoseCheck`, `TailMeleeCheck`, `HitFlashCheck`. 필요한 장면과 새 종 검사 항목을 선택하며 실제 렌더를 함께 확인한다. 장전은 [무기 규격 6.1](weapon-spec.md#61-손총-장전-모션-2026-10-20)에 따라 `CaptureReloadPose`로 기본형·장비형을 비교한다. 최초 문서 정리에서는 게임 검사를 다시 실행하지 않았으며, 이후 장전 추가 검증은 I-55에 별도 기록한다.

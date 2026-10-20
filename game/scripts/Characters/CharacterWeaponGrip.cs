@@ -21,7 +21,9 @@ public partial class CharacterRig
     /// <summary>Replace static wings/paws with compact shapes that meet the equipped weapon's hand positions.</summary>
     public void BindWeaponGrip(WeaponVisual.Built built)
     {
+        ResetReloadPose();
         _heldWeapon=built;
+        _leftGripHome=built.LeftGrip?.Transform??Transform3D.Identity;
         _meleePoseTime=-1;
         _supportGrip=built.Definition.Dual||built.Definition.Category==WeaponCategory.Heavy;
         if(_supportGrip||built.Definition.Category==WeaponCategory.Melee)_runningCarry=0;
@@ -49,7 +51,7 @@ public partial class CharacterRig
         bool canRaise=_heldWeapon!=null&&!_supportGrip&&_heldWeapon.Definition.Category!=WeaponCategory.Melee;
         _aimHold=firing?.18f:Mathf.Max(0,_aimHold-dt);
         bool aiming=firing||_aimHold>0;
-        float target=canRaise&&movement>.25f&&!aiming?1:0;
+        float target=canRaise&&movement>.25f&&!aiming&&!ReloadPoseActive?1:0;
         _runningCarry=aiming?0:Mathf.MoveToward(_runningCarry,target,dt*7);
         ApplyCarryPose(_carryKick);UpdateWeaponGrip();
     }
@@ -64,6 +66,7 @@ public partial class CharacterRig
         at+=new Vector3(0,_runningCarry*.14f,-_runningCarry*.12f-kick*.065f);
         Weapon.Position=at;
         Weapon.Rotation=new Vector3(-_runningCarry*1.05f,0,-.06f);
+        ApplyReloadCarryPose();
     }
 
     public void UpdateWeaponGrip()
@@ -72,8 +75,9 @@ public partial class CharacterRig
         _gripArms.Visible=IsInstanceValid(_heldWeapon.Root)&&!_heldWeapon.Root.IsQueuedForDeletion()&&_heldWeapon.Root.IsVisibleInTree();
         if(!_gripArms.Visible)return;
         _gripMaterial!.AlbedoColor=HandColor;
+        ApplyReloadHand();
         Connect(_rightForearm!,_heldWeapon.RightGrip,1);
-        Connect(_leftForearm!,_supportGrip?_heldWeapon.LeftGrip:null,-1);
+        Connect(_leftForearm!,_supportGrip||ReloadPoseActive?_heldWeapon.LeftGrip:null,-1);
     }
 
     private void Connect(MeshInstance3D arm,Node3D? target,float side)
@@ -83,7 +87,7 @@ public partial class CharacterRig
         // Compact shoulder-to-wing shape; the spare wing rests or opens outward while running.
         var elbow=IsPlaceholder?new Vector3(side*Definition.ColliderRadius*.8f,Definition.ColliderHeight*.40f,.15f):new Vector3(side*.46f,1.00f,.13f);
         var hand=target!=null&&IsInstanceValid(target)?_gripArms!.ToLocal(target.GlobalPosition)
-            :new Vector3(side*(.51f+_runningCarry*.20f),.72f+_runningCarry*(.26f+.035f*Mathf.Sin(_clock)),.13f);
+            :SpareHandPosition(side);
         var direction=hand-elbow;float length=direction.Length();
         if(length<.001f){arm.Visible=false;return;}
         arm.Position=(elbow+hand)*.5f;
@@ -92,6 +96,8 @@ public partial class CharacterRig
         if(!Mathf.IsEqualApprox(capsule.Height,length+.18f))capsule.Height=length+.18f;
     }
 
+    private Vector3 SpareHandPosition(float side=-1) => new(side*(.51f+_runningCarry*.20f),.72f+_runningCarry*(.26f+.035f*Mathf.Sin(_clock)),.13f);
+
     // Measure the wrist joint at the rounded cap's center, where it overlaps the palm.
     public float GripConnectionError
     {
@@ -99,7 +105,7 @@ public partial class CharacterRig
         {
             if(_heldWeapon==null||_rightForearm==null)return float.PositiveInfinity;
             float error=WristPosition(_rightForearm).DistanceTo(_heldWeapon.RightGrip.GlobalPosition);
-            if(_supportGrip&&_heldWeapon.LeftGrip!=null&&_leftForearm!=null)
+            if((_supportGrip||ReloadPoseActive)&&_heldWeapon.LeftGrip!=null&&_leftForearm!=null)
                 error=Mathf.Max(error,WristPosition(_leftForearm).DistanceTo(_heldWeapon.LeftGrip.GlobalPosition));
             return error;
         }

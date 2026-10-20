@@ -210,6 +210,7 @@ public partial class CharacterRig : Node3D
 
     public void ResetPose()
     {
+        ResetReloadPose();
         ResetEnemyAttackPose();
         _meleePoseTime = -1;
         ResetTail();

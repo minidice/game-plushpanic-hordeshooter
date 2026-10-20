@@ -19,7 +19,7 @@
 
 | ID | 증상 | 원인 / 메모 | 상태 | 날짜 | 관련 |
 |---|---|---|---|---|---|
-| I-17 | 일부 단독 헤드리스 검사가 끝날 때 `ObjectDB instances were leaked at exit` 경고 | 정확한 잔존 객체/원인은 미확인. 최근 `TailMeleeCheck`·`HitFlashCheck` 로그에도 종료 경고가 남음. 기능 검사는 통과했지만, 이것만으로 런타임 자원 누수가 없다고 결론 내리지 않음. `--verbose`로 객체를 식별해 재검증 필요. 2026-10-20 메뉴 작업 중 `Integration` 4회 중 3회에서 "4 ObjectDB instances were leaked" 발생, `--verbose`로 객체 식별: **`AudioStreamWAV` 2개 + `AudioStreamPlaybackWAV` 2개**(참조 1), 고아 StringName `SFX`·`Ambience`. 종료 순간 아직 재생 중인 소리 2개가 오디오 서버에 남는 것으로 보임(추정: 합성음 스트림을 실행 단위로 공유하는 캐시 + 재생 중 종료). 소리가 끝나기 전에 끝나는지에 따라 나와서 간헐적. 메뉴 변경은 Integration 경로의 오디오를 바꾸지 않음(볼륨 dB 설정만 추가). 후보 해결: `QuitHygiene`에서 재생기 정지·합성 캐시 비우기 | 열림 | 2026-10-20 | `feature-checklist.md`, `../game/output/TailMeleeCheck-polish-final.log`, I-1·I-2와 구분 |
+| I-17 | 일부 단독 헤드리스 검사가 끝날 때 `ObjectDB instances were leaked at exit` 경고 | 정확한 잔존 객체/원인은 미확인. 최근 `TailMeleeCheck`·`HitFlashCheck` 로그에도 종료 경고가 남음. 기능 검사는 통과했지만, 이것만으로 런타임 자원 누수가 없다고 결론 내리지 않음. `--verbose`로 객체를 식별해 재검증 필요. 2026-10-20 메뉴 작업 중 `Integration` 4회 중 3회에서 "4 ObjectDB instances were leaked" 발생, `--verbose`로 객체 식별: **`AudioStreamWAV` 2개 + `AudioStreamPlaybackWAV` 2개**(참조 1), 고아 StringName `SFX`·`Ambience`. 종료 순간 아직 재생 중인 소리 2개가 오디오 서버에 남는 것으로 보임(추정: 합성음 스트림을 실행 단위로 공유하는 캐시 + 재생 중 종료). 소리가 끝나기 전에 끝나는지에 따라 나와서 간헐적. 메뉴 변경은 Integration 경로의 오디오를 바꾸지 않음(볼륨 dB 설정만 추가). 2026-10-20 장전 모션 검사에서도 종료 경고 재현: `ReloadPoseCheck --verbose`는 AudioStreamWAV 3개 + AudioStreamPlaybackWAV 3개, `Integration`은 2개 잔존 경고. 손/총 렌더 캡처는 종료 경고 없음. 후보 해결: `QuitHygiene`에서 재생기 정지·합성 캐시 비우기 | 열림 | 2026-10-20 | `feature-checklist.md`, `../game/output/TailMeleeCheck-polish-final.log`, I-1·I-2와 구분 |
 | I-18 | 기어다니는 적을 맞히면 피 튀는 효과가 머리 위 10cm쯤에 보일 수 있음 | I-14 수정 때 몸통 판정을 1.4m까지 올렸기 때문. 총알이 판정 윗부분에 맞음 | 열림 (보기만의 문제) | 2026-10-20 | I-14 |
 | I-19 | 설정 화면 없음 (언어, 넉백 줄이기, 볼륨) | 값은 코드에 준비됨: `Loc.Language`, `GameSettings.RecoilScale`. 화면만 없음. **2026-10-20 해결**: 메인 메뉴 설정 페이지(언어, 전체·효과음·배경음 볼륨, 사격 반동 밀림 %)와 `user://settings.cfg` 저장(T-19). 키 재설정은 아직 없음 | 해결 | 2026-10-20 | `MenuCheck`, `decisions.md` T-19 |
 | I-20 | 붙잡히면 F8 치트로만 빠져나올 수 있음(싱글) | 정식 규칙은 동료 구조. 동료 AI·멀티가 없어 치트를 기본으로 켜 둠. 멀티가 생기면 기본 끔. 2026-10-20 검토: AI 분대원 옵션(M-11)이 정해져, 분대원이 구조를 맡으면 싱글에서도 끌 수 있음 | 제약 | 2026-10-19 | `decisions.md` C-14 |
@@ -96,6 +96,7 @@
 | I-31 | 감염체 또는 동물 좀비에 팔이 두 쌍처럼 보임 | 전용 감염체 원래 팔이 Deform에 병합되어 보조 팔이 추가됨. 별도로 `Zombify`가 기존 동물 날개가 있어도 ZombieArm을 생성 | 적 5종 GLB의 소매·팔·손을 좌우 어깨 피벗으로 분리하고 원래 팔을 회전. `Zombify`는 원래 팔이 없는 쪽만 보조 팔 생성. 최적화에서 어깨 피벗을 보존하고 복합 ID 대신 원본 노드 이름 확인 | 2026-10-20 | `EnemyAttackCheck`: 원래 팔/중복 없음/동작/복원 및 동물 좀비 네 종, `CaptureEnemyFeedback` |
 | I-32 | 피격 점멸이 너무 불투명하거나 동적으로 생성한 팔에는 안 보임 | 최초 흰색 불투명도 1.0과 imported Model만 검색하는 범위 | 최고 불투명도 0.72로 0.1초 감쇠, Pose 전체 검사로 생성 팔/새 장비 포함. 공유 재질을 변경하지 않고 원래 오버레이 복원. 반복 피격·시체 재부모화 이후에도 복원 확인 | 2026-10-20 | `HitFlashCheck`: 다른 개체 영향 없음/좀비 색 복원/동적 팔/재타격; `CaptureEnemyFeedback` |
 | I-35 | 총이 가슴 앞에 떠 있고 달리기/사격 시 손이 제대로 잡지 않음 | 무기를 장착 위치에 두는 것만으로는 종별 몸과 총기 손잡이 사이 연결이 보장되지 않음 | 무기의 실제 grip 표식으로 팔을 연결하고 한손/양손·달리기·사격 자세 반영. 새 총기/외형 비율을 추가할 때 정적 위치뿐 아니라 파지 오차와 자세 전환 검사 | 2026-10-20 기록 (이전 작업 포함) | `WeaponGripCheck`, `CaptureWeaponGrip`, `ModularCustomization`; `../game/scripts/Characters/CharacterWeaponGrip.cs` |
+| I-55 | 장전 중에도 손과 총이 기본 자세로 남아 총을 만지는 동작이 없음 | 탄약 상태는 처리하지만 `WeaponState.ReloadFraction`을 파지/자세에 전달하지 않았음. 변경 전 실제 컨트롤러 검사에서 장전 중 총 위치 변화 없음으로 실패 확인 | 공통 탄창식/개별 탄 삽입식 절차적 자세 추가. 기존 좌손 메시를 원점 기준으로 이동, 우손 파지 유지. 상태 처리 후 진행률 전달, 실제 발사 전에 총구 복원, 교체·투척·사망 초기화. 새 종/무기는 접촉점·체형 양끝·장비·완료/중단을 함께 검사. 실제 탄창·탄 메시 교체 및 쌍권총·더블배럴·중화기 전용 모션은 미구현 | 2026-10-20 | `ReloadPoseCheck` 279, `WeaponGripCheck` 187, `CombatPacingCheck` 44, `TailMeleeCheck`(면/파지 반복 포함), `Integration` 147 통과. `CaptureReloadPose` 네 종 기본/장비·게임 크기 렌더. 빌드 경고 0/오류 0. 종료 오디오 경고는 I-17 별도 유지 |
 
 ## 3. 재발 방지 확인 경로
 
@@ -103,7 +104,7 @@
 
 | 변경 영역 | 함께 확인할 것 |
 |---|---|
-| 무기 수치·장전 | `CombatPacingCheck` + `Integration`; 잔탄/예비탄 보존, 빈 탄창/부분 장전, 사격·교체 중단, 더블배럴 예외. 수치는 `combat-pacing-research.md`와 일치시킴 |
+| 무기 수치·장전 | `CombatPacingCheck` + `Integration` + `ReloadPoseCheck`; 잔탄/예비탄 보존, 빈 탄창/부분 장전, 사격·교체 중단, 더블배럴 예외. 수치는 `combat-pacing-research.md`와 일치시킴. `CaptureReloadPose`로 네 종 기본/장비의 손 왕복·장전 시야 확인 |
 | 근접·일반 적 공격 | `TailMeleeCheck` + `EnemyAttackCheck`; 준비 중 피해 없음, 타격 1회, 벽·방향·높이·회피, 취소 후 지연 피해 없음. `CaptureTailMelee` / `CaptureEnemyFeedback`로 실제 손 동작 확인 |
 | 플레이어/적 모델·최적화 | `TailMeleeCheck` + `EnemyAttackCheck` + `ModularCustomization` + `WeaponGripCheck`; 네 종과 복제 좀비, 팔 피벗·꼬리·색·크기·손 연결. GLB 자체와 최신 종류별 summary를 비교하고 후면·측면 렌더 확인 |
 | 피격 재질 | `HitFlashCheck`; 피격 개체만 점멸, 원래 색·좀비 오버레이 복원, 생성 팔/교체 장비 포함, 무적·회피 무효 피해에 점멸 없음 |
