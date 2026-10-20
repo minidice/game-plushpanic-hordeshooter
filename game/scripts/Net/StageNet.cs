@@ -28,6 +28,8 @@ public partial class StageNet : Node
     public long BytesReceived { get; private set; }
     public int SnapshotsReceived { get; private set; }
     public bool Started { get; private set; }
+    /// <summary>The room is going back to the lobby: nothing more is sent, so the other side can leave quietly.</summary>
+    public bool Ending { get; set; }
     /// <summary>Host: the line that tells a friend where to join (also shown on the pause screen).</summary>
     public string HostInfo { get; private set; } = "";
     /// <summary>Client: events or survivor records it could not apply (each one is skipped, the rest still apply).</summary>
@@ -69,6 +71,8 @@ public partial class StageNet : Node
             foreach (var e in _stage.AllEnemies)
                 if (e.NetId == 0) { e.NetId = ++_nextEnemyId; _enemies[e.NetId] = e; }
             Started = true;
+            // Friends waiting in the room load the stage now that it can take them.
+            NetLaunch.Lobby?.HostLive();
         }
         else
         {
@@ -256,7 +260,7 @@ public partial class StageNet : Node
     {
         float dt = (float)delta;
         Clock += dt;
-        if (!Connected) return;
+        if (!Connected || Ending) return;
         if (Role == NetRole.Client) { ClientFrame(dt); return; }
         if (_readyPeers.Count == 0) { _batch.Take(); _newEnemies.Clear(); return; }
         FlushNewEnemies();

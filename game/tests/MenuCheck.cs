@@ -100,9 +100,32 @@ public partial class MenuCheck : Node
         Click("Menu_Multi");
         await Frames(2);
         Check(!Ui<Button>("Multi_Host").Disabled && !Ui<Button>("Multi_Join").Disabled && Ui<LineEdit>("Multi_Address").Editable &&
-              Ui<LineEdit>("Multi_Address").Text == "127.0.0.1" && Ui<Button>("Multi_Public").Disabled,
-            "multiplayer page: host and join by address work, public rooms still coming soon");
+              Ui<LineEdit>("Multi_Address").Text == "" && Ui<Button>("Multi_Public").Disabled,
+            "multiplayer page: host and join by address work (address empty, I-76), public rooms still coming soon");
+        Click("Multi_Join");
+        Check(Ui<Label>("Multi_Status").Text == Loc.Text("menu_multi_need_address") && !Ui<Button>("Multi_Join").Disabled,
+            "joining with no address asks for one instead of connecting");
         await Shot("menu-multi");
+
+        // Create Room opens the room page (menu-multiplayer-plan.md 2장); LobbyCheck covers two sides.
+        Click("Multi_Host");
+        await Frames(2);
+        if (NetLaunch.Lobby != null)
+        {
+            Check(_menu.Page == MenuPage.Lobby && PageVisible(MenuPage.Lobby), "Create Room opens the room page");
+            Check(Ui<Button>("Lobby_Start") is { Visible: true, Disabled: false } && !Ui<Button>("Lobby_Ready").Visible,
+                "the host alone sees [Start] enabled and no [Ready]");
+            Check(Ui<Button>("Lobby_Mode_scenario") is { Disabled: false, ButtonPressed: true } && Ui<Button>("Lobby_Mode_survival").Disabled,
+                "the host picks the mode in the room; locked modes stay locked");
+            Check(Ui<Container>("Lobby_Players").GetChildCount() == 1 && Ui<Label>("Lobby_Count").Text == Loc.Format("fmt_lobby_players", 1, NetLaunch.MaxPlayers),
+                "the player list shows the host");
+            await Shot("menu-lobby");
+            _menu._UnhandledInput(new InputEventAction { Action = "ui_cancel", Pressed = true });
+            await Frames(2);
+            Check(_menu.Page == MenuPage.Multi && NetLaunch.Lobby == null && GetTree().GetMultiplayer().MultiplayerPeer == null,
+                "Esc in the room leaves it and closes the link");
+        }
+        else GD.Print($"SKIP: room page (UDP {NetLaunch.Port} is in use on this PC)");
         Click("Back_Multi");
         await Frames(2);
 

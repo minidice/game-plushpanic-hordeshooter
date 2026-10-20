@@ -34,10 +34,14 @@ ui_hud_ammo_low,Low ammo [R]
 # Pause and result screens
 ui_pause_title,Paused
 ui_pause_keys,[Esc] Resume   [Enter] Restart   [M] Menu
+ui_pause_keys_host,[Esc] Resume   [Enter] Back to the room (everyone)   [M] Menu (closes the room)
+ui_pause_keys_client,[Esc] Resume   [M] Menu (leave the room) · the host restarts
 ui_end_clear,STAGE CLEAR
 ui_end_over,GAME OVER
 fmt_end_stats,Time {0:00}:{1:00}    Kills {2}    Special infected {3}    Shots {4}
 ui_end_keys,[Enter] Play again    [Esc] Menu
+ui_end_keys_host,[Enter] Back to the room (everyone)    [Esc] Menu (closes the room)
+ui_end_keys_client,Waiting for the host to go back to the room    [Esc] Menu (leave the room)
 # Objectives (top left of the HUD)
 ui_objective_leave_saferoom,Open the safe room door  [E]
 ui_objective_reach_shutter,Reach the shutter panel at the end of the warehouse  [E]
@@ -52,6 +56,7 @@ msg_stage_alarm,Alarm! Hold out until the shutter opens
 msg_net_host_left,Lost the connection to the host
 fmt_net_hosting,Room open — join with 127.0.0.1 on this PC · {0} from another PC on the same router (UDP {1})
 msg_net_peer_refused,Different game version: cannot join
+msg_net_wait_host_restart,The host restarts the match
 msg_car_alarm,Car alarm! They are coming
 msg_stage_shutter_open,The shutter is open! Run to the safehouse
 msg_stage_close_to_clear,Close the door to clear the stage
@@ -122,11 +127,33 @@ menu_multi_code,6-character room code
 menu_multi_join,Join
 menu_multi_public,Browse Public Rooms
 menu_multi_soon_hint,Multiplayer is coming soon. It opens once two-player sync and room-code joining are built.
-menu_multi_address,Host address (127.0.0.1 on the same PC)
+menu_multi_address,Host address (the host's 192.168.x.x · 127.0.0.1 on the same PC)
 menu_multi_test_hint,Two-player test: [Create Room] in one window → enter the host address and [Join] in another (UDP 24680). Room codes come next.
 fmt_menu_multi_joining,Connecting to {0}...
 fmt_menu_multi_failed,Could not reach {0}. Check that the host created a room · the address · the firewall (UDP 24680).
 fmt_menu_multi_host_failed,Could not create the room. Check whether another game on this PC already uses UDP {0}.
+menu_multi_need_address,Enter the host address: the 192.168.x.x shown on the host's room screen.
+menu_multi_loopback_hint,An address starting with 127. is always this PC. To join another PC use the 192.168.x.x shown on the host's screen.
+menu_lobby_title,Room
+fmt_lobby_joined,In {0}'s room
+fmt_lobby_players,Players {0}/{1}
+lobby_role_host,Host
+lobby_role_member,Member
+lobby_me,(you)
+lobby_state_host,Host
+lobby_state_ready,Ready
+lobby_state_waiting,Not ready
+menu_lobby_ready,Ready
+menu_lobby_unready,Ready — press again to cancel
+menu_lobby_start,Start
+menu_lobby_leave,Leave Room
+lobby_loading,Loading the game...
+lobby_host_alone,Waiting for members. You can also start alone.
+lobby_all_ready,Everyone is ready. Press [Start].
+fmt_lobby_waiting_ready,Ready {0}/{1} — start opens once every member is ready.
+lobby_connecting,Waiting for the host to answer...
+lobby_wait_host,Waiting for the host to start.
+lobby_press_ready,Press [Ready]. A new mode from the host clears it.
 menu_settings_title,Settings
 settings_language,Language
 settings_sound,Sound

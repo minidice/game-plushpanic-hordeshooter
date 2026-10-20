@@ -5,11 +5,11 @@ using System.Linq;
 
 namespace HordeShooter;
 
-public enum MenuPage { Home, Customize, Single, Multi, Settings }
+public enum MenuPage { Home, Customize, Single, Multi, Settings, Lobby }
 
 /// <summary>
-/// Main menu (doc/menu-multiplayer-plan.md 1장): home → customize / single / multi / settings.
-/// The character preview stays on the left for every page; only the right-hand page changes.
+/// Main menu (doc/menu-multiplayer-plan.md 1장): home → customize / single / multi / settings, and the room (2장)
+/// after creating or joining one. The character preview stays on the left for every page; only the right-hand page changes.
 /// </summary>
 public partial class MainMenu : Control
 {
@@ -30,6 +30,13 @@ public partial class MainMenu : Control
     private CheckButton _autoRotate = null!;
     private bool _previewGear = true, _previewWeapon = true;
     private bool _starting;
+    // Multiplayer: join by address, then the room.
+    private Label _multiStatus = null!, _lobbyInfo = null!, _lobbyCount = null!, _lobbyModeHint = null!, _lobbyStatus = null!;
+    private LineEdit _address = null!;
+    private Button _joinButton = null!, _lobbyReady = null!, _lobbyStart = null!;
+    private VBoxContainer _lobbyPlayers = null!;
+    private readonly Dictionary<GameMode, Button> _lobbyModes = new();
+    private NetLobby? _lobby;
 
     public IReadOnlyList<CharacterDefinition> Characters => _characters;
     public CharacterDefinition Selected => _characters[_index];
@@ -43,16 +50,21 @@ public partial class MainMenu : Control
         Input.MouseMode = Input.MouseModeEnum.Visible;
         // The real game boots into this scene; test scenes add the menu under their own root and keep defaults.
         if (!GameSettings.Loaded && GetTree().CurrentScene == this) GameSettings.Load();
-        // Two-player test from the command line (--host / --join=address) skips the menu (multiplayer-sync-design.md 6장).
+        // Two-player test from the command line (multiplayer-sync-design.md 6장): --host skips the menu and starts at
+        // once, --join=address joins that room from the multiplayer page.
+        string? join = null;
+        bool backToRoom = false;
         if (GetTree().CurrentScene == this)
         {
-            if (NetLaunch.TryStartFromArgs(GetTree()))
+            if (NetLaunch.TryStartFromArgs(GetTree(), out join))
             {
                 SetProcess(false); // the menu was never built
                 return;
             }
-            // Coming back from a match: close the link and play offline again (I-73).
-            NetLaunch.Reset(GetTree());
+            // The host took the room back to the lobby (NetLobby.ReturnToLobby): stay connected and open the room.
+            // Any other way back from a match closes the link and plays offline again (I-73).
+            backToRoom = NetLaunch.Lobby is { InMatch: false } && GodotObject.IsInstanceValid(NetLaunch.Lobby);
+            if (!backToRoom) NetLaunch.Reset(GetTree());
         }
         Theme = UiTheme.Get();
         SetAnchorsPreset(LayoutPreset.FullRect);
@@ -60,7 +72,9 @@ public partial class MainMenu : Control
         _characters = CharacterCatalog.LoadAll(CharacterCatalog.PlayerDir)
             .Where(c => !c.Id.StartsWith("test_"))
             .OrderBy(c => { int order = Array.IndexOf(speciesOrder, c.Id); return order < 0 ? int.MaxValue : order; }).ToList();
-        Build(MenuPage.Home);
+        if (backToRoom) AttachLobby();
+        Build(backToRoom ? MenuPage.Lobby : join != null ? MenuPage.Multi : MenuPage.Home);
+        if (join != null) JoinRoom(join);
     }
 
     private void Build(MenuPage page)
@@ -99,6 +113,7 @@ public partial class MainMenu : Control
         AddPage(right, MenuPage.Single, BuildSingle());
         AddPage(right, MenuPage.Multi, BuildMulti());
         AddPage(right, MenuPage.Settings, BuildSettings());
+        AddPage(right, MenuPage.Lobby, BuildLobby());
         column.AddChild(UiTheme.Label(Hud.ControlsText, 14, UiTheme.Muted));
 
         int saved = _characters.FindIndex(c => c.Id == GameSession.SelectedCharacterId);
@@ -123,6 +138,7 @@ public partial class MainMenu : Control
         foreach (var (key, control) in _pages) control.Visible = key == page;
         _previewTools.Visible = page == MenuPage.Customize;
         _description.Visible = page != MenuPage.Customize;
+        if (page == MenuPage.Lobby) RefreshLobby();
         if (page == MenuPage.Single && _characters.Count > 0) _singleCharacter.Text = Loc.Format("fmt_menu_single_character", Loc.Text(Selected.DisplayName));
         // Enter presses the focused button, so each page focuses the action Enter should take.
         var focus = page switch
@@ -130,6 +146,7 @@ public partial class MainMenu : Control
             MenuPage.Customize when _buttons.Count > 0 => _buttons[_index],
             MenuPage.Home => _pages[page].FindChild("Menu_Single", true, false) as Button,
             MenuPage.Single => _pages[page].FindChild("StartGame", true, false) as Button,
+            MenuPage.Lobby => _lobby?.Role == NetRole.Host ? _lobbyStart : _lobbyReady,
             _ => _pages[page].FindChildren("*", "Button", true, false).OfType<Button>().FirstOrDefault(b => !b.Disabled),
         };
         focus?.CallDeferred(Control.MethodName.GrabFocus);
@@ -256,37 +273,198 @@ public partial class MainMenu : Control
         page.AddChild(Title("menu_multi_title"));
         page.AddChild(Hint(Loc.Text("menu_multi_rules")));
         // Two-player test (multiplayer-sync-design.md 6장): host on this PC, join by address. Room codes come in step ③.
-        var status = new Label { Name = "Multi_Status", AutowrapMode = TextServer.AutowrapMode.WordSmart };
+        _multiStatus = new Label { Name = "Multi_Status", AutowrapMode = TextServer.AutowrapMode.WordSmart };
         var host = BigButton("Multi_Host", Loc.Text("menu_multi_host"), disabled: false);
         host.Pressed += () =>
         {
-            if (!NetLaunch.Host(GetTree())) status.Text = Loc.Format("fmt_menu_multi_host_failed", NetLaunch.Port);
+            _sfx.Play("ui_click");
+            if (!NetLaunch.Host(GetTree())) { _multiStatus.Text = Loc.Format("fmt_menu_multi_host_failed", NetLaunch.Port); return; }
+            AttachLobby();
+            ShowPage(MenuPage.Lobby);
         };
         page.AddChild(host);
         var join = new HBoxContainer();
-        var address = new LineEdit { Name = "Multi_Address", Text = "127.0.0.1", PlaceholderText = Loc.Text("menu_multi_address"), MaxLength = 64, SizeFlagsHorizontal = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(0, 48) };
-        join.AddChild(address);
-        var joinButton = new Button { Name = "Multi_Join", Text = Loc.Text("menu_multi_join"), CustomMinimumSize = new Vector2(220, 48) };
-        join.AddChild(joinButton);
+        // Empty until a first join: a ready-made 127.0.0.1 invited typing the host's last digits after it (I-76).
+        _address = new LineEdit { Name = "Multi_Address", Text = NetLaunch.LastAddress, PlaceholderText = Loc.Text("menu_multi_address"), MaxLength = 64, SizeFlagsHorizontal = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(0, 48) };
+        _address.TextSubmitted += JoinRoom;
+        join.AddChild(_address);
+        _joinButton = new Button { Name = "Multi_Join", Text = Loc.Text("menu_multi_join"), CustomMinimumSize = new Vector2(220, 48) };
+        _joinButton.Pressed += () => JoinRoom(_address.Text);
+        join.AddChild(_joinButton);
         page.AddChild(join);
-        joinButton.Pressed += () =>
-        {
-            joinButton.Disabled = true;
-            status.Text = Loc.Format("fmt_menu_multi_joining", address.Text.Trim());
-            NetLaunch.Join(GetTree(), address.Text.Trim(), ok =>
-            {
-                if (ok || !IsInstanceValid(joinButton)) return;
-                joinButton.Disabled = false;
-                status.Text = Loc.Format("fmt_menu_multi_failed", address.Text.Trim());
-            });
-        };
-        page.AddChild(status);
+        page.AddChild(_multiStatus);
         page.AddChild(BigButton("Multi_Public", Loc.Format("fmt_menu_coming_soon", Loc.Text("menu_multi_public")), disabled: true));
         page.AddChild(Hint(Loc.Text("menu_multi_test_hint")));
         page.AddChild(new Control { SizeFlagsVertical = SizeFlags.ExpandFill });
         page.AddChild(BackButton(MenuPage.Multi));
         return page;
     }
+
+    public void JoinRoom(string address)
+    {
+        address = address.Trim();
+        if (address.Length == 0) { _multiStatus.Text = Loc.Text("menu_multi_need_address"); return; }
+        _address.Text = address;
+        _joinButton.Disabled = true;
+        _multiStatus.Text = Loc.Format("fmt_menu_multi_joining", address);
+        NetLaunch.Join(GetTree(), address, ok =>
+        {
+            if (!IsInstanceValid(this) || !IsInsideTree()) return;
+            GameSettings.Save(); // remembers the address for next time
+            if (ok) { AttachLobby(); ShowPage(MenuPage.Lobby); return; }
+            _joinButton.Disabled = false;
+            _multiStatus.Text = Loc.Format("fmt_menu_multi_failed", address);
+            if (NetLaunch.IsLoopback(address)) _multiStatus.Text += "\n" + Loc.Text("menu_multi_loopback_hint");
+        });
+    }
+
+    // ── Room (menu-multiplayer-plan.md 2장) ────────────────────────────────
+
+    private VBoxContainer BuildLobby()
+    {
+        var page = new VBoxContainer();
+        page.AddChild(Title("menu_lobby_title"));
+        _lobbyInfo = Hint("");
+        _lobbyInfo.Name = "Lobby_Info";
+        page.AddChild(_lobbyInfo);
+
+        // Only the host picks; everyone sees the choice, and a new one clears everyone's ready.
+        page.AddChild(Section("menu_mode_label"));
+        var modes = new HBoxContainer();
+        var group = new ButtonGroup();
+        _lobbyModes.Clear();
+        foreach (var mode in Enum.GetValues<GameMode>())
+        {
+            string id = mode.ToString().ToLowerInvariant();
+            bool playable = GameSession.PlayableModes.Contains(mode);
+            var button = new Button
+            {
+                Name = "Lobby_Mode_" + id, ToggleMode = true, ButtonGroup = group, SizeFlagsHorizontal = SizeFlags.ExpandFill,
+                CustomMinimumSize = new Vector2(0, 44), TooltipText = Loc.Text("mode_" + id + "_desc"),
+                Text = playable ? Loc.Text("mode_" + id) : Loc.Format("fmt_menu_coming_soon", Loc.Text("mode_" + id)),
+            };
+            button.Pressed += () => { _sfx.Play("ui_click"); _lobby?.SetMode(mode); };
+            modes.AddChild(button);
+            _lobbyModes[mode] = button;
+        }
+        page.AddChild(modes);
+        _lobbyModeHint = Hint("");
+        page.AddChild(_lobbyModeHint);
+
+        _lobbyCount = UiTheme.Label("", 17, UiTheme.Accent);
+        _lobbyCount.Name = "Lobby_Count";
+        page.AddChild(_lobbyCount);
+        _lobbyPlayers = new VBoxContainer { Name = "Lobby_Players" };
+        _lobbyPlayers.AddThemeConstantOverride("separation", 6);
+        page.AddChild(_lobbyPlayers);
+
+        page.AddChild(new Control { SizeFlagsVertical = SizeFlags.ExpandFill });
+        _lobbyStatus = Hint("");
+        _lobbyStatus.Name = "Lobby_Status";
+        page.AddChild(_lobbyStatus);
+        _lobbyReady = new Button { Name = "Lobby_Ready", ToggleMode = true, CustomMinimumSize = new Vector2(0, 50) };
+        _lobbyReady.AddThemeFontSizeOverride("font_size", 22);
+        _lobbyReady.Toggled += on => { _sfx.Play("ui_click"); _lobby?.SetReady(on); };
+        page.AddChild(_lobbyReady);
+        _lobbyStart = new Button { Name = "Lobby_Start", Text = Loc.Text("menu_lobby_start"), CustomMinimumSize = new Vector2(0, 50) };
+        _lobbyStart.AddThemeFontSizeOverride("font_size", 24);
+        _lobbyStart.Pressed += () => { _sfx.Play("ui_click"); _lobby?.Start(); };
+        page.AddChild(_lobbyStart);
+        var leave = new Button { Name = "Lobby_Leave", Text = Loc.Text("menu_lobby_leave"), CustomMinimumSize = new Vector2(0, 40) };
+        leave.Pressed += LeaveLobby;
+        page.AddChild(leave);
+        return page;
+    }
+
+    private void AttachLobby()
+    {
+        DetachLobby();
+        _lobby = NetLaunch.Lobby;
+        if (_lobby == null) return;
+        _lobby.Changed += RefreshLobby;
+        _lobby.Closed += OnLobbyClosed;
+    }
+
+    private void DetachLobby()
+    {
+        if (_lobby != null && IsInstanceValid(_lobby))
+        {
+            _lobby.Changed -= RefreshLobby;
+            _lobby.Closed -= OnLobbyClosed;
+        }
+        _lobby = null;
+    }
+
+    public void RefreshLobby()
+    {
+        if (_lobby == null || !IsInstanceValid(_lobby)) return;
+        bool host = _lobby.Role == NetRole.Host;
+        var lan = NetLaunch.LanAddresses();
+        _lobbyInfo.Text = host
+            ? Loc.Format("fmt_net_hosting", lan.Length > 0 ? string.Join(" / ", lan) : "127.0.0.1", NetLaunch.Port)
+            : Loc.Format("fmt_lobby_joined", NetLaunch.LastAddress);
+        foreach (var (mode, button) in _lobbyModes)
+        {
+            button.SetPressedNoSignal(mode == _lobby.Mode);
+            button.Disabled = !host || _lobby.InMatch || !GameSession.PlayableModes.Contains(mode);
+        }
+        _lobbyModeHint.Text = Loc.Text("mode_" + _lobby.Mode.ToString().ToLowerInvariant() + "_desc");
+
+        _lobbyCount.Text = Loc.Format("fmt_lobby_players", _lobby.Members.Count, NetLaunch.MaxPlayers);
+        foreach (var child in _lobbyPlayers.GetChildren()) { _lobbyPlayers.RemoveChild(child); child.QueueFree(); }
+        foreach (var member in _lobby.Members)
+        {
+            bool isHost = member.Peer == NetLobby.HostPeer;
+            var row = new HBoxContainer { Name = "Lobby_Player_" + member.Peer };
+            var character = _characters.FirstOrDefault(c => c.Id == member.Character);
+            string who = Loc.Text(isHost ? "lobby_role_host" : "lobby_role_member") + " · " + (character != null ? Loc.Text(character.DisplayName) : member.Character);
+            if (member.Peer == _lobby.Me) who += " " + Loc.Text("lobby_me");
+            var name = UiTheme.Label(who, 18);
+            name.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            row.AddChild(name);
+            string state = isHost ? "lobby_state_host" : member.Ready ? "lobby_state_ready" : "lobby_state_waiting";
+            row.AddChild(UiTheme.Label(Loc.Text(state), 18, member.Ready ? UiTheme.Accent : UiTheme.Muted));
+            _lobbyPlayers.AddChild(row);
+        }
+
+        var mine = _lobby.Mine;
+        _lobbyReady.Visible = !host;
+        _lobbyReady.Disabled = !_lobby.Joined || _lobby.InMatch;
+        _lobbyReady.SetPressedNoSignal(mine?.Ready ?? false);
+        _lobbyReady.Text = Loc.Text(mine?.Ready == true ? "menu_lobby_unready" : "menu_lobby_ready");
+        _lobbyStart.Visible = host;
+        _lobbyStart.Disabled = !_lobby.CanStart;
+        int others = _lobby.Members.Count(m => m.Peer != NetLobby.HostPeer);
+        int ready = _lobby.Members.Count(m => m.Peer != NetLobby.HostPeer && m.Ready);
+        _lobbyStatus.Text = _lobby.InMatch ? Loc.Text("lobby_loading")
+            : host && others == 0 ? Loc.Text("lobby_host_alone")
+            : host && ready == others ? Loc.Text("lobby_all_ready")
+            : host ? Loc.Format("fmt_lobby_waiting_ready", ready, others)
+            : !_lobby.Joined ? Loc.Text("lobby_connecting")
+            : mine?.Ready == true ? Loc.Text("lobby_wait_host")
+            : Loc.Text("lobby_press_ready");
+    }
+
+    private void LeaveLobby()
+    {
+        _sfx.Play("ui_click");
+        DetachLobby();
+        NetLaunch.Reset(GetTree());
+        _multiStatus.Text = "";
+        _joinButton.Disabled = false;
+        ShowPage(MenuPage.Multi);
+    }
+
+    /// <summary>The host closed the room or refused us. Deferred: this runs inside the link's own callback.</summary>
+    private void OnLobbyClosed(string reason) => Callable.From(() =>
+    {
+        if (!IsInstanceValid(this) || !IsInsideTree()) return;
+        DetachLobby();
+        NetLaunch.Reset(GetTree());
+        _joinButton.Disabled = false;
+        ShowPage(MenuPage.Multi);
+        _multiStatus.Text = Loc.Text(reason);
+    }).CallDeferred();
 
     private VBoxContainer BuildSettings()
     {
@@ -514,13 +692,16 @@ public partial class MainMenu : Control
 
     public override void _UnhandledInput(InputEvent e)
     {
-        if (e.IsActionPressed("ui_cancel") && Page != MenuPage.Home) Open(MenuPage.Home);
+        if (e.IsActionPressed("ui_cancel") && Page == MenuPage.Lobby) LeaveLobby();
+        else if (e.IsActionPressed("ui_cancel") && Page != MenuPage.Home) Open(MenuPage.Home);
         else if (e.IsActionPressed(GameInput.Confirm) && Page == MenuPage.Home) Open(MenuPage.Single);
         else if (e.IsActionPressed(GameInput.Confirm) && Page == MenuPage.Single) StartGame();
         else if (Page != MenuPage.Customize) return;
         else if (e.IsActionPressed(GameInput.MoveRight) || e.IsActionPressed(GameInput.MoveDown) || e.IsActionPressed("ui_right")) Select(_index + 1);
         else if (e.IsActionPressed(GameInput.MoveLeft) || e.IsActionPressed(GameInput.MoveUp) || e.IsActionPressed("ui_left")) Select(_index - 1);
     }
+
+    public override void _ExitTree() => DetachLobby(); // the room outlives the menu (it goes on into the match)
 
     public override void _Notification(int what)
     {

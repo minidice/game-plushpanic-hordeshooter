@@ -79,7 +79,7 @@ void fragment() {
         pauseBox.AddChild(pauseTitle);
         // A host can read the join address again here (multiplayer-sync-design.md 10장).
         var hostInfo = Stage.Net is { HostInfo: { Length: > 0 } info } ? info + "\n\n" : "";
-        var pauseBody = UiTheme.Label(hostInfo + Loc.Text("ui_pause_keys") + "\n\n" + ControlsText, 18);
+        var pauseBody = UiTheme.Label(hostInfo + Loc.Text(OnlineKey("ui_pause_keys")) + "\n\n" + ControlsText, 18);
         pauseBody.HorizontalAlignment = HorizontalAlignment.Center;
         pauseBox.AddChild(pauseBody);
     }
@@ -193,7 +193,7 @@ void fragment() {
         _endBody.Text =
             $"{Loc.Text(player.Definition.DisplayName)}\n" +
             Loc.Format("fmt_end_stats", t / 60, t % 60, stage.Kills, stage.SpecialKills, player.ShotsFired) + "\n\n" +
-            Loc.Text("ui_end_keys");
+            Loc.Text(OnlineKey("ui_end_keys"));
     }
 
     public override void _UnhandledInput(InputEvent e)
@@ -215,6 +215,14 @@ void fragment() {
         else if (Paused && e is InputEventKey { Pressed: true, PhysicalKeycode: Key.M })
             GoMenu();
     }
+
+    /// <summary>Online, Enter means "back to the room" for the host and nothing for a client: their own key hints.</summary>
+    private string OnlineKey(string key) => Stage.Role switch
+    {
+        NetRole.Host => key + "_host",
+        NetRole.Client => key + "_client",
+        _ => key,
+    };
 
     private void GoMenu()
     {

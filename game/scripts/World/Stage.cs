@@ -896,11 +896,19 @@ public partial class Stage : Node3D
         _ => Loc.Text("ui_objective_cleared"),
     };
 
-    /// <summary>Offline only: in a match both PCs would have to restart together, so it goes back to the menu (I-73).</summary>
+    /// <summary>
+    /// Offline: reload the stage. In a match both PCs have to restart together, so the host takes the whole room back to
+    /// the lobby (still connected) and a client waits for that (menu-multiplayer-plan.md 2장).
+    /// </summary>
     public void Restart()
     {
-        if (Role != NetRole.Offline) { BackToMenu(); return; }
-        GetTree().ReloadCurrentScene();
+        switch (Role)
+        {
+            case NetRole.Offline: GetTree().ReloadCurrentScene(); break;
+            case NetRole.Host when NetLaunch.Lobby is { InMatch: true } lobby: lobby.ReturnToLobby(); break;
+            case NetRole.Client: ShowNotice(Loc.Text("msg_net_wait_host_restart"), 3); break;
+            default: BackToMenu(); break;
+        }
     }
 
     public void BackToMenu() => GetTree().ChangeSceneToFile("res://scenes/Menu.tscn");

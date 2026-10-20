@@ -4,9 +4,11 @@ using System.Linq;
 namespace HordeShooter;
 
 /// <summary>
-/// Starts a two-player match (doc/multiplayer-sync-design.md 6장): the menu's "Create Room" / "Join", or the command line
-///   Godot --path . -- --host            → listens on <see cref="Port"/> and starts Stage 1 as the host
-///   Godot --path . -- --join=127.0.0.1  → connects, then starts Stage 1 as a client
+/// Opens and closes the link for a match (doc/multiplayer-sync-design.md 6장, menu-multiplayer-plan.md 2장).
+/// The menu's "Create Room" / "Join" open a <see cref="NetLobby"/>; the host starts the match from there.
+/// The command line skips the lobby for quick tests:
+///   Godot --path . -- --host            → listens on <see cref="Port"/> and starts Stage 1 at once
+///   Godot --path . -- --join=127.0.0.1  → the menu joins that room (straight into a running match)
 /// The stage reads <see cref="Pending"/> when it is the current scene. Back at the menu everything is reset (I-73).
 /// </summary>
 public static class NetLaunch
@@ -14,28 +16,49 @@ public static class NetLaunch
     public const int Port = 24680;
     /// <summary>Two-player MVP: the host takes one client.</summary>
     public const int MaxClients = 1;
+    public static int MaxPlayers => MaxClients + 1;
     public static NetRole Pending { get; private set; } = NetRole.Offline;
+    /// <summary>The open room on this PC (null when playing offline).</summary>
+    public static NetLobby? Lobby { get; private set; }
+    /// <summary>The address joined last (saved with the settings and shown again in the menu).</summary>
+    public static string LastAddress { get; set; } = "";
     private static bool _argsUsed;
     private static System.Action? _cancelJoin;
 
-    /// <summary>Called by the main menu when it boots; true when it took over. Command-line arguments are used once.</summary>
-    public static bool TryStartFromArgs(SceneTree tree)
+    /// <summary>
+    /// Called by the main menu when it boots; arguments are used once. True for --host (the menu is skipped).
+    /// For --join the menu still builds and joins with <paramref name="join"/>.
+    /// </summary>
+    public static bool TryStartFromArgs(SceneTree tree, out string? join)
     {
+        join = null;
         if (_argsUsed) return false;
         _argsUsed = true;
         foreach (var arg in OS.GetCmdlineUserArgs())
         {
-            if (arg == "--host") return Host(tree);
-            if (arg.StartsWith("--join")) { Join(tree, arg.Contains('=') ? arg[(arg.IndexOf('=') + 1)..] : "127.0.0.1"); return true; }
+            if (arg == "--host")
+            {
+                // Deferred: the menu calls this from its own _Ready, while the root is still adding it.
+                Callable.From(() => { if (Host(tree)) Lobby!.Start(); }).CallDeferred();
+                return true;
+            }
+            if (arg.StartsWith("--join")) join = arg.Contains('=') ? arg[(arg.IndexOf('=') + 1)..] : "127.0.0.1";
         }
         return false;
     }
 
-    /// <summary>Back to single player: close the link, forget the role and any join in progress.</summary>
+    /// <summary>Back to single player: close the link and the room, forget the role and any join in progress.</summary>
     public static void Reset(SceneTree tree)
     {
         _cancelJoin?.Invoke();
         _cancelJoin = null;
+        if (Lobby != null && GodotObject.IsInstanceValid(Lobby))
+        {
+            // Out of the tree now, so a new room can take the same name (and RPC path) this frame.
+            Lobby.GetParent()?.RemoveChild(Lobby);
+            Lobby.QueueFree();
+        }
+        Lobby = null;
         var api = tree.GetMultiplayer();
         if (api.MultiplayerPeer is ENetMultiplayerPeer peer) peer.Close();
         api.MultiplayerPeer = null;
@@ -51,7 +74,10 @@ public static class NetLaunch
                     (a.StartsWith("172.") && int.TryParse(a.Split('.')[1], out int b) && b is >= 16 and <= 31)))
         .Distinct().ToArray();
 
-    /// <summary>False when the port is taken (another game already hosts on this PC).</summary>
+    /// <summary>127.x.x.x always means this PC: typed for another PC it can never connect (I-76).</summary>
+    public static bool IsLoopback(string address) => address.StartsWith("127.") || address == "localhost";
+
+    /// <summary>Opens the room. False when the port is taken (another game already hosts on this PC).</summary>
     public static bool Host(SceneTree tree)
     {
         Reset(tree);
@@ -61,15 +87,15 @@ public static class NetLaunch
         tree.GetMultiplayer().MultiplayerPeer = peer;
         Pending = NetRole.Host;
         GD.Print($"[net] hosting on UDP {Port}");
-        // Deferred: the menu may call this from its own _Ready, while the tree is still adding it.
-        Callable.From(() => tree.ChangeSceneToFile("res://scenes/Stage1.tscn")).CallDeferred();
+        OpenLobby(tree, NetRole.Host);
         return true;
     }
 
-    /// <param name="done">Called once: true when connected, false when the host could not be reached.</param>
+    /// <param name="done">Called once: true when connected (the room is open), false when the host could not be reached.</param>
     public static void Join(SceneTree tree, string address, System.Action<bool>? done = null)
     {
         Reset(tree);
+        LastAddress = address;
         var peer = new ENetMultiplayerPeer();
         var error = peer.CreateClient(address, Port);
         if (error != Error.Ok) { GD.PushWarning($"[net] could not connect to {address}: {error}"); done?.Invoke(false); return; }
@@ -83,9 +109,9 @@ public static class NetLaunch
         {
             Detach();
             _cancelJoin = null;
-            done?.Invoke(true);
             Pending = NetRole.Client;
-            Callable.From(() => tree.ChangeSceneToFile("res://scenes/Stage1.tscn")).CallDeferred();
+            OpenLobby(tree, NetRole.Client);
+            done?.Invoke(true);
         };
         fail = () =>
         {
@@ -98,5 +124,11 @@ public static class NetLaunch
         api.ConnectedToServer += ok;
         api.ConnectionFailed += fail;
         _cancelJoin = Detach;
+    }
+
+    private static void OpenLobby(SceneTree tree, NetRole role)
+    {
+        Lobby = NetLobby.Create(role, GameSession.SelectedCharacterId);
+        tree.Root.AddChild(Lobby);
     }
 }

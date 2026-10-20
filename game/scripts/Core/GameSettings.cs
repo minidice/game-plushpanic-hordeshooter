@@ -46,6 +46,7 @@ public static class GameSettings
             GameSession.SelectedCharacterId = (string)cfg.GetValue("menu", "character", GameSession.DefaultCharacterId);
             GameSession.SquadSize = GameSession.ValidSquad((int)cfg.GetValue("menu", "squad_size", GameSession.DefaultSquadSize));
             GameSession.SelectedTheme = (string)cfg.GetValue("menu", "theme", GameSession.SelectedTheme);
+            NetLaunch.LastAddress = (string)cfg.GetValue("menu", "join_address", "");
         }
         Loaded = true;
         ApplyAudio();
@@ -65,6 +66,7 @@ public static class GameSettings
         cfg.SetValue("menu", "character", GameSession.SelectedCharacterId);
         cfg.SetValue("menu", "squad_size", GameSession.SquadSize);
         cfg.SetValue("menu", "theme", GameSession.SelectedTheme);
+        cfg.SetValue("menu", "join_address", NetLaunch.LastAddress);
         var error = cfg.Save(Path);
         if (error != Error.Ok) GD.PushWarning($"Settings not saved to {Path}: {error}");
     }
@@ -76,6 +78,7 @@ public static class GameSettings
         Path = DefaultPath;
         RecoilScale = MasterVolume = SfxVolume = AmbienceVolume = 1f;
         ReviveEnabled = true;
+        NetLaunch.LastAddress = "";
         Loc.Language = Loc.Fallback;
         ApplyAudio();
     }
