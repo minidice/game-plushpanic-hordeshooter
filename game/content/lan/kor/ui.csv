@@ -49,6 +49,7 @@ ui_objective_cleared,스테이지 클리어
 msg_stage_start,세이프룸 — 문을 열고 출발하세요
 msg_stage_find_shutter,창고 끝의 셔터 제어판을 찾으세요
 msg_stage_alarm,경보 작동! 셔터가 열릴 때까지 버티세요
+msg_car_alarm,차 경보기가 울린다! 몰려온다
 msg_stage_shutter_open,셔터가 열렸습니다! 세이프하우스로 달리세요
 msg_stage_close_to_clear,문을 닫으면 스테이지 클리어
 msg_stage_enemies_inside,안에 적이 남아 있습니다!

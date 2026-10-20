@@ -1,0 +1,17 @@
+{
+  "description": "Monster reactions and spawning (doc/spawn-design.md, decisions.md L-4..L-11). Distances in metres, times in seconds.",
+  "alert_radius_m": 6,
+  "sight_range_m": 14,
+  "trail_min_m": 15,
+  "trail_max_m": 40,
+  "protect_radius_m": 8,
+  "alarm_s": 20,
+  "alarm_wave_every_s": 6,
+  "alarm_wave_min": 6,
+  "alarm_wave_max": 9,
+  "noise_explosion_m": 30,
+  "noise_fire_m": 18,
+  "noise_balloon_m": 20,
+  "noise_flash_m": 25,
+  "noise_alarm_m": 60
+}

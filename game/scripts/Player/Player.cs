@@ -303,6 +303,9 @@ public partial class Player : CharacterBody3D
         Stage.Effects.FloatingText(GlobalPosition + Vector3.Up * 2.6f, $"+{gain}", new Color("7dff9a"));
     }
 
+    /// <summary>Squadmates walk right beside you; their steps sit under your own so the group does not clatter (I-63).</summary>
+    public const float BotStepVolumeDb = -5f;
+
     /// <summary>One soft pat per stride; alternating pitch so it waddles.</summary>
     private void Footsteps(float dt)
     {
@@ -312,7 +315,7 @@ public partial class Player : CharacterBody3D
         if (_stepDistance < .75f) return;
         _stepDistance = 0;
         _stepLeft = !_stepLeft;
-        Stage.Sfx.PlayAt("step", GlobalPosition, 0, _stepLeft ? 1f : 1.1f);
+        Stage.Sfx.PlayAt("step", GlobalPosition, IsBot ? BotStepVolumeDb : 0, _stepLeft ? 1f : 1.1f);
     }
 
     // ---------- dodge roll ----------

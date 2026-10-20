@@ -351,7 +351,7 @@ public partial class Integration : Node
         Check(player.Definition.Id == character && ((CapsuleShape3D)player.GetChild<CollisionShape3D>(0).Shape).Height == player.Definition.ColliderHeight,
             "player body comes from the chosen definition");
         Check(ProjectSettings.GetSetting("physics/3d/physics_engine").AsString() == "Jolt Physics", "Jolt physics configured");
-        Check(stage.Enemies.Count >= 25 && stage.Enemies.Count(e => e is CaptureEnemy) >= 2, "zombie stage populated with wanderers and capture specials");
+        Check(stage.Enemies.Count >= 7 && stage.Enemies.All(e => !e.Awake), "zombie stage starts with an idle pack waiting in the street (spawn-design.md)");
 
         // Flow field: the start door blocks the route until opened, the shutter blocks the yard.
         var street = new Vector3(20, 0, 0);

@@ -55,6 +55,9 @@ public partial class Sfx : Node
 
     public AudioStream Stream(string id) => _streams[id];
 
+    /// <summary>Godot's default cap for positional voices; sounds without <see cref="SoundDef.NearCap"/> keep it.</summary>
+    private const float DefaultMaxDb = 3f;
+
     private static AudioStreamPlayer3D Configure(AudioStreamPlayer3D p)
     {
         p.Bus = AudioSetup.SfxBus;
@@ -180,6 +183,7 @@ public partial class Sfx : Node
         player.Stream = _streams[id];
         player.Bus = def.Bus;
         player.VolumeDb = def.VolumeDb + volumeDb;
+        player.MaxDb = def.NearCap ? player.VolumeDb : DefaultMaxDb;
         player.Autoplay = true;
         player.SetMeta("sound", id);
         parent.AddChild(player);
@@ -211,6 +215,7 @@ public partial class Sfx : Node
         player.Stream = _streams[id];
         player.Bus = def.Bus;
         player.VolumeDb = def.VolumeDb + volumeDb;
+        player.MaxDb = def.NearCap ? player.VolumeDb : DefaultMaxDb;
         player.PitchScale = pitch * (1 + _rng.RandfRange(-def.PitchJitter, def.PitchJitter));
         player.SetMeta("sound", id);
         player.Play();

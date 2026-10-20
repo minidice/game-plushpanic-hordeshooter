@@ -8,6 +8,11 @@ namespace HordeShooter;
 /// <param name="Priority">0 crowd ambience, 1 normal, 2 must be heard. When the pool is full, a sound may take over a lower-or-equal priority voice.</param>
 /// <param name="RestartWhenFull">At its voice limit: true restarts its oldest voice (rapid fire), false skips the new one (crowd pings).</param>
 /// <param name="Bus">Mixer bus. Cues that must stay clean (ear ring, stingers) bypass the helium/flash effects on SFX.</param>
+/// <param name="NearCap">
+/// Positional only: never louder than <paramref name="VolumeDb"/>, however close. Godot's logarithmic falloff adds
+/// 20·ln(unit size / distance) — about +30 dB at the listener's feet — so without the cap a quiet recipe plays loud
+/// up close (I-63). Use it for frequent or constant sounds that must stay soft.
+/// </param>
 public sealed record SoundDef(
     string Id,
     string Description,
@@ -18,7 +23,8 @@ public sealed record SoundDef(
     bool Loop = false,
     int Priority = 1,
     bool RestartWhenFull = true,
-    string Bus = AudioSetup.SfxBus);
+    string Bus = AudioSetup.SfxBus,
+    bool NearCap = false);
 
 /// <summary>
 /// Every sound effect as a synthesis recipe. Ids are what gameplay code asks for; see doc/sound-spec.md.
@@ -38,7 +44,8 @@ public static class SoundRecipes
         new("rocket_launch", "로켓 발사", RocketLaunch, 1, .05f, 3, Priority: 2),
         new("mortar_fire", "박격포 발사 (통 소리)", MortarFire, 0, .05f, 3),
         new("mortar_whistle", "박격포탄 낙하 휘파람", MortarWhistle, -6, .03f, 4),
-        new("melee_swing", "근접 휘두르기", Swing, -4, .1f, 4),
+        // Played at the muzzle beside the listener: without the cap it rode the +3 dB ceiling like a gunshot.
+        new("melee_swing", "근접 휘두르기", Swing, -1, .1f, 4, NearCap: true),
         new("pan_bong", "프라이팬 타격", PanBong, -1, .08f, 4),
         new("dry_fire", "빈 탄창 딸깍", s => Click(s, .06f, 2400), -6, .05f, 2),
         new("reload_start", "재장전 시작 (탄창 빼기)", ReloadStart, -6, .05f, 2),
@@ -54,7 +61,9 @@ public static class SoundRecipes
         new("lure_beep", "유인 폭탄 삑", s => Beep(s, 1760, .08f), -4, 0, 4, Priority: 2),
 
         // ---------- player ----------
-        new("step", "플레이어 발소리", s => Step(s, 150, .07f), -10, .12f, 3),
+        // About six a second right under the listener: present but under the swing (I-63). A bare 150 Hz thump
+        // vanished on small speakers even when loud, so it carries a short mid-range scuff.
+        new("step", "플레이어 발소리 (발바닥 툭 + 스침)", PlayerStep, -12, .12f, 3, NearCap: true),
         new("roll", "구르기", Roll, -4, .08f, 2),
         new("honk", "피격 비명 (꽥)", s => Honk(s, .28f, 330, 260), -2, .1f, 2, Priority: 2),
         new("honk_long", "쓰러질 때 비명", s => Honk(s, .9f, 360, 180), 0, .03f, 1, Priority: 2),
@@ -62,7 +71,7 @@ public static class SoundRecipes
         new("pickup", "줍기", s => Chime(s, new[] { 660f, 990f }, .16f, .05f), -8, .03f, 2),
 
         // ---------- zombies & specials ----------
-        new("zombie_step", "좀비 발소리 (질질)", ZombieStep, -12, .15f, 6, Priority: 0),
+        new("zombie_step", "좀비 발소리 (질질, 작게)", ZombieStep, -17, .15f, 6, Priority: 0, NearCap: true),
         new("groan", "좀비 신음", Groan, -7, .15f, 4, Priority: 0, RestartWhenFull: false),
         new("zombie_hit", "좀비 피격 (솜 퍽)", ZombieHit, -6, .15f, 6, Priority: 0),
         new("zombie_die", "좀비 쓰러짐 (뿅 + 삑)", ZombieDie, -4, .12f, 6, Priority: 0),
@@ -74,7 +83,8 @@ public static class SoundRecipes
 
         // ---------- stage ----------
         new("door", "문 미끄러짐", Door, -4, .04f, 2),
-        new("alarm_loop", "경보 사이렌 (반복)", Alarm, -8, 0, 1, Loop: true),
+        // Heard, not blaring: monsters hear it 60 m away (spawn_rules.json), the player only needs to notice it (I-62).
+        new("alarm_loop", "경보 사이렌 (반복, 작게)", Alarm, -20, 0, 1, Loop: true, NearCap: true),
         new("shutter", "셔터 열림", Shutter, -2, 0, 1),
         new("ambience_loop", "밤바람 앰비언스 (반복)", Ambience, -16, 0, 1, Loop: true),
         new("game_over", "게임 오버 (빠밤빠밤...)", SadTrombone, -2, 0, 1, Priority: 2, Bus: "Master"),
@@ -318,6 +328,19 @@ public static class SoundRecipes
         Synth.Drive(buf, 1.8f);
         Synth.HighPass(buf, 350);
         return Synth.Declick(Synth.Normalize(buf, .85f));
+    }
+
+    /// <summary>The low pat (felt) plus a 0.9–3.2 kHz scuff (heard, even on laptop speakers).</summary>
+    private static float[] PlayerStep(Synth s)
+    {
+        var buf = Step(s, 150, .07f);
+        var scuff = Synth.Buffer(.06f);
+        s.Noise(scuff, 1);
+        Synth.HighPass(scuff, 900);
+        Synth.LowPass(scuff, 3200);
+        Synth.Envelope(scuff, .002f, 70);
+        Synth.Mix(buf, Synth.Normalize(scuff, .8f), .55f);
+        return Synth.Declick(Synth.Normalize(buf, .8f));
     }
 
     private static float[] ZombieStep(Synth s)

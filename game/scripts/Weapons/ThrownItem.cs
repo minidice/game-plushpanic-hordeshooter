@@ -200,7 +200,7 @@ public partial class ThrownItem : RigidBody3D
     {
         _stage.Effects.Explosion(at, 2.5f, new Color("ffffff"));
         _stage.Sfx.PlayAt("flash_bang", at + Vector3.Up);
-        _stage.Director.MakeNoise(at, 25f);
+        _stage.Director.MakeNoise(at, _stage.Director.Rules.NoiseFlash);
     }
 
     /// <summary>Watching your own flashbang is a classic: close + looking at it = white screen.</summary>

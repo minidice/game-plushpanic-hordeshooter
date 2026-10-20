@@ -1,4 +1,7 @@
-# 레벨 디자인 규칙
+# 시나리오 레벨 디자인 규칙
+
+> **적용 범위 — 2026-10-20 명시**: 시나리오 모드의 레벨 설계에 적용한다. 생존·서바이버 모드에 진행 방향·시간·전투 배분·보급 기준을 자동 적용하지 않는다. 아래 카메라 설명은 현재 구현 정보이며 공용 카메라 동작을 변경한다는 뜻이 아니다.
+> 먼저 [용어 사전](glossary.md)을 읽는다. 시간·전투 흐름·아이템 배치의 **미확정 추천안**은 [시나리오 레벨 디자인 목표](scenario-level-design.md)에 분리해 두었다. 아래 기존 확정 규칙과 추천 수치를 혼동하지 않는다.
 
 ## 진행 방향 — 확정 2026-10-20
 
@@ -22,7 +25,7 @@
 - [ ] 기본/확대 카메라에서 입구·다음 목표·출구 방향 확인
 - [ ] 주 통로에 전면 벽·선반이 캐릭터와 공격 동작을 가리지 않는지 확인
 - [ ] 문·셔터 개폐 전후 길찾기와 적 이동 확인
-- [ ] 탄약·회복 위치가 진행 흐름을 지나치게 역행시키지 않는지 확인
+- [ ] 탄약·회복 위치가 진행 흐름을 지나치게 역행시키지 않는지 확인 (보급 지점 데이터와 예산은 `SupplyCheck`, 전후 렌더는 `SupplyCapture`. 카메라가 −Z를 보므로 키 큰 소품의 −Z 쪽에 둔 물자는 가려짐)
 - [ ] 선택형 탐색과 전투용 후퇴 공간 확보
 
-구현: `game/scripts/World/CameraRig.cs`, `StageOneLayout.cs`. 관련 검사: `game/tests/CombatPacingCheck.tscn`. 전체 기능 현황은 [기능 체크리스트](feature-checklist.md).
+구현: `game/scripts/World/CameraRig.cs`, `StageOneLayout.cs`. 아이템 배치 데이터: `game/content/data/stages/stage1_supplies.json`(L-12), 몬스터 배치·등장 지점: `stage1_encounters.json`(L-7). 관련 검사: `game/tests/CombatPacingCheck.tscn`. 전체 기능 현황은 [기능 체크리스트](feature-checklist.md).

@@ -118,6 +118,8 @@ public sealed class WeaponDefinition
     public Color BodyColor { get; set; } = new("2f3330");
     public Color AccentColor { get; set; } = new("6b5a3f");
     public float Length { get; set; } = .75f;
+    /// <summary>Metres around the shooter (or the swing) in which idle monsters wake (noise_m).</summary>
+    public float Noise { get; set; } = 16f;
     public float Thickness { get; set; } = .12f;
 
     public float MeleeRange => MaxRange;

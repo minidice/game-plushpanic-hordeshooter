@@ -7,7 +7,8 @@ namespace HordeShooter;
 /// Stage 1 "Warehouse District". The route runs along +X:
 ///   start safe room (x 0–10) → street (10–52) → warehouse (52–84) → [shutter] → yard (84–116) → safehouse (116–126).
 /// The camera looks toward -Z, so walls on the -Z side are tall facades and walls on the +Z side are low
-/// fences that never hide the action.
+/// fences that never hide the action. Who waits where and where waves come in is data
+/// (content/data/stages/stage1_encounters.json, read by <see cref="HordeDirector"/>).
 /// </summary>
 public sealed class StageOneLayout
 {
@@ -22,6 +23,7 @@ public sealed class StageOneLayout
     public Interactable ShutterPanel { get; private set; } = null!;
     public Interactable StartDoorSwitch { get; private set; } = null!;
     public Interactable SafehouseSwitch { get; private set; } = null!;
+    public AlarmCar AlarmCar { get; private set; } = null!;
 
     private static readonly Rect2 SafehouseRect = new(116.4f, -3.8f, 9.4f, 7.6f);
     public bool InSafehouse(Vector3 p) => SafehouseRect.HasPoint(new Vector2(p.X, p.Z));
@@ -41,7 +43,7 @@ public sealed class StageOneLayout
         layout.BuildWarehouse();
         layout.BuildYard();
         layout.BuildSafehouse();
-        layout.AddSpawnPoints();
+        layout.PlaceSupplies(StageSupplies.Stage1);
         layout.ApplyFlow();
         return layout;
     }
@@ -75,15 +77,6 @@ public sealed class StageOneLayout
         StartDoorSwitch = Use(new Vector3(9.2f, 0, 0), "ui_use_open_door", _stage.LeaveSafeRoom);
 
         Solid(new Vector3(3, .45f, -3.2f), new Vector3(2.4f, .9f, 1f), "6b5843");
-        AmmoPile(new Vector3(2, 0, -2.4f));
-        Medkit(new Vector3(4, .9f, -3.2f));
-        // L4D-style starting kit on the floor.
-        Weapon(new Vector3(6.2f, 0, -3.2f), "m1911");
-        Weapon(new Vector3(7.3f, 0, -3.2f), "m4");
-        Weapon(new Vector3(8.4f, 0, -3.2f), "r870");
-        Weapon(new Vector3(6.2f, 0, 2.9f), "awm");
-        Throwable(new Vector3(7.3f, 0, 2.9f), "frag");
-        Throwable(new Vector3(8.4f, 0, 2.9f), "molotov");
         Lamp(new Vector3(2.9f, 2.85f, -3.72f), "ffd6a0", 3.8f, 8.5f, false);
         var terminalLight = Lamp(new Vector3(.28f, 2.38f, -1.5f), "75d6e0", 1.8f, 3.5f, false);
         terminalLight.RotationDegrees = new Vector3(0, 90, 0);
@@ -100,7 +93,9 @@ public sealed class StageOneLayout
         Windows(12, 52, -6);
 
         Solid(new Vector3(17, .65f, -3.8f), new Vector3(4.2f, 1.3f, 2f), "6d5a45");
-        Solid(new Vector3(29, .65f, 3.6f), new Vector3(4.2f, 1.3f, 2f), "54657a");
+        // The one with the blinking dash light: shoot it and the whole street hears (spawn-design.md 4장).
+        AlarmCar = AlarmCar.Create(_stage, new Vector3(29, .65f, 3.6f), new Vector3(4.2f, 1.3f, 2f), "54657a");
+        _solids.Add((AlarmCar.Position, new Vector3(4.2f, 1.3f, 2f)));
         Solid(new Vector3(42, .65f, -3.1f), new Vector3(4.2f, 1.3f, 2f), "7a4e48");
         Solid(new Vector3(22, .55f, 1.5f), new Vector3(1.2f, 1.1f, 1.2f), "8a7755");
         Solid(new Vector3(35, .6f, -.8f), new Vector3(1.4f, 1.2f, 1.4f), "8a7755");
@@ -112,12 +107,6 @@ public sealed class StageOneLayout
         Barrel(new Vector3(46, 0, -5f));
         Boxes(new Vector3(19.5f, 0, 4.4f), 3);
         Boxes(new Vector3(33, 0, -5f), 2);
-        Weapon(new Vector3(27.6f, 0, -4.4f), "m1911");
-        Weapon(new Vector3(23, 0, 4.2f), "glock17");
-        Weapon(new Vector3(38, 0, 2f), "m16");
-        Weapon(new Vector3(41, 0, 4.6f), "mp5");
-        Throwable(new Vector3(44, 0, 4.6f), "flashbang");
-        AmmoPile(new Vector3(32, 0, -5.4f));
 
         Lamp(new Vector3(20, 2.95f, -5.72f), "ffbe7a", 3.4f, 9, false);
         Lamp(new Vector3(33, 2.95f, -5.72f), "ffbe7a", 3.4f, 9, true);
@@ -147,16 +136,6 @@ public sealed class StageOneLayout
         Barrel(new Vector3(74, 0, 8.4f));
         Barrel(new Vector3(81.5f, 0, 6.2f));
         Boxes(new Vector3(67.5f, 0, -1), 3);
-        AmmoPile(new Vector3(82.6f, 0, -8.4f));
-        Medkit(new Vector3(75, 0, -8.6f));
-        Weapon(new Vector3(57, 0, 8.6f), "benelli_m4");
-        Weapon(new Vector3(63, 0, 2.6f), "ak47");
-        Weapon(new Vector3(64.5f, 0, -8.6f), "svd");
-        Weapon(new Vector3(69, 0, .5f), "m249");
-        Weapon(new Vector3(73.5f, 0, .4f), "double_barrel");
-        Weapon(new Vector3(81, 0, -8.8f), "alabong");
-        Throwable(new Vector3(60, 0, .8f), "frag");
-        Throwable(new Vector3(76, 0, 8.6f), "lure");
 
         // The crescendo trigger.
         var panel = Solid(new Vector3(83.4f, 1.1f, -6.2f), new Vector3(.6f, 1.4f, 1.2f), "3a4148");
@@ -187,11 +166,6 @@ public sealed class StageOneLayout
         Barrel(new Vector3(105, 0, -6f));
         Barrel(new Vector3(111, 0, 5.6f));
         Boxes(new Vector3(88, 0, 5.4f), 2);
-        Weapon(new Vector3(90, 0, 1f), "mortar");
-        Weapon(new Vector3(97, 0, -6f), "m82");
-        Weapon(new Vector3(110, 0, .2f), "r870");
-        Throwable(new Vector3(103, 0, 5.9f), "molotov");
-        Throwable(new Vector3(113, 0, -2f), "flashbang");
         Lamp(new Vector3(98, 2.65f, -6.72f), "ffbe7a", 3.3f, 9, false);
         Lamp(new Vector3(112, 2.65f, -6.72f), "9dffa8", 3.1f, 9, false);
         FloorText(new Vector3(112, 0, 0), "ui_floor_safehouse_arrow", "9dffa8");
@@ -210,43 +184,19 @@ public sealed class StageOneLayout
         SafehouseSwitch.Enabled = false;
         Lamp(new Vector3(121, 2.85f, -3.72f), "b5e6c3", 3.6f, 9, false);
         FloorText(new Vector3(121, 0, 2), "ui_floor_safehouse", "c8ffd0");
-        AmmoPile(new Vector3(124, 0, -3));
     }
 
-    private void AddSpawnPoints()
+    /// <summary>Weapons, throwables, ammo and medkits from the stage's supply points (decisions.md L-12).</summary>
+    private void PlaceSupplies(StageSupplies supplies)
     {
-        var points = new Vector3[]
-        {
-            new(21, 0, -5.2f), new(27, 0, 5.2f), new(31, 0, -5.2f), new(39, 0, 5.2f), new(45, 0, -1), new(50, 0, 4.6f),
-            new(54, 0, -8.6f), new(55, 0, 8.6f), new(62, 0, -8.6f), new(62, 0, 8.6f), new(69, 0, -8.6f), new(69, 0, 8.6f),
-            new(77, 0, -8.6f), new(77, 0, 8.6f),
-            new(88, 0, 6f), new(89, 0, -6f), new(97, 0, -6f), new(99, 0, 6f), new(104, 0, 6f), new(107, 0, -6f),
-            new(113, 0, 6f), new(113, 0, -6f),
-        };
-        _stage.Director.SpawnPoints.AddRange(points);
-    }
-
-    /// <summary>Idle wanderers and a guaranteed special per zone. Called once the player exists.</summary>
-    public void Populate(Stage stage)
-    {
-        var common = stage.CommonDefinition;
-        Scatter(stage, common, 17, 50, -5, 5, 7);
-        Scatter(stage, common, 55, 82, -9, 9, 10);
-        Scatter(stage, common, 87, 114, -6, 6, 8);
-        stage.SpawnInitialSpecial(0, new Vector3(66, 0, -8.6f));
-        stage.SpawnInitialSpecial(1, new Vector3(102, 0, -1.5f));
-    }
-
-    private void Scatter(Stage stage, MonsterDefinition def, float x0, float x1, float z0, float z1, int count)
-    {
-        int placed = 0;
-        for (int attempt = 0; attempt < count * 20 && placed < count; attempt++)
-        {
-            var p = new Vector3(_rng.RandfRange(x0, x1), 0, _rng.RandfRange(z0, z1));
-            if (stage.Flow.IsBlocked(p)) continue;
-            stage.SpawnCommon(p, false);
-            placed++;
-        }
+        foreach (var item in supplies.Points.SelectMany(p => p.Items))
+            switch (item.Kind)
+            {
+                case SupplyItemKind.Weapon: Weapon(item.At, item.Id); break;
+                case SupplyItemKind.Throwable: Throwable(item.At, item.Id); break;
+                case SupplyItemKind.Ammo: AmmoPile(item.At); break;
+                case SupplyItemKind.Medkit: Medkit(item.At); break;
+            }
     }
 
     // ---------- building blocks ----------

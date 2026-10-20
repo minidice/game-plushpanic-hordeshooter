@@ -57,9 +57,11 @@ public partial class EnemyExpansion : Node
         var common = _stage.SpawnCommon(new Vector3(7, 0, 1), false);
         Check(StageTheme.Commons(theme).Contains(common.Monster.Id), theme + " dynamic common spawn uses encounter pool");
         var specials = StageTheme.Specials(theme);
+        // Area specials placed so far took the first pool slots (only the start areas are filled at load).
+        int placed = _stage.AllEnemies.Count(e => e.IsSpecial);
         for (int i = 0; i < specials.Length; i++)
         {
-            var id = specials[(i + 2) % specials.Length];
+            var id = specials[(i + placed) % specials.Length];
             var special = _stage.SpawnThemeSpecial(new Vector3(8, 0, 0), false);
             Check(special.Monster.Id == id && special.IsSpecial, theme + " special rotation: " + id);
             special.QueueFree();

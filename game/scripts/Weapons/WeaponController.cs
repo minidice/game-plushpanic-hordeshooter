@@ -253,7 +253,7 @@ public partial class WeaponController : Node
             _ => .06f,
         };
         if (!_player.IsBot) Stage.Cam.AddShake(shake);
-        Stage.Director.MakeNoise(_player.GlobalPosition, def.Category == WeaponCategory.Heavy ? 26f : 16f);
+        Stage.Director.MakeNoise(_player.GlobalPosition, def.Noise);
     }
 
     /// <summary>
@@ -300,6 +300,11 @@ public partial class WeaponController : Node
                     exclude.Add(hit.Rid);
                     damage *= .8f;
                     continue;
+                case AlarmCar car:
+                    // Squadmates are careful with it; only a person sets it off by shooting.
+                    if (!_player.IsBot) car.Trigger();
+                    Stage.Effects.Impact(end, -dir);
+                    break;
                 case ExplosiveBarrel barrel:
                     barrel.Ignite();
                     break;
@@ -374,7 +379,7 @@ public partial class WeaponController : Node
             Stage.Sfx.PlayAt("pan_bong", targets[0].e.GlobalPosition + Vector3.Up);
             if (!_player.IsBot) Stage.Cam.AddShake(.12f);
         }
-        Stage.Director.MakeNoise(origin, 6f);
+        Stage.Director.MakeNoise(origin, def.Noise);
     }
 
     private static Vector3 Flat(Vector3 v) => new(v.X, 0, v.Z);

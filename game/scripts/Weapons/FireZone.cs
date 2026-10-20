@@ -50,7 +50,7 @@ public partial class FireZone : Node3D
         zone.AddChild(light);
         stage.FlickerLights.Add(light);
         light.SetMeta("base_energy", 1.4f);
-        stage.Director.MakeNoise(at, 18f);
+        stage.Director.MakeNoise(at, stage.Director.Rules.NoiseFire);
         stage.Sfx.Attach("fire_loop", zone);
         return zone;
     }

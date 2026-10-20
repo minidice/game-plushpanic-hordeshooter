@@ -164,6 +164,10 @@ ID와 발생 시점 목록, 교체 방법은 [`doc/sound-spec.md`](../doc/sound-
 | 특수 감염체 행동 | 풍선 터짐(반경 4.2m, 헬륨 15초, 12마리 소환), 황소 돌진(예고 0.9초, 12.5m/s, 벽 충돌 시 1.9초 기절) | `content/data/monster_traits/*.json` |
 | 피격 넉백 | 속도 = 피격 파워 × 0.08 ÷ 무게, 멈칫 0.05~0.35초 (소총은 멈칫만, 샷건·폭발은 밀림) | `Enemies/Enemy.cs` (`ApplyKnock`) |
 | 디렉터 | 일반 적 최대 70, 특수 최대 2, 크레센도 50초 | `Enemies/HordeDirector.cs`, `World/StageOneLayout.cs` |
+| 몬스터 등장·반응 | 연쇄 깨움 6m, 경계형 시야 14m, 지나온 길 15~40m 뒤, 출입구 보호 8m, 차 경보 20초(6초마다 6~9마리), 소음 폭발 30·화염 18·풍선 20·섬광 25·경보 60m | `content/data/spawn_rules.json` |
+| 보급 지점 | Stage 1: 시작 정비, 주요 2(창고·야적장), 선택 1(거리), 이벤트 보상 1(셔터 제어판), 도착 1 | `content/data/stages/stage1_supplies.json` |
+| 구역·미리 배치·등장 지점 | 스테이지 1의 5구역, 구역별 대기형·경계형 무리, 숨은 자리 22곳·벽 위 7곳 | `content/data/stages/stage1_encounters.json` |
+| 무기 소음 | 근접 4, 권총 14, SMG 16, 소총 20, 산탄·LMG 22, DMR 24, 저격 26, 로켓·박격포 30m | `content/data/weapon_types.csv` `noise_m` |
 
 ## 폴더 구조
 
@@ -174,12 +178,13 @@ game/
   content/data/         weapon_types.csv · weapons.csv · weapon_traits/   무기
                         throwables.csv · throwable_effects/                투척물
                         monsters.csv · monster_traits/                     몬스터 능력치(무게 포함)
+                        spawn_rules.json · stages/                         몬스터 등장·반응·경보, 보급 지점
   content/lan/kor|eng/  이름 문구 (weapon.csv, throwable.csv, monster.csv, character.csv)
   content/throwables/   투척물 정의 (.tres) 4종
   assets/characters/    GLB 모델
   scenes/               Menu.tscn(시작), Stage1.tscn
   scripts/Core|Audio|Characters|Player|Weapons|Enemies|World|UI
-  tests/                Integration(헤드리스 검사), InputCheck(창 모드 입력), Capture(렌더 캡처), MenuCheck(메뉴·설정), SquadCheck(AI 분대·부활) 외 전용 검사
+  tests/                Integration(헤드리스 검사), InputCheck(창 모드 입력), Capture(렌더 캡처), MenuCheck(메뉴·설정), SquadCheck(AI 분대·부활), SpawnCheck(몬스터 등장·반응·경보), SupplyCheck(보급 배치), SupplyCapture(보급 지점 전후 렌더), AudioLevelCheck(효과음 레시피 크기), AudioMixCheck(창 모드 실제 출력 녹음) 외 전용 검사
 ```
 
 ## 아직 없는 것

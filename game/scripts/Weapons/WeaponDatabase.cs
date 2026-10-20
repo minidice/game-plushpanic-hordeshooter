@@ -63,7 +63,7 @@ public sealed class WeaponDatabase
         "name", "slot", "category", "fire_mode", "automatic", "damage", "max_range_m", "effective_range_m", "falloff_min",
         "fire_interval_ms", "reload_ms", "reload_shell_ms", "mag_size", "max_mags", "start_mags", "refillable", "pierce",
         "spread_deg", "spread_per_shot_deg", "move_spread_deg", "max_spread_deg", "recoil_power", "hit_power",
-        "traits", "fire_sound", "model", "icon", "color", "accent_color", "length_m",
+        "traits", "fire_sound", "model", "icon", "color", "accent_color", "length_m", "noise_m",
     };
 
     private static readonly string[] Required = { "name", "slot", "category", "fire_mode", "damage", "max_range_m", "fire_interval_ms" };
@@ -174,9 +174,11 @@ public sealed class WeaponDatabase
             BodyColor = p.Color("color", new Color("2f3330")),
             AccentColor = p.Color("accent_color", new Color("6b5a3f")),
             Length = p.Float("length_m", .75f),
+            Noise = p.Float("noise_m", 16f),
         };
         def.EffectiveRange = p.Float("effective_range_m", def.MaxRange);
         def.Thickness = Thickness[def.Category];
+        if (def.Noise <= 0) _errors.Add($"{where}: noise_m은 0보다 커야 합니다 (소리 없는 무기는 아주 작은 값)");
 
         // Slot 1 never runs dry (L4D rule); elsewhere "inf" also means unlimited.
         bool infinite = def.Slot == WeaponSlot.Secondary || p.IsInfinite("max_mags");

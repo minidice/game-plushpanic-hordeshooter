@@ -49,6 +49,7 @@ ui_objective_cleared,Stage clear
 msg_stage_start,Safe room — open the door to set out
 msg_stage_find_shutter,Find the shutter panel at the end of the warehouse
 msg_stage_alarm,Alarm! Hold out until the shutter opens
+msg_car_alarm,Car alarm! They are coming
 msg_stage_shutter_open,The shutter is open! Run to the safehouse
 msg_stage_close_to_clear,Close the door to clear the stage
 msg_stage_enemies_inside,There are still enemies inside!

@@ -1,0 +1,54 @@
+{
+  "description": "Stage 1 supply points (doc/scenario-level-design.md 5장, trial budget for a 4-player team). Items sit together at places that read as supplies. kind: start (saferoom kit, outside the budget), main (needed supplies on the main route), optional (a reward for looking around), event (a reward tied to the crescendo), arrival (the safehouse; counts toward the next stage). item: weapon | throwable | ammo | medkit. at = [x, z]; height lifts it onto furniture.",
+  "points": [
+    {
+      "id": "start_kit", "kind": "start", "area": "saferoom",
+      "items": [
+        { "item": "ammo", "at": [2, -2.4] },
+        { "item": "medkit", "at": [4, -3.2], "height": 0.9 },
+        { "item": "weapon", "id": "m1911", "at": [6.2, -3.2] },
+        { "item": "weapon", "id": "m4", "at": [7.3, -3.2] },
+        { "item": "weapon", "id": "r870", "at": [8.4, -3.2] },
+        { "item": "throwable", "id": "frag", "at": [7.3, 2.9] },
+        { "item": "throwable", "id": "molotov", "at": [8.4, 2.9] }
+      ]
+    },
+    {
+      "id": "street_crates", "kind": "optional", "area": "street",
+      "items": [
+        { "item": "weapon", "id": "mp5", "at": [21.2, 4.7] },
+        { "item": "throwable", "id": "flashbang", "at": [22.6, 4.7] }
+      ]
+    },
+    {
+      "id": "warehouse_stack", "kind": "main", "area": "warehouse",
+      "items": [
+        { "item": "ammo", "at": [66.4, 0.8] },
+        { "item": "medkit", "at": [67.8, 0.8] },
+        { "item": "weapon", "id": "ak47", "at": [69.2, 0.8] },
+        { "item": "weapon", "id": "benelli_m4", "at": [66.4, 2.2] },
+        { "item": "throwable", "id": "frag", "at": [67.8, 2.2] }
+      ]
+    },
+    {
+      "id": "shutter_reward", "kind": "event", "area": "warehouse",
+      "items": [
+        { "item": "weapon", "id": "alabong", "at": [81, -8.8] }
+      ]
+    },
+    {
+      "id": "yard_container", "kind": "main", "area": "yard",
+      "items": [
+        { "item": "ammo", "at": [94, -2.2] },
+        { "item": "medkit", "at": [95.4, -2.2] },
+        { "item": "throwable", "id": "lure", "at": [96.8, -2.2] }
+      ]
+    },
+    {
+      "id": "safehouse", "kind": "arrival", "area": "safehouse",
+      "items": [
+        { "item": "ammo", "at": [124, -3] }
+      ]
+    }
+  ]
+}

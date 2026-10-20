@@ -28,6 +28,13 @@ public partial class Enemy : CharacterBody3D
     public float Health { get; protected set; }
     public bool IsDead { get; protected set; }
     public bool Awake { get; set; }
+    private Reaction _reaction;
+    /// <summary>How this placement wakes up (decisions.md L-5). Hunters are always awake.</summary>
+    public Reaction Reaction
+    {
+        get => _reaction;
+        set { _reaction = value; if (value == Reaction.Hunter) Awake = true; }
+    }
     /// <summary>Inside the player's vision cone this frame (maintained by <see cref="VisionSystem"/>).</summary>
     public bool IsSeen { get; set; } = true;
     public float PingTimer { get; set; }
@@ -91,6 +98,7 @@ public partial class Enemy : CharacterBody3D
         Stage = stage;
         Monster = monster;
         Definition = look;
+        Reaction = awake ? Reaction.Hunter : Reaction.Dormant;
         Awake = awake;
         Health = monster.Hp;
         AttackDamage = monster.AttackDamage;
@@ -192,7 +200,9 @@ public partial class Enemy : CharacterBody3D
 
         if (!Awake)
         {
-            if (dist < Monster.WakeRange || (dist < 12f && IsSeen && HasLineOfSight(dt))) Awake = true;
+            // Dormant ones ignore being looked at; watchers use their own eyes (spawn-design.md 2장).
+            if (dist < Monster.WakeRange ||
+                (Reaction == Reaction.Watcher && dist < Stage.Director.Rules.SightRange && HasLineOfSight(dt))) Wake();
             else return Wander(dt);
         }
         if (dist <= Radius + player.Definition.ColliderRadius + AttackReach)
@@ -231,13 +241,31 @@ public partial class Enemy : CharacterBody3D
         return flow * Speed;
     }
 
+    /// <summary>
+    /// Wakes up. A direct cause (hit, too close, seen) also wakes still-idle neighbours within the alert
+    /// radius, one hop only, so one shot never wakes the whole map (decisions.md L-5).
+    /// </summary>
+    public void Wake(bool alertOthers = true)
+    {
+        if (Awake || IsDead) return;
+        Awake = true;
+        if (alertOthers) Stage.Director.AlertAround(this);
+    }
+
+    /// <summary>Jump off a wall top toward <paramref name="direction"/> (ledge entry). Gravity does the rest.</summary>
+    public void LeapDown(Vector3 direction)
+    {
+        Knock += new Vector3(direction.X, 0, direction.Z).Normalized() * 6f;
+        Kick = 1;
+    }
+
     /// <summary>Flashbang: stand there dazed.</summary>
     public void Stun(float seconds)
     {
         if (IsDead) return;
         CancelMelee();
         StunTime = Mathf.Max(StunTime, seconds);
-        Awake = true;
+        Wake();
         OnStunned();
         Rig.Jolt(new Vector3(Rng.RandfRange(-3, 3), 0, Rng.RandfRange(-3, 3)));
     }
@@ -251,7 +279,7 @@ public partial class Enemy : CharacterBody3D
         if (IsDead || damage <= 0) return;
         Health -= damage;
         Rig.FlashHit();
-        Awake = true;
+        Wake();
         Hurt = Mathf.Max(Hurt, .3f);
         if (Health <= 0) Die(Vector3.Up, 2f);
     }
@@ -344,7 +372,7 @@ public partial class Enemy : CharacterBody3D
         Health -= hit.Damage;
         if (hit.Damage > 0) Rig.FlashHit();
         Hurt = 1;
-        Awake = true;
+        Wake();
         var flat = new Vector3(hit.Direction.X, 0, hit.Direction.Z).Normalized();
         ApplyKnock(flat, hit.Power);
         Rig.Jolt(flat * 4f);
@@ -371,7 +399,7 @@ public partial class Enemy : CharacterBody3D
         if (IsDead) return;
         direction.Y = 0;
         direction = direction.LengthSquared() > .0001f ? direction.Normalized() : Vector3.Forward;
-        Awake = true;
+        Wake();
         Health -= damage;
         if (damage > 0) Rig.FlashHit();
         Hurt = 1;

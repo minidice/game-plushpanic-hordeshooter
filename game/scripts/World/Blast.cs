@@ -15,7 +15,9 @@ public static class Blast
         stage.Effects.Explosion(at, radius, color);
         stage.Sfx.PlayAt("explosion", at + Vector3.Up, radius > 5 ? 2 : 0);
         stage.Effects.PaintSplat(at, 2f);
-        stage.Director.MakeNoise(at, 30f);
+        stage.Director.MakeNoise(at, stage.Director.Rules.NoiseExplosion);
+        foreach (var car in stage.AlarmCars)
+            if (car.GlobalPosition.DistanceTo(at) < radius + 2f) car.Trigger();
 
         foreach (var enemy in stage.Enemies)
         {

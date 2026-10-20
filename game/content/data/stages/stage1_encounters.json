@@ -1,0 +1,38 @@
+{
+  "description": "Stage 1 encounters (doc/spawn-design.md). Areas run along +X. Entering area N fills area N+1. Reactions: dormant, watcher, hunter. Entry kinds: hidden (a fixed spot out of the way, used off screen), ledge (drop from a wall top; height = wall top, dir = jump direction). Trail entries come from the walked route at run time.",
+  "areas": [
+    { "id": "saferoom", "x0": -1, "x1": 10.4 },
+    { "id": "street", "x0": 10.4, "x1": 52.4 },
+    { "id": "warehouse", "x0": 52.4, "x1": 84.4 },
+    { "id": "yard", "x0": 84.4, "x1": 116 },
+    { "id": "safehouse", "x0": 116, "x1": 127 }
+  ],
+  "groups": [
+    { "area": "street", "reaction": "dormant", "count": 5, "rect": [17, 50, -5, 5] },
+    { "area": "street", "reaction": "watcher", "count": 2, "rect": [30, 50, -5, 5] },
+    { "area": "warehouse", "reaction": "dormant", "count": 7, "rect": [55, 82, -9, 9] },
+    { "area": "warehouse", "reaction": "watcher", "count": 3, "rect": [60, 82, -9, 9] },
+    { "area": "warehouse", "reaction": "dormant", "special": 0, "at": [66, -8.6] },
+    { "area": "yard", "reaction": "dormant", "count": 6, "rect": [87, 114, -6, 6] },
+    { "area": "yard", "reaction": "watcher", "count": 2, "rect": [95, 114, -6, 6] },
+    { "area": "yard", "reaction": "watcher", "special": 1, "at": [102, -1.5] }
+  ],
+  "entries": [
+    { "kind": "hidden", "at": [21, -5.2] }, { "kind": "hidden", "at": [27, 5.2] }, { "kind": "hidden", "at": [31, -5.2] },
+    { "kind": "hidden", "at": [39, 5.2] }, { "kind": "hidden", "at": [45, -1] }, { "kind": "hidden", "at": [50, 4.6] },
+    { "kind": "hidden", "at": [54, -8.6] }, { "kind": "hidden", "at": [55, 8.6] }, { "kind": "hidden", "at": [62, -8.6] },
+    { "kind": "hidden", "at": [62, 8.6] }, { "kind": "hidden", "at": [69, -8.6] }, { "kind": "hidden", "at": [69, 8.6] },
+    { "kind": "hidden", "at": [77, -8.6] }, { "kind": "hidden", "at": [77, 8.6] },
+    { "kind": "hidden", "at": [88, 6] }, { "kind": "hidden", "at": [87, -6] }, { "kind": "hidden", "at": [97, -6] },
+    { "kind": "hidden", "at": [99, 6] }, { "kind": "hidden", "at": [104, 6] }, { "kind": "hidden", "at": [103.5, -6] },
+    { "kind": "hidden", "at": [113, 6] }, { "kind": "hidden", "at": [113, -6] },
+    { "kind": "ledge", "at": [22, -6.2], "height": 3.4, "dir": [0, 1] },
+    { "kind": "ledge", "at": [37, -6.2], "height": 3.4, "dir": [0, 1] },
+    { "kind": "ledge", "at": [49, -6.2], "height": 3.4, "dir": [0, 1] },
+    { "kind": "ledge", "at": [63, -10.2], "height": 3.8, "dir": [0, 1] },
+    { "kind": "ledge", "at": [75, -10.2], "height": 3.8, "dir": [0, 1] },
+    { "kind": "ledge", "at": [97, -7.2], "height": 3.0, "dir": [0, 1] },
+    { "kind": "ledge", "at": [102, -7.2], "height": 3.0, "dir": [0, 1] }
+  ],
+  "protected": []
+}

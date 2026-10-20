@@ -76,6 +76,8 @@ public partial class Stage : Node3D
 
     public List<Enemy> Enemies { get; } = new();
     public List<RigidBody3D> Props { get; } = new();
+    /// <summary>Loud devices that go off when shot or caught in a blast (spawn-design.md 4장).</summary>
+    public List<AlarmCar> AlarmCars { get; } = new();
     public List<Interactable> Interactables { get; } = new();
     public List<OmniLight3D> FlickerLights { get; } = new();
     /// <summary>Common infected (monsters.csv row "plush"); its look is the zombie version of the player species when mirror_player is on.</summary>
@@ -137,8 +139,8 @@ public partial class Stage : Node3D
         _enemyRoot = new Node3D { Name = "Enemies" };
         AddChild(_enemyRoot);
         Flow.Update(Player.GlobalPosition);
-        Layout.Populate(this);
         RefreshRouteFlows();
+        Director.UseEncounters(SpawnDatabase.Current.Stage1);
         Trail.Add(Player.GlobalPosition);
         // The menu's squad size applies to the real game scene; tests ask for squadmates explicitly.
         SpawnSquad(SquadOverride ?? (GetTree().CurrentScene == this ? GameSession.SquadSize : 0));
@@ -190,7 +192,8 @@ public partial class Stage : Node3D
     {
         var enemy = new T();
         enemy.Setup(this, monster, LookFor(monster), awake);
-        enemy.Position = new Vector3(at.X, .05f, at.Z);
+        // Ledge entries start on a wall top; everything else stands on the floor.
+        enemy.Position = new Vector3(at.X, Mathf.Max(at.Y, .05f), at.Z);
         _enemyRoot.AddChild(enemy);
         enemy.IsSeen = Player == null || Vision.CanSee(enemy.GlobalPosition + Vector3.Up * .8f);
         enemy.Rig.Visible = enemy.IsSeen;
@@ -362,7 +365,10 @@ public partial class Stage : Node3D
         }
     }
 
-    public static bool IsMedkit(Interactable item) => item.Name.ToString().StartsWith("Medkit");
+    /// <summary>
+    /// By prompt, not node name: Godot renames same-named siblings, so a second "Medkit" was not one (I-61).
+    /// </summary>
+    public static bool IsMedkit(Interactable item) => item.PromptKey == "ui_use_medkit";
 
     /// <summary>A squadmate takes an ammo pile or a medkit (they never take weapons, decisions.md M-13).</summary>
     public bool TakePickup(Interactable item, Player who)
@@ -451,6 +457,9 @@ public partial class Stage : Node3D
             }
         }
         NoticeTime = Mathf.Max(0, NoticeTime - dt);
+
+        // Areas fill one ahead of the furthest survivor. Tests that switch the director off keep only the start fill.
+        if (DirectorEnabled) Director.UpdateAreas();
 
         UpdateCrowdAudio(dt);
         AudioSetup.SetHelium(!Player.IsDead && Player.HeliumTime > 0);

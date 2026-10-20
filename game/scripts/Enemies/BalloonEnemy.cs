@@ -63,7 +63,7 @@ public partial class BalloonEnemy : Enemy
         Stage.Effects.Stuffing(at + Vector3.Up * 1.5f, Vector3.Up, Definition.StuffingColor, 30);
         for (int i = 0; i < 4; i++)
             Stage.Effects.PaintSplat(at + new Vector3(Rng.RandfRange(-1.5f, 1.5f), 0, Rng.RandfRange(-1.5f, 1.5f)), 1.4f);
-        Stage.Director.MakeNoise(at, 20f);
+        Stage.Director.MakeNoise(at, Stage.Director.Rules.NoiseBalloon);
 
         foreach (var other in Stage.Enemies)
         {

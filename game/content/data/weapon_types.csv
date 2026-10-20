@@ -1,12 +1,12 @@
-type,name,slot,category,fire_mode,automatic,damage,max_range_m,effective_range_m,falloff_min,fire_interval_ms,reload_ms,reload_shell_ms,mag_size,max_mags,start_mags,refillable,pierce,spread_deg,spread_per_shot_deg,move_spread_deg,max_spread_deg,recoil_power,hit_power,traits,fire_sound,model,icon,color,accent_color,length_m
-#분류ID,이름 키 (content/lan/<언어>/*.csv),칸(1 보조/2 주무기),분류(melee pistol smg rifle lmg shotgun sniper heavy),발사(melee hitscan projectile lob),연사(true/false),대미지(산탄은 전탄 합계),최대사거리(m),유효사거리(m) 이후 감쇠,최대사거리에서 대미지 배율,발사간격(ms),재장전(ms),1발씩 추가 장전 시간(ms; 0=탄창 교체),1탄창 총알수,최대 탄창수(inf=무제한),시작 예비 탄창수,탄약더미 충전가능,관통 수,기본 퍼짐(도),발당 퍼짐 증가,이동 시 퍼짐,최대 퍼짐,반동 넉백 파워(쏜 사람),피격 넉백 파워(맞은 적) ÷ 몬스터 무게,특성(; 구분 / -이름 은 제거),발사음 ID(빈칸=분류 기본),모델 경로(res://),아이콘 경로(res://),본체 색,포인트 색,길이(m)
-melee,name_weapontype_melee,1,melee,melee,true,34,1.9,1.9,1,500,0,,0,inf,0,false,1,0,0,0,0,0,60,melee_arc_wide,,,,3a3a3e,2a1f18,0.55
-pistol,name_weapontype_pistol,1,pistol,hitscan,false,5,20,10,0.6,140,1500,,15,inf,0,false,1,1.6,2.2,3,10,8,10,dual_wield,,,,34383a,22262a,0.32
-smg,name_weapontype_smg,2,smg,hitscan,true,8,40,30,0.5,70,2200,,50,13,10,true,1,2.4,1.2,2.5,11,4,8,,,,,2b2e30,45494c,0.6
-assault_rifle,name_weapontype_assault_rifle,2,rifle,hitscan,true,10,40,30,0.6,100,2200,,50,10,8,true,1,1.5,1.7,4,12,7,15,,,,,2f3330,6b5a3f,0.8
-lmg,name_weapontype_lmg,2,lmg,hitscan,true,11,40,28,0.6,75,3000,,100,3,2,true,1,3,1.2,7,15,9,18,,,,,2b2d2a,5a4a2f,1
-shotgun,name_weapontype_shotgun,2,shotgun,hitscan,false,30,20,10,0.35,800,550,380,10,10,10,true,1,15,0,3,18,60,90,buckshot,,,,3a2b22,2a2a2a,0.8
-bolt_sniper,name_weapontype_bolt_sniper,2,sniper,hitscan,false,100,80,60,0.8,1100,2000,,5,20,6,true,4,0.2,0,6,8,50,30,,,,,4a3a28,1f2224,1.1
-dmr,name_weapontype_dmr,2,sniper,hitscan,false,48,60,45,0.75,280,2600,,15,6,4,true,2,0.4,1.4,5,8,20,25,,,,,23272a,3d4a3a,1.05
-rocket_launcher,name_weapontype_rocket_launcher,2,heavy,projectile,false,100,40,40,1,800,3200,,1,5,3,false,1,0.5,0,2,3,100,120,rocket_motor;rocket_warhead,,,,4b5a3a,c9a23a,1.15
-mortar,name_weapontype_mortar,2,heavy,lob,false,0,32,32,1,600,1600,,1,6,5,false,1,0,0,0,0,25,0,mortar_lob;mortar_warhead,,,,55603f,2d3326,0.7
+type,name,slot,category,fire_mode,automatic,damage,max_range_m,effective_range_m,falloff_min,fire_interval_ms,reload_ms,reload_shell_ms,mag_size,max_mags,start_mags,refillable,pierce,spread_deg,spread_per_shot_deg,move_spread_deg,max_spread_deg,recoil_power,hit_power,traits,fire_sound,model,icon,color,accent_color,length_m,noise_m
+#분류ID,이름 키 (content/lan/<언어>/*.csv),칸(1 보조/2 주무기),분류(melee pistol smg rifle lmg shotgun sniper heavy),발사(melee hitscan projectile lob),연사(true/false),대미지(산탄은 전탄 합계),최대사거리(m),유효사거리(m) 이후 감쇠,최대사거리에서 대미지 배율,발사간격(ms),재장전(ms),1발씩 추가 장전 시간(ms; 0=탄창 교체),1탄창 총알수,최대 탄창수(inf=무제한),시작 예비 탄창수,탄약더미 충전가능,관통 수,기본 퍼짐(도),발당 퍼짐 증가,이동 시 퍼짐,최대 퍼짐,반동 넉백 파워(쏜 사람),피격 넉백 파워(맞은 적) ÷ 몬스터 무게,특성(; 구분 / -이름 은 제거),발사음 ID(빈칸=분류 기본),모델 경로(res://),아이콘 경로(res://),본체 색,포인트 색,길이(m),소음 반경(m) — 이 안의 대기형·경계형 몬스터가 깸
+melee,name_weapontype_melee,1,melee,melee,true,34,1.9,1.9,1,500,0,,0,inf,0,false,1,0,0,0,0,0,60,melee_arc_wide,,,,3a3a3e,2a1f18,0.55,4
+pistol,name_weapontype_pistol,1,pistol,hitscan,false,5,20,10,0.6,140,1500,,15,inf,0,false,1,1.6,2.2,3,10,8,10,dual_wield,,,,34383a,22262a,0.32,14
+smg,name_weapontype_smg,2,smg,hitscan,true,8,40,30,0.5,70,2200,,50,13,10,true,1,2.4,1.2,2.5,11,4,8,,,,,2b2e30,45494c,0.6,16
+assault_rifle,name_weapontype_assault_rifle,2,rifle,hitscan,true,10,40,30,0.6,100,2200,,50,10,8,true,1,1.5,1.7,4,12,7,15,,,,,2f3330,6b5a3f,0.8,20
+lmg,name_weapontype_lmg,2,lmg,hitscan,true,11,40,28,0.6,75,3000,,100,3,2,true,1,3,1.2,7,15,9,18,,,,,2b2d2a,5a4a2f,1,22
+shotgun,name_weapontype_shotgun,2,shotgun,hitscan,false,30,20,10,0.35,800,550,380,10,10,10,true,1,15,0,3,18,60,90,buckshot,,,,3a2b22,2a2a2a,0.8,22
+bolt_sniper,name_weapontype_bolt_sniper,2,sniper,hitscan,false,100,80,60,0.8,1100,2000,,5,20,6,true,4,0.2,0,6,8,50,30,,,,,4a3a28,1f2224,1.1,26
+dmr,name_weapontype_dmr,2,sniper,hitscan,false,48,60,45,0.75,280,2600,,15,6,4,true,2,0.4,1.4,5,8,20,25,,,,,23272a,3d4a3a,1.05,24
+rocket_launcher,name_weapontype_rocket_launcher,2,heavy,projectile,false,100,40,40,1,800,3200,,1,5,3,false,1,0.5,0,2,3,100,120,rocket_motor;rocket_warhead,,,,4b5a3a,c9a23a,1.15,30
+mortar,name_weapontype_mortar,2,heavy,lob,false,0,32,32,1,600,1600,,1,6,5,false,1,0,0,0,0,25,0,mortar_lob;mortar_warhead,,,,55603f,2d3326,0.7,30
