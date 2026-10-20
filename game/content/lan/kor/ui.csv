@@ -226,6 +226,11 @@ fmt_result_survivor_lost,{0} 버티고 쓰러졌습니다
 msg_survivor_boss,보스 등장! 빨간 원(내려찍기) 밖으로 피하세요
 msg_survivor_clear,보스 처치! 살아남았습니다
 boss_summon,소환!
-boss_enraged,격노!
-msg_boss_enraged,보스가 격노했습니다! 더 빠르고 더 자주 공격합니다
+msg_boss_enraged,"보스가 격노했습니다! 더 빠르고, 부채꼴 탄막을 씁니다"
 fmt_hud_mode_stage,{0} · {1}
+msg_boss_phase2,보스가 더 사나워졌습니다! 이제 졸개를 부릅니다
+boss_phase_up,페이즈 업!
+fmt_objective_survivor_rest,정비 시간 — {0}초 (보스까지 {1})
+ui_objective_survivor_named,강한 적을 쓰러뜨리세요
+fmt_survivor_rest,강한 적을 쓰러뜨렸습니다! {0}초 동안 정비하세요
+msg_survivor_named,강한 적이 나타났다!

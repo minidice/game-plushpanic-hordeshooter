@@ -33,7 +33,7 @@ public partial class Effects
     public void UnregisterCorpseObserver(Node3D anchor) => _corpseObservers.RemoveAll(o=>o.Anchor==anchor);
     private void TrackCorpse(Corpse body,float radius,MonsterDefinition? monster,Vector3 deathPosition)
     {
-        if(monster?.Tier!=MonsterTier.Named){_corpses.Add(new(body,_corpseClock,radius));return;}
+        if(monster?.KeepsCorpse!=true){_corpses.Add(new(body,_corpseClock,radius));return;}
         var record=new NamedCorpseRecord{Name="NamedCorpse",CorpseId=++_nextCorpseId,MonsterId=monster.Id,
             CreatedAt=_corpseClock,ExpiresAt=_corpseClock+RetentionSettings.NamedLifetime,Visual=body};
         AddChild(record);record.GlobalPosition=deathPosition;

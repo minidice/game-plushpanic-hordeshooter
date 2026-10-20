@@ -189,7 +189,7 @@ public partial class Effects : Node3D
         body.AddChild(new CollisionShape3D { Shape = new CapsuleShape3D { Radius = radius, Height = Mathf.Max(height, radius * 2.05f) } });
         AddChild(body);
         var origin = rig.GlobalPosition;
-        if (monster?.Tier == MonsterTier.Named)
+        if (monster?.KeepsCorpse == true)
         {
             var ground = Rays.Cast(this, origin + Vector3.Up * .5f, origin + Vector3.Down * 100, Layers.World);
             if (ground.HasValue) origin = ground.Value.Position;

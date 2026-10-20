@@ -6,7 +6,8 @@ namespace HordeShooter;
 
 /// <summary>
 /// Survival MVP (doc/menu-multiplayer-plan.md 3.1): hold the warehouse generator through timed waves.
-/// Waves come in through the two doorways (street side and yard side), later ones with armed animals.
+/// Waves come in through the two doorways (street side and yard side). Who comes is the mode table
+/// (modes/survival_spawns.csv, wave numbers): later waves mix in armed animals, and named ones arrive as a wave starts.
 /// Lasting to the end of the last wave clears the match; the generator breaking or the squad falling loses it.
 /// The schedule follows the clock, so a client can show the same wave text without being sent it.
 /// </summary>
@@ -24,6 +25,9 @@ public partial class SurvivalRules : ModeRules
     public SurvivalTuning Rules => Tuning.Survival;
     public int WaveCount => Rules.Waves.Count;
     public int SpawnedThisMatch { get; private set; }
+    /// <summary>Named monsters the table sent so far (checks).</summary>
+    public int NamedSent { get; private set; }
+    private int _namedThroughWave;
 
     private BaseCore _core = null!;
     private int _shownWave = -1;
@@ -113,12 +117,28 @@ public partial class SurvivalRules : ModeRules
         if (!running) { _spawnTimer = .5f; return; }
         _spawnTimer -= dt;
         if (_spawnTimer > 0) return;
+        if (index + 1 > _namedThroughWave)
+        {
+            SpawnNamed(_namedThroughWave, index + 1);
+            _namedThroughWave = index + 1;
+        }
         var wave = Rules.Waves[index];
         _spawnTimer = wave.Every;
         SpawnGroup(wave, index);
     }
 
-    /// <summary>One group through one doorway. Veterans arrive once per wave, with the first group.</summary>
+    /// <summary>The table's named rows for waves (<paramref name="after"/>, <paramref name="upTo"/>], through a doorway.</summary>
+    private void SpawnNamed(int after, int upTo)
+    {
+        foreach (var row in Table.NamedDue(after, upTo, Stage.ThemeId))
+        {
+            if (PickSpot(Rng.Randf() < .5f ? StreetGate : YardGate) is not { } at) continue;
+            for (int i = 0; i < row.Count; i++) ModeSpawnTable.Spawn(Stage, row, at);
+            NamedSent += row.Count;
+        }
+    }
+
+    /// <summary>One group through one doorway; each member is a weighted pick from the table's rows for this wave.</summary>
     public int SpawnGroup(SurvivalWave wave, int index)
     {
         int alive = Stage.AllEnemies.Count(e => !e.IsDead);
@@ -126,18 +146,16 @@ public partial class SurvivalRules : ModeRules
         if (count <= 0) return 0;
         var gate = Rng.Randf() < .5f ? StreetGate : YardGate;
         if (PickSpot(gate) is not { } at) return 0;
-        var armed = MonsterDatabase.Get("armed_animal");
+        int spawned = 0;
         for (int i = 0; i < count; i++)
-            SpawnHunter(Rng.Randf() * 100 < wave.ArmedPct ? armed : null, at);
-        if (_veteransSent < index + 1)
         {
-            _veteransSent = index + 1;
-            for (int i = 0; i < wave.Veterans; i++) SpawnHunter(MonsterDatabase.Get("armed_veteran"), at);
+            if (Table.PickCommon(index + 1, Stage.ThemeId, Rng) is not { } row) break;
+            ModeSpawnTable.Spawn(Stage, row, Near(at));
+            spawned++;
         }
-        SpawnedThisMatch += count;
-        return count;
+        SpawnedThisMatch += spawned;
+        return spawned;
     }
-    private int _veteransSent;
 
     private static Vector3[] Spots(float x0, float x1, float z0, float z1)
     {

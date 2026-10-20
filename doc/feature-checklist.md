@@ -9,6 +9,7 @@
 - [x] 싱글: 모드 3종 출격(거점·난전은 2026-10-21부터 1차 버전, 화면 이름 M-23), 스테이지는 자동(1개)
 - [x] 거점(구 생존) 1차: 창고 발전기(거점) 방어, 준비 + 웨이브 3개(약 2분 43초), 일반 적이 가까운 발전기를 때림, 뒤 웨이브에 무장 랫서판다·정예병, 거점 내구도 막대, 발전기 파괴 패배·마지막 웨이브 클리어 ([모드 3.1](menu-multiplayer-plan.md), M-22)
 - [x] 난전(구 서바이버) 1차: 선반 없는 창고 홀, 사방 화면 밖에서 약한 무리(점점 커짐), 2분 30초에 스킬 보스(돌진·빨간 원 내려찍기·소환·격노), 보스 막대, 보스 처치 클리어 (M-22)
+- [x] 개편 2단계(2026-10-21, T-21·M-24): 몬스터 등급 boss, 모드별 몬스터 테이블(`modes/<mode>_spawns.csv`), 보스 페이즈·스킬 데이터(`bosses/<id>.json`, 3페이즈·부채꼴 탄막 추가), 난전 named 처치 후 정비 시간 ([규격](mode-monster-tables.md))
 - [ ] 거점·난전 다음: 레벨업 능력 선택, 인벤토리·파밍·탈출, 전용 맵·전용 보스 모델, 멀티에서 보스 연출 동기화(I-77), 수치 플레이 조정
 - [x] 멀티 메뉴: 방 만들기, 주소로 참가(2인 테스트). 방 코드·공개방은 준비 중
 - [x] 멀티 테스트 실행: 한 PC 두 창(`Start-Multi-Test.cmd`), 방장 LAN 주소 안내, 다른 PC용 Windows 실행 파일(`Export-Game.cmd` → `build/HordeShooter-windows.zip`)
@@ -123,3 +124,10 @@
 - C# 빌드 경고·오류 0. `WeaponHandlingCheck` 30개 통과(헤드리스·창 모드), `Start-Game.ps1 -Test`(Integration) 148, `CombatPacingCheck` 44, `NetCodecCheck` 11, `NetSyncCheck` 28, `SquadCheck` 50, `ReloadPoseCheck` 279, `WeaponGripCheck` 187, `SupplyCheck` 12, `MenuCheck` 39, `LobbyCheck` 31, `ModeCheck` 43, `EnemyAttackCheck` 79, `SpawnCheck` 41, `TailMeleeCheck`, `VisionTierCheck` 23, `HitFlashCheck` 통과.
 - 창 모드 렌더 `output/weapons-*.png`로 조준 중 카메라·조준선, 3번 칸 HUD, 박격포 착탄 원·궤적, 레일건 충전선·진행 막대 확인.
 - 실제 손으로 해 본 조준 손맛·이동속도 차이 체감은 확인하지 않음(I-26). 2인 멀티로 3번 칸을 써 보지는 않음(I-78).
+
+### 이번 변경 확인 기록 — 2026-10-21 (개편 2단계)
+
+- C# 빌드 경고·오류 0. `ModeCheck` 67개 통과(헤드리스·창 모드), `Integration` 148, `CorpseTierCheck` 36, `CorpseRetentionCheck` 16, `CorpseReactionCheck` 26, `EnemyExpansion` 60, `SpawnCheck` 41, `NetSyncCheck` 28, `NetCodecCheck` 11, `MenuCheck` 39, `LobbyCheck` 31, `WeaponHandlingCheck` 30, `SquadCheck` 50, `EnemyAttackCheck` 79, `CombatPacingCheck` 44 통과.
+- 창 모드 렌더 `output/mode-survivor-fan.png`·`mode-survivor-boss.png`로 부채꼴 탄막 바닥 선, 페이즈 알림, 보스 막대 30%를 확인.
+- 보스 2~3분 전투 체감, 테이블 가중치의 난이도는 직접 플레이로 확인하지 않음(I-26).
+

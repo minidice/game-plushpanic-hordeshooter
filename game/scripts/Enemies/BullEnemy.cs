@@ -29,6 +29,9 @@ public partial class BullEnemy : Enemy
     private readonly System.Collections.Generic.HashSet<Player> _bowled = new();
     private StandardMaterial3D? _telegraphMat;
 
+    /// <summary>A boss charges only in phases that list the charge skill.</summary>
+    protected virtual bool CanCharge => true;
+
     protected override Vector3 Think(float dt)
     {
         _cooldown -= dt;
@@ -62,7 +65,7 @@ public partial class BullEnemy : Enemy
                 return Vector3.Zero;
         }
 
-        if (Awake && player != null && _cooldown <= 0 && dist < Charge.TriggerRange && dist > Charge.MinRange && HasLineOfSight(dt))
+        if (CanCharge && Awake && player != null && _cooldown <= 0 && dist < Charge.TriggerRange && dist > Charge.MinRange && HasLineOfSight(dt))
         {
             StartWindup(toPlayer / dist);
             return Vector3.Zero;

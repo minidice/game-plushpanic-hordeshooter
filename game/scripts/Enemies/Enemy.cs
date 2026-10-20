@@ -425,6 +425,9 @@ public partial class Enemy : CharacterBody3D
     /// <summary>Weaker (or tougher) than the data says, set right after spawning (Survivor's weak masses).</summary>
     public void ScaleHealth(float factor) => Health *= factor;
 
+    /// <summary>Hits harder (or softer) than the data says, set right after spawning (mode tables' damage_scale).</summary>
+    public void ScaleDamage(float factor) => AttackDamage *= factor;
+
     public virtual void TakeHit(HitInfo hit)
     {
         if (IsDead) return;

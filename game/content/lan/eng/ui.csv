@@ -226,6 +226,11 @@ fmt_result_survivor_lost,Lasted {0}
 msg_survivor_boss,The boss is here! Stay out of the red circle (slam)
 msg_survivor_clear,Boss down! You survived
 boss_summon,SUMMON!
-boss_enraged,ENRAGED!
-msg_boss_enraged,The boss is enraged: faster and more skills
+msg_boss_enraged,"The boss is enraged: faster, and it fires a fan of shots"
 fmt_hud_mode_stage,{0} · {1}
+msg_boss_phase2,The boss grows fiercer: now it calls minions
+boss_phase_up,PHASE UP!
+fmt_objective_survivor_rest,Rest — {0}s (boss in {1})
+ui_objective_survivor_named,Take down the strong ones
+fmt_survivor_rest,Strong ones down! {0}s to restock
+msg_survivor_named,Strong enemies incoming!

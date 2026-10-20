@@ -23,6 +23,8 @@ public abstract partial class ModeRules : Node
 
     protected Stage Stage => GetParent<Stage>();
     protected ModeTuning Tuning => ModeTuning.Current;
+    /// <summary>Which monsters this mode sends when (content/data/modes/&lt;mode&gt;_spawns.csv, decisions.md M-24).</summary>
+    public ModeSpawnTable Table => ModeSpawnTable.For(Mode);
     protected readonly RandomNumberGenerator Rng = new();
     /// <summary>Seconds of play so far (the stage clock, which stops when the match ends).</summary>
     protected float Time => Stage.Elapsed;
@@ -68,12 +70,11 @@ public abstract partial class ModeRules : Node
         return pool[Rng.RandiRange(0, pool.Count - 1)];
     }
 
-    /// <summary>A hunter (awake from the start) a step from <paramref name="at"/>.</summary>
-    protected Enemy SpawnHunter(MonsterDefinition? monster, Vector3 at)
+    /// <summary>A spot a step from <paramref name="at"/> so a group does not stack on one point.</summary>
+    protected Vector3 Near(Vector3 at)
     {
         var offset = new Vector3(Rng.RandfRange(-1.4f, 1.4f), 0, Rng.RandfRange(-1.4f, 1.4f));
-        var spot = Stage.Flow.IsBlocked(at + offset) ? at : at + offset;
-        return monster == null ? Stage.SpawnCommon(spot, awake: true) : Stage.Spawn(monster, spot, awake: true);
+        return Stage.Flow.IsBlocked(at + offset) ? at : at + offset;
     }
 
     protected static string Clock(float seconds)

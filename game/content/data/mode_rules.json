@@ -1,14 +1,26 @@
 {
-  "description": "생존·서바이버 모드 MVP 수치 (doc/menu-multiplayer-plan.md 3.1). 두 모드 모두 Stage 1 창고에서 시작한다. 시간은 초, 거리는 m. 첫 버전의 제안값이며 플레이로 조정한다.",
+  "description": "생존(거점)·서바이버(난전) 모드의 시간·무리 수치 (doc/menu-multiplayer-plan.md 3.1, doc/mode-monster-tables.md). 어떤 몬스터가 언제 나오는지는 modes/<mode>_spawns.csv, 보스 페이즈·스킬은 bosses/<id>.json. 두 모드 모두 Stage 1 창고에서 시작한다. 시간은 초, 거리는 m. 첫 버전의 제안값이며 플레이로 조정한다.",
   "survival": {
     "core_hp": 900,
     "prep_s": 8,
     "break_s": 10,
     "max_alive": 60,
     "waves": [
-      { "duration_s": 40, "every_s": 4.5, "group": 5, "armed_pct": 0, "veterans": 0 },
-      { "duration_s": 45, "every_s": 4, "group": 6, "armed_pct": 20, "veterans": 0 },
-      { "duration_s": 50, "every_s": 3.5, "group": 7, "armed_pct": 30, "veterans": 1 }
+      {
+        "duration_s": 40,
+        "every_s": 4.5,
+        "group": 5
+      },
+      {
+        "duration_s": 45,
+        "every_s": 4,
+        "group": 6
+      },
+      {
+        "duration_s": 50,
+        "every_s": 3.5,
+        "group": 7
+      }
     ]
   },
   "survivor": {
@@ -17,21 +29,8 @@
     "group_start": 3,
     "group_end": 8,
     "boss_group_scale": 0.5,
-    "common_hp_scale": 0.6,
     "spawn_min_m": 14,
     "spawn_max_m": 22,
-    "boss": {
-      "scale": 1.7,
-      "slam_range_m": 4.5,
-      "slam_radius_m": 5.5,
-      "slam_windup_s": 1.1,
-      "slam_damage": 22,
-      "slam_cooldown_s": 6,
-      "summon_every_s": 13,
-      "summon_count": 6,
-      "enrage_hp_pct": 50,
-      "enrage_speed": 1.35,
-      "enrage_cooldown_scale": 0.6
-    }
+    "rest_after_named_s": 12
   }
 }

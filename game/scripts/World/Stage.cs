@@ -307,9 +307,9 @@ public partial class Stage : Node3D
         }
         else if (monster.Behavior == MonsterBehavior.Boss)
         {
-            // The boss is its look scaled up (mode_rules.json survivor.boss.scale), collider included.
+            // The boss is its look scaled up (bosses/<id>.json scale), collider included.
             look = (CharacterDefinition)baseLook.Duplicate();
-            float scale = ModeTuning.Current.Boss.Scale;
+            float scale = BossDatabase.Get(monster.Id).Scale;
             look.ModelScale *= scale;
             look.ColliderRadius *= scale;
             look.ColliderHeight *= scale;

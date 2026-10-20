@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -70,8 +71,39 @@ public partial class ModeCheck : Node
         Check(bad.Count == 4, "a negative core, a non-number, an unknown key and a backwards spawn ring are reported: " + string.Join(" / ", bad));
         Check(MonsterDatabase.Current.Errors.Count == 0, "monsters.csv (with the boss row) loads without errors" + string.Join("; ", MonsterDatabase.Current.Errors));
         var bossDef = MonsterDatabase.Get(BossEnemy.MonsterId);
-        Check(bossDef.Behavior == MonsterBehavior.Boss && bossDef.BullCharge != null && bossDef.IsSpecial && bossDef.Tier == MonsterTier.Named,
-            "the boss is a named special with a bull charge");
+        Check(bossDef.Behavior == MonsterBehavior.Boss && bossDef.BullCharge != null && bossDef.IsSpecial && bossDef.Tier == MonsterTier.Boss,
+            "the boss is a boss-tier special with a bull charge");
+        Check(bossDef.KeepsCorpse && MonsterDatabase.Get("bull").KeepsCorpse && !MonsterDatabase.Get("humanoid").KeepsCorpse,
+            "boss and named corpses follow the same policy, commons their own (T-21)");
+
+        // ---------- mode monster tables (M-24) ----------
+        var outpost = ModeSpawnTable.For(GameMode.Survival);
+        var onslaught = ModeSpawnTable.For(GameMode.Survivor);
+        Check(outpost.Errors.Count == 0 && onslaught.Errors.Count == 0, "both mode tables load without errors" + string.Join("; ", outpost.Errors.Concat(onslaught.Errors)));
+        var rng = new RandomNumberGenerator { Seed = 7 };
+        var wave1 = Enumerable.Range(0, 60).Select(_ => outpost.PickCommon(1, "zombie", rng)!.Monster).ToList();
+        var wave3 = Enumerable.Range(0, 200).Select(_ => outpost.PickCommon(3, "zombie", rng)!.Monster).ToList();
+        Check(wave1.All(m => m == "@common") && wave3.Contains("armed_animal") && wave3.Contains("@common"), "wave 1 sends only commons, wave 3 mixes in armed animals");
+        Check(outpost.NamedDue(0, 1, "zombie").Count() == 0 && outpost.NamedDue(1, 3, "zombie").Count() == 2, "named ones open waves 2 and 3, not wave 1");
+        Check(onslaught.PickCommon(30, "armed", rng)!.Monster == "@common" && Enumerable.Range(0, 100).Any(_ => onslaught.PickCommon(80, "armed", rng)!.Monster == "armed_animal"),
+            "theme rows only join when they match the stage theme and time");
+        var badTable = ModeSpawnTable.FromText("test", "monster,role,theme,weight,count,from,until,hp_scale,damage_scale,extra\n" +
+            "ghost,common,any,1,,0,,1,1,\n@common,boss,any,1,,0,,1,1,\n@common,common,space,0,,5,2,0,1,\n").Errors;
+        Check(badTable.Count >= 6, "a table with an unknown column, monster, role and theme, zero weight and scale, and until before from is reported: " + string.Join(" / ", badTable));
+
+        // ---------- boss phases and skills (M-24) ----------
+        Check(BossDatabase.Current.Errors.Count == 0, "boss data loads without errors" + string.Join("; ", BossDatabase.Current.Errors));
+        var bossData = BossDatabase.Get(BossEnemy.MonsterId);
+        Check(bossData.Phases.Count == 3 && bossData.PhaseAt(1) == 0 && bossData.PhaseAt(.6f) == 1 && bossData.PhaseAt(.2f) == 2,
+            "three phases by health: 100 / 66 / 33%");
+        Check(bossData.Skills.Values.Select(k => k.Kind).Distinct().Count() == 4 && bossData.Phases[2].Skills.Count > bossData.Phases[0].Skills.Count,
+            "four skill kinds; later phases use more skills");
+        var badBoss = BossDatabase.FromText(new Dictionary<string, string>
+        {
+            ["test"] = "{\"phases\": [{\"from_hp_pct\": 90, \"skills\": [\"nope\"]}, {\"from_hp_pct\": 95}], \"skills\": {\"x\": {\"kind\": \"laser\"}, \"s\": {\"kind\": \"slam\", \"radius\": 3}}}",
+        }).Errors;
+        Check(badBoss.Count == 5, "a missing skill, a first phase below 100, phases going up, an unknown kind and an unknown key are reported: " + string.Join(" / ", badBoss));
+        Check(BossEnemy.MonsterId == bossData.Id && bossDef.Hp >= 8000, $"the boss is built for a 2–3 minute fight ({bossDef.Hp} HP)");
 
         // ---------- scenario is unchanged ----------
         var stage = await NewStage(GameMode.Scenario);
@@ -108,7 +140,9 @@ public partial class ModeCheck : Node
         Check(stage.Notice == Loc.Format("fmt_survival_wave_start", 1, r.Waves.Count), "wave 1 is announced");
         Check(stage.AllEnemies.All(e => e.GlobalPosition.X is < 52 or > 84), "groups come in from the street or the yard, not inside the hall");
         for (int i = 0; i < 6; i++) rules.SpawnGroup(r.Waves[2], 2);
-        Check(stage.AllEnemies.Any(e => e.Monster.Id is "armed_animal" or "armed_veteran"), "the last wave brings armed animals");
+        Check(stage.AllEnemies.Any(e => e.Monster.Id is "armed_animal"), "the last wave brings armed animals");
+        stage.AdvanceClockForTest(r.Prep + r.Waves[0].Duration + r.Break + .2f - stage.Elapsed);
+        await Until(() => rules.NamedSent >= 1 && stage.AllEnemies.Any(e => e.IsSpecial), "wave 2 opens with a named monster from the table");
 
         // Away from the generator, the horde goes for it instead of the player.
         foreach (var e in stage.AllEnemies.ToList()) e.QueueFree();
@@ -154,7 +188,18 @@ public partial class ModeCheck : Node
         var start = stage.Player.GlobalPosition;
         var commons = stage.AllEnemies.Where(e => !e.IsSpecial).ToList();
         Check(commons.All(e => e.GlobalPosition.DistanceTo(start) is > 10 and < 26), "the swarm arrives on a ring around the player");
-        Check(commons.All(e => e.Health <= e.Monster.Hp * r.CommonHpScale + .01f), "survivor commons are weaker than the data");
+        float weak = ModeSpawnTable.For(GameMode.Survivor).Rows.First(row => row.Monster == "@common").HpScale;
+        Check(commons.All(e => e.Health <= e.Monster.Hp * weak + .01f), $"survivor commons get the table's hp_scale ({weak})");
+
+        // A named wave, then a rest once they are down (M-24).
+        stage.AdvanceClockForTest(45.2f - stage.Elapsed);
+        await Until(() => rules.NamedSent >= 1, "a named monster arrives at its table time");
+        Check(rules.ObjectiveText == Loc.Text("ui_objective_survivor_named"), "the objective asks to take it down");
+        foreach (var e in stage.AllEnemies.Where(e => e.IsSpecial).ToList()) e.Burn(99999);
+        await Until(() => rules.RestLeft > 0, "once the named are down the rest starts");
+        int spawnedAtRest = rules.SpawnedThisMatch;
+        await Seconds(2);
+        Check(rules.SpawnedThisMatch == spawnedAtRest && rules.ObjectiveText.Length > 0 && !rules.ObjectiveText.StartsWith("fmt_"), "no swarm comes during the rest: " + rules.ObjectiveText);
         if (Windowed)
         {
             // Let a mid-match swarm build up for the render review.
@@ -171,24 +216,41 @@ public partial class ModeCheck : Node
         Check(rules.ObjectiveText == Loc.Text("ui_objective_survivor_boss") && rules.BarLabel.Contains(Loc.Text("name_monster_boss")), "the objective and bar switch to the boss");
 
         // Slam: a red disc, then everyone inside is hit and launched.
+        Check(boss.Phase == 0 && !boss.CurrentPhase.Skills.Contains("summon"), "phase 1 has no summon yet");
         await Until(() => !boss.Casting && boss.State == BullEnemy.Mode.Chase, "the boss is between skills", 6);
         foreach (var e in stage.AllEnemies.Where(e => e != boss).ToList()) e.QueueFree();
         boss.GlobalPosition = stage.Player.GlobalPosition + new Vector3(2.5f, 0, 0);
         stage.Player.Invulnerable = false;
-        int before = stage.Player.Health, slams = boss.Slams;
-        boss.StartSlam();
-        Check(boss.Casting, "the slam winds up");
-        await Frames(Mathf.CeilToInt(boss.Skills.SlamWindup * .6f * Engine.PhysicsTicksPerSecond));
+        int before = stage.Player.Health, slams = boss.Uses.GetValueOrDefault(BossSkillKind.Slam);
+        var slam = boss.Data.Skills.Values.First(k => k.Kind == BossSkillKind.Slam);
+        Check(boss.StartSkill(BossSkillKind.Slam) && boss.Casting, "the slam winds up");
+        await Frames(Mathf.CeilToInt(slam.Windup * .6f * Engine.PhysicsTicksPerSecond));
         await Shot("survivor-slam");
-        await Until(() => boss.Slams == slams + 1, "the slam lands after its windup", 3);
+        await Until(() => boss.Uses.GetValueOrDefault(BossSkillKind.Slam) == slams + 1, "the slam lands after its windup", 3);
         Check(stage.Player.Health < before, $"the slam hurts a player inside the disc ({before} → {stage.Player.Health})");
         stage.Player.Invulnerable = true;
 
+        // Phase 2 below 66%: the summon joins.
+        boss.Burn(boss.MaxHealth * .4f);
+        await Until(() => boss.Phase == 1 && boss.CurrentPhase.Skills.Contains("summon"), "below 66% the second phase starts", 3);
+        Check(stage.Notice == Loc.Text("msg_boss_phase2"), "the new phase is announced");
+        await Until(() => !boss.Casting, "the boss is free to summon", 4);
+        var summon = boss.Data.Skills.Values.First(k => k.Kind == BossSkillKind.Summon);
         int alive = stage.AllEnemies.Count();
-        Check(boss.Summon() == boss.Skills.SummonCount && stage.AllEnemies.Count() == alive + boss.Skills.SummonCount, "the summon calls a ring of commons");
-        boss.Burn(boss.MaxHealth * .55f);
-        await Until(() => boss.Enraged && boss.Speed > boss.Monster.MoveSpeed, "below half health it enrages and speeds up", 2);
-        Check(rules.BarFraction < .5f, "the bar follows the boss's health");
+        Check(boss.StartSkill(BossSkillKind.Summon) && stage.AllEnemies.Count() == alive + summon.Count, "the summon calls a ring of commons");
+
+        // Phase 3 below 33%: faster, and the fan of shots.
+        boss.Burn(boss.MaxHealth * .3f);
+        await Until(() => boss.Phase == 2 && boss.Speed > boss.Monster.MoveSpeed * 1.2f, "below 33% the last phase speeds it up", 3);
+        Check(rules.BarFraction < .34f, "the bar follows the boss's health");
+        await Until(() => !boss.Casting && boss.State == BullEnemy.Mode.Chase, "the boss is free to fire", 6);
+        var fan = boss.Data.Skills.Values.First(k => k.Kind == BossSkillKind.FanShot);
+        int fans = boss.Uses.GetValueOrDefault(BossSkillKind.FanShot);
+        Check(boss.StartSkill(BossSkillKind.FanShot) && boss.Casting, "the fan of shots winds up");
+        await Frames(Mathf.CeilToInt(fan.Windup * .6f * Engine.PhysicsTicksPerSecond));
+        await Shot("survivor-fan");
+        await Until(() => boss.Uses.GetValueOrDefault(BossSkillKind.FanShot) == fans + 1, "the fan goes off after its windup", 3);
+        Check(stage.GetChildren().OfType<EnemyProjectile>().Count() >= fan.Count, $"it fires {fan.Count} shots in a fan");
         await Seconds(1.5f);
         await Shot("survivor-boss");
         boss.Burn(boss.MaxHealth);

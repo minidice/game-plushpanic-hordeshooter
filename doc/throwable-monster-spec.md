@@ -72,7 +72,7 @@
 | 열 | 의미 |
 |---|---|
 | `id`, `name` | ID, 이름 키 |
-| `behavior` | `common`(일반), `balloon`(풍선 기생충), `bull`(박치기 황소), `boss`(서바이버 보스 `BossEnemy`: `bull_charge` 특성 필수, 내려찍기·소환 수치는 `mode_rules.json`) 등. 어떤 코드가 움직일지 결정 |
+| `behavior` | `common`(일반), `balloon`(풍선 기생충), `bull`(박치기 황소), `boss`(난전 보스 `BossEnemy`: `bull_charge` 특성 필수, 페이즈·스킬은 `bosses/<id>.json`, [몬스터 테이블 규격](mode-monster-tables.md)) 등. 어떤 코드가 움직일지 결정 |
 | `look` | 외형 .tres 이름 |
 | `mirror_player` | `true`면 플레이어와 같은 종에서 장비를 뗀 좀비 외형 |
 | `hp`, `move_speed_mps` | 체력, 이동 속도 |

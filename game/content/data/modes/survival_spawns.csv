@@ -1,0 +1,9 @@
+monster,role,theme,weight,count,from,until,hp_scale,damage_scale
+#몬스터 id 또는 @common(테마 일반 풀)·@special(테마 특수 풀),역할(common=무리 채우기 / named=그 시점에 count마리),테마(any zombie animals armed),가중치(common),수(named),시작(거점=웨이브 번호),끝(이 값 미만까지; 빈칸=끝까지),체력 배율,공격력 배율
+@common,common,any,100,,1,2,1,1
+@common,common,any,80,,2,3,1,1
+armed_animal,common,any,20,,2,3,1,1
+@common,common,any,70,,3,,1,1
+armed_animal,common,any,30,,3,,1,1
+@special,named,any,,1,2,,1,1
+armed_veteran,named,any,,1,3,,1,1

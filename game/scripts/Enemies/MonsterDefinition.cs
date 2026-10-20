@@ -6,7 +6,8 @@ using System.Text.Json;
 
 namespace HordeShooter;
 
-public enum MonsterTier { Common, Named }
+/// <summary>Common, named or boss (decisions.md T-21). Bosses keep their corpse like named ones.</summary>
+public enum MonsterTier { Common, Named, Boss }
 
 public enum MonsterBehavior
 {
@@ -58,6 +59,8 @@ public sealed class MonsterDefinition
     public BullChargeTrait? BullCharge { get; set; }
     public CaptureTrait? Capture { get; set; }
     public RangedTrait? Ranged { get; set; }
+    /// <summary>Named and boss corpses stay fixed and on their own timer; only commons are scenery (T-16, T-21).</summary>
+    public bool KeepsCorpse => Tier != MonsterTier.Common;
     public bool IsSpecial => Behavior != MonsterBehavior.Common && (Behavior != MonsterBehavior.Shooter || Id == "armed_veteran");
 }
 
@@ -129,13 +132,13 @@ public sealed class MonsterDatabase
             }
             var c = new CellReader(where, row.Cells, db._errors);
             var tier = row.Cells.GetValueOrDefault("tier", "").ToLowerInvariant();
-            if (tier is not ("" or "common" or "named")) db._errors.Add($"{where}: tier '{tier}' must be common/named; common used");
+            if (tier is not ("" or "common" or "named" or "boss")) db._errors.Add($"{where}: tier '{tier}' must be common/named/boss; common used");
             var m = new MonsterDefinition
             {
                 Id = id,
                 NameKey = row.Cells.GetValueOrDefault("name", ""),
                 Behavior = c.Enum<MonsterBehavior>("behavior"),
-                Tier = tier == "named" ? MonsterTier.Named : MonsterTier.Common,
+                Tier = tier switch { "named" => MonsterTier.Named, "boss" => MonsterTier.Boss, _ => MonsterTier.Common },
                 LookId = row.Cells.GetValueOrDefault("look", id),
                 MirrorPlayer = c.Bool("mirror_player", false),
                 Hp = c.Float("hp", 30),
