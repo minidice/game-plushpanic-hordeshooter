@@ -211,8 +211,21 @@ public partial class ModeCheck : Node
         Check(rules.GroupSize == r.GroupEnd || rules.GroupSize == r.GroupEnd - 1, "groups grow toward the boss");
         await Until(() => rules.BossArrived && rules.Boss != null, "the boss arrives on time", 4);
         var boss = rules.Boss!;
-        Check(boss.Definition.ColliderRadius > CharacterCatalog.Enemy("bull").ColliderRadius * 1.5f,
-            "the boss is a scaled-up bull");
+        Check(boss.Definition.ColliderRadius > CharacterCatalog.Enemy("bull").ColliderRadius * 1.5f && boss.Rig.Model.FindChild("boss_leftArm", true, false) != null,
+            "the boss wears its own model (boss.glb, arms kept), scaled up");
+        if (Windowed)
+        {
+            // Stand a few metres off, facing it, with the swarm cleared, so the close camera frames the boss model.
+            foreach (var e in stage.AllEnemies.Where(e => e != boss).ToList()) e.QueueFree();
+            boss.Stun(3);
+            stage.Player.TeleportTo(boss.GlobalPosition + new Vector3(-4.5f, 0, 2.5f));
+            stage.Player.SetControls(Vector2.Zero, boss.GlobalPosition + Vector3.Up, false);
+            stage.Cam.Close = true;
+            stage.Cam.SnapTo(stage.Player.GlobalPosition);
+            await Seconds(1.2f);
+            await Shot("survivor-boss-close");
+            stage.Cam.Close = false;
+        }
         Check(rules.ObjectiveText == Loc.Text("ui_objective_survivor_boss") && rules.BarLabel.Contains(Loc.Text("name_monster_boss")), "the objective and bar switch to the boss");
 
         // Slam: a red disc, then everyone inside is hit and launched.

@@ -11,4 +11,4 @@ spitter,name_monster_spitter,spitter,spitter,false,55,2.8,1.2,8,1500,0.4,12,vomi
 wild_animal,name_monster_wild_animal,common,plush,false,32,4.8,0.9,5,900,0.35,8,,common
 armed_animal,name_monster_armed_animal,shooter,plush,false,42,3.4,1,6,1000,0.35,12,animal_shot,common
 armed_veteran,name_monster_armed_veteran,shooter,plush,false,110,3,1.7,10,1000,0.35,14,veteran_shot,named
-boss,name_monster_boss,boss,bull,false,12000,3.2,8,14,1300,0.5,30,boss_charge,boss
+boss,name_monster_boss,boss,boss,false,12000,3.2,8,14,1300,0.5,30,boss_charge,boss

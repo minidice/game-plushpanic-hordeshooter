@@ -62,3 +62,8 @@ GLB 루트의 `extras.physics`에는 캡슐 반지름·반높이·중심·질량
 `./Build-Blender.ps1` → 기존 Blender 5.2로 기본 장면 생성, PNG 렌더, `output/blender-verification.json` 검사 보고서 작성.
 
 모델은 `src/model.mjs`와 `src/sculpt.mjs`에서 생성하므로 브라우저와 GLB의 기하 구조가 동일합니다. Three.js 0.180.0은 MIT, Rapier 0.21.0은 Apache-2.0 라이선스이며 원문은 해당 `node_modules` 패키지에 있습니다.
+
+## 보스 모델 (2026-10-21)
+
+`node tools/export-game-roster.mjs --boss-only` → `output/roster/boss-source.glb`, 이어서 Blender `--background --python tools/optimize_game_roster.py -- --boss-only --no-preview` → `../../game/assets/enemies/boss/boss.glb`. 생성 코드는 `tools/boss-models.mjs`(Codex 작성, 지시문 `../../doc/model-briefs/boss.md`). 다른 모델의 내보내기·최적화 동작은 그대로다.
+

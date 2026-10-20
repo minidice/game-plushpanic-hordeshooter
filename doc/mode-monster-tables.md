@@ -42,7 +42,7 @@
 
 파일: `game/content/data/bosses/<monster id>.json`. 파일 이름이 `monsters.csv`의 id다(`boss.json` = 거대 두목 황소).
 
-- `scale`: 외형과 충돌 크기 배율 (예전 `mode_rules.json` survivor.boss.scale).
+- `scale`: 외형과 충돌 크기 배율 (예전 `mode_rules.json` survivor.boss.scale). 외형 자체는 `monsters.csv`의 `look`(`boss` → `content/enemies/boss.tres` → `assets/enemies/boss/boss.glb`, 2026-10-21 전용 모델).
 - `phases`: 체력이 `from_hp_pct` % **이하**가 되면 그 페이즈. 첫 페이즈는 100, 내림차순. 각 페이즈: `skills`(쓸 스킬 이름), `speed`(이동 배율), `cooldown_scale`(스킬 대기 배율), `notice`(들어갈 때 알림 언어 키, 생략 가능).
 - `skills`: 이름 → `kind`와 수치.
 

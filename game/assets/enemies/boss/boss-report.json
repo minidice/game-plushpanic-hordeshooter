@@ -1,0 +1,34 @@
+{
+  "id": "boss",
+  "source_triangles": 11608,
+  "triangles": 4466,
+  "meshes": 6,
+  "materials": [
+    "boss_cream",
+    "boss_fur",
+    "boss_gold",
+    "boss_ink",
+    "boss_leather"
+  ],
+  "bytes": 131240,
+  "nodes": [
+    "boss_root",
+    "Body",
+    "Deform",
+    "Deform_mesh",
+    "LeftFoot",
+    "LeftFoot_mesh",
+    "boss_leftArm",
+    "boss_leftArm_mesh",
+    "RightFoot",
+    "RightFoot_mesh",
+    "boss_rightArm",
+    "boss_rightArm_mesh",
+    "Head",
+    "Head_mesh",
+    "Muzzle",
+    "Weapon"
+  ],
+  "forward": "+Z",
+  "notes": "No bones. Runtime object pivots. Beret included for runtime visibility. Source vertex colors preserved."
+}

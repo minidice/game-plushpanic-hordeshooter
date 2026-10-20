@@ -5,6 +5,7 @@ import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { createCharacter } from '../src/model.mjs';
 import { oval, line } from '../src/sculpt.mjs';
 import { createInfected, infectedKinds } from './infected-models.mjs';
+import { createBoss } from './boss-models.mjs';
 
 globalThis.FileReader = class {
   readAsArrayBuffer(blob) { blob.arrayBuffer().then(b => { this.result=b; this.onloadend?.(); }); }
@@ -19,7 +20,7 @@ async function save(kind, root) {
   await fs.writeFile(new URL(`${kind}-source.glb`,out),Buffer.from(binary));
   console.log(`${kind}: ${binary.byteLength} bytes`);
 }
-for (const kind of (process.argv.includes('--enemies-only') ? [] : ['goose','duck','raccoon','redpanda'])) {
+for (const kind of (process.argv.includes('--enemies-only') || process.argv.includes('--boss-only') ? [] : ['goose','duck','raccoon','redpanda'])) {
   const c=createCharacter(kind), bird=['goose','duck'].includes(kind), w=c.parts.weapon;
   // Export optional pieces; runtime and authoring previews control their visibility.
   c.root.traverse(o=>{if(o.userData.hiddenByDefault)o.visible=true;});
@@ -106,4 +107,5 @@ for (const kind of (process.argv.includes('--enemies-only') ? [] : ['goose','duc
   await save(kind,c.root);
 }
 
-for (const kind of (process.argv.includes('--players-only') ? [] : infectedKinds)) await save(kind, createInfected(kind));
+for (const kind of (process.argv.includes('--players-only') || process.argv.includes('--boss-only') ? [] : infectedKinds)) await save(kind, createInfected(kind));
+if (process.argv.includes('--boss-only')) await save('boss', createBoss());

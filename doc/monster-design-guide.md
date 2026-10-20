@@ -40,7 +40,7 @@
 | `wild_animal` / common | 현재 장비 없는 라쿤 | 야생 동물 근접. 라쿤 얼굴·귀·꼬리 특징 유지 |
 | `armed_animal` / common | 현재 총을 든 랫서판다 | 사격 전조와 엄폐 차폐가 있는 일반 원거리 적. 탄은 40m/s 가는 구적탄(C-22) |
 | `armed_veteran` / named | 현재 랫서판다 무장 모델 재사용 | 정예 원거리 적. 별도 정예 외형의 충분한 식별성은 후속 검토; named 분류도 M-8의 검토 대상 |
-| `boss` / boss | `bull` 외형을 1.7배로 키운 거대 황소(크기는 `bosses/boss.json`의 `scale`) | 난전(서바이버) 보스(M-22·M-24). 100/66/33% 3페이즈: 돌진(`boss_charge.json`)·빨간 원 내려찍기 → 소환 추가 → 부채꼴 탄막 추가·빨라짐. 페이즈·스킬은 [몬스터 테이블 규격](mode-monster-tables.md) 3장. 전용 보스 모델은 후속 |
+| `boss` / boss | 전용 모델 `boss.glb`(두 발로 선 황소 두목: 금관·금 코뚜레·어깨 보호대·챔피언 벨트·큰 주먹, [지시문](model-briefs/boss.md)), 게임이 1.7배로 키움(`bosses/boss.json`의 `scale`) | 난전(서바이버) 보스(M-22·M-24). 100/66/33% 3페이즈: 돌진(`boss_charge.json`)·빨간 원 내려찍기 → 소환 추가 → 부채꼴 탄막 추가·빨라짐. 페이즈·스킬은 [몬스터 테이블 규격](mode-monster-tables.md) 3장. 모델은 2026-10-21 Codex 첫 제작(A-17) |
 | `plush` / common | 선택한 플레이어 종을 복제하고 감염 색 적용 | 기존 복제 좀비 경로. 현재 위 3개 기본 테마 풀에는 포함되지 않음 |
 
 보스·네임드 추가 후보와 Codex 모델링 진행 방식, 등급 `boss` 추가 방향은 [개편 방향](mode-weapon-direction.md) 5.1·8장(T-21·A-17, 구현 전).

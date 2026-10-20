@@ -238,3 +238,12 @@ node prototypes/character-lab/tools/validate-game-roster.mjs
 네 동물 모두 `CharacterReloadPose`의 공통 탄창식/개별 탄 삽입 모션을 쓴다. 오른손은 손잡이를 유지하고, 왼손은 기존 손 메시를 잠시 장전 접촉점으로 이동한다. 별도 팔을 덧붙이지 않는다. 총을 몸 앞쪽으로 옮겨 조끼와 부리를 피하고, 장전 종료·취소 뒤 원래 변환으로 복구한다. 체형 조절은 기존 Model 변환을 함께 따르며 피격 캡슐은 유지한다.
 
 현재 적용 무기·타이밍·중단 규칙·미구현 범위는 [무기 규격 6.1](weapon-spec.md#61-손총-장전-모션-2026-10-20)이 기준이다. 새 종/무기를 추가하면 `ReloadPoseCheck`의 종·무기 목록도 갱신한다. 정면 가까운 쿼터뷰에서 기본형/장비형의 손 왕복을 확인하고 실제 게임 거리에서도 총 기울기와 손 움직임이 읽히는지 확인한다. `CaptureReloadPose`의 M4·R870 네 종 비교 렌더를 재사용한다.
+
+## 10. Codex로 만드는 몬스터 모델 (2026-10-21, A-17)
+
+새 보스·네임드 모델은 지시문 한 장으로 Codex CLI에 맡기고, 게임 연결과 확인은 Claude가 한다. 첫 사례: [난전 보스 지시문](model-briefs/boss.md).
+
+1. `doc/model-briefs/<id>.md`에 외형·색·크기·노드 구조(이 문서 2장)·예산·작업 범위·금지 사항·완료 기준을 적는다.
+2. `codex exec -C <저장소> -s workspace-write "<지시문을 읽고 5장 작업>"`: Codex가 `prototypes/character-lab/tools/`에 생성 코드를 쓰고 원본 GLB(`output/roster/<id>-source.glb`)를 만든다. `doc/`·`game/` 수정, Blender, 커밋은 하지 않는다.
+3. Claude가 `optimize_game_roster.py -- --<id>-only --no-preview`를 Blender로 돌려 `game/assets/enemies/<id>/<id>.glb`(삼각형 4,500 미만)를 만들고, `content/enemies/<id>.tres`와 `monsters.csv`의 `look`을 연결한 뒤 실제 렌더와 전용 검사로 확인한다.
+

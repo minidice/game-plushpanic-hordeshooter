@@ -13,7 +13,8 @@ ROOT=BASE.parents[1]
 OUT=BASE/'output'/'roster'
 PLAYERS=['goose','duck','raccoon','redpanda']
 ENEMIES=['humanoid','crawler','tether','leaper','spitter']
-SELECTED=PLAYERS if '--players-only' in sys.argv else ENEMIES if '--enemies-only' in sys.argv else PLAYERS+ENEMIES
+BOSS_ONLY='--boss-only' in sys.argv
+SELECTED=['boss'] if BOSS_ONLY else PLAYERS if '--players-only' in sys.argv else ENEMIES if '--enemies-only' in sys.argv else PLAYERS+ENEMIES
 
 def clear():
     bpy.ops.object.select_all(action='SELECT')
@@ -28,7 +29,7 @@ for kind in SELECTED:
     clear()
     bpy.ops.import_scene.gltf(filepath=str(OUT/f'{kind}-source.glb'))
     player=kind in PLAYERS
-    if not player:
+    if not player and kind!='boss':
         # Preserve authored limbs instead of baking them into Deform and adding duplicate arms at runtime.
         deform=bpy.data.objects['Deform']
         low=kind=='crawler';leap=kind=='leaper';fat=kind=='spitter'
@@ -92,11 +93,14 @@ for kind in SELECTED:
     print('ROSTER_ASSET '+json.dumps({k:v for k,v in report.items() if k not in ['nodes','materials']}))
     assert report['triangles'] < (30000 if player else 4500),report
     if player: assert all(any(m.startswith(f'custom_{channel}_') for m in report['materials']) for channel in ['body','beak','hat','vest','pack','wing','tail','feet','eyes','hair'])
-    else:
+    elif kind!='boss':
         assert all(f'{kind}_{side}Arm' in report['nodes'] and f'{kind}_{side}Arm_mesh' in report['nodes'] for side in ['left','right'])
+    else:
+        assert report['triangles'] < 4500,report
+        assert all(name in report['nodes'] for name in ['boss_leftArm','boss_rightArm','boss_leftArm_mesh','boss_rightArm_mesh']),report
 
 if '--no-preview' in sys.argv:
-    contact='players-contact' if '--players-only' in sys.argv else 'enemies-contact' if '--enemies-only' in sys.argv else 'roster-contact'
+    contact='boss-contact' if BOSS_ONLY else 'players-contact' if '--players-only' in sys.argv else 'enemies-contact' if '--enemies-only' in sys.argv else 'roster-contact'
     (OUT/f'{contact}-summary.json').write_text(json.dumps(reports,indent=2),encoding='utf8')
     sys.exit(0)
 
@@ -125,6 +129,13 @@ for row,kinds in enumerate([PLAYERS,ENEMIES]):
                     for part in [o]+list(o.children_recursive):part.hide_render=True
         bpy.ops.object.text_add(location=(root.location.x,root.location.y-1.0,.02))
         text=bpy.context.object;text.name=f'label_{kind}';text.data.body=kind.upper();text.data.align_x='CENTER';text.data.size=.18;text.data.materials.append(label)
+if BOSS_ONLY:
+    path=ROOT/'game'/'assets'/'enemies'/'boss'/'boss.glb'
+    bpy.ops.import_scene.gltf(filepath=str(path))
+    root=bpy.data.objects.get('boss_root')
+    root.location=(0,0,0)
+    bpy.ops.object.text_add(location=(0,-1.0,.02))
+    text=bpy.context.object;text.name='label_boss';text.data.body='BOSS';text.data.align_x='CENTER';text.data.size=.24;text.data.materials.append(label)
 bpy.ops.mesh.primitive_plane_add(size=200,location=(0,0,-.04));bpy.context.object.data.materials.append(floor)
 bpy.ops.object.camera_add(location=(2,-17,13));camera=bpy.context.object;aim(camera,(0,0,1));camera.data.type='ORTHO';camera.data.ortho_scale=12.5
 scene=bpy.context.scene;scene.camera=camera;scene.render.engine='CYCLES';scene.cycles.samples=24
@@ -133,7 +144,7 @@ scene.world.color=(.23,.23,.23)
 for name,pos,power,size in [('Key',(-5,-5,10),1600,7),('Fill',(6,-2,6),1000,6),('Rim',(1,6,9),1800,5)]:
     bpy.ops.object.light_add(type='AREA',location=pos);o=bpy.context.object;o.name=name;o.data.energy=power;o.data.shape='DISK';o.data.size=size;aim(o,(0,0,1))
 scene.view_settings.view_transform='AgX'
-contact='players-contact' if '--players-only' in sys.argv else 'enemies-contact' if '--enemies-only' in sys.argv else 'roster-contact'
+contact='boss-contact' if BOSS_ONLY else 'players-contact' if '--players-only' in sys.argv else 'enemies-contact' if '--enemies-only' in sys.argv else 'roster-contact'
 if '--players-only' in sys.argv:
     camera.location=(2,-13,9);aim(camera,(0,2,1));camera.data.ortho_scale=10
     scene.render.resolution_y=700
