@@ -68,6 +68,9 @@
 - [x] 수류탄·화염병·섬광탄·유인 폭탄, 투척 궤적·착탄 범위
 - [x] 구급상자 회복, 일시정지·재시작·스테이지 클리어
 
+- [x] 무기 개편 1단계(2026-10-21, C-24~C-26): 무기별 이동속도(기관단총 110%, 경기관총·저격 85%), 우클릭/Ctrl 조준(사거리·퍼짐·집중·낮은 자세·카메라, 걸음 느려짐), 투척·박격포 조준 중 이동 -50%, 3번 특수무기 칸(로켓런처·박격포·레일건), 박격포 거치·회수, 레일건 충전·관통 ([무기 규격](weapon-spec.md) 8장)
+- [ ] 무기 개편 다음: 개별 총 개성 다듬기, 레일건 전용 모델, 파티원 화면의 충전·거치 표시(I-78)
+
 ## 적과 협동
 
 - [x] 감염체/야생 동물/무장 동물 테마별 적 구성
@@ -114,3 +117,9 @@
 - C# 빌드 경고·오류 0. `ModeCheck` 43개 통과(헤드리스·창 모드 모두), `Integration` 147, `MenuCheck` 39, `LobbyCheck` 31, `NetSyncCheck` 28, `SpawnCheck` 41, `NetCodecCheck` 11 통과.
 - 창 모드 `ModeCheck` 렌더 `output/mode-*.png`로 거점·웨이브 문구·막대, 서바이버 무리, 보스 내려찍기 원·소환·격노·결과 화면 확인.
 - 일부 헤드리스 실행 종료 때 I-17의 오디오 스트림 잔존 경고가 남음. 2인 멀티로 두 모드를 실제로 해 보지는 않았고(I-77), 난이도·시간은 직접 플레이로 조정해야 함(I-26).
+
+### 이번 변경 확인 기록 — 2026-10-21 (무기 개편 1단계)
+
+- C# 빌드 경고·오류 0. `WeaponHandlingCheck` 30개 통과(헤드리스·창 모드), `Start-Game.ps1 -Test`(Integration) 148, `CombatPacingCheck` 44, `NetCodecCheck` 11, `NetSyncCheck` 28, `SquadCheck` 50, `ReloadPoseCheck` 279, `WeaponGripCheck` 187, `SupplyCheck` 12, `MenuCheck` 39, `LobbyCheck` 31, `ModeCheck` 43, `EnemyAttackCheck` 79, `SpawnCheck` 41, `TailMeleeCheck`, `VisionTierCheck` 23, `HitFlashCheck` 통과.
+- 창 모드 렌더 `output/weapons-*.png`로 조준 중 카메라·조준선, 3번 칸 HUD, 박격포 착탄 원·궤적, 레일건 충전선·진행 막대 확인.
+- 실제 손으로 해 본 조준 손맛·이동속도 차이 체감은 확인하지 않음(I-26). 2인 멀티로 3번 칸을 써 보지는 않음(I-78).

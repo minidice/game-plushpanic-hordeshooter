@@ -1,6 +1,6 @@
 key,text
 # 조작 안내 (HUD 아래, 메인 메뉴, 일시정지)
-ui_controls,"WASD 이동   마우스 조준   좌클릭 사격   Space 도약   1·2 무기 교체   G 투척 조준   Q 구급상자   E 줍기
+ui_controls,"WASD 이동   마우스 조준   좌클릭 사격   Space 도약   1·2·3 무기 교체   우클릭/Ctrl 조준   G 투척 조준   Q 구급상자   E 줍기
 R 재장전   Tab 확대/축소   Esc 일시정지"
 # 메인 메뉴
 ui_menu_title,HORDE SHOOTER  (가칭)

@@ -27,6 +27,18 @@ public partial class WeaponController : Node
     /// <summary>G was pressed: a throwable is in hand, the landing preview follows the cursor, click throws.</summary>
     public bool AimingThrow { get; private set; }
     public ThrowPreview? Preview => _preview;
+    /// <summary>A lobbed weapon (mortar) is in hand: its landing ring follows the cursor and walking is slowed like a throw aim.</summary>
+    public bool AimingLob => !AimingThrow && Current.Def.Mode == FireMode.Lob;
+    /// <summary>Setting up or packing up a mortar: the survivor cannot walk (decisions.md C-25).</summary>
+    public bool Planted => _plant != null || _recoverLeft > 0;
+    /// <summary>A railgun shot is charging.</summary>
+    public bool Charging => _charge != null;
+    /// <summary>0–1 progress of the current mortar set-up or railgun charge.</summary>
+    public float WindupProgress => _plant != null ? 1 - _plantLeft / Mathf.Max(.001f, _plant.Def.SetupTime)
+        : _charge != null ? 1 - _chargeLeft / Mathf.Max(.001f, _charge.Def.ChargeTime) : 0;
+    private WeaponState? _plant, _charge;
+    private float _plantLeft, _recoverLeft, _chargeLeft;
+    private MeshInstance3D? _chargeLine;
     private List<Node3D> _muzzles = new();
     private int _muzzleIndex;
     private OmniLight3D _flash = null!;
@@ -43,14 +55,27 @@ public partial class WeaponController : Node
 
     public override void _Ready()
     {
-        _player.Died += CancelMeleeSwing;
+        _player.Died += OnDied;
         _player.Rig.HideBuiltInWeapon();
         _flash = new OmniLight3D { OmniRange = 5, LightEnergy = 0, LightColor = new Color("ffcc77") };
         _player.Rig.Weapon.AddChild(_flash);
         RefreshVisual();
     }
 
-    public override void _ExitTree() => _player.Died -= CancelMeleeSwing;
+    public override void _ExitTree()
+    {
+        _player.Died -= OnDied;
+        HideChargeLine();
+    }
+
+    private void OnDied()
+    {
+        CancelMeleeSwing();
+        CancelWindup();
+        EndThrowAim();
+        _preview?.QueueFree();
+        _preview = null;
+    }
 
     public Vector3 MuzzlePosition => _muzzles.Count > 0 ? _muzzles[_muzzleIndex % _muzzles.Count].GlobalPosition : _player.Rig.Muzzle.GlobalPosition;
 
@@ -76,7 +101,8 @@ public partial class WeaponController : Node
                 if (ends.Count > 0) MortarShell.Fire(Stage, from, ends[0], def);
                 return;
         }
-        foreach (var end in ends) Stage.Effects.Tracer(from, end, false);
+        if (def.ChargeTime > 0) foreach (var end in ends) Stage.Effects.Beam(from, end, RailColor);
+        else foreach (var end in ends) Stage.Effects.Tracer(from, end, false);
         _flashTime = .045f;
         _muzzleIndex++;
     }
@@ -113,6 +139,8 @@ public partial class WeaponController : Node
         Current.Holster();
         _player.Rig.ResetReloadPose();
         if (_visual != null) _visual.Visible = false;
+        CancelWindup();
+        _preview?.QueueFree();
         _preview = ThrowPreview.Create(Stage.Effects);
         ShowHeldThrowable();
         return true;
@@ -159,6 +187,7 @@ public partial class WeaponController : Node
     public bool SelectSlot(int slot)
     {
         EndThrowAim();
+        CancelWindup();
         if (!Loadout.SelectSlot(slot)) return false;
         RefreshVisual();
         return true;
@@ -179,6 +208,9 @@ public partial class WeaponController : Node
         blocked |= _player.IsDead || _player.IsStunned;
         if (blocked || AimingThrow || (_swingState != null && _swingState != Current)) CancelMeleeSwing();
         else AdvanceMeleeSwing(dt);
+        _recoverLeft = Mathf.Max(0, _recoverLeft - dt);
+        if (blocked || AimingThrow) CancelWindup();
+        else if (TickWindup(dt)) return;
 
         if (AimingThrow)
         {
@@ -194,8 +226,19 @@ public partial class WeaponController : Node
         }
 
         var state = Current;
+        // Only your own landing ring: another player's mortar is theirs to aim.
+        if (AimingLob && _player.IsLocal)
+        {
+            _preview ??= ThrowPreview.Create(Stage.Effects);
+            _preview.ShowLob(state.Def, MuzzlePosition, LobTarget(state.Def), _player.GlobalPosition, dt);
+        }
+        else if (_preview != null)
+        {
+            _preview.QueueFree();
+            _preview = null;
+        }
         bool wasReloading = state.Reloading && _reloadWatch == state;
-        state.Tick(dt, moving);
+        state.Tick(dt, moving, _player.IsAiming);
         if (wasReloading && !state.Reloading) _player.PlayOwn("reload_end");
         _reloadWatch = state;
         if (blocked)
@@ -215,13 +258,104 @@ public partial class WeaponController : Node
             }
             return;
         }
-        if (_swingState == null && state.Trigger(pressed, held)) Fire(state);
+        if (_swingState == null && !Planted && state.Trigger(pressed, held)) Fire(state);
+    }
+
+    // ---------- mortar set-up and railgun charge (decisions.md C-25) ----------
+
+    private static readonly Color RailColor = new("6fd0ff");
+
+    /// <summary>Runs a set-up or charge in progress; true while one is running (nothing else fires meanwhile).</summary>
+    private bool TickWindup(float dt)
+    {
+        if (_plant != null)
+        {
+            if (_plant != Current) { CancelWindup(); return false; }
+            _plantLeft -= dt;
+            Kick = .25f;
+            if (_plantLeft > 0) return true;
+            var planted = _plant;
+            _plant = null;
+            Fire(planted, released: true);
+            _recoverLeft = planted.Def.RecoverTime;
+            return true;
+        }
+        if (_charge != null)
+        {
+            if (_charge != Current) { CancelWindup(); return false; }
+            _chargeLeft -= dt;
+            ShowChargeLine();
+            if (_chargeLeft > 0) return true;
+            var charged = _charge;
+            _charge = null;
+            HideChargeLine();
+            Fire(charged, released: true);
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>Stunned, switched or throwing before the shot left: no shot, the round comes back.</summary>
+    public void CancelWindup()
+    {
+        _plant?.Refund();
+        _charge?.Refund();
+        _plant = _charge = null;
+        HideChargeLine();
+    }
+
+    private void ShowChargeLine()
+    {
+        if (_charge == null) return;
+        _chargeLine ??= Mat.Mesh(Stage.Effects, new BoxMesh { Size = Vector3.One }, MuzzlePosition, Mat.Fade(new Color(RailColor, .35f)));
+        float range = _charge.Def.MaxRange * RangeScale(_charge.Def);
+        var from = MuzzlePosition;
+        var to = from + AimDirection() * range;
+        _chargeLine.GlobalPosition = (from + to) * .5f;
+        _chargeLine.LookAt(to, Vector3.Up);
+        float t = WindupProgress;
+        _chargeLine.Scale = new Vector3(.03f + .06f * t, .03f + .06f * t, range);
+    }
+
+    private void HideChargeLine()
+    {
+        _chargeLine?.QueueFree();
+        _chargeLine = null;
+    }
+
+    /// <summary>Aiming stretches the range of the gun in hand (aim_range_mult).</summary>
+    private float RangeScale(WeaponDefinition def) => _player.IsAiming ? def.AimRangeMultiplier : 1f;
+
+    /// <summary>Where a lobbed shell would land now: the cursor, kept between the weapon's min and max range.</summary>
+    public Vector3 LobTarget(WeaponDefinition def)
+    {
+        var flat = _player.AimPoint - _player.GlobalPosition;
+        flat.Y = 0;
+        float dist = Mathf.Clamp(flat.Length(), def.MinRange, def.MaxRange);
+        var dir = flat.LengthSquared() > .01f ? flat.Normalized() : _player.AimDirection;
+        var target = _player.GlobalPosition + dir * dist;
+        return new Vector3(target.X, 0, target.Z);
     }
 
     // ---------- firing ----------
 
-    private void Fire(WeaponState state)
+    private void Fire(WeaponState state, bool released = false)
     {
+        // The mortar sets up first and the railgun charges first; the round is already taken (refunded on cancel).
+        if (!released && state.Def.Mode == FireMode.Lob && state.Def.SetupTime > 0)
+        {
+            _plant = state;
+            _plantLeft = state.Def.SetupTime;
+            _player.PlayOwn("reload_start");
+            return;
+        }
+        if (!released && state.Def.ChargeTime > 0)
+        {
+            _charge = state;
+            _chargeLeft = state.Def.ChargeTime;
+            _player.PlayOwn("balloon_inflate");
+            return;
+        }
         _player.Rig.ResetReloadPose();
         // A queued burst can fire after input is released; lower its muzzle before using its transform.
         _player.Rig.SetLocomotionPose(0,0,true);
@@ -245,10 +379,7 @@ public partial class WeaponController : Node
                 Stage.Net?.OnShot(_player, def, MuzzlePosition, new[] { MuzzlePosition + rocketDir }, _player.AimPoint);
                 break;
             case FireMode.Lob:
-                var flat = _player.AimPoint - _player.GlobalPosition;
-                flat.Y = 0;
-                float dist = Mathf.Clamp(flat.Length(), def.MinRange, def.MaxRange);
-                var target = _player.GlobalPosition + (flat.LengthSquared() > .01f ? flat.Normalized() : dir) * dist;
+                var target = LobTarget(def);
                 MortarShell.Fire(Stage, MuzzlePosition, target, def);
                 Stage.Net?.OnShot(_player, def, MuzzlePosition, new[] { target }, _player.AimPoint);
                 break;
@@ -259,13 +390,15 @@ public partial class WeaponController : Node
                 int pellets = Mathf.Max(1, def.Pellets);
                 float cone = pellets > 1 ? def.PelletSpread : state.Spread;
                 var ends = Stage.Net != null ? new System.Collections.Generic.List<Vector3>(pellets) : null;
+                float rangeScale = RangeScale(def);
                 for (int i = 0; i < pellets; i++)
                 {
-                    var end = Hitscan(def, origin, Spread(dir, cone), def.Damage * _player.DamageMultiplier / pellets, def.HitPower / pellets, out bool crit);
+                    var end = Hitscan(def, origin, Spread(dir, cone), def.Damage * _player.DamageMultiplier / pellets, def.HitPower / pellets, rangeScale, out bool crit);
                     anyCrit |= crit;
                     var from = MuzzlePosition;
                     if (origin.DistanceTo(end) < origin.DistanceTo(from)) from = origin;
-                    Stage.Effects.Tracer(from, end, crit);
+                    if (def.ChargeTime > 0) Stage.Effects.Beam(from, end, RailColor);
+                    else Stage.Effects.Tracer(from, end, crit);
                     ends?.Add(end);
                 }
                 if (ends != null) Stage.Net!.OnShot(_player, def, MuzzlePosition, ends, _player.AimPoint);
@@ -312,25 +445,26 @@ public partial class WeaponController : Node
     }
 
     /// <summary>
-    /// One bullet (or pellet). Damage falls off past the effective range; it pierces up to
-    /// <see cref="WeaponDefinition.Pierce"/> enemies, losing 20% each time; explosive rounds blow up where it stops.
+    /// One bullet (or pellet). Damage falls off past the effective range (both stretched by aiming, <paramref name="rangeScale"/>);
+    /// it pierces up to <see cref="WeaponDefinition.Pierce"/> enemies, losing 20% each time; explosive rounds blow up where it stops.
     /// </summary>
-    private Vector3 Hitscan(WeaponDefinition def, Vector3 origin, Vector3 dir, float damage, float power, out bool crit)
+    private Vector3 Hitscan(WeaponDefinition def, Vector3 origin, Vector3 dir, float damage, float power, float rangeScale, out bool crit)
     {
         crit = false;
-        var end = origin + dir * def.MaxRange;
+        float range = def.MaxRange * rangeScale;
+        var end = origin + dir * range;
         var exclude = new List<Rid> { _player.GetRid() };
         for (int pierced = 0; pierced < def.Pierce; pierced++)
         {
-            if (Rays.Cast(_player, origin, origin + dir * def.MaxRange, Layers.BulletMask, exclude) is not { } hit) break;
+            if (Rays.Cast(_player, origin, origin + dir * range, Layers.BulletMask, exclude) is not { } hit) break;
             end = hit.Position;
-            float falloff = def.FalloffAt(origin.DistanceTo(end));
+            float falloff = def.FalloffAt(origin.DistanceTo(end), rangeScale);
             switch (hit.Collider)
             {
                 case Enemy enemy when !enemy.IsDead:
                     bool isCrit = pierced == 0 && enemy == _player.FocusTarget && _player.CritReady;
                     crit |= isCrit;
-                    enemy.TakeHit(new HitInfo(damage * falloff * (isCrit ? Player.CritMultiplier : 1f), dir, end, isCrit, power));
+                    enemy.TakeHit(new HitInfo(damage * falloff * (isCrit ? def.CritMultiplier : 1f), dir, end, isCrit, power));
                     exclude.Add(hit.Rid);
                     damage *= .8f;
                     continue;
@@ -397,7 +531,7 @@ public partial class WeaponController : Node
         {
             var push = to.LengthSquared() > .001f ? to.Normalized() : dir;
             bool crit = enemy == _player.FocusTarget && _player.CritReady;
-            enemy.TakeHit(new HitInfo(def.Damage * _player.DamageMultiplier * (crit ? Player.CritMultiplier : 1f), push, enemy.GlobalPosition + Vector3.Up, crit, def.HitPower));
+            enemy.TakeHit(new HitInfo(def.Damage * _player.DamageMultiplier * (crit ? def.CritMultiplier : 1f), push, enemy.GlobalPosition + Vector3.Up, crit, def.HitPower));
         }
         foreach (var prop in Stage.Props)
         {

@@ -64,6 +64,7 @@ public sealed class WeaponDatabase
         "fire_interval_ms", "reload_ms", "reload_shell_ms", "mag_size", "max_mags", "start_mags", "refillable", "pierce",
         "spread_deg", "spread_per_shot_deg", "move_spread_deg", "max_spread_deg", "recoil_power", "hit_power",
         "traits", "fire_sound", "model", "icon", "color", "accent_color", "length_m", "noise_m",
+        "move_speed_pct", "aim_range_mult", "aim_move_pct", "aim_focus_mult", "crit_mult",
     };
 
     private static readonly string[] Required = { "name", "slot", "category", "fire_mode", "damage", "max_range_m", "fire_interval_ms" };
@@ -175,10 +176,18 @@ public sealed class WeaponDatabase
             AccentColor = p.Color("accent_color", new Color("6b5a3f")),
             Length = p.Float("length_m", .75f),
             Noise = p.Float("noise_m", 16f),
+            MoveSpeedScale = p.Float("move_speed_pct", 100) / 100f,
+            AimRangeMultiplier = p.Float("aim_range_mult", 1),
+            AimMoveScale = p.Float("aim_move_pct", 50) / 100f,
+            AimFocusMultiplier = p.Float("aim_focus_mult", 1),
+            CritMultiplier = p.Float("crit_mult", 2.5f),
         };
         def.EffectiveRange = p.Float("effective_range_m", def.MaxRange);
         def.Thickness = Thickness[def.Category];
         if (def.Noise <= 0) _errors.Add($"{where}: noise_m은 0보다 커야 합니다 (소리 없는 무기는 아주 작은 값)");
+        if (def.MoveSpeedScale <= 0 || def.AimMoveScale <= 0) _errors.Add($"{where}: move_speed_pct·aim_move_pct는 0보다 커야 합니다");
+        if (def.AimRangeMultiplier < 1 || def.AimFocusMultiplier < 1 || def.CritMultiplier < 1)
+            _errors.Add($"{where}: aim_range_mult·aim_focus_mult·crit_mult는 1 이상이어야 합니다");
 
         // Slot 1 never runs dry (L4D rule); elsewhere "inf" also means unlimited.
         bool infinite = def.Slot == WeaponSlot.Secondary || p.IsInfinite("max_mags");
@@ -244,7 +253,8 @@ public sealed class WeaponDatabase
         ["pellets"] = new[] { "count", "spread_deg" },
         ["burst"] = new[] { "count", "interval_ms" },
         ["projectile"] = new[] { "speed_mps", "max_flight_ms" },
-        ["lob"] = new[] { "flight_ms", "min_range_m" },
+        ["lob"] = new[] { "flight_ms", "min_range_m", "setup_ms", "recover_ms" },
+        ["charge"] = new[] { "charge_ms" },
         ["explode_on_hit"] = new[] { "radius_m", "damage", "self_damage_share", "knockback_power" },
         ["dual_wield"] = new[] { "name_format_key", "mag_multiplier", "fire_interval_multiplier", "spread_add_deg", "recoil_multiplier" },
     };
@@ -305,6 +315,11 @@ public sealed class WeaponDatabase
             case "lob":
                 def.FlightTime = t.Float("flight_ms", 1300) / 1000f;
                 def.MinRange = t.Float("min_range_m", 0);
+                def.SetupTime = Math.Max(0, t.Float("setup_ms", 0)) / 1000f;
+                def.RecoverTime = Math.Max(0, t.Float("recover_ms", 0)) / 1000f;
+                break;
+            case "charge":
+                def.ChargeTime = Math.Max(0, t.Float("charge_ms", 700)) / 1000f;
                 break;
             case "explode_on_hit":
                 def.ExplosionRadius = t.Float("radius_m", 4);

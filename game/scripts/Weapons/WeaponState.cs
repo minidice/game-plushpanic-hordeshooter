@@ -42,12 +42,17 @@ public sealed class WeaponState
     public bool IsEmpty => !IsMelee && Mag == 0 && (Def.InfiniteReserve || Reserve == 0);
     public int TotalAmmo => Mag + Reserve;
 
-    public void Tick(float dt, bool moving)
+    /// <summary>Share of the normal cone left while aiming (decisions.md C-26); moving adds nothing then.</summary>
+    public const float AimSpreadShare = .35f;
+
+    public void Tick(float dt, bool moving, bool aiming = false)
     {
         _cooldown = Math.Max(0, _cooldown - dt);
         _burstTimer = Math.Max(0, _burstTimer - dt);
         _bloom = Math.Max(0, _bloom - Def.SpreadRecovery * dt);
-        Spread = Math.Min(Def.MaxSpread, Def.BaseSpread + _bloom + (moving ? Def.MoveSpread : 0));
+        Spread = aiming
+            ? Math.Min(Def.MaxSpread, (Def.BaseSpread + _bloom) * AimSpreadShare)
+            : Math.Min(Def.MaxSpread, Def.BaseSpread + _bloom + (moving ? Def.MoveSpread : 0));
         if (!Reloading) return;
         ReloadElapsed += dt;
         if (Def.ShellReloadTime <= 0)
@@ -117,6 +122,12 @@ public sealed class WeaponState
     }
 
     public void CancelReload() => Reloading = false;
+
+    /// <summary>A shot that was taken but never left (mortar set-up or railgun charge cut short): the round comes back.</summary>
+    internal void Refund()
+    {
+        if (!IsMelee) Mag = Math.Min(Def.MagSize, Mag + 1);
+    }
 
     /// <summary>Drop any unfinished burst (rolling, healing).</summary>
     public void CancelBurst() => _burstLeft = 0;

@@ -44,6 +44,17 @@ public partial class Effects : Node3D
         Expire(beam, crit ? .08f : .045f);
     }
 
+    /// <summary>A charged shot (railgun): a thick bright line that lingers a moment longer than a tracer.</summary>
+    public void Beam(Vector3 from, Vector3 to, Color color)
+    {
+        float length = from.DistanceTo(to);
+        if (length < .05f) return;
+        var beam = Mat.Mesh(this, _unitBox, (from + to) * .5f, Mat.Glow(color, 6));
+        beam.LookAt(to, Vector3.Up);
+        beam.Scale = new Vector3(.16f, .16f, length);
+        Expire(beam, .22f);
+    }
+
     public void Shell(Vector3 at, Vector3 right)
     {
         var shell = new RigidBody3D

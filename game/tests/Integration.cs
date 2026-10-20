@@ -678,6 +678,9 @@ public partial class Integration : Node
         player.SetControls(Vector2.Zero, new Vector3(26, 1, 0), true);
         await Frames(2);
         player.SetControls(Vector2.Zero, new Vector3(26, 1, 0), false);
+        // The mortar sets up before it fires (decisions.md C-25).
+        Check(player.Weapons.Planted, "the mortar sets up before the shot");
+        await Frames((int)(ArmoryCatalog.Weapon("mortar").SetupTime * 60) + 3);
         bool marked = stage.Effects.GetChildren().OfType<MortarShell>().Any(m => m.Target.DistanceTo(new Vector3(26, 0, 0)) < .5f);
         await Frames(30);
         bool earlyAlive = crowd.All(IsInstanceValid);
@@ -804,7 +807,8 @@ public partial class Integration : Node
         Check(player.Loadout.CurrentThrowable?.Id == "frag", "mouse wheel switches the throwable kind while aiming");
         player.PressCancel();
         await Frames(2);
-        Check(!player.Weapons.AimingThrow && player.Loadout.Count(ArmoryCatalog.Throwable("frag")) == 1 && player.Weapons.Preview == null,
+        // A mortar in hand keeps its own landing ring after the throw aim ends (decisions.md C-25).
+        Check(!player.Weapons.AimingThrow && player.Loadout.Count(ArmoryCatalog.Throwable("frag")) == 1 && (player.Weapons.Preview == null || player.Weapons.AimingLob),
             "right click cancels without throwing");
         player.SetControls(Vector2.Zero, new Vector3(40, 1, 0), false);
         await Toss(player);

@@ -50,7 +50,9 @@ public partial class CameraRig : Camera3D
             {
                 var lead = Player.AimPoint - Player.GlobalPosition;
                 lead.Y = 0;
-                goal += lead.LimitLength(14f) * .22f;
+                // Aiming looks much further toward the cursor, like a scope (decisions.md C-26).
+                float aim = Player.AimBlend;
+                goal += lead.LimitLength(14f + 12f * aim) * (.22f + .26f * aim);
             }
         }
         _focus = _focus.Lerp(goal, 1 - Mathf.Exp(-dt * 5f));

@@ -61,6 +61,7 @@ public partial class NetCodecCheck : Node
             Flags = NetPlayerFlags.Downed | NetPlayerFlags.HostMoves, ActiveSlot = 2,
             Secondary = NetIds.Weapon("m1911"), SecondaryMag = 15, SecondaryReserve = 0,
             Primary = NetIds.Weapon("m4"), PrimaryMag = 37, PrimaryReserve = 250,
+            Special = NetIds.Weapon("railgun"), SpecialMag = 1, SpecialReserve = 3,
             Throwables = new List<(int, int)> { (NetIds.Throwable("frag"), 2), (NetIds.Throwable("molotov"), 1) },
         };
         foreach (int count in new[] { 0, 70, 200 })
@@ -77,6 +78,7 @@ public partial class NetCodecCheck : Node
             var p = got.Players[0];
             bool players = p.Peer == 2 && Near(p.Position, player.Position) && p.Health == 87 && p.Medkits == 1 && Mathf.IsEqualApprox(p.BleedLeft, 12.5f) &&
                            p.Flags == player.Flags && p.ActiveSlot == 2 && NetIds.WeaponAt(p.Primary) == "m4" && p.PrimaryMag == 37 && p.PrimaryReserve == 250 &&
+                           NetIds.WeaponAt(p.Special) == "railgun" && p.SpecialMag == 1 && p.SpecialReserve == 3 &&
                            NetIds.WeaponAt(p.Secondary) == "m1911" && p.Throwables.Count == 2 && NetIds.ThrowableAt(p.Throwables[0].Kind) == "frag" && p.Throwables[0].Count == 2;
             bool enemies = count == 0 ? got.Enemies == null
                 : got.Enemies!.Count == count && got.Enemies.Zip(snap.Enemies!).All(t =>

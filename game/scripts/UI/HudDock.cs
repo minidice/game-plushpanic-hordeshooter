@@ -76,9 +76,10 @@ public partial class Hud
         dock.AddChild(new Paint { Name = "LeapGauge", CustomMinimumSize = new Vector2(74, 84), Painter = DrawLeap });
         _slot1 = new HudEquipmentSlot("SecondarySlot", "1");
         _slot2 = new HudEquipmentSlot("PrimarySlot", "2");
+        _slot3 = new HudEquipmentSlot("SpecialSlot", "3");
         _throwables = new HudEquipmentSlot("ThrowableSlot", "G");
         _medkit = new HudEquipmentSlot("MedkitSlot", "Q");
-        foreach (var slot in new[] { _slot1, _slot2, _throwables, _medkit }) dock.AddChild(slot);
+        foreach (var slot in new[] { _slot1, _slot2, _slot3, _throwables, _medkit }) dock.AddChild(slot);
 
         var ammoPanel = new PanelContainer { Name = "AmmoPanel", CustomMinimumSize = new Vector2(174, 0), SizeFlagsVertical = Control.SizeFlags.ShrinkCenter, MouseFilter = Control.MouseFilterEnum.Ignore };
         ammoPanel.AddThemeStyleboxOverride("panel", HudPlate(pad: 10));

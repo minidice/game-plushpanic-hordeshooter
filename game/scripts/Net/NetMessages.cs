@@ -54,7 +54,7 @@ public static class NetIds
 
 /// <summary>Buttons a client is holding right now.</summary>
 [System.Flags]
-public enum NetHeld { None = 0, Fire = 1, Revive = 2 }
+public enum NetHeld { None = 0, Fire = 1, Revive = 2, Aim = 4 }
 
 /// <summary>
 /// One-shot buttons. The client counts every press and always sends the counts, so a lost or late input message
@@ -113,6 +113,7 @@ public struct NetPlayerState
     public int ActiveSlot;
     public int Secondary, SecondaryMag, SecondaryReserve;
     public int Primary, PrimaryMag, PrimaryReserve; // Primary −1 = none
+    public int Special, SpecialMag, SpecialReserve; // Special −1 = none
     public List<(int Kind, int Count)> Throwables;
 
     public void Write(NetWriter w)
@@ -127,6 +128,7 @@ public struct NetPlayerState
         w.U8(ActiveSlot);
         w.U16(Secondary); w.U16(SecondaryMag); w.U16(SecondaryReserve);
         w.S16(Primary); w.U16(PrimaryMag); w.U16(PrimaryReserve);
+        w.S16(Special); w.U16(SpecialMag); w.U16(SpecialReserve);
         w.U8(Throwables?.Count ?? 0);
         if (Throwables != null) foreach (var (kind, count) in Throwables) { w.U8(kind); w.U8(count); }
     }
@@ -139,6 +141,7 @@ public struct NetPlayerState
             Flags = (NetPlayerFlags)r.U8(), ActiveSlot = r.U8(),
             Secondary = r.U16(), SecondaryMag = r.U16(), SecondaryReserve = r.U16(),
             Primary = r.S16(), PrimaryMag = r.U16(), PrimaryReserve = r.U16(),
+            Special = r.S16(), SpecialMag = r.U16(), SpecialReserve = r.U16(),
             Throwables = new List<(int, int)>(),
         };
         int n = r.U8();

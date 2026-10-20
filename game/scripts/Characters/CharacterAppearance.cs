@@ -140,6 +140,16 @@ public partial class CharacterRig
         SetPartVisible(Definition.Id+"_rightArm",!weapon||_heldWeapon==null);
         UpdateWeaponGrip();
     }
+    /// <summary>Aiming (decisions.md C-26): a low, steady stance. Body and gun sink a little, feet stay planted.</summary>
+    public void AimStance(float blend)
+    {
+        if(blend<=0)return;
+        float drop=.14f*blend/Definition.ModelScale;
+        Body.Position+=Vector3.Down*drop;
+        Deform.Scale=Deform.Scale*new Vector3(1+.04f*blend,1-.08f*blend,1+.04f*blend);
+        Weapon.Position+=Vector3.Down*drop;
+        UpdateWeaponGrip();
+    }
     /// <summary>Short forward bound. The collider follows the ground; only the visual arcs upwards.</summary>
     public void DodgePose(float phase)
     {

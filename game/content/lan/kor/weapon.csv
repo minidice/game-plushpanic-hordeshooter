@@ -26,3 +26,5 @@ name_weapon_m82,바렛 M82
 name_weapon_alabong,알라봉
 name_weapon_mortar,박격포
 fmt_weapon_dual,쌍 {0}
+name_weapontype_railgun,레일건
+name_weapon_railgun,레일건

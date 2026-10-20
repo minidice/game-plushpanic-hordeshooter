@@ -43,6 +43,7 @@ public partial class Player
         var held = NetHeld.None;
         if (_fire) held |= NetHeld.Fire;
         if (_reviveHeld) held |= NetHeld.Revive;
+        if (_aimHeld) held |= NetHeld.Aim;
         return new NetInput
         {
             Seq = seq, Aim = AimPoint, Held = held, Presses = (byte[])_pressCounts.Clone(),
@@ -75,6 +76,8 @@ public partial class Player
         if (Pressed(input, NetPress.CycleDown)) PressCycle(-1);
         if (input.SlotPresses != _slotPressesSeen) { _slotPressesSeen = input.SlotPresses; if (input.Slot != 0) PressSlot(input.Slot); }
         HoldRevive(input.Held.HasFlag(NetHeld.Revive));
+        // Aiming changes range and focus, which the host decides with the hit (decisions.md C-26).
+        _aimHeld = input.Held.HasFlag(NetHeld.Aim);
         // Own movement on the owner's PC (decided 2026-10-20); the host only takes over while it moves them itself.
         NetMotion = HostMovesMe ? null : input.Position;
     }
@@ -111,6 +114,7 @@ public partial class Player
             ActiveSlot = l.ActiveSlot,
             Secondary = NetIds.Weapon(l.Secondary.Def.Id), SecondaryMag = l.Secondary.Mag, SecondaryReserve = l.Secondary.Reserve,
             Primary = l.Primary == null ? -1 : NetIds.Weapon(l.Primary.Def.Id), PrimaryMag = l.Primary?.Mag ?? 0, PrimaryReserve = l.Primary?.Reserve ?? 0,
+            Special = l.Special == null ? -1 : NetIds.Weapon(l.Special.Def.Id), SpecialMag = l.Special?.Mag ?? 0, SpecialReserve = l.Special?.Reserve ?? 0,
             Throwables = l.Throwables.Select(t => (NetIds.Throwable(t.def.Id), t.count)).ToList(),
         };
     }
@@ -149,8 +153,9 @@ public partial class Player
     {
         var secondary = NetIds.WeaponDef(s.Secondary);
         var primary = s.Primary < 0 ? null : NetIds.WeaponDef(s.Primary);
+        var special = s.Special < 0 ? null : NetIds.WeaponDef(s.Special);
         var throws = s.Throwables.Select(t => (ArmoryCatalog.Throwable(NetIds.ThrowableAt(t.Kind)), t.Count)).ToList();
-        bool changed = Loadout.ApplyNet(secondary, s.SecondaryMag, s.SecondaryReserve, primary, s.PrimaryMag, s.PrimaryReserve, s.ActiveSlot, throws);
+        bool changed = Loadout.ApplyNet(secondary, s.SecondaryMag, s.SecondaryReserve, primary, s.PrimaryMag, s.PrimaryReserve, special, s.SpecialMag, s.SpecialReserve, s.ActiveSlot, throws);
         _slotMismatch = Loadout.ActiveSlot != s.ActiveSlot ? _slotMismatch + 1 : 0;
         if (_slotMismatch >= 4 && Weapons.SelectSlot(s.ActiveSlot)) changed = true;
         if (_slotMismatch >= 4) _slotMismatch = 0;

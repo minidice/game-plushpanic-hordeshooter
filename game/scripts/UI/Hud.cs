@@ -24,7 +24,7 @@ void fragment() {
     private Control _root = null!;
     private Label _objective = null!, _timer = null!, _notice = null!, _hp = null!;
     private Label _ammo = null!, _reserve = null!, _ammoHint = null!, _status = null!, _prompt = null!, _help = null!;
-    private HudEquipmentSlot _slot1 = null!, _slot2 = null!, _throwables = null!, _medkit = null!;
+    private HudEquipmentSlot _slot1 = null!, _slot2 = null!, _slot3 = null!, _throwables = null!, _medkit = null!;
     private ColorRect _blind = null!;
     private Label _endTitle = null!, _endBody = null!;
     private PanelContainer _endPanel = null!, _pausePanel = null!;
@@ -156,6 +156,9 @@ void fragment() {
         var primary = loadout.Primary;
         _slot2.UpdateSlot(primary?.Def.DisplayName ?? Loc.Text("hud_empty"), primary == null ? "" : $"{primary.Mag} / {primary.Reserve}",
             primary?.Def.IconPath ?? "", "rifle", loadout.ActiveSlot == 2, primary != null);
+        var special = loadout.Special;
+        _slot3.UpdateSlot(special?.Def.DisplayName ?? Loc.Text("hud_special"), special == null ? "" : $"{special.Mag} / {special.Reserve}",
+            special?.Def.IconPath ?? "", "rifle", loadout.ActiveSlot == 3, special != null);
         var throwable = loadout.CurrentThrowable;
         _throwables.UpdateSlot(throwable?.DisplayName ?? Loc.Text("hud_throwable"), throwable == null ? "—" : $"×{loadout.Count(throwable)}",
             throwable?.IconPath ?? "", "throwable", player.Weapons.AimingThrow, throwable != null);
@@ -326,6 +329,12 @@ void fragment() {
         var aim = player.AimPoint;
         var center = cam.UnprojectPosition(aim);
         var gun = player.Gun;
+        if (player.AimBlend > 0)
+        {
+            // Aiming (decisions.md C-26): a faint sight line from the gun to the cursor.
+            var from = cam.UnprojectPosition(player.GlobalPosition + Vector3.Up * Player.AimHeight);
+            c.DrawLine(from, center, new Color(UiTheme.Accent, .35f * player.AimBlend), 2, true);
+        }
 
         float distance = Mathf.Max(1, (aim - player.GlobalPosition).Length());
         float spreadOffset = distance * Mathf.Tan(Mathf.DegToRad(gun.Spread * .5f));
@@ -345,7 +354,14 @@ void fragment() {
         }
 
         var font = c.GetThemeDefaultFont();
-        if (gun.Reloading)
+        if (player.Weapons.WindupProgress > 0)
+        {
+            // Mortar set-up or railgun charge.
+            var bar = new Rect2(center + new Vector2(-60, radius + 18), new Vector2(120, 10));
+            c.DrawRect(bar, new Color(0, 0, 0, .7f));
+            c.DrawRect(new Rect2(bar.Position, new Vector2(bar.Size.X * player.Weapons.WindupProgress, bar.Size.Y)), UiTheme.Accent);
+        }
+        else if (gun.Reloading)
         {
             var bar = new Rect2(center + new Vector2(-60, radius + 18), new Vector2(120, 10));
             c.DrawRect(bar, new Color(0, 0, 0, .7f));

@@ -54,6 +54,16 @@ public partial class Player : CharacterBody3D
     }
 
     public bool CritReady => IsLocal && FocusTarget != null && FocusTime >= CritFocusTime;
+
+    /// <summary>Movement while the aim of a throw or a lobbed weapon is up (decisions.md C-26).</summary>
+    public const float LobAimMoveScale = .5f;
+    /// <summary>
+    /// Holding right click or Ctrl with a gun that can aim (decisions.md C-26): range ×aim_range_mult, tighter spread,
+    /// slower walk, faster focus, the camera looks further toward the cursor. Not while busy or throwing.
+    /// </summary>
+    public bool IsAiming { get; private set; }
+    /// <summary>0–1 easing of the aim, for the low stance and the camera.</summary>
+    public float AimBlend { get; private set; }
     public RigidBody3D? Corpse { get; private set; }
     public float DamageFlash { get; private set; }
     public bool ManualControl { get; set; }
@@ -82,7 +92,7 @@ public partial class Player : CharacterBody3D
     private CollisionShape3D _shape = null!;
     private readonly RandomNumberGenerator _rng = new();
     private Vector2 _move;
-    private bool _fire, _firePressed, _reloadPressed, _healPressed, _throwPressed, _rollPressed, _cancelPressed;
+    private bool _fire, _firePressed, _reloadPressed, _healPressed, _throwPressed, _rollPressed, _cancelPressed, _aimHeld;
     private int _cycle;
     private int _slotPressed;
     private Vector3 _push, _tumbleDirection, _rollDirection;
@@ -173,6 +183,8 @@ public partial class Player : CharacterBody3D
     public void PressCycle(int direction) => _cycle = direction;
     public void PressRoll() => _rollPressed = true;
     public void PressSlot(int slot) => _slotPressed = slot;
+    /// <summary>Scripted aim (right click / Ctrl held).</summary>
+    public void HoldAim(bool held) => _aimHeld = held;
 
     private void SetAim(Vector3 point)
     {
@@ -200,6 +212,8 @@ public partial class Player : CharacterBody3D
         if (Input.IsActionJustPressed(GameInput.DebugEscape)) DebugEscapeRestraint();
         if (Input.IsActionJustPressed(GameInput.Slot1)) _slotPressed = 1;
         if (Input.IsActionJustPressed(GameInput.Slot2)) _slotPressed = 2;
+        if (Input.IsActionJustPressed(GameInput.Slot3)) _slotPressed = 3;
+        _aimHeld = Input.IsActionPressed(GameInput.AltFire) || Input.IsActionPressed(GameInput.Aim);
 
         var camera = GetViewport().GetCamera3D();
         if (camera == null) return;
@@ -229,12 +243,14 @@ public partial class Player : CharacterBody3D
         RollCooldownLeft = Mathf.Max(0, RollCooldownLeft - dt);
         bool stunned = StunTime > 0;
         if (stunned) StunTime = Mathf.Max(0, StunTime - dt);
-        UpdateFocus(dt);
         UpdateHealing(dt, stunned);
 
         if (_rollPressed) TryStartRoll(stunned);
         UpdateReviving(dt, _move.LengthSquared() > .01f);
         bool busy = stunned || IsRolling || IsHealing || IsRestrained || Reviving != null;
+        IsAiming = _aimHeld && !busy && Gun.Def.CanAim && !Weapons.AimingThrow && !Gun.Reloading;
+        AimBlend = Mathf.MoveToward(AimBlend, IsAiming ? 1 : 0, dt * 6);
+        UpdateFocus(dt);
 
         if (_slotPressed != 0 && !stunned && !IsRestrained) Weapons.SelectSlot(_slotPressed);
         if (_throwPressed && !busy)
@@ -246,8 +262,8 @@ public partial class Player : CharacterBody3D
         if (_cycle != 0 && !IsRestrained) Weapons.CycleThrowable(_cycle);
         if (_reloadPressed && !busy && !Weapons.AimingThrow && Gun.StartReload()) PlayOwn("reload_start");
 
-        var move = stunned || IsRestrained || Reviving != null ? Vector3.Zero : new Vector3(_move.X, 0, _move.Y).LimitLength(1);
-        float speed = Definition.MoveSpeed * (IsHealing ? .35f : 1f) * (Gun.Reloading ? .85f : 1f);
+        var move = stunned || IsRestrained || Reviving != null || Weapons.Planted ? Vector3.Zero : new Vector3(_move.X, 0, _move.Y).LimitLength(1);
+        float speed = Definition.MoveSpeed * (IsHealing ? .35f : 1f) * (Gun.Reloading ? .85f : 1f) * HandlingSpeedScale;
         bool grounded = IsOnFloor() && Velocity.Y <= 0;
         _push = _push.MoveToward(Vector3.Zero, dt * (grounded ? 10f : 1.2f));
         var horizontal = IsRestrained ? RestraintVelocity() : IsRolling ? _rollDirection * RollSpeed : move * speed + _push;
@@ -270,6 +286,7 @@ public partial class Player : CharacterBody3D
         float amount = Mathf.Min(1, new Vector2(Velocity.X, Velocity.Z).Length() / Definition.MoveSpeed);
         Rig.Animate(dt, stunned || IsRolling ? 0 : amount, Weapons.Kick, _hurt, Velocity);
         if (IsRolling) Rig.DodgePose(1 - _rollTime / RollTime);
+        else Rig.AimStance(AimBlend);
         ApplyRestraintPose();
 
         _firePressed = _reloadPressed = _healPressed = _throwPressed = _rollPressed = _cancelPressed = false;
@@ -294,11 +311,26 @@ public partial class Player : CharacterBody3D
                 candidate = enemy;
             }
         }
-        if (candidate != null && candidate == FocusTarget) FocusTime += dt;
+        if (candidate != null && candidate == FocusTarget) FocusTime += dt * (IsAiming ? Gun.Def.AimFocusMultiplier : 1f);
         else
         {
             FocusTarget = candidate;
             FocusTime = 0;
+        }
+    }
+
+    /// <summary>
+    /// What the weapon in hand does to walking speed: its own move_speed_pct, then aiming (aim_move_pct) or a throw /
+    /// lobbed weapon's aim (−50%).
+    /// </summary>
+    public float HandlingSpeedScale
+    {
+        get
+        {
+            float scale = Weapons.AimingThrow ? 1f : Gun.Def.MoveSpeedScale;
+            if (Weapons.AimingThrow || Weapons.AimingLob) scale *= LobAimMoveScale;
+            else if (IsAiming) scale *= Gun.Def.AimMoveScale;
+            return scale;
         }
     }
 

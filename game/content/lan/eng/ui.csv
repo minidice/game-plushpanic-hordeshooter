@@ -1,6 +1,6 @@
 key,text
 # Controls (bottom of the HUD, main menu, pause)
-ui_controls,"WASD Move   Mouse Aim   LMB Fire   Space Leap   1·2 Switch weapon   G Aim throw   Q Medkit   E Pick up
+ui_controls,"WASD Move   Mouse Aim   LMB Fire   Space Leap   1·2·3 Switch weapon   RMB/Ctrl Aim   G Aim throw   Q Medkit   E Pick up
 R Reload   Tab Zoom   Esc Pause"
 # Main menu
 ui_menu_title,HORDE SHOOTER  (working title)

@@ -26,3 +26,5 @@ name_weapon_m82,Barrett M82
 name_weapon_alabong,Alabong
 name_weapon_mortar,Mortar
 fmt_weapon_dual,Dual {0}
+name_weapontype_railgun,Railgun
+name_weapon_railgun,Railgun

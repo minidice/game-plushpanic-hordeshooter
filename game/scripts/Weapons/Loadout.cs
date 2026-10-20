@@ -22,6 +22,7 @@ public enum PickupResult
 /// What the player carries, L4D style:
 ///   1 = secondary (melee → pistol → dual pistols, unlimited ammo),
 ///   2 = primary (limited ammo),
+///   3 = special (heavy finishers: rocket launcher, mortar, railgun; few rounds, never from ammo piles),
 ///   G = throwables (several kinds; G throws the most recently picked kind),
 ///   Q = medkit (lives on <see cref="Player"/>).
 /// Pure logic so it can be tested without a scene.
@@ -30,8 +31,17 @@ public sealed class Loadout
 {
     public WeaponState Secondary { get; private set; }
     public WeaponState? Primary { get; private set; }
+    public WeaponState? Special { get; private set; }
     public int ActiveSlot { get; private set; } = 1;
-    public WeaponState Current => ActiveSlot == 2 && Primary != null ? Primary : Secondary;
+    public WeaponState Current => ActiveSlot switch
+    {
+        2 when Primary != null => Primary,
+        3 when Special != null => Special,
+        _ => Secondary,
+    };
+
+    /// <summary>What is in slot 1, 2 or 3 (null when empty).</summary>
+    public WeaponState? InSlot(int slot) => slot switch { 1 => Secondary, 2 => Primary, 3 => Special, _ => null };
 
     private readonly Dictionary<string, int> _throwCounts = new();
     private readonly List<ThrowableDefinition> _throwOrder = new();
@@ -43,16 +53,15 @@ public sealed class Loadout
     /// (the caller rebuilds the model in hand). The slot follows the host only when a pickup swapped a weapon.
     /// </summary>
     internal bool ApplyNet(WeaponDefinition secondary, int secMag, int secReserve, WeaponDefinition? primary, int priMag, int priReserve,
-        int slot, IReadOnlyList<(ThrowableDefinition def, int count)> throwables)
+        WeaponDefinition? special, int speMag, int speReserve, int slot, IReadOnlyList<(ThrowableDefinition def, int count)> throwables)
     {
         bool changed = false;
         if (Secondary.Def.Id != secondary.Id) { Secondary = new WeaponState(secondary, secMag, secReserve); changed = true; }
         else Secondary.SetAmmo(secMag, secReserve);
-        if (primary == null) { if (Primary != null) { Primary = null; changed = true; } }
-        else if (Primary == null || Primary.Def.Id != primary.Id) { Primary = new WeaponState(primary, priMag, priReserve); changed = true; }
-        else Primary.SetAmmo(priMag, priReserve);
-        if (changed) ActiveSlot = slot == 2 && Primary != null ? 2 : 1;
-        if (ActiveSlot == 2 && Primary == null) ActiveSlot = 1;
+        Primary = ApplySlot(Primary, primary, priMag, priReserve, ref changed);
+        Special = ApplySlot(Special, special, speMag, speReserve, ref changed);
+        if (changed) ActiveSlot = InSlot(slot) != null ? slot : 1;
+        if (InSlot(ActiveSlot) == null) ActiveSlot = 1;
         // Same kinds, counts and order (G throws the first): a cycle the host refused must not stick.
         var mine = Throwables.Select(t => (t.def.Id, t.count)).ToList();
         if (!mine.SequenceEqual(throwables.Select(t => (t.def.Id, t.count))))
@@ -68,11 +77,22 @@ public sealed class Loadout
         return changed;
     }
 
+    private static WeaponState? ApplySlot(WeaponState? mine, WeaponDefinition? host, int mag, int reserve, ref bool changed)
+    {
+        if (host == null)
+        {
+            if (mine != null) changed = true;
+            return null;
+        }
+        if (mine == null || mine.Def.Id != host.Id) { changed = true; return new WeaponState(host, mag, reserve); }
+        mine.SetAmmo(mag, reserve);
+        return mine;
+    }
+
     public bool SelectSlot(int slot)
     {
         if (slot == ActiveSlot) return false;
-        if (slot == 2 && Primary == null) return false;
-        if (slot != 1 && slot != 2) return false;
+        if (InSlot(slot) == null) return false;
         Current.Holster();
         ActiveSlot = slot;
         return true;
@@ -88,6 +108,7 @@ public sealed class Loadout
             {
                 Secondary = new WeaponState(dual);
                 Primary?.Holster();
+            Special?.Holster();
                 ActiveSlot = 1;
                 return (PickupResult.Upgraded, null);
             }
@@ -97,28 +118,32 @@ public sealed class Loadout
             state?.Holster();
             Secondary = state ?? new WeaponState(def);
             Primary?.Holster();
+            Special?.Holster();
             ActiveSlot = 1;
             return (PickupResult.Swapped, droppedSecondary);
         }
 
-        if (Primary != null && Primary.Def.Id == def.Id)
+        bool special = def.Slot == WeaponSlot.Special;
+        var held = special ? Special : Primary;
+        if (held != null && held.Def.Id == def.Id)
         {
             // Take what fits; whatever is left stays on the floor as a lighter copy of the gun.
             int carried = state?.TotalAmmo ?? def.ReserveStart + def.MagSize;
-            int added = Primary.AddReserve(carried);
+            int added = held.AddReserve(carried);
             if (added <= 0) return (PickupResult.Full, null);
             int left = carried - added;
             if (left <= 0) return (PickupResult.Refilled, null);
             int mag = System.Math.Min(left, def.MagSize);
             return (PickupResult.Refilled, new WeaponState(def, mag, left - mag));
         }
-        var dropped = Primary;
-        dropped?.Holster();
+        held?.Holster();
         state?.Holster();
-        Primary = state ?? new WeaponState(def);
-        Secondary.Holster();
-        ActiveSlot = 2;
-        return (dropped == null ? PickupResult.Equipped : PickupResult.Swapped, dropped);
+        Current.Holster();
+        var taken = state ?? new WeaponState(def);
+        if (special) Special = taken;
+        else Primary = taken;
+        ActiveSlot = (int)def.Slot;
+        return (held == null ? PickupResult.Equipped : PickupResult.Swapped, held);
     }
 
     // ---------- throwables ----------

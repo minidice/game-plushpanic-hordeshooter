@@ -9,6 +9,8 @@ public enum WeaponSlot
     Secondary = 1,
     /// <summary>Key 2: everything else. Limited ammo.</summary>
     Primary = 2,
+    /// <summary>Key 3: heavy "finisher" weapons (rocket launcher, mortar, railgun). Few rounds, never from ammo piles.</summary>
+    Special = 3,
 }
 
 public enum WeaponCategory
@@ -90,6 +92,18 @@ public sealed class WeaponDefinition
     public float MaxSpread { get; set; } = 12f;
     public float SpreadRecovery { get; set; } = 18f;
 
+    // ---------- handling (doc/mode-weapon-direction.md 1·3장) ----------
+    /// <summary>Move speed while this weapon is in hand (1 = 100%).</summary>
+    public float MoveSpeedScale { get; set; } = 1;
+    /// <summary>While aiming (right click / Ctrl): effective and max range multiply by this.</summary>
+    public float AimRangeMultiplier { get; set; } = 1;
+    /// <summary>Move speed while aiming, on top of <see cref="MoveSpeedScale"/>.</summary>
+    public float AimMoveScale { get; set; } = .5f;
+    /// <summary>While aiming, focus on a target (the crit) builds this much faster.</summary>
+    public float AimFocusMultiplier { get; set; } = 1;
+    /// <summary>Damage multiplier of a crit (a focused hit).</summary>
+    public float CritMultiplier { get; set; } = 2.5f;
+
     // ---------- traits (filled from weapon_traits/*.json) ----------
     public int Pellets { get; set; } = 1;
     public float PelletSpread { get; set; }
@@ -101,6 +115,11 @@ public sealed class WeaponDefinition
     public float ProjectileLifetime { get; set; } = 2.5f;
     public float FlightTime { get; set; } = 1.3f;
     public float MinRange { get; set; }
+    /// <summary>Lob weapons: standing still to set up before the shot, and to pack up after it (trait lob).</summary>
+    public float SetupTime { get; set; }
+    public float RecoverTime { get; set; }
+    /// <summary>Hold time between the trigger and the shot (trait charge, railgun).</summary>
+    public float ChargeTime { get; set; }
     public float ExplosionRadius { get; set; }
     public float ExplosionDamage { get; set; }
     public float ExplosionSelfShare { get; set; } = .2f;
@@ -124,13 +143,19 @@ public sealed class WeaponDefinition
 
     public float MeleeRange => MaxRange;
     public bool UsesAmmo => Mode != FireMode.Melee;
+    /// <summary>Melee and lobbed weapons have no aim-down-sights; everything else can aim.</summary>
+    public bool CanAim => Mode is FireMode.Hitscan or FireMode.Projectile;
     public bool Explodes => ExplosionRadius > 0;
 
-    /// <summary>Damage multiplier for a hit at <paramref name="distance"/> metres.</summary>
-    public float FalloffAt(float distance)
+    /// <summary>
+    /// Damage multiplier for a hit at <paramref name="distance"/> metres: linear from the effective range down to
+    /// <see cref="FalloffMin"/> at the max range (decisions.md C-27). Aiming stretches both by <paramref name="rangeScale"/>.
+    /// </summary>
+    public float FalloffAt(float distance, float rangeScale = 1)
     {
-        if (distance <= EffectiveRange || MaxRange <= EffectiveRange) return 1;
-        float t = Mathf.Clamp((distance - EffectiveRange) / (MaxRange - EffectiveRange), 0, 1);
+        float effective = EffectiveRange * rangeScale, max = MaxRange * rangeScale;
+        if (distance <= effective || max <= effective) return 1;
+        float t = Mathf.Clamp((distance - effective) / (max - effective), 0, 1);
         return Mathf.Lerp(1, FalloffMin, t);
     }
 

@@ -51,6 +51,22 @@ public partial class ThrowPreview : Node3D
         }
     }
 
+    /// <summary>A lobbed weapon in hand (mortar, decisions.md C-25): same look, sized to its blast and range.</summary>
+    public void ShowLob(WeaponDefinition def, Vector3 from, Vector3 target, Vector3 playerFeet, float dt)
+    {
+        _time += dt;
+        Target = target;
+        float radius = Mathf.Max(.6f, def.ExplosionRadius);
+        _landing.GlobalPosition = new Vector3(target.X, .06f, target.Z);
+        _landing.Scale = new Vector3(radius, 1, radius) * (1 + .03f * Mathf.Sin(_time * 8));
+        _landingMat.AlbedoColor = new Color(KindColor(ThrowableKind.Frag), .55f + .2f * Mathf.Sin(_time * 8));
+        _reach.GlobalPosition = new Vector3(playerFeet.X, .05f, playerFeet.Z);
+        _reach.Scale = new Vector3(def.MaxRange, 1, def.MaxRange);
+        float flight = ThrownItem.FlightTime(from, target);
+        for (int i = 0; i < _dots.Count; i++)
+            _dots[i].GlobalPosition = ThrownItem.ArcPoint(from, target, flight * (i + 1) / (_dots.Count + 1));
+    }
+
     public static Color KindColor(ThrowableKind kind) => kind switch
     {
         ThrowableKind.Fire => new Color("ff7a2a"),

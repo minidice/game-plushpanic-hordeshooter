@@ -72,12 +72,13 @@ public sealed class CellReader
     {
         "1" or "secondary" or "보조" or "보조무기" => WeaponSlot.Secondary,
         "2" or "primary" or "주" or "주무기" => WeaponSlot.Primary,
+        "3" or "special" or "특수" or "특수무기" => WeaponSlot.Special,
         _ => BadSlot(column),
     };
 
     private WeaponSlot BadSlot(string column)
     {
-        Bad(column, "1/2");
+        Bad(column, "1/2/3");
         return WeaponSlot.Primary;
     }
 

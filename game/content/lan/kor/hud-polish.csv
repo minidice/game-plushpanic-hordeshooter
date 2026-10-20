@@ -7,3 +7,4 @@ hud_quick_help,WASD 이동 · E 상호작용 · Esc 조작법
 hud_ammo_hint,장전 / 예비 탄약   ·   R
 hud_melee_hint,근거리 공격   ·   좌클릭
 hud_no_refill_hint,탄약 보충 불가   ·   R
+hud_special,특수무기

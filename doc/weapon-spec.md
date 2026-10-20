@@ -4,7 +4,7 @@
 > **데이터**: `game/content/data/`
 > **로더**: `game/scripts/Weapons/WeaponDatabase.cs`
 > **투척물·몬스터**는 `doc/throwable-monster-spec.md`, **이름(다국어)** 은 `doc/localization.md`를 보세요.
-> **개편 방향**(2026-10-21 기획, 구현 전): 총기 5갈래·타입별 이동속도, 3번 특수무기 칸, 조준(우클릭/Ctrl)은 [무기·모드·몬스터 개편 방향](mode-weapon-direction.md) 1~3장(C-24~C-27). 이 문서는 구현될 때 갱신한다.
+> **개편 1단계**(2026-10-21 구현): 타입별 이동속도·조준 칸, 3번 특수무기 칸, 우클릭/Ctrl 조준, 박격포 거치·회수, 레일건 충전은 아래 2·3·8장. 방향 전체는 [무기·모드·몬스터 개편 방향](mode-weapon-direction.md) 1~3장(C-24~C-27).
 
 ## 1. 파일 세 종류
 
@@ -33,7 +33,7 @@ type=assault_rifle  ◀──── m4,assault_rifle,M4,11,,,,       buckshot.js
 | `type` | 분류 ID (weapons.csv에서는 어느 분류를 따를지) | weapon_types.csv의 type |
 | `id` | 무기 ID (weapons.csv 전용, 코드·맵 배치에서 이 이름으로 찾음) | 영문 소문자 |
 | `name` | **이름 키** (`name_weapon_<id>`). 실제 문구는 `content/lan/<언어>/weapon.csv` | |
-| `slot` | 칸 | `1` 보조(근접·권총, **탄약 무제한**) / `2` 주무기 |
+| `slot` | 칸 | `1` 보조(근접·권총, **탄약 무제한**) / `2` 주무기 / `3` 특수무기(로켓런처·박격포·레일건, 탄약 더미로 충전 안 됨, C-25) |
 | `category` | 분류(외형·발사음·화면 흔들림) | `melee pistol smg rifle lmg shotgun sniper heavy` |
 | `fire_mode` | 발사 방식 | `melee` 휘두르기, `hitscan` 즉발 총알, `projectile` 날아가는 투사체, `lob` 곡사 |
 | `automatic` | 누르고 있으면 연사 | `true` / `false`(클릭마다) |
@@ -58,6 +58,11 @@ type=assault_rifle  ◀──── m4,assault_rifle,M4,11,,,,       buckshot.js
 | `icon` | 아이콘 경로(예: `res://assets/icons/m4.png`). 하단 장비 HUD에 표시 | |
 | `color` `accent_color` `length_m` | 도형 외형의 색과 길이 | |
 | `noise_m` | 쏘거나 휘두를 때 이 반경 안의 대기형·경계형 몬스터가 깸 (`spawn-design.md` 2장) | 근접 4, 권총 14, 소총 20, 저격 26 |
+| `move_speed_pct` | 이 무기를 들었을 때 이동속도 (8장) | % (기관단총 110, 경기관총·저격 85) |
+| `aim_range_mult` | 조준 중 유효·최대 사거리 배율. 1 이상 | 볼트 저격 2, 돌격소총 1.5 |
+| `aim_move_pct` | 조준 중 이동속도 (`move_speed_pct`에 곱함) | % (저격 30, 돌격소총 45) |
+| `aim_focus_mult` | 조준 중 집중(치명타 준비)이 차는 속도 배율. 1 이상 | 볼트 저격 2.5 |
+| `crit_mult` | 치명타 대미지 배율. 1 이상 | 기본 2.5, 볼트 저격 4, 지정사수 3 |
 
 **합치는 규칙**: 무기 칸이 비어 있으면 분류 값을 씁니다. 분류에도 없으면 코드 기본값을 씁니다. `name, slot, category, fire_mode, damage, max_range_m, fire_interval_ms`는 둘 중 한 곳에 반드시 있어야 합니다.
 
@@ -70,7 +75,8 @@ type=assault_rifle  ◀──── m4,assault_rifle,M4,11,,,,       buckshot.js
 | `pellets` | **산탄.** 한 번에 여러 발이 원뿔로 퍼짐. `damage`·`hit_power`를 발 수로 나눔 → **다 맞으면 전부, 일부만 맞으면 그만큼만** | `count`, `spread_deg` |
 | `explode_on_hit` | **타격 후 폭발.** 총알·로켓·포탄이 멈춘 자리에서 폭발 | `radius_m`, `damage`(폭발 대미지), `self_damage_share`(내가 맞을 때 비율), `knockback_power`(폭발 넉백) |
 | `projectile` | 직선 투사체 (`fire_mode=projectile`에 필요) | `speed_mps`, `max_flight_ms` |
-| `lob` | 조준점으로 곡사, 벽 너머 가능 (`fire_mode=lob`에 필요) | `flight_ms`, `min_range_m` |
+| `lob` | 조준점으로 곡사, 벽 너머 가능 (`fire_mode=lob`에 필요). 쏘기 전 거치·쏜 뒤 회수 동안 못 움직임 | `flight_ms`, `min_range_m`, `setup_ms`, `recover_ms` |
+| `charge` | 방아쇠를 당기면 충전한 뒤 발사(레일건). 충전 중 조준선 표시, 끊기면 탄 반환 | `charge_ms` |
 | `burst` | 점사 | `count`, `interval_ms` |
 | `melee_arc` | **근접.** 앞쪽 부채꼴 안의 적을 가까운 순서로 여러 마리 | `arc_deg`, `max_targets` |
 | `dual_wield` | **쌍권총.** 같은 무기를 하나 더 주우면 쌍으로 바뀜 | `name_format_key`(언어 키, 기본 `fmt_weapon_dual`), `mag_multiplier`, `fire_interval_multiplier`, `spread_add_deg`, `recoil_multiplier` |
@@ -193,3 +199,20 @@ HUD에는 현재 모드별 임계값 분기가 없다. 여기서는 공용 코�
 이 방식은 현행 뼈 없는 캐릭터 구조의 절차적 자세다. 손·총 장전 동작은 6.1절까지 구현했고, 개별 손가락 조작·실제 탄창 메시 교체·임의 길이/체형에 맞춘 두 관절 IK는 별도 작업이다. 현재 네 종의 지원 체형 범위에 맞춰 검사한다. 모델의 팔 위치를 바꿀 경우 `CharacterWeaponGrip.Connect`의 어깨 기준도 맞춰야 한다.
 
 검사: `res://tests/WeaponGripCheck.tscn` (4종 × 7무기, 반동/도약, 숨김, 쌍권총), 시각 검증: `res://tests/CaptureWeaponGrip.tscn` → `output/weapon-grip-*.png`.
+
+## 8. 조준 · 특수무기 · 타입별 이동 (2026-10-21 구현, C-24~C-27)
+
+- **이동속도**: `move_speed_pct`. 기본 100, 기관단총 110, 산탄총 95, 지정사수 90, 경기관총·볼트 저격·특수무기 85. 장전 중 ×0.85, 치료 중 ×0.35는 그대로 곱한다.
+- **조준**: 우클릭 또는 Ctrl을 **누르고 있는 동안**. 근접·곡사(박격포) 무기와 장전·치료·구르기·기절·붙잡힘·투척 조준 중에는 안 됨. 투척 조준 중의 우클릭은 지금처럼 취소(C-11).
+  - 유효·최대 사거리 ×`aim_range_mult` (대미지 감소 곡선도 같이 늘어남, C-27)
+  - 퍼짐: (기본 + 발당 누적) × 0.35, 이동 퍼짐 없음 (`WeaponState.AimSpreadShare`)
+  - 이동속도 ×`aim_move_pct`
+  - 집중 ×`aim_focus_mult` (집중 0.5초가 차면 치명타, 배율은 `crit_mult`)
+  - 몸과 총이 14cm 낮아지는 자세, 카메라가 커서 쪽으로 더 멀리(최대 26m의 48%) 당겨짐, 화면에 총→커서 조준선
+- **투척·곡사 조준 중 이동 -50%**: G로 투척 조준 중, 또는 박격포를 들고 있는 동안(`Player.LobAimMoveScale`).
+- **3번 특수무기 칸**: 로켓런처(`alabong`), 박격포(`mortar`), 레일건(`railgun`, 새 무기). 줍으면 3번으로 들어가고 바로 듭니다. 같은 무기를 또 주우면 예비탄으로, 다른 특수무기면 3번만 바뀌어 바닥에 떨어집니다. 탄약 더미로는 충전되지 않습니다(C-4).
+  - **박격포**: 들고 있으면 착탄 원·최대 거리·궤적이 보임(투척 조준과 같은 표시). 클릭하면 0.8초 거치 → 발사 → 0.5초 회수, 그동안 이동 불가. 거치 중 기절·교체·투척하면 취소되고 탄을 돌려받음.
+  - **레일건**: 클릭하면 0.7초 충전(조준선이 굵어짐, 조준점 아래 진행 막대) → 굵은 빔. 대미지 260, 관통 99(관통마다 ×0.8). 충전 중 교체·기절하면 취소, 탄 반환. 모델은 지금 AWM을 재사용(전용 모델은 후속).
+- 멀티: 조준 버튼은 입력의 `NetHeld.Aim`으로 방장에게 가고(사거리·집중은 방장이 계산), 3번 칸은 스냅샷의 `Special`로 맞춘다. 프로토콜 3.
+- 검사: `game/tests/WeaponHandlingCheck.tscn` (창 모드면 `output/weapons-*.png`).
+
