@@ -198,7 +198,7 @@ public partial class SurvivorRules : ModeRules
         {
             Xp -= XpNeeded;
             Level++;
-            foreach (var p in Humans) QueueOf(p).Add(CardCatalog.LevelUp(Cards, Rng));
+            foreach (var p in Humans) QueueOf(p).Add(CardCatalog.LevelUp(Cards, Rng, p));
             Stage.ShowNotice(Loc.Format("fmt_level_up", Level), 2);
             Stage.Sfx.Play("pickup", 0, 1.4f);
         }

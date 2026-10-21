@@ -6,10 +6,10 @@ name_card_stuffing_burst,솜 폭발
 name_card_billiards,당구
 name_card_honk_reload,꽥 장전
 name_card_rubber_duck,고무오리 미끼
-desc_card_balloon,맞을수록 부풀다 떠오름. 떠 있는 적을 쏘면 펑
+desc_card_balloon,맞을수록 부풀다 네 번째에 펑! 주변을 날림 (네임드 · 보스는 안 부풀지만 펑은 맞음)
 desc_card_velcro,맞은 적끼리 달라붙어 덩어리. 다섯이면 터짐
 desc_card_stuffing_burst,처치하면 솜이 터져 주변을 밀어냄
-desc_card_billiards,날아가던 적이 부딪힌 적을 날려 보냄
+desc_card_billiards,저격 · 샷건에 맞은 적이 날아가 부딪힌 적을 날려 보냄
 desc_card_honk_reload,장전할 때 꽥! 주변을 밀어냄
 desc_card_rubber_duck,열 번 맞힐 때마다 고무오리가 떨어져 적을 모았다 펑
 fx_card_float,둥실
@@ -58,3 +58,20 @@ name_card_r_heal,솜 보충
 desc_card_r_heal,지금 최대 체력의 40% 회복
 name_card_r_medkit,구급상자
 desc_card_r_medkit,구급상자 +1 (최대 3)
+# 카드 트리 · 분류 카드 (onslaught-cards-plan.md 13.2)
+tag_card_sniper,나 · 저격 전용
+tag_card_shotgun,나 · 샷건 전용
+name_card_billiards_sniper,관통 당구
+desc_card_billiards_sniper,저격에 맞은 적이 총알 방향으로 쭉 날아가 부딪힌 적을 줄줄이 날려 보냄
+name_card_billiards_shotgun,산탄 볼링
+desc_card_billiards_shotgun,샷건 산탄마다 적을 밀어 날리고, 날아간 적이 볼링 핀처럼 다른 적을 쓰러뜨림
+fmt_card_upgrade_name,{0} Lv{1}
+fmt_card_upgrade_tag,나 · {0} 강화
+name_card_u_balloon_radius,풍선탄 폭발 범위
+desc_card_u_balloon_radius,펑 범위 +0.75 m
+name_card_u_balloon_damage,풍선탄 폭발 대미지
+desc_card_u_balloon_damage,펑 대미지 +60%
+name_card_u_velcro_size,찍찍이 덩어리
+desc_card_u_velcro_size,덩어리가 한 마리 적어도 터짐 (5 → 4 → 3)
+name_card_u_velcro_damage,찍찍이 폭발 대미지
+desc_card_u_velcro_damage,찍! 대미지 +50%

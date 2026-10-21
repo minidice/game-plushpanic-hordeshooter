@@ -19,6 +19,7 @@
 - [x] 정식 난전 카드 흐름 1차(2026-10-21, M-27): 진열대 · 강화 진열대 제거, 시작 때 1 · 2 · 3번 칸 무장 카드, 팀 공유 경험치 → 레벨업 일반 카드(실험실 카드 + 반복 카드 피해 · 회복 · 구급상자), 보스 기준 4구간(3 · 4 · 5 · 6분, 구간 보스 체력 35~100%), 중간 보스 = 특별 카드, 최종 보스 = 클리어, Lv · 경험치 막대, 멀티 동기화(방장 판정, 카드 번호) ([규격](mode-monster-tables.md) 5장)
 - [x] 20분 판 내용 1차(2026-10-21, M-27 · Q-24): 모드 표를 구간 시계로(보스전 동안 멈춤), 4구간 표(일반 체력 0.6 → 1.25, 구간마다 named 증가), 구간 보스 무작위(`mid_bosses` · `final_bosses`, 겹치지 않게), 임시 중간 보스 3종(거대 황소 · 풍선 대왕 · 토사물 어미), 보스 소환 몬스터 지정 ([규격](mode-monster-tables.md) 2 · 3 · 5장)
 - [x] 난전 중간 보스 전용 모델(2026-10-21, A-17): 풍선 대왕(금관 · 망토 · 풍선 다발) · 토사물 어미(뒤쪽 후드 · 입 깔때기 · 등 주머니), Codex 2회 + Claude 마무리, 보스 크기 정리(중간 약 3 m < 최종 약 3.2 m), `MonsterLineupCapture`에 보스 줄 · 근접 렌더 ([지시문](model-briefs/midbosses-balloon-spitter.md))
+- [x] 실험실 피드백 반영 1차(2026-10-21, M-27 계획 13.2): 카드는 고른 사람의 것(명중에 쏜 사람 · 무기 분류), 풍선탄 4방 펑 · 네임드 면역, 카드 트리(풍선탄 · 찍찍이 강화 Lv), 당구 저격 · 샷건 전용(관통 당구 · 산탄 볼링), 꽥 · 고무오리는 레벨업에서 제외, 실험실 L = 난전 레벨업 제안
 - [ ] 난전 개편(M-27) 나머지: 소환수(드론 · 부사수 · 펫), 레벨업 일반 카드 · 보스 특별 카드, 총 분류별 풀, 하데스식 카드 창 · + 아이콘 · 버프 줄 ([계획](onslaught-cards-plan.md))
 - [ ] 거점·난전 다음: 팀원 직접 교환·큰 배낭·탈출, 전용 맵·전용 보스 모델, 멀티에서 보스 연출 동기화(I-77), 수치 플레이 조정
 - [x] 멀티 메뉴: 방 만들기, 주소로 참가(2인 테스트). 방 코드·공개방은 준비 중
@@ -156,6 +157,11 @@
 
 - C# 빌드 경고·오류 0. `ModeCheck` 81개(창 모드, 화면 밖 화살표 포함)·79개(헤드리스), `MapCheck` 25, `WeaponHandlingCheck` 30, `Integration` 148, `NetSyncCheck` 28, `NetCodecCheck` 11, `LobbyCheck` 31, `MenuCheck` 39, `SquadCheck` 50, `SpawnCheck` 41, `CombatPacingCheck` 44, `ReloadPoseCheck` 279, `EnemyAttackCheck` 79, `VisionTierCheck` 23 통과.
 - 렌더: `output/map-open-field.png`·`mode-survivor-rack.png`(들판·진열대·바닥 글씨·무장 목표), `mode-survivor-arrow.png`(화면 밖 팀원 화살표, `∞` 탄약, "난전 · 들판"). 실제 손으로 하는 난이도·들판 성능은 미확인(I-26·I-80). 2인 멀티로 들판·진열대를 해 보지는 않음.
+
+### 이번 변경 확인 기록 — 2026-10-21 (실험실 피드백 반영 1차)
+
+- C# 빌드 경고 · 오류 0. `CardLabCheck` 79(헤드리스) · 80(창 모드, 2회: 풍선탄 3방 부풂 · 4방째 펑, 샷건 한 발은 한 번만 부풂, 네임드는 안 부풀고 펑 피해만, 폭발 범위 · 대미지 강화와 최대 레벨, 찍찍이 덩어리 강화, 소총 명중은 큐볼 아님 · 저격은 큐볼 · 산탄 볼링, 카드 없는 팀원 명중엔 안 걸림, 덩어리 같이 펑, 레벨업 제안: 샷건이면 산탄 볼링 · 고른 카드는 강화만 · 저격 · 샷건 없으면 당구 없음 · 꽥 · 오리 없음), `ModeCheck` 117, `OnslaughtNetCheck` 16, `MapCheck` 24, `HitFlashCheck`, `EnemyAttackCheck` 79, `EnemyExpansion` 60, `SpawnCheck` 41, `NetSyncCheck` 28, `NetCodecCheck` 12, `LobbyCheck` 31, `MenuCheck` 39, `SquadCheck` 50, `InventoryCheck` 41, `WeaponHandlingCheck` 36, `CombatPacingCheck` 44, `Integration` 148 통과.
+- 렌더 `output/cardlab-levelup.png`(SVD를 들면 "관통 당구 · 나 · 저격 전용" 카드), `cardlab-clump-puff.png`. 실제 손으로 해 본 체감 · 2인 플레이의 카드 소유는 미확인(I-85).
 
 ### 이번 변경 확인 기록 — 2026-10-21 (중간 보스 전용 모델)
 

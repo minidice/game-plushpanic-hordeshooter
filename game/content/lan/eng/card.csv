@@ -6,10 +6,10 @@ name_card_stuffing_burst,Stuffing burst
 name_card_billiards,Billiards
 name_card_honk_reload,Honk reload
 name_card_rubber_duck,Rubber duck
-desc_card_balloon,Hits inflate monsters until they float. Shoot a floating one to pop it
+desc_card_balloon,Hits inflate monsters; the fourth pops them and throws their neighbours (named and bosses do not inflate but take the pop)
 desc_card_velcro,Hit monsters stick together. Five in a clump burst
 desc_card_stuffing_burst,Kills burst into stuffing that pushes neighbours away
-desc_card_billiards,A flying monster sends whoever it hits flying
+desc_card_billiards,Monsters hit by a sniper or shotgun fly off and send whoever they hit flying
 desc_card_honk_reload,Reloading honks and pushes everything back
 desc_card_rubber_duck,Every tenth hit drops a squeaky duck that gathers monsters and pops
 fx_card_float,Float
@@ -58,3 +58,20 @@ name_card_r_heal,Restuff
 desc_card_r_heal,Heal 40% of your max health now
 name_card_r_medkit,Medkit
 desc_card_r_medkit,One more medkit (up to 3)
+# Card tree and kind cards (onslaught-cards-plan.md 13.2)
+tag_card_sniper,You · sniper only
+tag_card_shotgun,You · shotgun only
+name_card_billiards_sniper,Piercing billiards
+desc_card_billiards_sniper,A monster hit by your sniper flies along the shot and knocks a row of others flying
+name_card_billiards_shotgun,Buckshot bowling
+desc_card_billiards_shotgun,Every pellet shoves its monster; the flying ones bowl others over like pins
+fmt_card_upgrade_name,{0} Lv{1}
+fmt_card_upgrade_tag,You · {0} upgrade
+name_card_u_balloon_radius,Balloon pop radius
+desc_card_u_balloon_radius,Pop radius +0.75 m
+name_card_u_balloon_damage,Balloon pop damage
+desc_card_u_balloon_damage,Pop damage +60%
+name_card_u_velcro_size,Velcro clump
+desc_card_u_velcro_size,A clump bursts with one fewer monster (5 → 4 → 3)
+name_card_u_velcro_damage,Velcro burst damage
+desc_card_u_velcro_damage,Rrrip! damage +50%

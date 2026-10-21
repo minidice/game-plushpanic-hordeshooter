@@ -469,7 +469,7 @@ public partial class WeaponController : Node
                 case Enemy enemy when !enemy.IsDead:
                     bool isCrit = pierced == 0 && enemy == _player.FocusTarget && _player.CritReady;
                     crit |= isCrit;
-                    enemy.TakeHit(new HitInfo(damage * falloff * (isCrit ? def.CritMultiplier : 1f), dir, end, isCrit, power));
+                    enemy.TakeHit(new HitInfo(damage * falloff * (isCrit ? def.CritMultiplier : 1f), dir, end, isCrit, power, _player, def.TypeId));
                     exclude.Add(hit.Rid);
                     damage *= .8f;
                     continue;
@@ -536,7 +536,8 @@ public partial class WeaponController : Node
         {
             var push = to.LengthSquared() > .001f ? to.Normalized() : dir;
             bool crit = enemy == _player.FocusTarget && _player.CritReady;
-            enemy.TakeHit(new HitInfo(def.Damage * _player.DamageMultiplier * (crit ? def.CritMultiplier : 1f), push, enemy.GlobalPosition + Vector3.Up, crit, def.HitPower));
+            enemy.TakeHit(new HitInfo(def.Damage * _player.DamageMultiplier * (crit ? def.CritMultiplier : 1f), push, enemy.GlobalPosition + Vector3.Up, crit, def.HitPower,
+                _player, def.TypeId));
         }
         foreach (var prop in Stage.Props)
         {

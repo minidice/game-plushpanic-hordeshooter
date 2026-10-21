@@ -92,10 +92,19 @@ public partial class CardLabCheck : Node
     private static void Tap(Enemy e, float damage = 1) =>
         e.TakeHit(new HitInfo(damage, Vector3.Right, e.GlobalPosition + Vector3.Up));
 
+    /// <summary>A hit fired by <paramref name="who"/> with a weapon of <paramref name="kind"/> (cards act on their owner's hits).</summary>
+    private static void Shoot(Enemy e, Player who, string kind, float damage = 1) =>
+        e.TakeHit(new HitInfo(damage, Vector3.Right, e.GlobalPosition + Vector3.Up, false, 20, who, kind));
+
+    /// <summary>Balloon rounds count one step per frame, so taps one frame apart.</summary>
+    private async Task Taps(Enemy e, int count)
+    {
+        for (int i = 0; i < count; i++) { Tap(e); await Frames(1); }
+    }
+
     private async Task Reset()
     {
-        foreach (var c in LabCards.All) Cards.Set(c, false);
-        foreach (var s in LabCards.Specials) Cards.Set(s, false);
+        Cards.ClearAll();
         _rules.ClearEnemies();
         await Frames(3);
     }
@@ -139,18 +148,37 @@ public partial class CardLabCheck : Node
             $"card {c} has a name and a description in the language table");
         await Reset();
 
-        // ---------- balloon rounds ----------
+        // ---------- balloon rounds (plan 13.2: puff up, the fourth hit pops; named and bosses do not puff) ----------
         Cards.Set(LabCard.Balloon, true);
         var spot = OpenSpot(10);
         var balloon = await Common(spot);
         var neighbour = await Common(spot + new Vector3(1.4f, 0, 0));
-        int taps = 0;
-        while (!balloon.Floating && taps++ < 15) Tap(balloon);
-        Check(balloon.Floating && Cards.Floats == 1 && taps <= 9, $"hits inflate a monster until it floats ({taps} hits)");
-        await Frames(30);
-        Check(balloon.GlobalPosition.Y > .3f && balloon.Rig.Scale.X > 1.3f, $"it rises and stays puffed up (height {balloon.GlobalPosition.Y:0.00} m)");
+        await Taps(balloon, LabCards.BalloonHits - 1);
+        Check(!balloon.IsDead && !balloon.Floating && balloon.Inflate > .7f && balloon.Rig.Scale.X > 1.3f,
+            $"three hits puff a monster up without floating it (scale {balloon.Rig.Scale.X:0.00})");
         Tap(balloon);
-        Check(balloon.IsDead && Cards.Pops == 1 && neighbour.KnockSpeed > 3, $"shooting it pops it and throws its neighbour ({neighbour.KnockSpeed:0.0} m/s)");
+        Check(balloon.IsDead && Cards.Pops == 1 && neighbour.KnockSpeed > 3, $"the fourth hit pops it and throws its neighbour ({neighbour.KnockSpeed:0.0} m/s)");
+        await Reset();
+        Cards.Set(LabCard.Balloon, true);
+        var blasted = await Common(OpenSpot(10));
+        for (int i = 0; i < 8; i++) Tap(blasted);
+        Check(Mathf.IsEqualApprox(blasted.Inflate, 1f / LabCards.BalloonHits), "the pellets of one blast puff it only once");
+        spot = OpenSpot(10);
+        var named = _stage.Spawn(MonsterDatabase.Get("bull"), spot, awake: false);
+        var popper = await Common(spot + new Vector3(1.6f, 0, 0));
+        await Frames(2);
+        await Taps(named, LabCards.BalloonHits + 1);
+        float namedHealth = named.Health;
+        Check(named.Inflate == 0 && !named.IsDead, "a named monster does not puff up");
+        await Taps(popper, LabCards.BalloonHits);
+        Check(popper.IsDead && named.Health < namedHealth, $"but a pop next to it hurts it ({namedHealth:0} → {named.Health:0})");
+        float radius = Cards.PopRadiusFor(player), damage = Cards.PopDamageFor(player);
+        Cards.Upgrade(CardUpgrade.BalloonRadius, player);
+        Cards.Upgrade(CardUpgrade.BalloonDamage, player);
+        Check(Cards.PopRadiusFor(player) > radius && Cards.PopDamageFor(player) > damage && Cards.PopRadiusFor(null) > radius,
+            $"upgrades widen the pop and hit harder ({radius:0.0} → {Cards.PopRadiusFor(player):0.0} m, {damage:0} → {Cards.PopDamageFor(player):0})");
+        for (int i = 0; i < 5; i++) Cards.Upgrade(CardUpgrade.BalloonRadius, player);
+        Check(Cards.LevelOf(player, CardUpgrade.BalloonRadius) == LabCards.MaxLevel(CardUpgrade.BalloonRadius), "an upgrade stops at its last level");
         await Reset();
 
         // ---------- velcro ----------
@@ -163,6 +191,8 @@ public partial class CardLabCheck : Node
         foreach (var e in new[] { await Common(spot + new Vector3(-1, 0, 0)), await Common(spot + new Vector3(0, 0, -1)) }) Tap(e);
         await Until(() => Cards.ClumpBursts >= 1, "a fifth one makes the clump burst");
         Check(sticky.All(e => !IsInstanceValid(e) || !e.Sticky), "the burst clears the stickiness");
+        Cards.Upgrade(CardUpgrade.VelcroSize);
+        Check(Cards.ClumpSizeToBurst == LabCards.ClumpBurstSize - 1, "the clump upgrade bursts one monster sooner");
         await Reset();
 
         // ---------- stuffing burst ----------
@@ -174,7 +204,7 @@ public partial class CardLabCheck : Node
         Check(victim.IsDead && Cards.StuffingBursts == 1 && neighbour.KnockSpeed > 2, "a kill bursts into stuffing and pushes the neighbour away");
         await Reset();
 
-        // ---------- billiards ----------
+        // ---------- billiards (plan 13.2: sniper and shotgun only) ----------
         spot = OpenSpot(10);
         var cue = await Common(spot);
         var ball = await Common(spot + new Vector3(1.3f, 0, 0));
@@ -182,14 +212,40 @@ public partial class CardLabCheck : Node
         await Frames(20);
         Check(Cards.BilliardHits == 0, "without the card a thrown monster only bumps the other");
         await Reset();
-        Cards.Set(LabCard.Billiards, true);
+        Cards.Set(LabCard.Billiards, true, player);
+        cue = await Common(spot);
+        ball = await Common(spot + new Vector3(1.3f, 0, 0));
+        Shoot(cue, player, "assault_rifle");
+        await Frames(20);
+        Check(Cards.BilliardHits == 0, "a rifle hit is no cue ball");
+        await Reset();
+        Cards.Set(LabCard.Billiards, true, player);
         cue = await Common(spot);
         ball = await Common(spot + new Vector3(1.3f, 0, 0));
         var ballStart = ball.GlobalPosition;
-        cue.Shove(Vector3.Right, 150, 0);
-        await Until(() => Cards.BilliardHits >= 1, "with billiards a thrown monster passes the hit on", 1);
+        Shoot(cue, player, "bolt_sniper");
+        await Until(() => Cards.BilliardHits >= 1, "a sniper hit sends its monster off as a cue ball that passes the hit on", 1);
         await Frames(15);
         Check(ball.GlobalPosition.X - ballStart.X > 1f, $"the one it hit flies on ({ball.GlobalPosition.X - ballStart.X:0.0} m)");
+        await Reset();
+        Cards.Set(LabCard.Billiards, true, player);
+        cue = await Common(spot);
+        ball = await Common(spot + new Vector3(1.3f, 0, 0));
+        for (int i = 0; i < 6; i++) Shoot(cue, player, "shotgun");
+        await Until(() => Cards.BilliardHits >= 1, "shotgun pellets bowl it into the next one", 1);
+        await Reset();
+        Cards.Set(LabCard.Billiards, true, player);
+        var mate = _stage.AddSurvivor(CharacterCatalog.Player("duck"), player.GlobalPosition + new Vector3(3, 0, 0), true, "Mate", new AppearanceProfile());
+        mate.ManualControl = true;
+        await Frames(2);
+        int hitsBefore = Cards.BilliardHits;
+        var lone = await Common(OpenSpot(10));
+        var pin = await Common(lone.GlobalPosition + new Vector3(1.3f, 0, 0));
+        Shoot(lone, mate, "bolt_sniper");
+        await Frames(20);
+        Check(Cards.BilliardHits == hitsBefore, "a teammate without the card does not get it (cards are their owner's)");
+        _stage.Players.Remove(mate);
+        mate.QueueFree();
         await Reset();
 
         // ---------- honk reload ----------
@@ -214,22 +270,18 @@ public partial class CardLabCheck : Node
         await Until(() => _stage.Lure == null, "then it pops", 6);
         await Reset();
 
-        // ---------- velcro + balloon: the clump floats and pops together ----------
+        // ---------- velcro + balloon: the clump pops together ----------
         Cards.Set(LabCard.Velcro, true);
         Cards.Set(LabCard.Balloon, true);
         spot = OpenSpot(4);
         var clump = new[] { await Common(spot), await Common(spot + new Vector3(1, 0, 0)), await Common(spot + new Vector3(0, 0, 1)) };
         foreach (var e in clump) Tap(e);
         await Until(() => Cards.ClumpSize(clump[0]) == 3, "the three stick together");
-        int floats = Cards.Floats;
-        taps = 0;
-        while (!clump[0].Floating && taps++ < 15) Tap(clump[0]);
-        Check(clump.All(e => e.Floating) && Cards.Floats - floats == 3, "when one floats the whole clump floats");
-        await Frames(20);
-        await Shot("clump-float");
         int pops = Cards.Pops;
-        Tap(clump[1]);
-        Check(clump.All(e => !IsInstanceValid(e) || e.IsDead) && Cards.Pops - pops == 3, "popping one pops the whole floating clump");
+        await Taps(clump[0], LabCards.BalloonHits - 2);
+        await Shot("clump-puff");
+        await Taps(clump[0], 1);
+        Check(clump.All(e => !IsInstanceValid(e) || e.IsDead) && Cards.Pops - pops == 3, "popping one pops the whole clump");
         await Reset();
 
         // ---------- cheat reset: the arming cards (M-27 plan 13.1) ----------
@@ -287,9 +339,11 @@ public partial class CardLabCheck : Node
         window.Open();
         Check(queue.Front!.Choices.Select(c => c.Id).SequenceEqual(levelOne), "closing and opening never changes them");
         await Shot("levelup");
-        var chosen = queue.Front!.Choices[0];
-        window.Pick(0);
-        Check(Cards.IsOn(Enum.Parse<LabCard>(chosen.Id)) && queue.Count == 1 && window.IsOpen, $"picking {chosen.Name} turns that card on and shows the next offer");
+        int pick = Math.Max(0, queue.Front!.Choices.ToList().FindIndex(c => c.Key.StartsWith("c|")));
+        var chosen = queue.Front!.Choices[pick];
+        window.Pick(pick);
+        Check((chosen.Key.StartsWith("c|") ? Cards.Owns(player, Enum.Parse<LabCard>(chosen.Id)) : chosen.Key.StartsWith("r|")) && queue.Count == 1 && window.IsOpen,
+            $"picking {chosen.Name} makes that card the survivor's own and shows the next offer");
         window.Pick(0);
         Check(queue.Count == 0 && !window.IsOpen && queue.Picked >= 5, "the last pick closes the window");
         if (Windowed)
@@ -297,10 +351,32 @@ public partial class CardLabCheck : Node
             // A real click on a card.
             Key(Godot.Key.L);
             await Idle(3);
-            int before = LabCards.All.Count(Cards.IsOn);
+            int picked = queue.Picked;
             await Click(((Control)window.FindChild("Card2", true, false)!).GetGlobalRect().GetCenter());
-            Check(queue.Count == 0 && LabCards.All.Count(Cards.IsOn) == before + 1, "clicking a card picks it");
+            Check(queue.Count == 0 && queue.Picked == picked + 1, "clicking a card picks it");
         }
+        await Reset();
+
+        // ---------- the card tree and the kind cards (plan 13.2) ----------
+        // The lab's starting guns: an M4 in slot 1, a shotgun in slot 2.
+        player.Loadout.SetSlot(1, ArmoryCatalog.Weapon("m4"));
+        player.Loadout.SetSlot(2, ArmoryCatalog.Weapon("r870"));
+        var rng = new RandomNumberGenerator { Seed = 3 };
+        var draws = Enumerable.Range(0, 40).SelectMany(_ => CardCatalog.LevelUp(Cards, rng, player).Choices).Select(c => c.Key).ToList();
+        Check(draws.Contains("c|Billiards|shotgun") && !draws.Any(k => k.StartsWith("u|")) && !draws.Contains("c|HonkReload") && !draws.Contains("c|RubberDuck"),
+            "with a shotgun in hand billiards comes as 산탄 볼링; no upgrades before a card is taken; honk and duck are not level-up cards");
+        Cards.Set(LabCard.Balloon, true, player);
+        draws = Enumerable.Range(0, 40).SelectMany(_ => CardCatalog.LevelUp(Cards, rng, player).Choices).Select(c => c.Key).ToList();
+        Check(!draws.Contains("c|Balloon") && draws.Contains("u|BalloonRadius|1") && draws.Contains("u|BalloonDamage|1"),
+            "once balloon rounds are taken only their upgrades come, starting at Lv1");
+        var upgradeCard = CardCatalog.FromKey("u|BalloonRadius|1", Cards)!;
+        upgradeCard.Apply(player);
+        Check(Cards.LevelOf(player, CardUpgrade.BalloonRadius) == 1 && upgradeCard.Name.Contains("1") && CardCatalog.FromKey("c|Billiards|sniper", null)!.Name == Loc.Text("name_card_billiards_sniper"),
+            "picking an upgrade raises its level; the sniper's billiards has its own name");
+        player.Loadout.SetSlot(2, ArmoryCatalog.Weapon("mp5"));
+        draws = Enumerable.Range(0, 40).SelectMany(_ => CardCatalog.LevelUp(Cards, rng, player).Choices).Select(c => c.Key).ToList();
+        Check(!draws.Any(k => k.StartsWith("c|Billiards")), "without a sniper or shotgun billiards is never offered");
+        player.Loadout.SetSlot(2, ArmoryCatalog.Weapon("r870"));
         await Reset();
 
         // ---------- special cards (boss-reward cheat) ----------
@@ -352,7 +428,7 @@ public partial class CardLabCheck : Node
         Check(!log.IsDead && IsInstanceValid(log) && log.TotalDamage >= 300 + 9999 && log.Dps > 0, $"it takes any damage without dying (DPS {log.Dps:0})");
         Check(log.GlobalPosition.DistanceTo(logHome) < .05f, "and does not move off its spot");
         Cards.Set(LabCard.Balloon, true);
-        for (int i = 0; i < 12; i++) Tap(log);
+        await Taps(log, LabCards.BalloonHits * 2);
         Check(!log.IsDead && IsInstanceValid(log), "a balloon pop cannot kill it either");
         Key(Godot.Key.Backspace);
         await Frames(3);

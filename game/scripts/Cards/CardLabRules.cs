@@ -66,8 +66,7 @@ public partial class CardLabRules : ModeRules
     {
         Trickle = false;
         ClearEnemies();
-        foreach (var c in LabCards.All) Cards.Set(c, false);
-        foreach (var s in LabCards.Specials) Cards.Set(s, false);
+        Cards.ClearAll();
         Queue.Clear();
         var loadout = Stage.Player.Loadout;
         loadout.SetSlot(1, ArmoryCatalog.Weapon(ArmoryCatalog.StartingWeapon));
@@ -77,13 +76,8 @@ public partial class CardLabRules : ModeRules
         foreach (var offer in ArmingCards.Draw(Tuning.Survivor.WeaponPool, Rng)) Queue.Add(offer);
     }
 
-    /// <summary>A test level-up: three lab cards that are still off, as a normal card offer.</summary>
-    public void TestLevelUp()
-    {
-        var off = LabCards.All.Where(c => !Cards.IsOn(c)).OrderBy(_ => Rng.Randf()).Take(3).ToList();
-        if (off.Count == 0) return;
-        Queue.Add(new CardOffer { Kind = CardKind.Normal, TitleKey = "ui_card_levelup_title", Choices = off.Select(c => CardCatalog.Lab(c, Cards)).ToList() });
-    }
+    /// <summary>A test level-up: the same offer an Onslaught level-up gives this survivor (new cards, upgrades of taken ones, repeatables).</summary>
+    public void TestLevelUp() => Queue.Add(CardCatalog.LevelUp(Cards, Rng, Stage.Player));
 
     /// <summary>A boss-reward cheat: the stand-in special cards that are still off, as a special (gold) offer.</summary>
     public void TestSpecial()
