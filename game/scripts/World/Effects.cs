@@ -32,29 +32,6 @@ public partial class Effects : Node3D
     private readonly BoxShape3D _shellShape = new() { Size = new Vector3(.05f, .05f, .1f) };
     private readonly System.Collections.Generic.Dictionary<float, BoxMesh> _burstMeshes = new();
 
-    public void Tracer(Vector3 from, Vector3 to, bool crit)
-    {
-        float length = from.DistanceTo(to);
-        if (length < .05f) return;
-        float thick = crit ? .07f : .03f;
-        var mat = Mat.Glow(crit ? new Color("ffcf4a") : new Color("ffe5a0"), crit ? 4 : 2);
-        var beam = Mat.Mesh(this, _unitBox, (from + to) * .5f, mat);
-        beam.LookAt(to, Vector3.Up);
-        beam.Scale = new Vector3(thick, thick, length);
-        Expire(beam, crit ? .08f : .045f);
-    }
-
-    /// <summary>A charged shot (railgun): a thick bright line that lingers a moment longer than a tracer.</summary>
-    public void Beam(Vector3 from, Vector3 to, Color color)
-    {
-        float length = from.DistanceTo(to);
-        if (length < .05f) return;
-        var beam = Mat.Mesh(this, _unitBox, (from + to) * .5f, Mat.Glow(color, 6));
-        beam.LookAt(to, Vector3.Up);
-        beam.Scale = new Vector3(.16f, .16f, length);
-        Expire(beam, .22f);
-    }
-
     public void Shell(Vector3 at, Vector3 right)
     {
         var shell = new RigidBody3D
@@ -95,31 +72,9 @@ public partial class Effects : Node3D
         Cap(_splats, splat, MaxSplats);
     }
 
-    /// <summary>Flat fading fan showing a melee swing.</summary>
+    /// <summary>Bright hollow crescent following the melee impact and follow-through.</summary>
     public void Swoosh(Vector3 at, Vector3 direction, float range, float arcDegrees)
-    {
-        var mesh = new ArrayMesh();
-        var verts = new System.Collections.Generic.List<Vector3>();
-        int steps = 10;
-        float half = Mathf.DegToRad(arcDegrees) * .5f;
-        for (int i = 0; i < steps; i++)
-        {
-            float a0 = -half + 2 * half * i / steps, a1 = -half + 2 * half * (i + 1) / steps;
-            verts.Add(Vector3.Zero);
-            verts.Add(new Vector3(Mathf.Sin(a1), 0, Mathf.Cos(a1)) * range);
-            verts.Add(new Vector3(Mathf.Sin(a0), 0, Mathf.Cos(a0)) * range);
-        }
-        var arrays = new Godot.Collections.Array();
-        arrays.Resize((int)Mesh.ArrayType.Max);
-        arrays[(int)Mesh.ArrayType.Vertex] = verts.ToArray();
-        mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
-        var mat = Mat.Fade(new Color(1, 1, .85f, .35f));
-        var fan = Mat.Mesh(this, mesh, at, mat);
-        fan.Rotation = new Vector3(0, Mathf.Atan2(direction.X, direction.Z), 0);
-        var tween = fan.CreateTween();
-        tween.TweenProperty(mat, "albedo_color:a", 0f, .16f);
-        tween.TweenCallback(FreeLater(fan));
-    }
+        => MeleeSwingEffect.Play(this, at, direction, range, arcDegrees);
 
     public void SonarPing(Vector3 at)
     {
@@ -187,8 +142,9 @@ public partial class Effects : Node3D
     }
 
     /// <summary>Move a character's visuals onto a tumbling rigid body (the "bowling pin" death).</summary>
-    public RigidBody3D SpawnCorpse(CharacterRig rig, float radius, float height, Vector3 impulse, Vector3 torque, MonsterDefinition? monster = null)
+    public RigidBody3D SpawnCorpse(CharacterRig rig, float radius, float height, Vector3 impulse, Vector3 torque, MonsterDefinition? monster = null, bool critical = false)
     {
+        DeathBurst(rig, critical);
         var body = new Corpse
         {
             Name = "Corpse",
@@ -239,6 +195,17 @@ public partial class Effects : Node3D
             Topple(body, rig, origin);
         }
         return body;
+    }
+
+    /// <summary>A brief death marker, independent of the corpse's lifetime and physics.</summary>
+    public void DeathBurst(CharacterRig rig, bool critical = false)
+    {
+        rig.FlashDeath(critical);
+        // Read visibility before SpawnCorpse reveals/reparents the rig. An off-screen kill must not add a new beacon.
+        if (!rig.IsVisibleInTree()) return;
+        var def = rig.Definition;
+        DamageBurstEffect.Play(this, rig.GlobalPosition + Vector3.Up * def.ColliderHeight * .55f,
+            def.ColliderHeight, def.ColliderRadius, true, critical);
     }
 
     public const float ToppleSeconds = .45f, ReboundSeconds = .22f;

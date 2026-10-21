@@ -66,7 +66,7 @@ public partial class Enemy
     {
         var flat = new Vector3(direction.X, 0, direction.Z);
         flat = flat.LengthSquared() > .0001f ? flat.Normalized() : Vector3.Forward;
-        Rig.FlashHit();
+        Rig.FlashHit(crit);
         Hurt = 1;
         Rig.Jolt(flat * 4f);
         Stage.Effects.Stuffing(point, -flat, Definition.StuffingColor, crit ? 16 : 5);
@@ -74,5 +74,5 @@ public partial class Enemy
     }
 
     /// <summary>The host reported a hit on this enemy (someone else's shot).</summary>
-    public void ShowNetHit(Vector3 point, Vector3 direction) => PuppetHit(point, direction, false);
+    public void ShowNetHit(Vector3 point, Vector3 direction, bool crit = false) => PuppetHit(point, direction, crit);
 }

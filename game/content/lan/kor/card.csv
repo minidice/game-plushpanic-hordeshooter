@@ -26,8 +26,9 @@ ui_cardlab_off,끔
 ui_cardlab_keys,"F7 적 무리 · F8 네임드 · F9 계속 나오기 {0}
 F10 느리게 {1} · F11 1번 무기 바꾸기 · F12 2번 무기 바꾸기
 Backspace 적 지우기 · 0 카드 모두 켜기/끄기
-Home 치트 초기화(1 · 2 · 3번 칸 카드) · L 일반 카드(레벨업) · K 특별 카드(보스 보상)
-F 미룬 카드 열기 · T 통나무 놓기(커서 위치) · Shift+T 통나무 치우기"
+Home 치트 초기화(1 · 2 · 3번 칸 · 소환수 카드) · L 일반 카드(레벨업) · K 특별 카드(보스 보상)
+F 미룬 카드 열기 · T 통나무 놓기(커서 위치) · Shift+T 통나무 치우기
+C 소환수 추가(펫 · 드론 · 부사수 차례로) · Shift+C 소환수 치우기"
 fmt_cardlab_stats,"둥실 {0} · 펑 {1} · 덩어리 최대 {2} · 찍! {3}
 솜 폭발 {4} · 당구 {5} · 꽥 {6} · 오리 {7}"
 # 카드 창 (decisions.md M-27)
@@ -58,6 +59,37 @@ name_card_r_heal,솜 보충
 desc_card_r_heal,지금 최대 체력의 40% 회복
 name_card_r_medkit,구급상자
 desc_card_r_medkit,구급상자 +1 (최대 3)
+# 소환수 (decisions.md M-27, Companion.cs)
+ui_card_companion_title,소환수 고르기
+tag_companion_pet,소환수 · 펫 (사족)
+tag_companion_drone,소환수 · 드론 (비행)
+tag_companion_sidekick,소환수 · 부사수 (이족)
+fmt_companion_name,{0} · {1}
+companion_pet_dog,강아지 펫
+companion_pet_turtle,거북이 펫
+companion_pet_rabbit,토끼 펫
+companion_drone_quadcopter,쿼드콥터 드론
+companion_drone_ladybug,무당벌레 드론
+companion_drone_bee,꿀벌 드론
+companion_drone_ufo,UFO 드론
+companion_gear_twin_blaster,쌍열 블래스터
+companion_gear_rocket_pod,로켓 포드
+companion_gear_blaster,블래스터
+companion_gear_laser,레이저
+companion_gear_support,지원 포드
+companion_gear_light,조명
+desc_companion_gear_twin_blaster,가까운 적에게 빠르게 연사
+desc_companion_gear_rocket_pod,잠깐 조준한 뒤 로켓 한 발 — 터지며 주변을 날림
+desc_companion_gear_blaster,가까운 적에게 연사
+desc_companion_gear_laser,0.9초 조준한 뒤 줄지어 선 적을 꿰뚫는 레이저
+desc_companion_gear_support,가끔 나를 조금 치료
+desc_companion_gear_light,내 주변을 비춤
+desc_companion_sidekick_gun,내 곁에서 자기 총으로 가까운 적을 쏨
+desc_companion_pet,무적 · 길과 총알을 막지 않음 · 멀어지면 돌아옴
+desc_companion_drone,무적 · 길과 총알을 막지 않음 · 멀어지면 돌아옴
+desc_companion_sidekick,몹에게 둘러싸이면 쓰러졌다가 8초 뒤 내 곁에서 다시 일어남
+fx_companion_down,쓰러짐!
+fx_companion_revive,다시 일어남!
 # 카드 트리 · 분류 카드 (onslaught-cards-plan.md 13.2)
 tag_card_sniper,나 · 저격 전용
 tag_card_shotgun,나 · 샷건 전용

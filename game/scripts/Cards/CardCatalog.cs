@@ -76,6 +76,8 @@ public static class CardCatalog
                 return Special(special, effects);
             case "r" when parts.Length == 2 && Repeatables.Contains(parts[1]):
                 return Repeat(parts[1]);
+            case "f" when parts.Length == 2 && CompanionSpec.Parse(parts[1]) != null:
+                return CompanionSquad.Card(parts[1], null);
         }
         return null;
     }

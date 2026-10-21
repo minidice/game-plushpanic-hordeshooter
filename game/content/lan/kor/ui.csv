@@ -245,7 +245,7 @@ ui_objective_survivor_named,강한 적을 쓰러뜨리세요
 fmt_survivor_rest,강한 적을 쓰러뜨렸습니다! {0}초 동안 정비하세요
 msg_survivor_named,강한 적이 나타났다!
 ui_map_open_field,들판
-fmt_objective_survivor_arm,무기 카드를 고르세요 ({0}/{1}) — 1 · 2 · 3번 칸
+fmt_objective_survivor_arm,무기 · 소환수 카드를 고르세요 ({0}/{1}) — 1 · 2 · 3번 칸 · 소환수
 msg_survivor_armed,준비 완료! 사방에서 몰려온다
 fmt_hud_cooldown,충전 {0}초
 # 난전 카드 흐름 (decisions.md M-27)
@@ -262,3 +262,12 @@ msg_boss_spitter_mother_3,토사물 어미가 격노했습니다!
 fmt_survivor_midboss_down,중간 보스 격파! 특별 카드 — 다음 구간 ({0}/{1})
 fmt_level_up,레벨 {0}! 카드를 고르세요
 fmt_hud_level,Lv {0}
+
+settings_pet_quality,소환수 모델 품질
+settings_quality_high,고품질
+settings_quality_low,저품질 (가벼움)
+fmt_pause_companion_quality,소환수 모델 품질: {0}  (눌러서 바꾸기)
+sidekick_cadet,거위 부사수
+sidekick_scout,오리 정찰병
+sidekick_engineer,너구리 공병
+sidekick_guard,랫서판다 경비병

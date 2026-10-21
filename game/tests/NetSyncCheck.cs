@@ -76,6 +76,43 @@ public partial class NetSyncCheck : Node
             $"the client has the host's waiting monsters as puppets ({clientCount} of {hostCount})");
         Check(_client.Director.FilledThrough == -1 && _client.Director.MobsSpawned == 0, "the client never places or sends monsters itself");
 
+        // The cosmetic critical flag must cross the actual event batch, including a lethal hit.
+        var colorTarget = _host.Spawn(MonsterDatabase.Get("humanoid"), _client.Player.GlobalPosition + Vector3.Right * 1.2f, false);
+        colorTarget.SetPhysicsProcess(false);
+        await Frames(10);
+        var colorPuppet = _client.Enemies.Single(e => e.NetId == colorTarget.NetId);
+        Color? BurstColor(Node parent, string name)
+        {
+            var burst = parent.GetChildren().FirstOrDefault(n => n.Name == name && !n.IsQueuedForDeletion());
+            if (burst == null) return null;
+            return ((ShaderMaterial)burst.GetNode<MeshInstance3D>("DamageRays").MaterialOverride).GetShaderParameter("tint").AsColor();
+        }
+        colorTarget.TakeHit(new HitInfo(1, Vector3.Right, colorTarget.GlobalPosition + Vector3.Up, true));
+        bool sawYellow = false;
+        for (int i = 0; i < 12 && !sawYellow; i++)
+        {
+            await Frames(1);
+            sawYellow = BurstColor(colorPuppet.Rig, "HitBurst") is { B: < .5f, R: > .9f };
+        }
+        Check(sawYellow, "critical enemy hit arrives yellow on the other PC");
+        colorTarget.TakeHit(new HitInfo(1, Vector3.Right, colorTarget.GlobalPosition + Vector3.Up));
+        bool sawWhite = false;
+        for (int i = 0; i < 12 && !sawWhite; i++)
+        {
+            await Frames(1);
+            sawWhite = BurstColor(colorPuppet.Rig, "HitBurst") is { B: > .9f, R: > .9f };
+        }
+        Check(sawWhite, "a normal hit after critical resets the remote rays to white");
+        Check(colorPuppet.Rig.IsVisibleInTree(), "the critical death fixture is visible to the receiving player");
+        colorTarget.TakeHit(new HitInfo(99999, Vector3.Right, colorTarget.GlobalPosition + Vector3.Up, true));
+        bool sawDeath = false;
+        for (int i = 0; i < 12 && !sawDeath; i++)
+        {
+            await Frames(1);
+            sawDeath = BurstColor(_client.Effects, "DeathBurst") is { B: < .5f, R: > .9f };
+        }
+        Check(sawDeath, "critical death arrives with the same yellow ring on the other PC");
+
         // ---------- the client opens the safe room door ----------
         var door = _client.Layout.StartDoorSwitch;
         _client.Player.TeleportTo(door.GlobalPosition + Vector3.Left * .6f);

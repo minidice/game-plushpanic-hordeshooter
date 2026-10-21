@@ -442,9 +442,9 @@ public partial class Enemy : CharacterBody3D
     {
         if (IsDead) return;
         if (IsPuppet) { PuppetHit(hit.Point, hit.Direction, hit.Crit); return; }
-        Stage.Net?.OnEnemyHit(this, hit.Point, hit.Direction);
+        Stage.Net?.OnEnemyHit(this, hit.Point, hit.Direction, hit.Crit);
         Health -= hit.Damage;
-        if (hit.Damage > 0) Rig.FlashHit();
+        if (hit.Damage > 0) Rig.FlashHit(hit.Crit);
         Hurt = 1;
         Wake();
         var flat = new Vector3(hit.Direction.X, 0, hit.Direction.Z).Normalized();
@@ -452,8 +452,10 @@ public partial class Enemy : CharacterBody3D
         Rig.Jolt(flat * 4f);
         Stage.Effects.Stuffing(hit.Point, -flat, Definition.StuffingColor, hit.Crit ? 16 : 5);
         if (Health > 0) Stage.Sfx.PlayAt("zombie_hit", hit.Point);
+        // Cards can finish this death synchronously inside EnemyHit (for example a balloon pop).
+        if (Health <= 0) CriticalDeath = hit.Crit;
         Stage.RaiseEnemyHit(this, hit);
-        if (Health <= 0) Die(flat, hit.Crit ? 7.5f : 5f);
+        if (Health <= 0) DieFromHit(flat, hit.Crit ? 7.5f : 5f, hit.Crit);
     }
 
     /// <summary>
@@ -481,6 +483,16 @@ public partial class Enemy : CharacterBody3D
         Hurt = 1;
         ApplyKnock(direction, power);
         if (Health <= 0) Die(direction, HordeShooter.Knockback.Hit(power) / Monster.Mass);
+    }
+
+    public bool CriticalDeath { get; private set; }
+
+    /// <summary>Carry the killing hit's cosmetic flag through every special's existing death path.</summary>
+    public void DieFromHit(Vector3 direction, float force, bool critical)
+    {
+        if (IsDead) return;
+        CriticalDeath = critical;
+        Die(direction, force);
     }
 
     public virtual void Die(Vector3 direction, float force)
@@ -511,6 +523,6 @@ public partial class Enemy : CharacterBody3D
         force = Mathf.Min(force, CorpseMaxPush);
         var impulse = direction.Normalized() * force * CorpseSideShare + Vector3.Up * (force * .4f + 1.6f);
         var torque = new Vector3(Rng.RandfRange(-2, 2), Rng.RandfRange(-1, 1), Rng.RandfRange(-2, 2)) * (1 + force * .15f);
-        Stage.Effects.SpawnCorpse(Rig, radius, height, impulse, torque, Monster);
+        Stage.Effects.SpawnCorpse(Rig, radius, height, impulse, torque, Monster, CriticalDeath);
     }
 }

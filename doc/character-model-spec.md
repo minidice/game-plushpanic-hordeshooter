@@ -229,9 +229,27 @@ node prototypes/character-lab/tools/validate-game-roster.mjs
 
 감염체 5종은 GLB의 `{id}_leftArm`, `{id}_rightArm`에 원래 소매·팔·손을 보존하고 어깨에서 회전시킨다. 몸에 붙은 정적 팔 위에 새 팔을 추가하지 않는다. 동물형은 기존 날개/팔을 쓰고, 팔 노드가 없는 도형형 적만 보조 팔을 생성한다. 최적화 재실행 시 이 피벗을 병합하지 않아야 한다.
 
-실제 피해를 받으면 약 0.1초간 흰색 오버레이가 감쇠한다. 최고 불투명도는 0.72이며 기존 색과 좀비 오버레이를 복원한다. 동적으로 생성한 팔도 포함한다. 피해가 무효인 회피/무적 상태에서는 점멸하지 않는다.
+실제 피해를 받으면 약 0.1초간 일반 흰색/치명타 노란색 오버레이가 감쇠한다. 최고 불투명도는 0.72이며 기존 색과 좀비 오버레이를 복원한다. 동적으로 생성한 팔도 포함한다. 피해가 무효인 회피/무적 상태에서는 점멸하지 않는다.
 
 검사: `TailMeleeCheck`, `EnemyAttackCheck`, `HitFlashCheck`. 실제 렌더: `output/tails-rear-quarter.png`, `melee-pose-sequence.png`, `enemy-attack-sequence.png`, `hit-feedback-comparison.png`.
+
+
+<a id="damage-effects"></a>
+### 8.1 피격·사망 섬광 (2026-10-22, A-19·C-19)
+
+사용자 첨부 `공격효과참고.mp4`·`피격효과.mp4`에서 확인한 짧은 흰 몸 점멸과 주황빛 방사형 타격선을 반영한다. 영상에서 사망 순간은 뚜렷하게 확인되지 않아 사망 연출은 같은 색감으로 확장한 현재 시안이다. Blender 모델·외부 이미지 텍스처 없이 Godot 메시와 절차적 셰이더로 그린다.
+
+- **피격**: `CharacterHitFlashEffect`는 일반 흰색(`#ffffff`), 치명타 노란색(`#ffd34a`) 오버레이를 사용한다(0.1초, 최고 불투명도 0.72 유지). `CharacterRig.FlashHit`가 몸과 같은 색의 6방향 타격선과 작은 중심 섬광을 함께 시작하며, 0.16초 동안 바깥으로 이동·감쇠한다. 직경은 `clamp(ColliderHeight × 1.45, 1.8, 3.1)`m. 몸 중심 높이 `ColliderHeight × 0.55`에 붙어서 움직인다.
+- **투명도·색**: 선·원 셰이더의 최고 불투명도는 0.90(투명도 10%)이고 기존 시간 곡선으로 더 투명해진다. 주황 가장자리/흰 중심 혼합을 제거해 하나의 `tint`를 쓴다. 몸 오버레이는 이미 불투명도 0.72였으므로 이를 유지한다. 가산 합성과 배경 밝기에 따라 체감 투명도는 달라질 수 있다. 치명타 뒤 일반 피해는 재사용 재질의 색을 즉시 흰색으로 되돌린다.
+- **반복 피격**: 캐릭터마다 활성 타격선 하나를 재시작한다. 산탄 여러 펠릿·화상 틱이 각자 메시나 조명을 쌓지 않는다. 마지막 피격 후 시간이 지나면 제거된다. 기존 점멸의 공유 재질 보호, 생성 팔·장비 포함, 원래 오버레이 복원은 유지한다.
+- **사망**: 작은 피격 타격선을 제거하고 몸 점멸을 한 번 시작한다. 일반 처치는 흰색, 치명타 자체로 처치한 경우 몸·선·원 모두 노란색이다. `Enemy.CriticalDeath`를 명중 콜백 전에 확정해 풍선 카드가 콜백 안에서 사망시켜도 색이 유지된다. 치명타가 아니었던 후속 사망이나 주변 연쇄 피해에 이전 치명타 색을 전파하지 않는다. 사망점에 8방향 섬광과 끊어진 확산 링을 0.32초 표시한다. 직경은 `clamp(ColliderHeight × 1.65, 2.2, 4.0)`m. 시체에 붙어 따라가지 않고 독립적으로 사라진다. 기존 솜 파편·페인트·넘어짐·시체 물리/수명/관전 처리는 유지한다. 다운은 사망으로 취급하지 않는다.
+- **가시성·비용**: 효과마다 공용 사각형 메시 1개와 독립 재질을 사용한다. 카메라 방향을 향하고 깊이 검사를 유지한다. 몸에 가려지지 않도록 카메라 쪽으로 `clamp(ColliderRadius, 0.2, 1.0)`m 옮긴다. 작은 효과에 추가 조명·화면 흔들림은 없다. 피격 타격선은 Rig의 숨김을 따르며, 사망 버스트는 **시체로 옮겨 공개하기 전** Rig가 보일 때만 생성한다. 기존 사망 후 시체 공개 정책은 그대로다.
+- **연결 경로**: 실제 양의 피해를 받은 플레이어·적, 피해가 있는 밀기·화상·기존 수신 피격 경로에서 `FlashHit`를 쓴다. 무적/회피/0 피해의 기존 차단 조건은 유지한다. 일반·네임드·풍선은 `Effects.SpawnCorpse`, 플레이어는 `Player.Die`에서 공용 `Effects.DeathBurst`를 호출한다. 수신 효과는 기존 호스트 이벤트/체력 스냅샷을 따른다. `EnemyHit`·`EnemyDeath`에 치명타 여부 U8을 추가하고 로비 프로토콜을 5→6으로 올렸다. 같은 적의 동일 색 피격은 기존 80ms 제한을 유지하지만 색 변경은 바로 보낸다. [멀티 규격](multiplayer-sync-design.md#damage-color-sync) 참조. 치명타 판정 자체는 기존 규칙을 유지한다. 원격 화상·밀기 등 기존에 피격 이벤트를 보내지 않는 경로의 동기화 확대는 이번 범위가 아니다.
+- **수치의 상태**: 위 색·크기·시간은 아트 조정값이며 피해·치명타 배율·넉백·충돌·사망 판정을 바꾸지 않는다. UI 이펙트 개편은 별도 후속이다. 실제 2PC 및 6인 장시간·저사양 성능은 미검증이다.
+
+코드: [DamageBurstEffect.cs](../game/scripts/Effects/DamageBurstEffect.cs), [damage_burst.gdshader](../game/shaders/damage_burst.gdshader), [CharacterHitFlash.cs](../game/scripts/Characters/CharacterHitFlash.cs), [Effects.cs](../game/scripts/World/Effects.cs), [Player.cs](../game/scripts/Player/Player.cs).
+
+재검사: `DamageEffectsCheck.tscn`(양의 피해/무효 피해, 반복 재사용·소멸, 수신 표시, 일반·네임드·풍선·플레이어 사망, 숨김, 다운), `HitFlashCheck.tscn`(원래 재질 복원), `CorpseReactionCheck.tscn`, `CorpseTierCheck.tscn`, `VisionTierCheck.tscn`, `NetSyncCheck.tscn`, `Integration.tscn`. 실제 렌더: `DamageEffectsCheck` 창 모드 → `output/damage-fx-*.png`. `CaptureDamageEffects.tscn`을 창 모드 `--fixed-fps 60 --disable-vsync`로 실행하면 `output/damage-fx-frames/frame-*.png` 150프레임을 생성한다. 왼쪽 플레이어 일반 피격(흰색), 오른쪽 적 치명타/치명 처치(노란색)를 비교한다. 실제 피해·시체 물리를 포함한 통제된 검사 장면이며, HUD·시나리오·시야 갱신을 고정한다. 로컬 `output/damage-fx-preview.gif`는 해당 프레임을 잘라 2배 느리게 보여 준 미리보기다.
 
 ## 9. 플레이어 장전 자세
 
@@ -247,3 +265,11 @@ node prototypes/character-lab/tools/validate-game-roster.mjs
 2. `codex exec -C <저장소> -s workspace-write "<지시문을 읽고 5장 작업>"`: Codex가 `prototypes/character-lab/tools/`에 생성 코드를 쓰고 원본 GLB(`output/roster/<id>-source.glb`)를 만든다. `doc/`·`game/` 수정, Blender, 커밋은 하지 않는다.
 3. Claude가 `optimize_game_roster.py -- --<id>-only --no-preview`를 Blender로 돌려 `game/assets/enemies/<id>/<id>.glb`(삼각형 4,500 미만)를 만들고, `content/enemies/<id>.tres`와 `monsters.csv`의 `look`을 연결한 뒤 실제 렌더와 전용 검사로 확인한다.
 
+
+## 9. 사족 펫 모델 (2026-10-22, A-20)
+
+거북이·강아지·토끼는 이족 `CharacterRig`/플레이어 카탈로그와 분리한 시각용 `PetModel`을 사용한다. 네 발·머리·꼬리 피벗과 공용 `BackSocket`으로 같은 등 무기를 교체한다. 고품질/저품질 무기 없는 기본형 6개·공용 무기 GLB 2개와 설정 품질 전환, 좌표/예산/사용 예시/검사와 모드 연결의 남은 범위는 [펫 모델 규격](pet-model-spec.md)을 따른다.
+
+## 10. 드론·부사수 모델 (2026-10-22, A-21)
+
+드론4종은 별도 비행 모델과 하부 공용 장비를 쓴다. 부사수4종은 기존 goose/duck/raccoon/redpanda CharacterRig를 시각 루트에서0.60배로 줄이고 전용 외형 프리셋을 적용한다. 원본 정의·플레이어 외형은 변경하지 않고 총/손/총구도 함께 축소한다. 충돌 참고 치수만 제공하며 물리 바디/AI는 후속. 품질 설정은 드론의 별도 메시와 부사수 자동LOD에 적용한다. [전체 계약·검사](companion-model-spec.md).

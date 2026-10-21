@@ -16,8 +16,8 @@ namespace HordeShooter;
 /// </summary>
 public partial class SurvivorRules : ModeRules
 {
-    /// <summary>Picks every person makes before the swarm starts (slot 1, 2 and 3).</summary>
-    public const int ArmingPicks = 3;
+    /// <summary>Picks every person makes before the swarm starts (slot 1, 2 and 3, then a companion).</summary>
+    public const int ArmingPicks = 4;
     public const float SyncEvery = .5f;
 
     public override GameMode Mode => GameMode.Survivor;
@@ -63,13 +63,15 @@ public partial class SurvivorRules : ModeRules
     /// <summary>This PC's survivor's waiting offers (a client's is the host's copy).</summary>
     public CardQueue LocalQueue { get; } = new();
     public CardWindow Window { get; private set; } = null!;
+    /// <summary>Everyone's companions (the deciding PC's, or a client's copies).</summary>
+    public CompanionSquad Companions { get; private set; } = null!;
 
     private float _spawnTimer = 1.5f, _namedThrough = -1, _restUntil, _armedAt, _segmentStart, _syncTimer, _netXp = -1;
     private readonly List<(Enemy Enemy, Vector3 Last)> _named = new();
     private readonly Dictionary<Player, CardQueue> _queues = new();
     private readonly HashSet<Player> _armed = new();
     private readonly HashSet<int> _pendingPicks = new();
-    private readonly Dictionary<Player, (int Version, int Level, int Segment, bool Boss)> _sent = new();
+    private readonly Dictionary<Player, (int Version, int Level, int Segment, bool Boss, int Squad)> _sent = new();
     private readonly HashSet<string> _bossesMet = new();
 
     /// <summary>Everyone starts by arming (on every PC, so a client's clock starts when the host's does).</summary>
@@ -90,6 +92,8 @@ public partial class SurvivorRules : ModeRules
             LocalQueue.DropFront();
         };
         AddChild(Window);
+        Companions = new CompanionSquad { Name = "Companions", Stage = Stage };
+        AddChild(Companions);
         if (Stage.Authoritative) Stage.EnemyKilled += OnKilled;
     }
 
@@ -150,9 +154,12 @@ public partial class SurvivorRules : ModeRules
         else if (Stage.Authoritative && Boss != null) BarFraction = IsInstanceValid(Boss) && !Boss.IsDead ? Boss.Health / Boss.MaxHealth : 0;
         if (!Stage.Authoritative) return;
 
-        // Everyone (also who joins later) gets the three arming offers once; the clock waits for the first ones.
+        // Everyone (also who joins later) gets the arming offers once (three weapons, then a companion); the clock waits for the first ones.
         foreach (var p in Humans.Where(p => _armed.Add(p)))
+        {
             foreach (var offer in ArmingCards.Draw(Rules.WeaponPool, Rng)) QueueOf(p).Add(offer);
+            QueueOf(p).Add(Companions.Offer(Rng));
+        }
         if (Arming && Humans.Any() && Humans.All(p => ArmingLeft(p) == 0)) Stage.SetModeObjective(Objective.ModeGoal);
         SyncClients(dt);
     }
@@ -221,7 +228,7 @@ public partial class SurvivorRules : ModeRules
         foreach (var p in Humans.Where(p => p != Stage.Player))
         {
             var queue = QueueOf(p);
-            var now = (queue.Version, Level, Segment, BossArrived);
+            var now = (queue.Version, Level, Segment, BossArrived, Companions.Version);
             if (!periodic && _sent.TryGetValue(p, out var last) && last == now) continue;
             if (net.SendCards(p, EncodeFor(p))) _sent[p] = now;
         }
@@ -236,6 +243,7 @@ public partial class SurvivorRules : ModeRules
         w.F32(SegmentTime);
         w.U8(BossArrived ? 1 : 0);
         CardCatalog.Write(w, QueueOf(who).Offers);
+        Companions.Write(w);
         return w.ToArray();
     }
 
@@ -252,6 +260,7 @@ public partial class SurvivorRules : ModeRules
         var offers = CardCatalog.Read(r);
         _pendingPicks.RemoveWhere(serial => offers.All(o => o.Serial != serial));
         LocalQueue.Replace(offers.Where(o => !_pendingPicks.Contains(o.Serial)));
+        Companions.Read(r);
     }
 
     // ---------- named and swarm ----------

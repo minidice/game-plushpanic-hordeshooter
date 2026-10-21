@@ -247,19 +247,21 @@ public partial class ModeCheck : Node
         Check(stage.Map is OpenFieldMap && stage.Map.TitleKey == "ui_map_open_field", "Onslaught plays its own open field");
         Check(rules.GroupSize == r.GroupStart && rules.BarLabel.Length > 0 && !rules.BossArrived, "the bar counts down to the boss");
 
-        // Arming: three card offers in the card window (slot 1 gun, slot 2 gun, slot 3 special); each pick fills its slot (M-27).
+        // Arming: four card offers in the card window (slot 1 gun, slot 2 gun, slot 3 special, a companion); each pick fills its slot (M-27).
         var queue = rules.LocalQueue;
-        await Until(() => queue.Count == SurvivorRules.ArmingPicks, "the three arming offers wait in the card window", 2);
+        await Until(() => queue.Count == SurvivorRules.ArmingPicks, "the four arming offers wait in the card window", 2);
         Check(queue.Offers.All(o => o.Kind == CardKind.Arming) && rules.Window.IsOpen && !queue.Front!.CanClose && !stage.Interactables.OfType<WeaponPickup>().Any(),
             "the card window opens on the slot 1 offer, cannot be closed, and nothing lies on the floor");
         Check(queue.Offers[0].Choices.Concat(queue.Offers[1].Choices).All(c => r.WeaponPool.Contains(c.Id) && ArmoryCatalog.Weapon(c.Id).Slot != WeaponSlot.Special) &&
               queue.Offers[2].Choices.All(c => ArmoryCatalog.Weapon(c.Id).Slot == WeaponSlot.Special),
             "slots 1 and 2 offer guns from the pool, slot 3 special weapons");
+        Check(queue.Offers[3].Choices.Select(c => CompanionSpec.Parse(c.Id)?.Kind).Distinct().Count() == 3 && queue.Offers[3].Choices.All(c => c.Target == CardTarget.Summon),
+            "the last offer is a companion: a pet, a drone and a sidekick");
         await Shot("survivor-arming");
         string first = queue.Front!.Choices[0].Id;
         rules.Window.Pick(0);
         await Frames(2);
-        Check(stage.Player.Loadout.Secondary.Def.Id == first && rules.Arming && queue.Count == 2 && rules.ObjectiveText.Contains("2/3"),
+        Check(stage.Player.Loadout.Secondary.Def.Id == first && rules.Arming && queue.Count == 3 && rules.ObjectiveText.Contains("2/4"),
             $"the first card ({first}) becomes slot 1 and the slot 2 offer follows");
         await Seconds(2);
         Check(rules.SpawnedThisMatch == 0 && rules.MatchTime == 0, "nothing comes and the clock waits while arming");
@@ -268,8 +270,14 @@ public partial class ModeCheck : Node
         string third = queue.Front!.Choices[2].Id;
         rules.Window.Pick(2);
         await Frames(2);
+        Check(rules.Arming && queue.Front?.TitleKey == "ui_card_companion_title", "after slot 3 the companion offer follows; the match still waits");
+        await Shot("survivor-companion-card");
+        string buddy = queue.Front!.Choices[0].Id;
+        rules.Window.Pick(0);
+        await Frames(2);
         Check(stage.Player.Loadout.Primary?.Def.Id == second && stage.Player.Loadout.Special?.Def.Id == third && !rules.Arming &&
               stage.Objective == Objective.ModeGoal && !rules.Window.IsOpen, $"slot 2 is the {second}, slot 3 the {third}, and the match starts");
+        Check(rules.Companions.Of(stage.Player).Single().Spec.Key == buddy, $"the companion ({buddy}) joins the survivor");
         Check(stage.Player.Loadout.Secondary.HasInfiniteReserve && stage.Player.Loadout.Primary!.HasInfiniteReserve, "both guns have unlimited reserves");
         Check(stage.Hud.FindChild("SpecialSlot", true, false) is Control { Visible: true }, "the slot 3 tile shows in Onslaught now");
 

@@ -565,6 +565,16 @@ public partial class MainMenu : Control
         language.ItemSelected += i => SetLanguage(languages[(int)i]);
         page.AddChild(language);
 
+        var petRow=new HBoxContainer();
+        var petLabel=UiTheme.Label(Loc.Text("settings_pet_quality"),17);
+        petLabel.SizeFlagsHorizontal=SizeFlags.ExpandFill;petRow.AddChild(petLabel);
+        var petQuality=new OptionButton { Name="Settings_PetQuality",CustomMinimumSize=new Vector2(190,38) };
+        petQuality.AddItem(Loc.Text("settings_quality_high"));
+        petQuality.AddItem(Loc.Text("settings_quality_low"));
+        petQuality.Select((int)GameSettings.PetQuality);
+        petQuality.ItemSelected += i => { GameSettings.PetQuality=(PetModelQuality)i;GameSettings.Save(); };
+        petRow.AddChild(petQuality);page.AddChild(petRow);
+
         page.AddChild(Section("settings_sound"));
         PercentSlider(page, "Settings_MasterVolume", "settings_volume_master", GameSettings.MasterVolume, v => { GameSettings.MasterVolume = v; GameSettings.ApplyAudio(); });
         PercentSlider(page, "Settings_SfxVolume", "settings_volume_sfx", GameSettings.SfxVolume, v => { GameSettings.SfxVolume = v; GameSettings.ApplyAudio(); });

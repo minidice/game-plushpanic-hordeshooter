@@ -15,7 +15,7 @@ public partial class NetLobby : Node
     public const string NodeName = "NetLobby";
     public const int HostPeer = 1;
     /// <summary>Bump when lobby or match messages change shape: older builds then show as another version.</summary>
-    public const int Protocol = 5;
+    public const int Protocol = 6;
     /// <summary>Two PCs can play together only on the same version: messages and data ids (multiplayer-sync-design.md 6장).</summary>
     public static string Version => $"p{Protocol}-{(uint)NetIds.DataHash():x8}";
     /// <summary>Seconds between the host's refreshes of its room on the public list (it expires after 45 s).</summary>

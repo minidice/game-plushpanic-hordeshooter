@@ -39,7 +39,7 @@ public partial class StageNet : Node
     private readonly Dictionary<int, NetTrack> _playerTracks = new();
     private readonly HashSet<int> _readyPeers = new();
     private readonly List<Enemy> _newEnemies = new();
-    private readonly Dictionary<int, double> _lastHitEvent = new();
+    private readonly Dictionary<int, (double Time, bool Critical)> _lastHitEvent = new();
     private readonly NetEventBatch _batch = new();
     private int _nextEnemyId, _inputSeq, _snapshotIndex;
     private float _snapshotTimer;
@@ -190,17 +190,19 @@ public partial class StageNet : Node
         if (Role != NetRole.Host || enemy.NetId == 0) return;
         FlushNewEnemies();
         _batch.Begin(NetEvent.EnemyDeath); _batch.W.U16(enemy.NetId); _batch.W.Pos(direction); _batch.W.F32(force);
+        _batch.W.U8(enemy.CriticalDeath ? 1 : 0);
         _enemies.Remove(enemy.NetId);
         _lastHitEvent.Remove(enemy.NetId);
     }
 
-    public void OnEnemyHit(Enemy enemy, Vector3 point, Vector3 direction)
+    public void OnEnemyHit(Enemy enemy, Vector3 point, Vector3 direction, bool critical)
     {
         if (Role != NetRole.Host || enemy.NetId == 0) return;
         // A shotgun hits a crowd many times a frame: one picture per enemy per 80 ms is plenty.
-        if (_lastHitEvent.TryGetValue(enemy.NetId, out var last) && Clock - last < .08) return;
-        _lastHitEvent[enemy.NetId] = Clock;
+        if (_lastHitEvent.TryGetValue(enemy.NetId, out var last) && Clock - last.Time < .08 && last.Critical == critical) return;
+        _lastHitEvent[enemy.NetId] = (Clock, critical);
         _batch.Begin(NetEvent.EnemyHit); _batch.W.U16(enemy.NetId); _batch.W.Pos(point); _batch.W.Yaw(direction);
+        _batch.W.U8(critical ? 1 : 0);
     }
 
     public void OnEnemyAttack(Enemy enemy, NetAttack kind, Player? victim, Vector3 point)
@@ -522,7 +524,8 @@ public partial class StageNet : Node
                 int id = r.U16();
                 var direction = r.Pos();
                 float force = r.F32();
-                if (_enemies.Remove(id, out var enemy) && IsInstanceValid(enemy) && !enemy.IsDead) enemy.Die(direction, force);
+                bool critical = r.U8() != 0;
+                if (_enemies.Remove(id, out var enemy) && IsInstanceValid(enemy) && !enemy.IsDead) enemy.DieFromHit(direction, force, critical);
                 break;
             }
             case NetEvent.EnemyHit:
@@ -530,7 +533,8 @@ public partial class StageNet : Node
                 int id = r.U16();
                 var point = r.Pos();
                 var dir = r.Yaw();
-                if (_enemies.TryGetValue(id, out var enemy) && IsInstanceValid(enemy)) enemy.ShowNetHit(point, dir);
+                bool critical = r.U8() != 0;
+                if (_enemies.TryGetValue(id, out var enemy) && IsInstanceValid(enemy)) enemy.ShowNetHit(point, dir, critical);
                 break;
             }
             case NetEvent.EnemyAttack:

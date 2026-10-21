@@ -350,8 +350,8 @@ public partial class CardLabCheck : Node
         Key(Godot.Key.Home);
         await Idle(3);
         var queue = _rules.Queue;
-        Check(queue.Count == 3 && queue.Front!.Kind == CardKind.Arming && window.IsOpen && hud.CardWindowOpen,
-            "Home resets and opens the slot 1 · 2 · 3 arming cards, one offer after another");
+        Check(queue.Count == 4 && queue.Front!.Kind == CardKind.Arming && window.IsOpen && hud.CardWindowOpen,
+            "Home resets and opens the slot 1 · 2 · 3 and companion arming cards, one offer after another");
         Check(player.Loadout.Secondary.Def.Id == ArmoryCatalog.StartingWeapon && player.Loadout.Primary == null && player.Loadout.Special == null && !LabCards.All.Any(Cards.IsOn),
             "the reset leaves only the frying pan and no cards");
         var offers = queue.Offers.ToList();
@@ -369,14 +369,17 @@ public partial class CardLabCheck : Node
         string first = offers[0].Choices[0].Id;
         Key(Godot.Key.Key1);
         await Idle(2);
-        Check(player.Loadout.Secondary.Def.Id == first && queue.Count == 2 && window.IsOpen, $"1 picks the first card: slot 1 is the {first}, the slot 2 offer follows");
+        Check(player.Loadout.Secondary.Def.Id == first && queue.Count == 3 && window.IsOpen, $"1 picks the first card: slot 1 is the {first}, the slot 2 offer follows");
         window.Pick(1);
         Check(player.Loadout.Primary?.Def.Id == offers[1].Choices[1].Id, "the second offer fills slot 2");
         await Shot("arming-3");
         Key(Godot.Key.Key3);
         await Idle(2);
-        Check(player.Loadout.Special?.Def.Id == offers[2].Choices[2].Id && queue.Count == 0 && !window.IsOpen && !hud.CardWindowOpen,
-            "the third fills slot 3 and the window closes");
+        Check(player.Loadout.Special?.Def.Id == offers[2].Choices[2].Id && queue.Count == 1 && window.IsOpen, "the third fills slot 3 and the companion offer follows");
+        Key(Godot.Key.Key1);
+        await Idle(2);
+        Check(_rules.Companions.Of(player).Single().Spec.Key == offers[3].Choices[0].Id && queue.Count == 0 && !window.IsOpen && !hud.CardWindowOpen,
+            "1 takes the first companion and the window closes");
         Check(hud.FindChild("SpecialSlot", true, false) is Control { Visible: true }, "the slot 3 tile shows the special weapon");
 
         // ---------- level-up cards: put off, counted, same cards again ----------

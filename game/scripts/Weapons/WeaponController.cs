@@ -41,8 +41,7 @@ public partial class WeaponController : Node
     private MeshInstance3D? _chargeLine;
     private List<Node3D> _muzzles = new();
     private int _muzzleIndex;
-    private OmniLight3D _flash = null!;
-    private float _flashTime, _swingElapsed;
+    private float _swingElapsed;
     private WeaponState? _swingState;
     private bool _swingHit;
     private WeaponState? _reloadWatch;
@@ -57,8 +56,6 @@ public partial class WeaponController : Node
     {
         _player.Died += OnDied;
         _player.Rig.HideBuiltInWeapon();
-        _flash = new OmniLight3D { OmniRange = 5, LightEnergy = 0, LightColor = new Color("ffcc77") };
-        _player.Rig.Weapon.AddChild(_flash);
         RefreshVisual();
     }
 
@@ -95,10 +92,19 @@ public partial class WeaponController : Node
                     Stage.Effects.Swoosh(_player.GlobalPosition + Vector3.Up * Player.AimHeight, flat.Normalized(), def.MeleeRange, def.MeleeArc);
                 return;
             case FireMode.Projectile:
-                if (ends.Count > 0) Rocket.Launch(Stage, from, (ends[0] - from).Normalized(), def, _player.GetRid());
+                if (ends.Count > 0)
+                {
+                    var direction = (ends[0] - from).Normalized();
+                    Rocket.Launch(Stage, from, direction, def, _player.GetRid());
+                    WeaponShotEffect.Flash(Stage.Effects, def, from, direction);
+                }
                 return;
             case FireMode.Lob:
-                if (ends.Count > 0) MortarShell.Fire(Stage, from, ends[0], def);
+                if (ends.Count > 0)
+                {
+                    MortarShell.Fire(Stage, from, ends[0], def);
+                    WeaponShotEffect.Flash(Stage.Effects, def, from, Vector3.Up);
+                }
                 return;
             case FireMode.Shout:
                 ShoutLook(def);
@@ -107,9 +113,12 @@ public partial class WeaponController : Node
                 // The thrown item arrives as its own throw event.
                 return;
         }
-        if (def.ChargeTime > 0) foreach (var end in ends) Stage.Effects.Beam(from, end, RailColor);
-        else foreach (var end in ends) Stage.Effects.Tracer(from, end, false);
-        _flashTime = .045f;
+        for (int i = 0; i < ends.Count; i++)
+        {
+            var origin = _player.GlobalPosition + Vector3.Up * Player.AimHeight;
+            var start = origin.DistanceTo(ends[i]) < origin.DistanceTo(from) ? origin : from;
+            WeaponShotEffect.Play(Stage.Effects, def, from, start, ends[i], false, muzzleFlash: i == 0);
+        }
         _muzzleIndex++;
     }
 
@@ -162,7 +171,6 @@ public partial class WeaponController : Node
         if (!def.ModelFacesPositiveZ) _visual.RotationDegrees = new Vector3(0, 180, 0);
         _player.Rig.Weapon.AddChild(_visual);
         _player.Rig.BindWeaponGrip(built);
-        _flash.Position = _player.Rig.Weapon.ToLocal(MuzzlePosition);
     }
 
     // ---------- throw aiming ----------
@@ -241,8 +249,6 @@ public partial class WeaponController : Node
     private void TickActions(float dt, bool moving, bool pressed, bool held, bool blocked)
     {
         Kick = Mathf.MoveToward(Kick, 0, dt * 7);
-        _flashTime -= dt;
-        _flash.LightEnergy = _flashTime > 0 ? 4 : 0;
         blocked |= _player.IsDead || _player.IsStunned;
         if (blocked || AimingThrow || (_swingState != null && _swingState != Current)) CancelMeleeSwing();
         else AdvanceMeleeSwing(dt);
@@ -418,11 +424,13 @@ public partial class WeaponController : Node
             case FireMode.Projectile:
                 var rocketDir = Spread(dir, state.Spread);
                 Rocket.Launch(Stage, MuzzlePosition, rocketDir, def, _player.GetRid());
+                WeaponShotEffect.Flash(Stage.Effects, def, MuzzlePosition, rocketDir);
                 Stage.Net?.OnShot(_player, def, MuzzlePosition, new[] { MuzzlePosition + rocketDir }, _player.AimPoint);
                 break;
             case FireMode.Lob:
                 var target = LobTarget(def);
                 MortarShell.Fire(Stage, MuzzlePosition, target, def);
+                WeaponShotEffect.Flash(Stage.Effects, def, MuzzlePosition, Vector3.Up);
                 Stage.Net?.OnShot(_player, def, MuzzlePosition, new[] { target }, _player.AimPoint);
                 break;
             case FireMode.Shout:
@@ -452,8 +460,7 @@ public partial class WeaponController : Node
                     anyCrit |= crit;
                     var from = MuzzlePosition;
                     if (origin.DistanceTo(end) < origin.DistanceTo(from)) from = origin;
-                    if (def.ChargeTime > 0) Stage.Effects.Beam(from, end, RailColor);
-                    else Stage.Effects.Tracer(from, end, crit);
+                    WeaponShotEffect.Play(Stage.Effects, def, MuzzlePosition, from, end, crit, muzzleFlash: i == 0);
                     ends?.Add(end);
                 }
                 if (ends != null) Stage.Net!.OnShot(_player, def, MuzzlePosition, ends, _player.AimPoint);
@@ -462,7 +469,6 @@ public partial class WeaponController : Node
                 break;
         }
 
-        _flashTime = .045f;
         _muzzleIndex++;
         // Every gun pushes its shooter back; power comes from the data, scale from the player's option.
         // Squadmates take a third of the push, so a shotgun does not leave them behind the leader.

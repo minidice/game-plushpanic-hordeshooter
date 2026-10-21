@@ -245,7 +245,7 @@ ui_objective_survivor_named,Take down the strong ones
 fmt_survivor_rest,Strong ones down! {0}s to restock
 msg_survivor_named,Strong enemies incoming!
 ui_map_open_field,Open Field
-fmt_objective_survivor_arm,Pick your weapon cards ({0}/{1}) — slots 1 · 2 · 3
+fmt_objective_survivor_arm,Pick your weapon and companion cards ({0}/{1}) — slots 1 · 2 · 3 · companion
 msg_survivor_armed,Armed! Here they come from every side
 fmt_hud_cooldown,Recharge {0}s
 # Onslaught card flow (decisions.md M-27)
@@ -262,3 +262,12 @@ msg_boss_spitter_mother_3,The Spew Mother is enraged!
 fmt_survivor_midboss_down,Middle boss down! Special card — next stretch ({0}/{1})
 fmt_level_up,Level {0}! Pick a card
 fmt_hud_level,Lv {0}
+
+settings_pet_quality,Companion model quality
+settings_quality_high,High
+settings_quality_low,Low (lighter)
+fmt_pause_companion_quality,Companion model quality: {0}  (click to change)
+sidekick_cadet,Goose Cadet
+sidekick_scout,Duck Scout
+sidekick_engineer,Raccoon Engineer
+sidekick_guard,Red Panda Guard

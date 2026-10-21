@@ -18,16 +18,18 @@ public partial class CharacterHitFlashEffect : Node
     private readonly List<(MeshInstance3D Mesh, Material? Original, Material Flash)> _meshes = new();
     private readonly Dictionary<Material, Material> _overlayCopies = new();
     private float _remaining;
+    private Color _tint = Colors.White;
 
     public override void _Ready() => SetProcess(_remaining > 0);
 
-    public void Play(Node3D model)
+    public void Play(Node3D model, bool critical = false)
     {
         // Newly equipped hands/weapons are included; existing meshes and overlay chains are reused.
         _meshes.RemoveAll(entry => !IsInstanceValid(entry.Mesh));
         CacheMeshes(model);
         _remaining = Duration;
-        _white.AlbedoColor = new Color(1, 1, 1, PeakAlpha);
+        _tint = critical ? DamageBurstEffect.CriticalColor : Colors.White;
+        _white.AlbedoColor = new Color(_tint, PeakAlpha);
         foreach (var entry in _meshes) entry.Mesh.MaterialOverlay = entry.Flash;
         SetProcess(true);
     }
@@ -56,7 +58,7 @@ public partial class CharacterHitFlashEffect : Node
     public override void _Process(double delta)
     {
         _remaining = Mathf.Max(0, _remaining - (float)delta);
-        _white.AlbedoColor = new Color(1, 1, 1, PeakAlpha * _remaining / Duration);
+        _white.AlbedoColor = new Color(_tint, PeakAlpha * _remaining / Duration);
         if (_remaining > 0) return;
         foreach (var entry in _meshes)
             if (IsInstanceValid(entry.Mesh) && entry.Mesh.MaterialOverlay == entry.Flash)

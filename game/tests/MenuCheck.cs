@@ -159,6 +159,11 @@ public partial class MenuCheck : Node
         GameSettings.Path = SettingsPath;
         GameSettings.Load();
         Click("Menu_Settings");
+        Check(_menu.FindChild("Settings_PetQuality",true,false) is OptionButton,"settings provide high and low pet quality");
+        var petQuality=Ui<OptionButton>("Settings_PetQuality");
+        Check(petQuality.ItemCount==2 && petQuality.Selected==0 && GameSettings.PetQuality==PetModelQuality.High,"pet quality defaults to high");
+        petQuality.Select(1);petQuality.EmitSignal(OptionButton.SignalName.ItemSelected,1);
+        Check(GameSettings.PetQuality==PetModelQuality.Low,"low pet quality can be selected");
         await Frames(2);
         float fullRecoil = Knockback.Recoil(100);
         Ui<HSlider>("Settings_Recoil").Value = 40;
@@ -198,6 +203,7 @@ public partial class MenuCheck : Node
         Check(Loc.Language == "eng" && Mathf.IsEqualApprox(GameSettings.RecoilScale, .4f) && Mathf.IsEqualApprox(GameSettings.SfxVolume, .5f),
             "language, recoil and volume are restored from the settings file");
         Check(GameSession.SquadSize == 3 && GameSession.SelectedCharacterId == "raccoon", "squad size and character are restored from the settings file");
+        Check(GameSettings.PetQuality==PetModelQuality.Low,"pet quality is restored from settings");
 
         // A broken file or unknown values fall back to safe defaults.
         GameSettings.Reset();
@@ -207,12 +213,14 @@ public partial class MenuCheck : Node
             bad.SetValue("options", "language", "xx");
             bad.SetValue("options", "recoil_scale", 7f);
             bad.SetValue("menu", "squad_size", 2);
+            bad.SetValue("graphics","pet_quality",99);
             bad.Save(SettingsPath);
         }
         GameSettings.Path = SettingsPath;
         GameSettings.Load();
         Check(Loc.Language == "kor" && GameSettings.RecoilScale == 1f && GameSettings.SfxVolume == 1f && GameSession.SquadSize == GameSession.DefaultSquadSize,
             "unknown language, out-of-range recoil, NaN volume and invalid squad size fall back to defaults");
+        Check(GameSettings.PetQuality==PetModelQuality.High,"invalid pet quality falls back to high");
     }
 
     private async Task OpenMenu()

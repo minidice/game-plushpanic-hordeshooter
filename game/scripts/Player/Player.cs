@@ -572,6 +572,7 @@ public partial class Player : CharacterBody3D
         body.AddChild(new CollisionShape3D { Shape = new CapsuleShape3D { Radius = Definition.ColliderRadius, Height = h } });
         Stage.AddChild(body);
         body.GlobalPosition = GlobalPosition + Vector3.Up * h * .5f;
+        Stage.Effects.DeathBurst(Rig);
         Rig.Reparent(body);
         Rig.Position = Vector3.Down * h * .5f;
         var flat = direction.LengthSquared() > .0001f ? direction.Normalized() : -AimDirection;

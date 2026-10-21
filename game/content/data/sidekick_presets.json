@@ -1,0 +1,6 @@
+[
+  {"id":"cadet","species":"goose","name":"sidekick_cadet","weapon":"m4","scale":0.6,"appearance":{"Hat":2,"HatColor":"#527d83","Goggles":false,"Headset":true,"Vest":true,"VestStyle":0,"VestColor":"#66827b","Pack":false}},
+  {"id":"scout","species":"duck","name":"sidekick_scout","weapon":"glock17","scale":0.6,"appearance":{"Hat":0,"Goggles":true,"Headset":false,"Vest":true,"VestStyle":0,"VestColor":"#b58d51","Pack":true,"PackColor":"#92764c"}},
+  {"id":"engineer","species":"raccoon","name":"sidekick_engineer","weapon":"m1911","scale":0.6,"appearance":{"Hat":1,"HatColor":"#d0a84b","Goggles":false,"Headset":true,"Vest":true,"VestStyle":0,"VestColor":"#597784","Pack":true,"PackColor":"#d0a84b"}},
+  {"id":"guard","species":"redpanda","name":"sidekick_guard","weapon":"r870","scale":0.6,"appearance":{"Hat":1,"HatColor":"#586a76","Goggles":false,"Headset":false,"Vest":true,"VestStyle":1,"VestColor":"#586a76","Pack":false}}
+]

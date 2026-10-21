@@ -26,8 +26,9 @@ ui_cardlab_off,off
 ui_cardlab_keys,"F7 Horde · F8 Named · F9 Trickle {0}
 F10 Slow {1} · F11 Next slot-1 gun · F12 Next slot-2 gun
 Backspace Clear · 0 All cards on/off
-Home Cheat reset (slot 1 · 2 · 3 cards) · L Normal card (level-up) · K Special card (boss reward)
-F Open put-off cards · T Training log at the cursor · Shift+T Remove logs"
+Home Cheat reset (slot 1 · 2 · 3 and companion cards) · L Normal card (level-up) · K Special card (boss reward)
+F Open put-off cards · T Training log at the cursor · Shift+T Remove logs
+C Add a companion (pet · drone · sidekick in turn) · Shift+C Remove companions"
 fmt_cardlab_stats,"Float {0} · Pop {1} · Largest clump {2} · Burst {3}
 Stuffing {4} · Billiards {5} · Honk {6} · Duck {7}"
 # Card window (decisions.md M-27)
@@ -58,6 +59,37 @@ name_card_r_heal,Restuff
 desc_card_r_heal,Heal 40% of your max health now
 name_card_r_medkit,Medkit
 desc_card_r_medkit,One more medkit (up to 3)
+# Companions (decisions.md M-27, Companion.cs)
+ui_card_companion_title,Pick a companion
+tag_companion_pet,Companion · pet (four legs)
+tag_companion_drone,Companion · drone (flying)
+tag_companion_sidekick,Companion · sidekick (two legs)
+fmt_companion_name,{0} · {1}
+companion_pet_dog,Dog pet
+companion_pet_turtle,Turtle pet
+companion_pet_rabbit,Rabbit pet
+companion_drone_quadcopter,Quadcopter drone
+companion_drone_ladybug,Ladybug drone
+companion_drone_bee,Bee drone
+companion_drone_ufo,UFO drone
+companion_gear_twin_blaster,Twin blaster
+companion_gear_rocket_pod,Rocket pod
+companion_gear_blaster,Blaster
+companion_gear_laser,Laser
+companion_gear_support,Support pod
+companion_gear_light,Light
+desc_companion_gear_twin_blaster,Rapid fire at nearby monsters
+desc_companion_gear_rocket_pod,"Aims a moment, then one rocket that throws everything around it"
+desc_companion_gear_blaster,Steady fire at nearby monsters
+desc_companion_gear_laser,"Aims for 0.9 s, then a laser through a whole line"
+desc_companion_gear_support,Now and then mends you a little
+desc_companion_gear_light,Lights up around you
+desc_companion_sidekick_gun,Shoots nearby monsters with its own gun at your side
+desc_companion_pet,Invincible · never blocks paths or shots · comes back when you run off
+desc_companion_drone,Invincible · never blocks paths or shots · comes back when you run off
+desc_companion_sidekick,Falls when monsters swarm it and gets up beside you 8 s later
+fx_companion_down,Down!
+fx_companion_revive,Back up!
 # Card tree and kind cards (onslaught-cards-plan.md 13.2)
 tag_card_sniper,You · sniper only
 tag_card_shotgun,You · shotgun only

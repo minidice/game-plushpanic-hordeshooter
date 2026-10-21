@@ -22,7 +22,10 @@
 - [x] 실험실 피드백 반영 1차(2026-10-21, M-27 계획 13.2): 카드는 고른 사람의 것(명중에 쏜 사람 · 무기 분류), 풍선탄 4방 펑 · 네임드 면역, 카드 트리(풍선탄 · 찍찍이 강화 Lv), 당구 저격 · 샷건 전용(관통 당구 · 산탄 볼링), 꽥 · 고무오리는 레벨업에서 제외, 실험실 L = 난전 레벨업 제안
 - [x] 난전 3번 칸 꽥 · 고무오리 1차(2026-10-21, M-27 계획 13.1): 발사 방식 `shout`(주변 밀쳐내기) · `throw`(투척물 던지기), 3번 칸 무장 카드 후보 5종, 난전 전용 무기별 쿨타임 `special_cooldowns`, 실험실 오리 카드도 같은 오리
 - [x] 꽥 경적 · 고무오리 전용 모델 · 아이콘(2026-10-21, A-17 · I-87): Codex Blender 스크립트(`gadget-models.py`) + Claude 수정(축 · 색 · 부리 · 크기), 던진 오리도 같은 모델, 아이콘은 `render-weapon-icons.py --only`
-- [ ] 난전 개편(M-27) 나머지: 소환수(드론 · 부사수 · 펫), 레벨업 일반 카드 · 보스 특별 카드, 총 분류별 풀, 하데스식 카드 창 · + 아이콘 · 버프 줄 ([계획](onslaught-cards-plan.md))
+- [x] 소환수 게임 적용 1차(2026-10-22, M-28): 난전 무장 네 번째 소환수 카드 · 실험실 C, 따라가기 · 기본 공격 · 12 m 벗어나면 복귀(시전은 끝내고), 펫 · 드론 무적 · 몸 없음, 부사수 쓰러짐 → 8초 뒤 부활, 게임 중 Esc 메뉴에서 소환수 모델 품질 전환, 멀티 목록 동기화 ([규격](companion-model-spec.md))
+- [ ] 난전 개편(M-27) 나머지: 소환수 카드(기본 공격 강화 · 새 능력) · 각성, 총 분류별 카드 풀, 버프 줄 ([계획](onslaught-cards-plan.md))
+- [x] 사족 펫 모델 라이브러리(A-20): 거북이·강아지·토끼 기본형, 공용 등 무기 2종 교체/해제, 시각용 걷기. 세 종 형태 개선·고품질/저품질 6개 GLB·설정 저장/전환 포함. 거북이·토끼는 귀여움 기준으로 큰 머리/볼·짧은 몸/발 재조정, 게임 크기 전후 비교 확인. 모델 185개·메뉴 44개 검사와 6마리 렌더 확인. 모델 단계이며 추종·소환 카드·공격은 후속 ([규격](pet-model-spec.md)).
+- [x] 드론·부사수 모델 라이브러리(A-21): 드론4종×고/저, 공용 하부장비4종 교체, 기존 캐릭터60% 프리셋4종·기존 걷기/무기 잡기. 소환수 공용 품질 설정, 부사수는 자동LOD 조절. 모델253·펫185·메뉴44 검사 및 실제 렌더 확인. 추종·공격·소환카드는 후속 ([규격](companion-model-spec.md)).
 - [ ] 거점·난전 다음: 팀원 직접 교환·큰 배낭·탈출, 전용 맵·전용 보스 모델, 멀티에서 보스 연출 동기화(I-77), 수치 플레이 조정
 - [x] 멀티 메뉴: 방 만들기, 주소로 참가(2인 테스트). 방 코드·공개방은 준비 중
 - [x] 멀티 테스트 실행: 한 PC 두 창(`Start-Multi-Test.cmd`), 방장 LAN 주소 안내, 다른 PC용 Windows 실행 파일(`Export-Game.cmd` → `build/HordeShooter-windows.zip`)
@@ -79,6 +82,8 @@
 - [x] 돌격 적의 예고·돌격 자세와 돌격 중 충돌 피해
 - [x] 실제 피해를 받은 플레이어/적의 약 0.1초 흰색 반짝임; 원래 색/좀비 재질 복원
 - [x] 조준 집중 치명타, 반동·넉백, 탄착·솜 파편·사망 효과·효과음
+- [x] 무기 발사·근접 시각 효과(2026-10-22, A-19): 분류별 흰/노란 총구 섬광·짧은 탄 잔상, 레일건 청백색 빔, 근접 초승달, 알라봉·박격포 발사 섬광. 꽥·고무오리 고유 연출 유지. 피격·사망은 아래 항목, UI 개편은 후속 ([무기 규격 6.3](weapon-spec.md#weapon-effects)).
+- [x] 피격·사망 섬광(2026-10-22, A-19·C-19): 일반 흰색/치명타 노란색 몸·타격선·사망 원, 선·원 투명도 10%. 수신 색 동기화(프로토콜 6), 반복 피격 재사용, 숨김 적의 섬광 차단, 기존 솜 파편·시체·다운/사망 구분 유지 ([캐릭터 규격 8.1](character-model-spec.md#damage-effects)).
 - [x] 수류탄·화염병·섬광탄·유인 폭탄, 투척 궤적·착탄 범위
 - [x] 구급상자 회복, 일시정지·재시작·스테이지 클리어
 
@@ -160,6 +165,11 @@
 - C# 빌드 경고·오류 0. `ModeCheck` 81개(창 모드, 화면 밖 화살표 포함)·79개(헤드리스), `MapCheck` 25, `WeaponHandlingCheck` 30, `Integration` 148, `NetSyncCheck` 28, `NetCodecCheck` 11, `LobbyCheck` 31, `MenuCheck` 39, `SquadCheck` 50, `SpawnCheck` 41, `CombatPacingCheck` 44, `ReloadPoseCheck` 279, `EnemyAttackCheck` 79, `VisionTierCheck` 23 통과.
 - 렌더: `output/map-open-field.png`·`mode-survivor-rack.png`(들판·진열대·바닥 글씨·무장 목표), `mode-survivor-arrow.png`(화면 밖 팀원 화살표, `∞` 탄약, "난전 · 들판"). 실제 손으로 하는 난이도·들판 성능은 미확인(I-26·I-80). 2인 멀티로 들판·진열대를 해 보지는 않음.
 
+### 이번 변경 확인 기록 — 2026-10-22 (소환수 게임 적용 1차)
+
+- C# 빌드 경고 · 오류 0. 새 `CompanionCheck` 39(헤드리스 · 창 모드), `CompanionModelCheck` 253 · `PetModelCheck` 185(드론 날갯짓 폭 변경 뒤), `CardLabCheck` 85(Home 무장 4장 · 소환수 고르기), `ModeCheck` 123(무장 네 번째 소환수 카드 · 합류), `MapCheck` 24, `OnslaughtNetCheck` 19(파티원의 소환수 고르기가 방장에 반영 · 파티원 화면에 두 소환수), `MenuCheck` 44, `LobbyCheck` 31, `NetSyncCheck` 32, `NetCodecCheck` 12, `HitFlashCheck`, `EnemyAttackCheck` 79, `SpawnCheck` 41, `SquadCheck` 50, `InventoryCheck` 41, `WeaponHandlingCheck` 36, `CombatPacingCheck` 44, `Integration` 148 통과.
+- 렌더 `output/companion-follow.png`(꿀벌 드론 · 거위 부사수 · 쌍열 블래스터 강아지가 생존자 곁), `companion-fight.png`. 처음 크기(펫 0.5 · 드론 0.25)는 너무 작아 0.6 · 0.4로 키움. 모델 자체를 고칠 문제는 보이지 않아 이번에는 Codex 작업 없음. 손으로 해 본 체감 · 2인 플레이는 미확인(I-89).
+
 ### 이번 변경 확인 기록 — 2026-10-21 (꽥 · 고무오리 전용 모델 · 아이콘)
 
 - Blender `gadget-models.py` 내보내기 검사 통과(경적 삼각형 1,568 · 메시 3 · 재질 4, 오리 2,444 · 4 · 4, `Muzzle` 앞쪽 거리 = `length_m`). `CardLabCheck` 84(헤드리스) · 85(창 모드, 근접 렌더 포함), `ModeCheck` 120, `OnslaughtNetCheck` 16, `MapCheck` 24, `HitFlashCheck`, `EnemyAttackCheck` 79, `SpawnCheck` 41, `NetSyncCheck` 28, `NetCodecCheck` 12, `LobbyCheck` 31, `MenuCheck` 39, `SquadCheck` 50, `InventoryCheck` 41, `WeaponHandlingCheck` 36, `CombatPacingCheck` 44, `SupplyCheck` 12, `ReloadPoseCheck` 279, `Integration` 148 통과.
@@ -235,3 +245,29 @@
 - `EnemyExpansion` 60, `EnemyAttackCheck` 79, `CorpseTierCheck` 36, `CorpseReactionCheck` 29, `CorpseRetentionCheck` 16, `HitFlashCheck`(모델 있는 황소는 생성 팔 없음 검사 추가), `ModeCheck` 86, `SpawnCheck` 41, `CombatPacingCheck` 44, `NetSyncCheck` 28, `CardLabCheck` 68, `VisionTierCheck` 23, `Integration` 148 통과.
 - 렌더 `output/lineup-*.png`(`tests/MonsterLineupCapture.tscn`, 빈 바닥 · 시야 끔 · 조명): 앞 · 옆 · 뒤, 황소 돌진 준비, 풍선 부풂 · 펑.
 
+### 이번 변경 확인 기록 — 2026-10-21 (M4 발사 시각 효과 1차, A-19)
+
+- M4 전용 흰/노란 총구 섬광과 앞으로 이동하는 짧은 탄 잔상. 히트스캔·피해·탄약·소리·사거리 계약 유지, 로컬/수신 발사에 연결. 다른 무기·근접·피격·사망·UI는 아직 적용하지 않았다.
+- C# 빌드 경고 0·오류 0, Godot 가져오기 성공. `RifleEffectsCheck` 헤드리스 17개·창 모드 17개, `WeaponHandlingCheck` 36개, `NetSyncCheck` 28개, `Integration` 148개 통과. 코드 리뷰에서 수정이 필요한 문제 없음.
+- Forward+ 실제 렌더: `output/rifle-fx-muzzle.png`, `rifle-fx-travel.png`, `rifle-fx-end.png`. `RifleEffectsCheck` 창 모드가 효과의 표시 시간을 60 fps로 고정한 72프레임을 `output/rifle-fx-frames/`에 출력한다. 이번 로컬 미리보기 `output/rifle-fx-preview.gif`는 이 프레임을 잘라 2배 느리게 보여 준다(실제 플레이 녹화 아님).
+- 종료 경고는 별도: 무기 조작 검사 8개(`--verbose`: AudioStreamWAV 4개 + AudioStreamPlaybackWAV 4개), 통합 4개, 전용 헤드리스 재실행 2개 ObjectDB 잔존. 전용 창 모드·멀티 검사는 종료 경고 없음. 기존 I-17을 해결했다고 보지 않는다. 6인 장시간 렌더 성능·다른 PC·사용자 체감은 미검증.
+
+### 이번 변경 확인 기록 — 2026-10-22 (다른 무기로 효과 확장, A-19)
+
+- M4의 방향을 다른 총기·근접으로 확장. 산탄은 여러 궤적과 섬광/조명 1개, 점사는 각 발마다, 쌍권총은 좌우 총구 교대, 레일건은 청백색 빔. 알라봉·박격포 실제 투사체는 유지하고 발사 섬광 추가. 꽥·고무오리 고유 연출 유지.
+- C# 빌드 경고 0·오류 0, Godot 가져오기 성공. `WeaponEffectsCheck` 헤드리스 100개·창 모드 100개, `RifleEffectsCheck` 17개, `TailMeleeCheck` 13,976회(메시 반복 검사 포함), `CombatPacingCheck` 44개, `WeaponHandlingCheck` 36개, `NetSyncCheck` 28개, `Integration` 148개 통과. 코드 리뷰에서 수정이 필요한 문제 없음.
+- Forward+ 실제 렌더 `output/weapon-fx-*.png`. 고정된 효과 시간·합성한 끝점으로 비교하는 검사 장면이며 플레이 녹화가 아니다. 비교 이미지 `output/weapon-fx-comparison.png`는 로컬 렌더 산출물을 묶은 미리보기다.
+- 종료 ObjectDB 잔존: 새 전용 헤드리스 2개·M4 2개·무기 조작 8개·멀티 12개·통합 2개. 이번 실행에서는 객체별 식별을 하지 않았고 I-17은 미해결. 새 전용 창 모드·근접·전투 속도 검사는 종료 경고 없음. 기존 원격 근접 표시 시점·원격 치명타 정보 제약, 6인 장시간 성능·다른 PC 확인은 [무기 규격 6.3](weapon-spec.md#weapon-effects)에 기록했다.
+
+### 이번 변경 확인 기록 — 2026-10-22 (피격·사망 이펙트, A-19·C-19)
+
+- 흰 몸 점멸은 유지하고 6방향 피격 타격선(0.16초)·8방향 사망 섬광/확산 링(0.32초)을 추가했다. 피격은 캐릭터마다 하나 재사용, 사망은 작은 피격선을 교체하고 독립적으로 소멸. 일반·네임드·풍선·플레이어와 기존 수신 경로에 적용, 다운·시체 보존·관전·피해 판정 유지. 숨겨진 적의 신규 사망 섬광은 차단한다.
+- 빌드 경고/오류 0·Godot 가져오기 성공. `DamageEffectsCheck` 헤드리스/창 모드 각 24개, `HitFlashCheck`, `CorpseReactionCheck` 29개, `CorpseTierCheck` 36개, `VisionTierCheck` 23개, `Integration` 148개 통과. `NetSyncCheck` 첫 병렬 실행의 위치 추적 실패(평균 2.07m, 최대 4.80m)는 원인 미확정이고, 코드 변경 없이 단독 재실행 28개 통과. 코드 리뷰의 숨김 사망 표시 지적은 재현 검사와 가시성 조건으로 수정 후 재확인했다.
+- Forward+ `CaptureDamageEffects` 150프레임 확인. `output/damage-fx-comparison.png`·`damage-fx-preview.gif`는 통제된 실제 엔진 렌더에서 만든 로컬 미리보기(GIF 2배 느리게). `DamageEffectsCheck` 창 모드의 일반·네임드·풍선·플레이어 스틸도 생성한다.
+- 종료 ObjectDB 경고: 최종 전용 헤드리스 4개(AudioStreamWAV 2 + AudioStreamPlaybackWAV 2), HitFlash 2개, 시체 등급 11개, 시야 4개, 통합 2개, 멀티 단독 12개. 전용 최종 창 모드·시체 반응·프레임 렌더는 경고 없음. 기존 I-17 미해결이며 실제 2PC·6인 장시간/저사양 성능·UI 이펙트는 이번에 검증/개편하지 않았다.
+
+### 이번 변경 확인 기록 — 2026-10-22 (피격 색·투명도 피드백, A-19·C-19)
+
+- 일반 흰색/치명타 노란색으로 몸·타격선·사망 원을 통일하고 선·원 최고 불투명도 90% 적용. 몸 점멸 최고 불투명도 72%·지속시간 유지. 치명타 뒤 일반색 복귀, 특수 사망·카드 콜백의 치명 처치 색 보존. 네트워크 적 피격/사망에 치명타 U8 전달, 프로토콜 6.
+- 빌드 경고/오류 0. `DamageEffectsCheck` 31개, `HitFlashCheck`, `NetSyncCheck` 32개, `NetCodecCheck` 12개, `LobbyCheck` 31개, `Integration` 148개 통과. `CaptureDamageEffects --fixed-fps 60 --disable-vsync`의 Forward+ 150프레임과 `output/damage-color-comparison.png` 비교 렌더 확인.
+- 전용 4개·멀티 14개·통합 2개 ObjectDB 종료 경고(I-17), 객체별 미식별. 나머지 위 검사·렌더는 종료 경고 없음. 초기 실패·카드 콜백 수정·멀티 검사 가시성 조건 수정은 `issues.md`에 기록했다. 실제 2PC·장시간 부하 미검증.

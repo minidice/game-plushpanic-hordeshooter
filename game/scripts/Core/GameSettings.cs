@@ -1,4 +1,5 @@
 using Godot;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -23,6 +24,18 @@ public static class GameSettings
     public static float AmbienceVolume { get; set; } = 1f;
     /// <summary>Game option "revive" for single player (multiplayer: a room option). Default on (decisions.md M-18).</summary>
     public static bool ReviveEnabled { get; set; } = true;
+    private static PetModelQuality _petQuality=PetModelQuality.High;
+    public static event Action<PetModelQuality>? PetQualityChanged;
+    public static PetModelQuality PetQuality
+    {
+        get=>_petQuality;
+        set
+        {
+            if(!Enum.IsDefined(value)) throw new ArgumentException("Unknown pet quality",nameof(value));
+            if(_petQuality==value) return;
+            _petQuality=value;PetQualityChanged?.Invoke(value);
+        }
+    }
 
     /// <summary>Korean first (the fallback language), then the rest in folder order.</summary>
     public static IReadOnlyList<string> Languages =>
@@ -43,6 +56,8 @@ public static class GameSettings
             SfxVolume = Unit(cfg.GetValue("options", "volume_sfx", 1f));
             AmbienceVolume = Unit(cfg.GetValue("options", "volume_ambience", 1f));
             ReviveEnabled = (bool)cfg.GetValue("options", "revive", true);
+            int petQuality=(int)cfg.GetValue("graphics","pet_quality",0);
+            PetQuality=petQuality == 1 ? PetModelQuality.Low : PetModelQuality.High;
             GameSession.SelectedCharacterId = (string)cfg.GetValue("menu", "character", GameSession.DefaultCharacterId);
             GameSession.SquadSize = GameSession.ValidSquad((int)cfg.GetValue("menu", "squad_size", GameSession.DefaultSquadSize));
             GameSession.SelectedTheme = (string)cfg.GetValue("menu", "theme", GameSession.SelectedTheme);
@@ -63,6 +78,7 @@ public static class GameSettings
         cfg.SetValue("options", "volume_sfx", SfxVolume);
         cfg.SetValue("options", "volume_ambience", AmbienceVolume);
         cfg.SetValue("options", "revive", ReviveEnabled);
+        cfg.SetValue("graphics","pet_quality",(int)PetQuality);
         cfg.SetValue("menu", "character", GameSession.SelectedCharacterId);
         cfg.SetValue("menu", "squad_size", GameSession.SquadSize);
         cfg.SetValue("menu", "theme", GameSession.SelectedTheme);
@@ -78,6 +94,7 @@ public static class GameSettings
         Path = DefaultPath;
         RecoilScale = MasterVolume = SfxVolume = AmbienceVolume = 1f;
         ReviveEnabled = true;
+        PetQuality=PetModelQuality.High;
         NetLaunch.LastAddress = "";
         Loc.Language = Loc.Fallback;
         ApplyAudio();

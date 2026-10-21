@@ -17,14 +17,29 @@ public partial class CardLabRules : ModeRules
     public CardQueue Queue { get; } = new();
     /// <summary>A group of commons every few seconds around the survivor.</summary>
     public bool Trickle { get; set; }
+    /// <summary>The survivor's companions (C adds the next kind, Shift+C clears).</summary>
+    public CompanionSquad Companions { get; private set; } = null!;
     private float _trickleTimer;
+    private int _nextCompanion;
+
+    /// <summary>What C cycles through: each pet, drone and sidekick once, with differing gear.</summary>
+    public static readonly string[] CompanionCycle =
+    {
+        "pet:dog:twin_blaster", "drone:bee:laser", "sidekick:cadet", "pet:turtle:rocket_pod", "drone:quadcopter:blaster",
+        "sidekick:scout", "pet:rabbit:twin_blaster", "drone:ladybug:support", "sidekick:engineer", "drone:ufo:light", "sidekick:guard",
+    };
 
     public override void _Ready()
     {
         base._Ready();
         Cards = new LabCards { Name = "LabCards", Stage = Stage };
         AddChild(Cards);
+        Companions = new CompanionSquad { Name = "Companions", Stage = Stage };
+        AddChild(Companions);
     }
+
+    /// <summary>The next companion of <see cref="CompanionCycle"/> joins the survivor.</summary>
+    public Companion? AddNextCompanion() => Companions.Add(Stage.Player, CompanionCycle[_nextCompanion++ % CompanionCycle.Length]);
 
     protected override void Tick(float dt)
     {
@@ -67,6 +82,7 @@ public partial class CardLabRules : ModeRules
         Trickle = false;
         ClearEnemies();
         Cards.ClearAll();
+        Companions.Clear();
         Queue.Clear();
         var loadout = Stage.Player.Loadout;
         loadout.SetSlot(1, ArmoryCatalog.Weapon(ArmoryCatalog.StartingWeapon));
@@ -74,6 +90,7 @@ public partial class CardLabRules : ModeRules
         loadout.Unequip(3);
         Stage.Player.Weapons.RefreshVisual();
         foreach (var offer in ArmingCards.Draw(Tuning.Survivor.WeaponPool, Rng)) Queue.Add(offer);
+        Queue.Add(Companions.Offer(Rng));
     }
 
     /// <summary>A test level-up: the same offer an Onslaught level-up gives this survivor (new cards, upgrades of taken ones, repeatables).</summary>

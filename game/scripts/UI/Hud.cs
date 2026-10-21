@@ -28,6 +28,7 @@ void fragment() {
     private ColorRect _blind = null!;
     private Label _endTitle = null!, _endBody = null!;
     private PanelContainer _endPanel = null!, _pausePanel = null!;
+    private Button _pauseQuality = null!;
     private ShaderMaterial _darkVignette = null!, _hurtVignette = null!, _heliumVignette = null!;
 
     /// <summary>The card pick window is open (<see cref="CardWindow"/>): the mouse shows and only walking and leaping work.</summary>
@@ -98,7 +99,20 @@ void fragment() {
         var pauseBody = UiTheme.Label(hostInfo + Loc.Text(OnlineKey("ui_pause_keys")) + "\n\n" + ControlsText, 18);
         pauseBody.HorizontalAlignment = HorizontalAlignment.Center;
         pauseBox.AddChild(pauseBody);
+        // The companion model quality can change mid-match: the models swap their meshes at once (pet-model-spec.md 품질 설정).
+        _pauseQuality = new Button { Name = "PauseCompanionQuality", FocusMode = Control.FocusModeEnum.None, MouseFilter = Control.MouseFilterEnum.Stop };
+        ShowPauseQuality();
+        _pauseQuality.Pressed += () =>
+        {
+            GameSettings.PetQuality = GameSettings.PetQuality == PetModelQuality.High ? PetModelQuality.Low : PetModelQuality.High;
+            GameSettings.Save();
+            ShowPauseQuality();
+        };
+        pauseBox.AddChild(_pauseQuality);
     }
+
+    private void ShowPauseQuality() => _pauseQuality.Text = Loc.Format("fmt_pause_companion_quality",
+        Loc.Text(GameSettings.PetQuality == PetModelQuality.High ? "settings_quality_high" : "settings_quality_low"));
 
     private T Place<T>(T control, float ax, float ay, Vector2 offset, bool growLeft, bool growUp, bool centerX = false) where T : Control
     {
@@ -196,6 +210,8 @@ void fragment() {
         _heliumVignette.SetShaderParameter("strength", helium);
 
         UpdateEndPanel(stage, player);
+        // The setting may have changed in the main menu or elsewhere since the panel was built.
+        if (Paused && !_pausePanel.Visible) ShowPauseQuality();
         _pausePanel.Visible = Paused;
         if (InventoryOpen && (!playing || Paused || player.IsDead)) SetInventoryOpen(false);
         bool captured = playing && !Paused && !InventoryOpen && !CardWindowOpen && GetWindow().HasFocus();

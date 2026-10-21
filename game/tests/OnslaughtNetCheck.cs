@@ -77,7 +77,7 @@ public partial class OnslaughtNetCheck : Node
         var hostCopy = hostRules.QueueOf(remote);
 
         // Arming: the client is sent its own three offers and its picks arm its survivor on the host.
-        await Until(() => clientRules.LocalQueue.Count == SurvivorRules.ArmingPicks, "the client is sent its three arming offers");
+        await Until(() => clientRules.LocalQueue.Count == SurvivorRules.ArmingPicks, "the client is sent its four arming offers (three weapons, a companion)");
         Check(clientRules.LocalQueue.Offers.Select(o => o.Choices.Select(c => c.Key)).SequenceEqual(hostCopy.Offers.Select(o => o.Choices.Select(c => c.Key)), new KeysEqual()) &&
               clientRules.Window.IsOpen && clientRules.LocalQueue.Front!.Title == Loc.Format("fmt_card_arming_title", 1),
             "the same cards as the host drew for it, in the card window");
@@ -86,14 +86,23 @@ public partial class OnslaughtNetCheck : Node
         {
             picks[slot] = clientRules.LocalQueue.Front!.Choices[slot].Id;
             clientRules.Window.Pick(slot);
-            await Until(() => hostCopy.Count == 2 - slot, $"the client's slot {slot + 1} pick reaches the host");
+            await Until(() => hostCopy.Count == 3 - slot, $"the client's slot {slot + 1} pick reaches the host");
         }
+        string buddy = clientRules.LocalQueue.Front!.Choices[1].Id;
+        clientRules.Window.Pick(1);
+        await Until(() => hostCopy.Count == 0, "the client's companion pick reaches the host");
+        Check(hostRules.Companions.Of(remote).Single().Spec.Key == buddy, $"the host gives the client's survivor its companion ({buddy})");
         Check(remote.Loadout.Secondary.Def.Id == picks[0] && remote.Loadout.Primary?.Def.Id == picks[1] && remote.Loadout.Special?.Def.Id == picks[2],
             $"the host arms the client's survivor with its picks ({string.Join(", ", picks)})");
         Check(hostRules.Arming, "the match waits for the host's own picks");
-        for (int i = 0; i < 3; i++) hostRules.LocalQueue.Choose(_host.Player, 0);
+        for (int i = 0; i < SurvivorRules.ArmingPicks; i++) hostRules.LocalQueue.Choose(_host.Player, 0);
         await Until(() => !hostRules.Arming && !clientRules.Arming, "once both have armed the match starts on both PCs");
         await Until(() => _client.Player.Loadout.Primary?.Def.Id == picks[1], "the client's own survivor carries its picks");
+        string hostBuddy = hostRules.Companions.Of(_host.Player).Single().Spec.Key;
+        await Until(() => clientRules.Companions.All.Count == 2 &&
+                          clientRules.Companions.All.Any(c => c.Survivor == _client.Player && c.Spec.Key == buddy) &&
+                          clientRules.Companions.All.Any(c => c.Survivor.PeerId == _host.Player.PeerId && c.Spec.Key == hostBuddy),
+            "the client sees both companions, each beside its own survivor");
 
         // A team level-up: the client is sent its level-up card and its pick is applied by the host.
         hostRules.AddXp(hostRules.XpNeeded);

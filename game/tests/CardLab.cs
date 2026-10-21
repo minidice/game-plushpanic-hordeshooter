@@ -113,6 +113,8 @@ public partial class CardLab : Node
             case Key.Home: Rules.CheatReset(); break;
             case Key.L: Rules.TestLevelUp(); break;
             case Key.K: Rules.TestSpecial(); break;
+            case Key.C when key.ShiftPressed: Rules.Companions.Clear(); break;
+            case Key.C: Rules.AddNextCompanion(); break;
             case Key.T when key.ShiftPressed: Rules.RemoveDummies(); break;
             case Key.T: Rules.SpawnDummy(Stage.Player.AimPoint); break;
             default: return;
