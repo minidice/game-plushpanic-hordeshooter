@@ -48,6 +48,7 @@ type=assault_rifle  ◀──── m4,assault_rifle,M4,11,,,,       buckshot.js
 | `max_mags` | 최대 탄창 수. 예비탄 최대치 = `mag_size × max_mags` | `inf` 무제한 |
 | `start_mags` | 처음 주웠을 때 예비 탄창 수 | |
 | `refillable` | 탄약 더미로 충전 가능 | `true/false` |
+| `caliber` | 탄 종류(거점 배낭에서만 쓰임, M-25). 근접은 빈 칸 | `content/data/calibers.csv`의 id |
 | `pierce` | 한 발이 뚫고 지나가는 적 수(관통마다 대미지 ×0.8) | 1 = 관통 없음 |
 | `spread_deg` `spread_per_shot_deg` `move_spread_deg` `max_spread_deg` | 퍼짐(조준원): 기본, 발당 증가, 이동 중 추가, 최대 | 도 |
 | `recoil_power` | **반동 넉백 파워(쏜 사람).** 거리 대신 파워라 옵션으로 줄일 수 있음 (5장) | 권총 8, 샷건 60, 로켓 100 |

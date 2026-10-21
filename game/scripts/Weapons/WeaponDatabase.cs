@@ -64,7 +64,7 @@ public sealed class WeaponDatabase
         "fire_interval_ms", "reload_ms", "reload_shell_ms", "mag_size", "max_mags", "start_mags", "refillable", "pierce",
         "spread_deg", "spread_per_shot_deg", "move_spread_deg", "max_spread_deg", "recoil_power", "hit_power",
         "traits", "fire_sound", "model", "icon", "color", "accent_color", "length_m", "noise_m",
-        "move_speed_pct", "aim_range_mult", "aim_move_pct", "aim_focus_mult", "crit_mult",
+        "move_speed_pct", "aim_range_mult", "aim_move_pct", "aim_focus_mult", "crit_mult", "caliber",
     };
 
     private static readonly string[] Required = { "name", "slot", "category", "fire_mode", "damage", "max_range_m", "fire_interval_ms" };
@@ -181,6 +181,7 @@ public sealed class WeaponDatabase
             AimMoveScale = p.Float("aim_move_pct", 50) / 100f,
             AimFocusMultiplier = p.Float("aim_focus_mult", 1),
             CritMultiplier = p.Float("crit_mult", 2.5f),
+            Caliber = cells["caliber"],
         };
         def.EffectiveRange = p.Float("effective_range_m", def.MaxRange);
         def.Thickness = Thickness[def.Category];

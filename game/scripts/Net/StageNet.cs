@@ -137,6 +137,7 @@ public partial class StageNet : Node
         welcome.Begin(NetEvent.World); welcome.W.Str(_stage.Player.Definition.Id); WriteWorld(welcome.W);
         foreach (var e in _stage.AllEnemies.Where(e => !e.IsDead)) { welcome.Begin(NetEvent.EnemySpawn); WriteSpawn(welcome.W, e); }
         foreach (var p in _stage.Interactables.OfType<WeaponPickup>().Where(p => p.State != null)) { welcome.Begin(NetEvent.PickupSpawn); WritePickup(welcome.W, p); }
+        foreach (var l in _stage.Interactables.OfType<LootPickup>()) { welcome.Begin(NetEvent.LootSpawn); WriteLoot(welcome.W, l); }
         SendEvents(peer, welcome.Take());
     }
 
@@ -246,6 +247,28 @@ public partial class StageNet : Node
     {
         if (Role != NetRole.Host) return;
         _batch.Begin(NetEvent.BarrelExplode); _batch.W.U16(barrel.NetId);
+    }
+
+    /// <summary>Client: an Outpost inventory drag goes to the host, which applies it to our survivor (decisions.md M-25).</summary>
+    public void RequestInventory(int from, int to) => Send(MethodName.ClientInventory, from, to);
+
+    [Rpc(MultiplayerApi.RpcMode.AnyPeer, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
+    private void ClientInventory(int from, int to)
+    {
+        if (Role != NetRole.Host || !Peers.TryGetValue(Multiplayer.GetRemoteSenderId(), out var who)) return;
+        if (who.IsDead || who.IsDowned || who.IsRestrained) return;
+        InventoryOps.Drag(who, from, to);
+    }
+
+    public void OnLootSpawn(LootPickup loot)
+    {
+        if (Role != NetRole.Host || !Started) return;
+        _batch.Begin(NetEvent.LootSpawn); WriteLoot(_batch.W, loot);
+    }
+
+    private static void WriteLoot(NetWriter w, LootPickup l)
+    {
+        w.U16(l.NetId); w.U8((int)l.Item.Kind); w.U16(NetIds.Item(l.Item.Kind, l.Item.Id)); w.U16(l.Item.Count); w.Pos(l.GlobalPosition);
     }
 
     public void OnPickupSpawn(WeaponPickup pickup)
@@ -571,6 +594,17 @@ public partial class StageNet : Node
                 var pickup = WeaponPickup.ForWeapon(_stage, at, def, state, id);
                 break;
             }
+            case NetEvent.LootSpawn:
+            {
+                int id = r.U16();
+                var kind = (ItemKind)r.U8();
+                var itemId = NetIds.ItemAt(kind, r.U16());
+                int count = r.U16();
+                var at = r.Pos();
+                if (_stage.Interactables.Any(i => i.NetId == id)) break;
+                LootPickup.Spawn(_stage, at, new InvItem { Kind = kind, Id = itemId, Count = count }, id);
+                break;
+            }
         }
     }
 
@@ -600,7 +634,7 @@ public partial class StageNet : Node
             item.Enabled = (on & 1) != 0;
             item.Visible = (on & 2) != 0;
         }
-        foreach (var gone in _stage.Interactables.Where(i => i is WeaponPickup && !listed.Contains(i.NetId)).ToList())
+        foreach (var gone in _stage.Interactables.Where(i => i is WeaponPickup or LootPickup && !listed.Contains(i.NetId)).ToList())
         {
             _stage.Interactables.Remove(gone);
             gone.QueueFree();

@@ -21,6 +21,17 @@
         "every_s": 3.5,
         "group": 7
       }
+    ],
+    "loot_min": 3,
+    "loot_max": 5,
+    "loot_weapons": [
+      "mp5",
+      "m4",
+      "ak47",
+      "m249",
+      "r870",
+      "svd",
+      "alabong"
     ]
   },
   "survivor": {

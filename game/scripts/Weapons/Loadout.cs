@@ -194,6 +194,46 @@ public sealed class Loadout
         return (held == null ? PickupResult.Equipped : PickupResult.Swapped, held);
     }
 
+    /// <summary>
+    /// Outpost's backpack (decisions.md M-25): put a carried weapon into slot 1, 2 or 3 and hold it. Returns what was
+    /// there (slot 1 always has something).
+    /// </summary>
+    public WeaponState? Equip(int slot, WeaponState state)
+    {
+        Current.Holster();
+        var old = InSlot(slot);
+        Adopt(state);
+        switch (slot)
+        {
+            case 1: Secondary = state; break;
+            case 2: Primary = state; break;
+            default: Special = state; break;
+        }
+        ActiveSlot = slot;
+        return old;
+    }
+
+    /// <summary>Empties slot 2 or 3 (into the backpack or onto the floor). Slot 1 is never empty.</summary>
+    public WeaponState? Unequip(int slot)
+    {
+        var old = InSlot(slot);
+        if (slot == 1 || old == null) return null;
+        old.Holster();
+        if (slot == 2) Primary = null;
+        else Special = null;
+        if (ActiveSlot == slot) ActiveSlot = 1;
+        return old;
+    }
+
+    /// <summary>Takes <paramref name="count"/> of a throwable kind out of the G slot.</summary>
+    public int RemoveThrowable(ThrowableDefinition def, int count)
+    {
+        int have = Count(def);
+        int take = Math.Min(have, count);
+        _throwCounts[def.Id] = have - take;
+        return take;
+    }
+
     // ---------- throwables ----------
 
     public ThrowableDefinition? CurrentThrowable => _throwOrder.LastOrDefault(t => Count(t) > 0);

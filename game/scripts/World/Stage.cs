@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace HordeShooter;
 
@@ -920,6 +921,30 @@ public partial class Stage : Node3D
         else Sfx.PlayAt("pickup", who.GlobalPosition + Vector3.Up);
     }
 
+    /// <summary>Outpost: loot on the floor goes into the backpack; what does not fit stays (decisions.md M-25).</summary>
+    public void TakeLoot(LootPickup loot, Player who)
+    {
+        if (who.Backpack is not { } bag) return;
+        int left = bag.Add(loot.Item.Copy());
+        if (left == loot.Item.Count)
+        {
+            if (who.IsLocal) ShowNotice(Loc.Text("msg_backpack_full"), 2);
+            return;
+        }
+        Effects.FloatingText(who.GlobalPosition + Vector3.Up * 2.6f, $"+{loot.Item.Count - left} {loot.Item.DisplayName}", new Color("ffd36b"));
+        PickupSound(who);
+        if (left > 0) { loot.SetCount(left); return; }
+        Interactables.Remove(loot);
+        loot.QueueFree();
+    }
+
+    /// <summary>Outpost: a drag in the inventory screen. The deciding PC applies it; a client asks the host.</summary>
+    public void InventoryDrag(int from, int to)
+    {
+        if (Authoritative) InventoryOps.Drag(Player, from, to);
+        else Net?.RequestInventory(from, to);
+    }
+
     /// <summary>A mode's own pickups (Onslaught's racks) leave the world the same way a taken weapon does.</summary>
     public void RemovePickupFromWorld(WeaponPickup pickup) => RemovePickup(pickup);
 
@@ -942,6 +967,19 @@ public partial class Stage : Node3D
     {
         bool local = who.IsLocal;
         var at = who.GlobalPosition + Vector3.Up * 2.6f;
+        // Outpost: an ammo pile hands out one stack for each gun carried, into the backpack (decisions.md M-25).
+        if (who.Backpack is { } bag)
+        {
+            int added = 0;
+            foreach (var cal in new[] { who.Loadout.Primary, who.Loadout.Special }.Where(w => w is { Def.Refillable: true, Def.Caliber.Length: > 0 }).Select(w => w!.Def.Caliber).Distinct())
+            {
+                var item = InvItem.Ammo(cal, CaliberDatabase.Get(cal)?.Stack ?? 30);
+                added += item.Count - bag.Add(item);
+            }
+            if (added > 0) Sfx.PlayAt("reload_end", who.GlobalPosition + Vector3.Up);
+            Effects.FloatingText(at, added > 0 ? Loc.Format("fmt_refill_got", added) : Loc.Text(bag.FreeCells == 0 ? "msg_backpack_full" : "msg_refill_no_primary"), new Color("ffd36b"));
+            return;
+        }
         var primary = who.Loadout.Primary;
         if (primary == null)
         {

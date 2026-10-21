@@ -239,7 +239,11 @@ public partial class WeaponController : Node
             _preview = null;
         }
         bool wasReloading = state.Reloading && _reloadWatch == state;
+        // Outpost: the reserve is the backpack's rounds of this caliber; a reload takes them out (decisions.md M-25).
+        int carried = InventoryOps.CarriedRounds(_player, state);
+        if (carried >= 0) state.SetAmmo(state.Mag, carried);
         state.Tick(dt, moving, _player.IsAiming);
+        if (carried >= 0 && state.Reserve < carried) _player.Backpack!.Take(ItemKind.Ammo, state.Def.Caliber, carried - state.Reserve);
         if (wasReloading && !state.Reloading) _player.PlayOwn("reload_end");
         _reloadWatch = state;
         if (blocked)

@@ -1,6 +1,6 @@
 key,text
 # 조작 안내 (HUD 아래, 메인 메뉴, 일시정지)
-ui_controls,"WASD 이동   마우스 조준   좌클릭 사격   Space 도약   1·2·3 무기 교체   우클릭/Ctrl 조준   G 투척 조준   Q 구급상자   E 줍기
+ui_controls,"WASD 이동   마우스 조준   좌클릭 사격   Space 도약   1·2·3 무기 교체   우클릭/Ctrl 조준   G 투척 조준   Q 구급상자   E 줍기   I 배낭(거점)
 R 재장전   Tab 확대/축소   Esc 일시정지"
 # 메인 메뉴
 ui_menu_title,HORDE SHOOTER  (가칭)
@@ -81,6 +81,17 @@ msg_pickup_medkit_full,구급상자는 하나만 들 수 있습니다
 msg_refill_no_primary,2번 무기가 없습니다
 fmt_refill_not_refillable,{0}은(는) 탄약을 보충할 수 없습니다
 fmt_refill_got,+{0} AMMO
+# 거점 배낭 (decisions.md M-25)
+fmt_use_loot,{0} ×{1} 줍기
+msg_backpack_full,배낭이 가득 찼습니다
+msg_loot_drop,전리품!
+ui_inventory_title,배낭
+ui_inventory_hint,"끌어서 옮기기 · 위 칸에 놓으면 장착
+창 밖에 놓으면 바닥에 버리기 · I 닫기"
+fmt_tip_weapon,"{0}
+{1} · 탄 {2}
+피해 {3} · 탄창 {5}/{4}"
+fmt_tip_stack,{0} ×{1}  (최대 {2})
 msg_refill_full,FULL
 fmt_weapon_no_ammo,{0} 탄약 없음
 # 머리 위 짧은 글씨

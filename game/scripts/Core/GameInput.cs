@@ -24,6 +24,8 @@ public static class GameInput
     public const string Slot3 = "slot_3";
     /// <summary>Hold to aim (with the right mouse button, which is <see cref="AltFire"/>).</summary>
     public const string Aim = "aim";
+    /// <summary>Outpost's backpack screen.</summary>
+    public const string Inventory = "inventory";
     public const string Throw = "throw";
     public const string Dodge = "dodge";
     public const string DebugEscape = "debug_escape";
@@ -47,6 +49,7 @@ public static class GameInput
         Key(Slot2, Godot.Key.Key2);
         Key(Slot3, Godot.Key.Key3);
         Key(Aim, Godot.Key.Ctrl);
+        Key(Inventory, Godot.Key.I);
         Key(Throw, Godot.Key.G);
         Key(Dodge, Godot.Key.Space);
         Key(DebugEscape, Godot.Key.F8);

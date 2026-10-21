@@ -13,7 +13,8 @@
 - [x] 개편 3단계(2026-10-21, A-17): 난전 보스 전용 모델 `boss.glb`(Codex 제작, 삼각형 4,466) 적용, 지시문 → Codex → Blender 최적화 → 게임 연결 흐름 ([지시문](model-briefs/boss.md))
 - [x] 개편 4단계(2026-10-21, L-13): 맵 인터페이스 `StageMap`(Stage 1은 그 하위 클래스, 모드별 맵 선택 자리, 검사용 맵 교체) ([레벨 규칙](level-design-rules.md))
 - [x] 개편 5단계(2026-10-21, M-26): 난전 전용 들판(나무·돌기둥 무작위 산포, 방에서는 같은 씨앗), 바닥 진열대로 무기 2개 고르기, 예비탄 무제한, 3번 칸 종류 25초 충전, 네임드 처치 시 강화 진열대, 화면 밖 팀원·보스 화살표
-- [ ] 거점·난전 다음: 레벨업 능력 선택, 인벤토리·파밍·탈출, 전용 맵·전용 보스 모델, 멀티에서 보스 연출 동기화(I-77), 수치 플레이 조정
+- [x] 개편 6단계(2026-10-21, M-25): 거점 배낭 4×5 = 20칸(I로 열기, 드래그 장착·옮기기·바닥 버리기, 마우스 오버 정보), 탄 종류 8개와 배낭 탄으로 장전, 바닥 무기·탄약 더미·구급상자가 배낭으로, 네임드 처치 시 전리품 3~5개 흩뿌림, 멀티 동기화(방장 판정)
+- [ ] 거점·난전 다음: 레벨업 능력 선택, 팀원 직접 교환·큰 배낭·탈출, 전용 맵·전용 보스 모델, 멀티에서 보스 연출 동기화(I-77), 수치 플레이 조정
 - [x] 멀티 메뉴: 방 만들기, 주소로 참가(2인 테스트). 방 코드·공개방은 준비 중
 - [x] 멀티 테스트 실행: 한 PC 두 창(`Start-Multi-Test.cmd`), 방장 LAN 주소 안내, 다른 PC용 Windows 실행 파일(`Export-Game.cmd` → `build/HordeShooter-windows.zip`)
 - [x] AI 분대원 선택(없음 / 1명 기본 / 3명) 저장
@@ -101,7 +102,7 @@
 
 실행: `game/Start-Game.cmd`. 기본 통합 검사: `game/Start-Game.ps1 -Test`.
 
-빌드·가져오기 후 Godot 테스트 장면: `CombatPacingCheck.tscn`, `EnemyAttackCheck.tscn`, `TailMeleeCheck.tscn`, `HitFlashCheck.tscn`, 생존·서바이버는 `ModeCheck.tscn`. 실제 화면 검사는 별도 캡처 장면과 플레이로 보완한다. 수치나 동작을 바꿀 때 해당 검사와 문서도 같이 갱신한다.
+빌드·가져오기 후 Godot 테스트 장면: `CombatPacingCheck.tscn`, `EnemyAttackCheck.tscn`, `TailMeleeCheck.tscn`, `HitFlashCheck.tscn`, 생존·서바이버는 `ModeCheck.tscn`, 거점 배낭은 `InventoryCheck.tscn`. 실제 화면 검사는 별도 캡처 장면과 플레이로 보완한다. 수치나 동작을 바꿀 때 해당 검사와 문서도 같이 갱신한다.
 
 상세 규격: [무기](weapon-spec.md), [캐릭터](character-model-spec.md), [적·투척물](throwable-monster-spec.md), [사운드](sound-spec.md), [다국어](localization.md).
 
@@ -149,3 +150,8 @@
 
 - C# 빌드 경고·오류 0. `ModeCheck` 81개(창 모드, 화면 밖 화살표 포함)·79개(헤드리스), `MapCheck` 25, `WeaponHandlingCheck` 30, `Integration` 148, `NetSyncCheck` 28, `NetCodecCheck` 11, `LobbyCheck` 31, `MenuCheck` 39, `SquadCheck` 50, `SpawnCheck` 41, `CombatPacingCheck` 44, `ReloadPoseCheck` 279, `EnemyAttackCheck` 79, `VisionTierCheck` 23 통과.
 - 렌더: `output/map-open-field.png`·`mode-survivor-rack.png`(들판·진열대·바닥 글씨·무장 목표), `mode-survivor-arrow.png`(화면 밖 팀원 화살표, `∞` 탄약, "난전 · 들판"). 실제 손으로 하는 난이도·들판 성능은 미확인(I-26·I-80). 2인 멀티로 들판·진열대를 해 보지는 않음.
+
+### 이번 변경 확인 기록 — 2026-10-21 (개편 6단계, 거점 배낭)
+
+- C# 빌드 경고·오류 0. 새 `InventoryCheck` 41개(헤드리스)·43개(창 모드, 실제 마우스 드래그로 장착·바닥 버리기 포함) 통과( 탄 종류 표, 배낭 쌓기·꺼내기·합치기·바꾸기, 바닥 무기 장착/배낭, 드래그 장착·넣기·바닥 버리기, 배낭 탄으로 장전, 탄약 더미, G·Q, 구급상자 자동 보충, 일부만 줍기, 네임드 전리품, 배낭 화면). `NetCodecCheck` 12(배낭 왕복 추가), `ModeCheck` 79(헤드리스)·81(창 모드), `Integration`(`Start-Game.ps1 -Test`) 148, `MapCheck` 25, `NetSyncCheck` 28, `LobbyCheck` 31, `MenuCheck` 39, `SquadCheck` 50, `SpawnCheck` 41, `CombatPacingCheck` 44, `WeaponHandlingCheck` 30, `SupplyCheck` 12, `InputCheck` 14(창 모드. 헤드리스로 잘못 돌렸을 때는 마우스 조준 검사가 실패 — 창 전용 검사라 정상) 통과.
+- 렌더 `output/inventory-open.png`: 배낭 화면(장착 칸 1·2·3·G·Q, 4×5 칸, 무기 아이콘·탄 묶음 색·투척물 도형·구급상자, 안내 문구)과 네임드 전리품. 마우스 드래그는 창 모드 검사의 가상 입력으로 확인(헤드리스 Godot은 GUI 판정을 하지 않아 생략). 2인 멀티 실제 플레이 미확인(I-81).

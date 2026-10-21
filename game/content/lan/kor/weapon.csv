@@ -28,3 +28,11 @@ name_weapon_mortar,박격포
 fmt_weapon_dual,쌍 {0}
 name_weapontype_railgun,레일건
 name_weapon_railgun,레일건
+name_caliber_9mm,9mm 탄
+name_caliber_556,5.56mm 탄
+name_caliber_762,7.62mm 탄
+name_caliber_12g,12게이지 산탄
+name_caliber_50,.50 탄
+name_caliber_rocket,로켓탄
+name_caliber_shell,박격포탄
+name_caliber_cell,레일건 전지

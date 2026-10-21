@@ -93,6 +93,8 @@ public sealed class WeaponDefinition
     public float SpreadRecovery { get; set; } = 18f;
 
     // ---------- handling (doc/mode-weapon-direction.md 1·3장) ----------
+    /// <summary>Ammo kind (calibers.csv id). In Outpost reloads draw this from the backpack; empty for melee.</summary>
+    public string Caliber { get; set; } = "";
     /// <summary>Move speed while this weapon is in hand (1 = 100%).</summary>
     public float MoveSpeedScale { get; set; } = 1;
     /// <summary>While aiming (right click / Ctrl): effective and max range multiply by this.</summary>

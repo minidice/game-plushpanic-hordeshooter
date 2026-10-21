@@ -198,6 +198,14 @@ public abstract class StageMap
         node.OnUse = who =>
         {
             var taker = who ?? _stage.Player;
+            // Outpost: a second medkit goes into the backpack.
+            if (taker.Medkits > 0 && taker.Backpack is { } bag && bag.Add(InvItem.Medkit()) == 0)
+            {
+                node.Enabled = false;
+                node.Visible = false;
+                _stage.Sfx.PlayAt("pickup", taker.GlobalPosition + Vector3.Up);
+                return;
+            }
             if (taker.Medkits > 0)
             {
                 if (taker.IsLocal) _stage.ShowNotice(Loc.Text("msg_pickup_medkit_full"), 2);

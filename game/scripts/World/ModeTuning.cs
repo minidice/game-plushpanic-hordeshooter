@@ -7,7 +7,8 @@ namespace HordeShooter;
 
 public sealed record SurvivalWave(float Duration, float Every, int Group);
 
-public sealed record SurvivalTuning(float CoreHp, float Prep, float Break, int MaxAlive, IReadOnlyList<SurvivalWave> Waves)
+public sealed record SurvivalTuning(float CoreHp, float Prep, float Break, int MaxAlive, IReadOnlyList<SurvivalWave> Waves,
+    int LootMin, int LootMax, IReadOnlyList<string> LootWeapons)
 {
     /// <summary>Seconds from the start to the end of the last wave (the clear).</summary>
     public float Total => Prep + Waves.Sum(w => w.Duration) + Break * System.Math.Max(0, Waves.Count - 1);
@@ -25,7 +26,8 @@ public sealed class ModeTuning
 {
     public const string Path = "res://content/data/mode_rules.json";
 
-    private static readonly string[] SurvivalKeys = { "core_hp", "prep_s", "break_s", "max_alive", "waves" };
+    private static readonly string[] SurvivalKeys = { "core_hp", "prep_s", "break_s", "max_alive", "waves", "loot_min", "loot_max", "loot_weapons" };
+    private static readonly string[] DefaultLootWeapons = { "mp5", "m4", "ak47", "r870", "svd" };
     private static readonly string[] WaveKeys = { "duration_s", "every_s", "group" };
     private static readonly string[] SurvivorKeys =
         { "boss_at_s", "spawn_every_s", "group_start", "group_end", "boss_group_scale", "spawn_min_m", "spawn_max_m", "rest_after_named_s",
@@ -34,7 +36,7 @@ public sealed class ModeTuning
 
     private static readonly SurvivalWave DefaultWave = new(40, 4.5f, 5);
 
-    public SurvivalTuning Survival { get; private set; } = new(900, 8, 10, 60, new[] { DefaultWave });
+    public SurvivalTuning Survival { get; private set; } = new(900, 8, 10, 60, new[] { DefaultWave }, 3, 5, DefaultLootWeapons);
     public SurvivorTuning Survivor { get; private set; } = new(150, 1.3f, 3, 8, .5f, 14, 22, 12, DefaultPool, 3, 25);
 
     private readonly List<string> _errors = new();
@@ -99,21 +101,23 @@ public sealed class ModeTuning
                 waves.Add(wave);
             }
         if (waves.Count == 0) { _errors.Add($"{where}: waves needs at least one wave"); waves.AddRange(d.Waves); }
-        Survival = new SurvivalTuning(f.Float("core_hp", d.CoreHp), f.Float("prep_s", d.Prep), f.Float("break_s", d.Break), f.Int("max_alive", d.MaxAlive), waves);
+        Survival = new SurvivalTuning(f.Float("core_hp", d.CoreHp), f.Float("prep_s", d.Prep), f.Float("break_s", d.Break), f.Int("max_alive", d.MaxAlive), waves,
+            f.Int("loot_min", d.LootMin), f.Int("loot_max", d.LootMax), ReadPool(s, where, d.LootWeapons, "loot_weapons"));
+        if (Survival.LootMin < 0 || Survival.LootMax < Survival.LootMin) _errors.Add($"{where}: loot_min must be 0 or more and loot_max at least loot_min");
         Positive(where, ("core_hp", Survival.CoreHp), ("prep_s", Survival.Prep), ("break_s", Survival.Break), ("max_alive", Survival.MaxAlive));
     }
 
     /// <summary>The rack pool: weapon ids that exist and are not melee (doc/mode-monster-tables.md 5장).</summary>
-    private IReadOnlyList<string> ReadPool(JsonElement s, string where, IReadOnlyList<string> fallback)
+    private IReadOnlyList<string> ReadPool(JsonElement s, string where, IReadOnlyList<string> fallback, string key = "weapon_pool")
     {
-        if (!s.TryGetProperty("weapon_pool", out var list)) return fallback;
-        if (list.ValueKind != JsonValueKind.Array) { _errors.Add($"{where}: weapon_pool must be a list of weapon ids"); return fallback; }
+        if (!s.TryGetProperty(key, out var list)) return fallback;
+        if (list.ValueKind != JsonValueKind.Array) { _errors.Add($"{where}: {key} must be a list of weapon ids"); return fallback; }
         var pool = new List<string>();
         foreach (var item in list.EnumerateArray())
         {
             var id = item.ValueKind == JsonValueKind.String ? item.GetString() ?? "" : "";
             if (!WeaponDatabase.Current.Weapons.TryGetValue(id, out var def) || def.Mode == FireMode.Melee)
-                _errors.Add($"{where}: weapon_pool '{id}' is not a gun in weapons.csv");
+                _errors.Add($"{where}: {key} '{id}' is not a gun in weapons.csv");
             else pool.Add(id);
         }
         return pool.Count > 0 ? pool : fallback;

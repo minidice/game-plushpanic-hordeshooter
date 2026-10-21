@@ -30,6 +30,23 @@ public static class NetIds
     public static int Throwable(string id) => Index(Throwables, id, "throwable");
     public static string ThrowableAt(int i) => Throwables[i];
     public static int Monster(string id) => Index(Monsters, id, "monster");
+
+    /// <summary>An item's id as a number for its kind (weapon, caliber, throwable; medkits are 0).</summary>
+    public static int Item(ItemKind kind, string id) => kind switch
+    {
+        ItemKind.Weapon => Weapon(id),
+        ItemKind.Ammo => Index(CaliberDatabase.Current.Order.ToArray(), id, "caliber"),
+        ItemKind.Throwable => Throwable(id),
+        _ => 0,
+    };
+
+    public static string ItemAt(ItemKind kind, int index) => kind switch
+    {
+        ItemKind.Weapon => WeaponAt(index),
+        ItemKind.Ammo => CaliberDatabase.Current.Order[index],
+        ItemKind.Throwable => ThrowableAt(index),
+        _ => InvItem.MedkitId,
+    };
     public static string MonsterAt(int i) => Monsters[i];
 
     private static int Index(string[] list, string id, string what)
@@ -44,7 +61,7 @@ public static class NetIds
         unchecked
         {
             int h = 17;
-            foreach (var s in Weapons.Select(w => w.Id).Concat(Throwables).Concat(Monsters))
+            foreach (var s in Weapons.Select(w => w.Id).Concat(Throwables).Concat(Monsters).Concat(CaliberDatabase.Current.Order))
                 foreach (char c in s) h = h * 31 + c;
             return h;
         }
@@ -114,6 +131,8 @@ public struct NetPlayerState
     public int Secondary, SecondaryMag, SecondaryReserve;
     public int Primary, PrimaryMag, PrimaryReserve; // Primary −1 = none
     public int Special, SpecialMag, SpecialReserve; // Special −1 = none
+    /// <summary>Outpost backpack: (cell, kind, id, count, magazine); null outside Outpost.</summary>
+    public List<(int Cell, int Kind, int Id, int Count, int Mag)>? Backpack;
     public List<(int Kind, int Count)> Throwables;
 
     public void Write(NetWriter w)
@@ -131,6 +150,8 @@ public struct NetPlayerState
         w.S16(Special); w.U16(SpecialMag); w.U16(SpecialReserve);
         w.U8(Throwables?.Count ?? 0);
         if (Throwables != null) foreach (var (kind, count) in Throwables) { w.U8(kind); w.U8(count); }
+        w.U8(Backpack == null ? 0xFF : Backpack.Count);
+        if (Backpack != null) foreach (var (cell, kind, id, count, mag) in Backpack) { w.U8(cell); w.U8(kind); w.U16(id); w.U16(count); w.U16(mag); }
     }
 
     public static NetPlayerState Read(NetReader r)
@@ -146,6 +167,12 @@ public struct NetPlayerState
         };
         int n = r.U8();
         for (int i = 0; i < n; i++) s.Throwables.Add((r.U8(), r.U8()));
+        int items = r.U8();
+        if (items != 0xFF)
+        {
+            s.Backpack = new List<(int, int, int, int, int)>(items);
+            for (int i = 0; i < items; i++) s.Backpack.Add((r.U8(), r.U8(), r.U16(), r.U16(), r.U16()));
+        }
         return s;
     }
 }
@@ -218,7 +245,7 @@ public sealed class NetSnapshot
 public enum NetEvent
 {
     EnemySpawn = 1, EnemyDeath, EnemyHit, EnemyAttack, EnemyAttackEnd, EnemyProjectile,
-    PlayerHit, Shot, Throw, BarrelExplode, World, PickupSpawn, Notice, StageEnd,
+    PlayerHit, Shot, Throw, BarrelExplode, World, PickupSpawn, Notice, StageEnd, LootSpawn,
 }
 
 /// <summary>Enemy attack kinds for <see cref="NetEvent.EnemyAttack"/>.</summary>

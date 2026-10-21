@@ -28,3 +28,11 @@ name_weapon_mortar,Mortar
 fmt_weapon_dual,Dual {0}
 name_weapontype_railgun,Railgun
 name_weapon_railgun,Railgun
+name_caliber_9mm,9mm rounds
+name_caliber_556,5.56mm rounds
+name_caliber_762,7.62mm rounds
+name_caliber_12g,12-gauge shells
+name_caliber_50,.50 rounds
+name_caliber_rocket,Rockets
+name_caliber_shell,Mortar shells
+name_caliber_cell,Railgun cells

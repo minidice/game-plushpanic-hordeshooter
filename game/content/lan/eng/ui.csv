@@ -1,6 +1,6 @@
 key,text
 # Controls (bottom of the HUD, main menu, pause)
-ui_controls,"WASD Move   Mouse Aim   LMB Fire   Space Leap   1·2·3 Switch weapon   RMB/Ctrl Aim   G Aim throw   Q Medkit   E Pick up
+ui_controls,"WASD Move   Mouse Aim   LMB Fire   Space Leap   1·2·3 Switch weapon   RMB/Ctrl Aim   G Aim throw   Q Medkit   E Pick up   I Backpack (Outpost)
 R Reload   Tab Zoom   Esc Pause"
 # Main menu
 ui_menu_title,HORDE SHOOTER  (working title)
@@ -81,6 +81,17 @@ msg_pickup_medkit_full,You can only carry one medkit
 msg_refill_no_primary,You have no weapon 2
 fmt_refill_not_refillable,{0} can't be refilled
 fmt_refill_got,+{0} AMMO
+# Outpost backpack (decisions.md M-25)
+fmt_use_loot,Pick up {0} ×{1}
+msg_backpack_full,Backpack full
+msg_loot_drop,Loot!
+ui_inventory_title,Backpack
+ui_inventory_hint,"Drag to move · drop on a top slot to equip
+Drop outside to leave it on the floor · I closes"
+fmt_tip_weapon,"{0}
+{1} · {2} rounds
+Damage {3} · Mag {5}/{4}"
+fmt_tip_stack,{0} ×{1}  (max {2})
 msg_refill_full,FULL
 fmt_weapon_no_ammo,{0} out of ammo
 # Short text above heads

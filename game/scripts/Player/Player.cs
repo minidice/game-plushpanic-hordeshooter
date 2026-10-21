@@ -33,6 +33,8 @@ public partial class Player : CharacterBody3D
     /// <summary>Dead for good. A downed survivor has 0 health but is not dead (see PlayerDowned).</summary>
     public bool IsDead => Health <= 0 && !IsDowned;
     public int Medkits { get; set; }
+    /// <summary>Outpost's 4 × 5 backpack (decisions.md M-25); null in the other modes.</summary>
+    public Backpack? Backpack { get; set; }
     public bool IsHealing { get; private set; }
     public float HealProgress => IsHealing ? _healTime / HealDuration : 0;
     public float HeliumTime { get; private set; }
@@ -214,6 +216,8 @@ public partial class Player : CharacterBody3D
         if (Input.IsActionJustPressed(GameInput.Slot2)) _slotPressed = 2;
         if (Input.IsActionJustPressed(GameInput.Slot3)) _slotPressed = 3;
         _aimHeld = Input.IsActionPressed(GameInput.AltFire) || Input.IsActionPressed(GameInput.Aim);
+        // With the backpack open the mouse drags items: no shooting, aiming or throwing.
+        if (Stage.Hud?.InventoryOpen == true) _fire = _firePressed = _aimHeld = _throwPressed = _cancelPressed = false;
 
         var camera = GetViewport().GetCamera3D();
         if (camera == null) return;
@@ -354,6 +358,8 @@ public partial class Player : CharacterBody3D
         int gain = Mathf.CeilToInt((MaxHealth - Health) * .8f);
         Health = Math.Min(MaxHealth, Health + gain);
         Medkits--;
+        // Outpost: the next medkit comes out of the backpack into the Q slot by itself.
+        if (Medkits == 0 && Backpack is { } bag && Stage.Authoritative && bag.Take(ItemKind.Medkit, InvItem.MedkitId, 1) == 1) Medkits = 1;
         IsHealing = false;
         ResetDowns();
         PlayOwn("heal");

@@ -73,6 +73,8 @@ void fragment() {
         _prompt.Name = "InteractionPrompt";
         _prompt.HorizontalAlignment = HorizontalAlignment.Center;
 
+        BuildInventory();
+
         _endPanel = CenterPanel(out var endBox);
         _endTitle = UiTheme.Label("", 48, UiTheme.Accent);
         _endTitle.HorizontalAlignment = HorizontalAlignment.Center;
@@ -189,7 +191,8 @@ void fragment() {
 
         UpdateEndPanel(stage, player);
         _pausePanel.Visible = Paused;
-        bool captured = playing && !Paused && GetWindow().HasFocus();
+        if (InventoryOpen && (!playing || Paused || player.IsDead)) SetInventoryOpen(false);
+        bool captured = playing && !Paused && !InventoryOpen && GetWindow().HasFocus();
         var mode = captured ? Input.MouseModeEnum.Hidden : Input.MouseModeEnum.Visible;
         if (Input.MouseMode != mode) Input.MouseMode = mode;
     }
@@ -218,6 +221,18 @@ void fragment() {
     {
         var stage = Stage;
         if (e.IsActionPressed(GameInput.Zoom)) stage.Cam.Close = !stage.Cam.Close;
+        if (e.IsActionPressed(GameInput.Inventory) && stage.State == StageState.Playing && !Paused)
+        {
+            SetInventoryOpen(!InventoryOpen);
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+        if (InventoryOpen && e.IsActionPressed(GameInput.Pause))
+        {
+            SetInventoryOpen(false);
+            GetViewport().SetInputAsHandled();
+            return;
+        }
 
         if (e.IsActionPressed(GameInput.Pause))
         {

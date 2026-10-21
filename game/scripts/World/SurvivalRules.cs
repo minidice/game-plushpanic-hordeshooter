@@ -27,9 +27,18 @@ public partial class SurvivalRules : ModeRules
     private bool _shownBreak;
     private float _spawnTimer;
 
+    /// <summary>Items spilled by fallen named and bosses so far (checks).</summary>
+    public int LootDrops { get; private set; }
+
     public override void _Ready()
     {
         base._Ready();
+        // Named and bosses spill loot around where they fall (decisions.md M-25); the host decides it.
+        if (Stage.Authoritative)
+            Stage.EnemyKilled += (enemy, _, _) =>
+            {
+                if (enemy.Monster.KeepsCorpse && Stage.State == StageState.Playing) ScatterLoot(enemy.GlobalPosition);
+            };
         _core = BaseCore.Create(Stage, Stage.Map.CoreSpot, Rules.CoreHp);
         _core.Destroyed += () =>
         {
@@ -82,6 +91,9 @@ public partial class SurvivalRules : ModeRules
 
     protected override void Tick(float dt)
     {
+        // Every survivor carries a backpack here, also those who join later (decisions.md M-25).
+        foreach (var p in Stage.Players)
+            if (IsInstanceValid(p)) p.Backpack ??= new Backpack();
         if (Stage.Authoritative) BarFraction = _core.Health / _core.MaxHealth;
         var (wave, running, _) = Phase(Time);
         if (running && wave != _shownWave)
@@ -147,6 +159,55 @@ public partial class SurvivalRules : ModeRules
         }
         SpawnedThisMatch += spawned;
         return spawned;
+    }
+
+    /// <summary>Floor weapons go into the backpack (or straight to an empty slot); pistols and melee swap as usual.</summary>
+    public override bool TakePickup(WeaponPickup pickup, Player who)
+    {
+        if (pickup.Throwable is { } throwable && who.Backpack is { } bag)
+        {
+            if (bag.Add(InvItem.Throwable(throwable.Id)) > 0)
+            {
+                if (who.IsLocal) Stage.ShowNotice(Loc.Text("msg_backpack_full"), 2);
+                return true;
+            }
+            Stage.Effects.FloatingText(who.GlobalPosition + Vector3.Up * 2.6f, throwable.DisplayName, new Color("8dff9c"));
+            Stage.RemovePickupFromWorld(pickup);
+            return true;
+        }
+        return InventoryOps.TakeWeapon(who, pickup);
+    }
+
+    /// <summary>
+    /// A fallen named or boss spills loot_min–loot_max items in a ring: ammo for the guns the team carries, medkits,
+    /// throwables and now and then a weapon from loot_weapons (mode_rules.json survival).
+    /// </summary>
+    public int ScatterLoot(Vector3 at)
+    {
+        int count = Rng.RandiRange(Rules.LootMin, Rules.LootMax);
+        var calibers = Stage.AlivePlayers
+            .SelectMany(p => new[] { p.Loadout.Primary, p.Loadout.Special })
+            .Where(w => w != null && w.Def.Caliber != "").Select(w => w!.Def.Caliber).Distinct().ToList();
+        if (calibers.Count == 0) calibers = Rules.LootWeapons.Select(id => ArmoryCatalog.Weapon(id).Caliber).Where(c => c != "").Distinct().ToList();
+        for (int i = 0; i < count; i++)
+        {
+            float a = Mathf.Tau * i / count + Rng.RandfRange(-.3f, .3f);
+            var spot = at + new Vector3(Mathf.Cos(a), 0, Mathf.Sin(a)) * Rng.RandfRange(1f, 2.4f);
+            if (Stage.Flow.IsBlocked(spot)) spot = at;
+            float roll = Rng.Randf();
+            if (roll < .55f && calibers.Count > 0)
+            {
+                var cal = calibers[Rng.RandiRange(0, calibers.Count - 1)];
+                int stack = CaliberDatabase.Get(cal)?.Stack ?? 30;
+                LootPickup.Spawn(Stage, spot, InvItem.Ammo(cal, Mathf.Max(1, Rng.RandiRange(stack / 2, stack))));
+            }
+            else if (roll < .7f) LootPickup.Spawn(Stage, spot, InvItem.Medkit());
+            else if (roll < .85f) LootPickup.Spawn(Stage, spot, InvItem.Throwable(Rng.Randf() < .5f ? "frag" : "molotov"));
+            else WeaponPickup.ForWeapon(Stage, spot, ArmoryCatalog.Weapon(Rules.LootWeapons[Rng.RandiRange(0, Rules.LootWeapons.Count - 1)]));
+            LootDrops++;
+        }
+        Stage.Effects.FloatingText(at + Vector3.Up * 2.4f, Loc.Text("msg_loot_drop"), new Color("ffd36b"));
+        return count;
     }
 
     /// <summary>One of the map's doorways at random; with none, a ring 16–24 m around the generator.</summary>

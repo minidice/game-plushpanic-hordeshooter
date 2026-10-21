@@ -115,6 +115,8 @@ public partial class Player
             Secondary = NetIds.Weapon(l.Secondary.Def.Id), SecondaryMag = l.Secondary.Mag, SecondaryReserve = l.Secondary.Reserve,
             Primary = l.Primary == null ? -1 : NetIds.Weapon(l.Primary.Def.Id), PrimaryMag = l.Primary?.Mag ?? 0, PrimaryReserve = l.Primary?.Reserve ?? 0,
             Special = l.Special == null ? -1 : NetIds.Weapon(l.Special.Def.Id), SpecialMag = l.Special?.Mag ?? 0, SpecialReserve = l.Special?.Reserve ?? 0,
+            Backpack = Backpack == null ? null : Enumerable.Range(0, Backpack.Size).Where(i => Backpack[i] != null)
+                .Select(i => (i, (int)Backpack[i]!.Kind, NetIds.Item(Backpack[i]!.Kind, Backpack[i]!.Id), Backpack[i]!.Count, Backpack[i]!.State?.Mag ?? 0)).ToList(),
             Throwables = l.Throwables.Select(t => (NetIds.Throwable(t.def.Id), t.count)).ToList(),
         };
     }
@@ -159,6 +161,20 @@ public partial class Player
         _slotMismatch = Loadout.ActiveSlot != s.ActiveSlot ? _slotMismatch + 1 : 0;
         if (_slotMismatch >= 4 && Weapons.SelectSlot(s.ActiveSlot)) changed = true;
         if (_slotMismatch >= 4) _slotMismatch = 0;
+        if (s.Backpack != null)
+        {
+            // Outpost: the host's backpack is the truth (decisions.md M-25).
+            Backpack ??= new Backpack();
+            Backpack.Clear();
+            foreach (var (cell, kind, id, count, mag) in s.Backpack)
+            {
+                var itemKind = (ItemKind)kind;
+                var itemId = NetIds.ItemAt(itemKind, id);
+                Backpack.Set(cell, itemKind == ItemKind.Weapon
+                    ? InvItem.Weapon(new WeaponState(ArmoryCatalog.Weapon(itemId), mag, 0))
+                    : new InvItem { Kind = itemKind, Id = itemId, Count = count });
+            }
+        }
         if (changed) Weapons.RefreshVisual();
     }
 }

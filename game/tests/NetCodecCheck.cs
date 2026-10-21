@@ -63,6 +63,12 @@ public partial class NetCodecCheck : Node
             Primary = NetIds.Weapon("m4"), PrimaryMag = 37, PrimaryReserve = 250,
             Special = NetIds.Weapon("railgun"), SpecialMag = 1, SpecialReserve = 3,
             Throwables = new List<(int, int)> { (NetIds.Throwable("frag"), 2), (NetIds.Throwable("molotov"), 1) },
+            Backpack = new List<(int, int, int, int, int)>
+            {
+                (0, (int)ItemKind.Ammo, NetIds.Item(ItemKind.Ammo, "762"), 40, 0),
+                (19, (int)ItemKind.Weapon, NetIds.Item(ItemKind.Weapon, "ak47"), 1, 27),
+                (7, (int)ItemKind.Medkit, 0, 3, 0),
+            },
         };
         foreach (int count in new[] { 0, 70, 200 })
         {
@@ -79,13 +85,20 @@ public partial class NetCodecCheck : Node
             bool players = p.Peer == 2 && Near(p.Position, player.Position) && p.Health == 87 && p.Medkits == 1 && Mathf.IsEqualApprox(p.BleedLeft, 12.5f) &&
                            p.Flags == player.Flags && p.ActiveSlot == 2 && NetIds.WeaponAt(p.Primary) == "m4" && p.PrimaryMag == 37 && p.PrimaryReserve == 250 &&
                            NetIds.WeaponAt(p.Special) == "railgun" && p.SpecialMag == 1 && p.SpecialReserve == 3 &&
-                           NetIds.WeaponAt(p.Secondary) == "m1911" && p.Throwables.Count == 2 && NetIds.ThrowableAt(p.Throwables[0].Kind) == "frag" && p.Throwables[0].Count == 2;
+                           NetIds.WeaponAt(p.Secondary) == "m1911" && p.Throwables.Count == 2 && NetIds.ThrowableAt(p.Throwables[0].Kind) == "frag" && p.Throwables[0].Count == 2 &&
+                           p.Backpack is { Count: 3 } bag && bag[0] == player.Backpack![0] && bag[1] == player.Backpack[1] && bag[2] == player.Backpack[2] &&
+                           NetIds.ItemAt(ItemKind.Ammo, bag[0].Id) == "762" && NetIds.ItemAt(ItemKind.Weapon, bag[1].Id) == "ak47";
             bool enemies = count == 0 ? got.Enemies == null
                 : got.Enemies!.Count == count && got.Enemies.Zip(snap.Enemies!).All(t =>
                     t.First.Id == t.Second.Id && Near(t.First.Position, t.Second.Position) && t.First.Flags == t.Second.Flags &&
                     t.First.Facing.AngleTo(t.Second.Facing) < .03f);
             Check(players && enemies && Mathf.Abs((float)got.Time - 1234.5678f) < .001f && Mathf.Abs(got.Shutter - .5f) < .01f,
                 $"a snapshot with {count} enemies survives the round trip ({bytes.Length} bytes)");
+            if (count == 0)
+            {
+                var plain = new NetSnapshot { Players = { new NetPlayerState { Peer = 3, Throwables = new() } } };
+                Check(NetSnapshot.Decode(plain.Encode()).Players[0].Backpack == null, "a survivor without a backpack (outside Outpost) stays without one");
+            }
             if (count == 70) Check(bytes.Length < 1200 - 0, $"70 enemies fit one 1,200-byte packet ({bytes.Length} bytes)");
         }
         Check(NetIds.WeaponAt(NetIds.Weapon("ak47")) == "ak47" && NetIds.MonsterAt(NetIds.Monster("spitter")) == "spitter", "data ids map both ways");

@@ -1,0 +1,10 @@
+id,name,stack,color
+#탄 종류 id(무기 표 caliber 열),이름 키(content/lan/<언어>/weapon.csv),배낭 한 칸에 들어가는 발 수(거점 모드),아이콘 색
+9mm,name_caliber_9mm,60,d9b45a
+556,name_caliber_556,60,b9c46a
+762,name_caliber_762,40,c98a4a
+12g,name_caliber_12g,12,d0563f
+50,name_caliber_50,5,9aa3ad
+rocket,name_caliber_rocket,2,7f9c4e
+shell,name_caliber_shell,3,6f7f52
+cell,name_caliber_cell,2,6fd0ff
