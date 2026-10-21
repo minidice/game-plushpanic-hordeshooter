@@ -1,0 +1,7 @@
+{
+  "kind": "shout",
+  "description": "난전 3번 칸 꽥(M-27 계획 13.1): 주변을 팍 밀쳐냄. 가운데일수록 세게",
+  "radius_m": 4.5,
+  "damage": 12,
+  "knockback_power": 170
+}

@@ -88,6 +88,8 @@ public sealed class CellReader
         "hitscan" => FireMode.Hitscan,
         "projectile" => FireMode.Projectile,
         "lob" => FireMode.Lob,
+        "shout" => FireMode.Shout,
+        "throw" => FireMode.Throw,
         _ => BadMode(column),
     };
 

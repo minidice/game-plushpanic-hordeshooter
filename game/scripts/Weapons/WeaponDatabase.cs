@@ -217,6 +217,8 @@ public sealed class WeaponDatabase
         }
         if (def.Mode == FireMode.Lob && !HasKind(traits, "lob")) _errors.Add($"{where}: fire_mode lob에는 lob 특성이 필요합니다");
         if (def.Mode == FireMode.Projectile && !HasKind(traits, "projectile")) _errors.Add($"{where}: fire_mode projectile에는 projectile 특성이 필요합니다");
+        if (def.Mode == FireMode.Shout && !HasKind(traits, "shout")) _errors.Add($"{where}: fire_mode shout에는 shout 특성이 필요합니다");
+        if (def.Mode == FireMode.Throw && !HasKind(traits, "throw")) _errors.Add($"{where}: fire_mode throw에는 throw 특성이 필요합니다");
         if (dual is { } d) def.DualVariant = MakeDual(def, d, where);
         return def;
     }
@@ -259,6 +261,8 @@ public sealed class WeaponDatabase
         ["lob"] = new[] { "flight_ms", "min_range_m", "setup_ms", "recover_ms" },
         ["charge"] = new[] { "charge_ms" },
         ["explode_on_hit"] = new[] { "radius_m", "damage", "self_damage_share", "knockback_power" },
+        ["shout"] = new[] { "radius_m", "damage", "knockback_power" },
+        ["throw"] = new[] { "throwable" },
         ["dual_wield"] = new[] { "name_format_key", "mag_multiplier", "fire_interval_multiplier", "spread_add_deg", "recoil_multiplier" },
     };
 
@@ -323,6 +327,15 @@ public sealed class WeaponDatabase
                 break;
             case "charge":
                 def.ChargeTime = Math.Max(0, t.Float("charge_ms", 700)) / 1000f;
+                break;
+            case "shout":
+                def.ShoutRadius = t.Float("radius_m", 4);
+                def.ShoutDamage = t.Float("damage", 0);
+                def.ShoutPower = t.Float("knockback_power", 150);
+                break;
+            case "throw":
+                // Checked against throwables.csv by the checks (the two tables load separately).
+                def.ThrowableId = t.String("throwable", "");
                 break;
             case "explode_on_hit":
                 def.ExplosionRadius = t.Float("radius_m", 4);

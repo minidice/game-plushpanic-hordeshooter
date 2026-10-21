@@ -50,15 +50,18 @@ public sealed class Loadout
 
     private bool _unlimited;
     private float _specialCooldown;
+    private IReadOnlyDictionary<string, float>? _cooldowns;
 
     /// <summary>
     /// Onslaught (decisions.md M-26): every weapon carried keeps unlimited reserves, and slot-3 kinds recharge for
-    /// <paramref name="specialCooldown"/> seconds after a shot. Applied to what is carried now and to everything picked up later.
+    /// <paramref name="specialCooldown"/> seconds after a shot, or their own time in <paramref name="cooldowns"/> (by weapon
+    /// id, mode_rules.json special_cooldowns). Applied to what is carried now and to everything picked up later.
     /// </summary>
-    public void UseOnslaughtAmmo(float specialCooldown)
+    public void UseOnslaughtAmmo(float specialCooldown, IReadOnlyDictionary<string, float>? cooldowns = null)
     {
         _unlimited = true;
         _specialCooldown = specialCooldown;
+        _cooldowns = cooldowns;
         foreach (var state in new[] { Secondary, Primary, Special }) AdoptMaybe(state);
     }
 
@@ -72,7 +75,8 @@ public sealed class Loadout
     {
         if (state == null || !_unlimited) return state;
         state.UnlimitedReserve = true;
-        state.ShotCooldown = state.Def.Slot == WeaponSlot.Special ? _specialCooldown : 0;
+        state.ShotCooldown = state.Def.Slot != WeaponSlot.Special ? 0
+            : _cooldowns != null && _cooldowns.TryGetValue(state.Def.Id, out float own) ? own : _specialCooldown;
         return state;
     }
 

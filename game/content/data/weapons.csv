@@ -17,3 +17,5 @@ m82,bolt_sniper,name_weapon_m82,,,,,220,,,,1500,2500,,5,6,4,,99,,,,,80,40,,,res:
 alabong,rocket_launcher,name_weapon_alabong,,,,,,,,,,,,,,,,,,,,,,,,,res://assets/weapons/alabong.glb,res://assets/icons/alabong.png,,,,
 mortar,mortar,name_weapon_mortar,,,,,,,,,,,,,,,,,,,,,,,,,res://assets/weapons/mortar.glb,res://assets/icons/mortar.png,,,,
 railgun,railgun,name_weapon_railgun,,,,,,,,,,,,,,,,,,,,,,,,,res://assets/weapons/awm.glb,res://assets/icons/awm.png,,,,
+honk,honk,name_weapon_honk,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+rubber_duck,rubber_duck,name_weapon_rubber_duck,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,

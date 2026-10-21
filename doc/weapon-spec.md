@@ -35,7 +35,7 @@ type=assault_rifle  ◀──── m4,assault_rifle,M4,11,,,,       buckshot.js
 | `name` | **이름 키** (`name_weapon_<id>`). 실제 문구는 `content/lan/<언어>/weapon.csv` | |
 | `slot` | 칸 | `1` 보조(근접·권총, **탄약 무제한**) / `2` 주무기 / `3` 특수무기(로켓런처·박격포·레일건, 탄약 더미로 충전 안 됨, C-25) |
 | `category` | 분류(외형·발사음·화면 흔들림) | `melee pistol smg rifle lmg shotgun sniper heavy` |
-| `fire_mode` | 발사 방식 | `melee` 휘두르기, `hitscan` 즉발 총알, `projectile` 날아가는 투사체, `lob` 곡사 |
+| `fire_mode` | 발사 방식 | `melee` 휘두르기, `hitscan` 즉발 총알, `projectile` 날아가는 투사체, `lob` 곡사, `shout` 내 주변 밀쳐내기(꽥), `throw` 투척물 던지기(고무오리) |
 | `automatic` | 누르고 있으면 연사 | `true` / `false`(클릭마다) |
 | `damage` | 한 발 대미지. **산탄은 전탄 합계**, 로켓은 직격 대미지 | |
 | `max_range_m` | 최대 사거리. 총알이 여기서 멈춤. 근접은 손이 닿는 거리 | m |
@@ -79,6 +79,8 @@ type=assault_rifle  ◀──── m4,assault_rifle,M4,11,,,,       buckshot.js
 | `projectile` | 직선 투사체 (`fire_mode=projectile`에 필요) | `speed_mps`, `max_flight_ms` |
 | `lob` | 조준점으로 곡사, 벽 너머 가능 (`fire_mode=lob`에 필요). 쏘기 전 거치·쏜 뒤 회수 동안 못 움직임 | `flight_ms`, `min_range_m`, `setup_ms`, `recover_ms` |
 | `charge` | 방아쇠를 당기면 충전한 뒤 발사(레일건). 충전 중 조준선 표시, 끊기면 탄 반환 | `charge_ms` |
+| `shout` | 내 주변 반경 안의 적을 밀쳐내고 피해(가운데일수록 셈, 겨눈 곳과 무관). `fire_mode=shout`에 필요(난전 꽥, 2026-10-21) | `radius_m`, `damage`, `knockback_power` |
+| `throw` | 총알 대신 `throwables.csv`의 투척물을 조준점에 던짐. `fire_mode=throw`에 필요(난전 고무오리, 2026-10-21) | `throwable` |
 | `burst` | 점사 | `count`, `interval_ms` |
 | `melee_arc` | **근접.** 앞쪽 부채꼴 안의 적을 가까운 순서로 여러 마리 | `arc_deg`, `max_targets` |
 | `dual_wield` | **쌍권총.** 같은 무기를 하나 더 주우면 쌍으로 바뀜 | `name_format_key`(언어 키, 기본 `fmt_weapon_dual`), `mag_multiplier`, `fire_interval_multiplier`, `spread_add_deg`, `recoil_multiplier` |
@@ -217,5 +219,5 @@ HUD에는 현재 모드별 임계값 분기가 없다. 여기서는 공용 코�
   - **레일건**: 클릭하면 0.7초 충전(조준선이 굵어짐, 조준점 아래 진행 막대) → 굵은 빔. 대미지 260, 관통 99(관통마다 ×0.8). 충전 중 교체·기절하면 취소, 탄 반환. 모델은 지금 AWM을 재사용(전용 모델은 후속).
 - 멀티: 조준 버튼은 입력의 `NetHeld.Aim`으로 방장에게 가고(사거리·집중은 방장이 계산), 3번 칸은 스냅샷의 `Special`로 맞춘다. 프로토콜 3.
 - 검사: `game/tests/WeaponHandlingCheck.tscn` (창 모드면 `output/weapons-*.png`).
-- **난전(서바이버)의 탄약 규칙**(2026-10-21, M-26): 모든 무기 예비탄 무제한, 3번 칸 종류(`slot=3`)는 장전 대신 쏜 뒤 `special_cooldown_s`(25초) 충전. 진열대로 고른 무기는 종류와 상관없이 1·2번 칸에 들어간다. [몬스터 테이블 규격](mode-monster-tables.md) 5장.
+- **난전(서바이버)의 탄약 규칙**(2026-10-21, M-26): 모든 무기 예비탄 무제한, 3번 칸 종류(`slot=3`)는 장전 대신 쏜 뒤 `special_cooldown_s`(25초) 충전. 같은 날 난전 전용 3번 칸 꽥(`honk`) · 고무오리(`rubber_duck`)를 더하고 무기별 쿨타임 `special_cooldowns`(꽥 8초 · 고무오리 14초)를 둠(M-27 계획 13.1, I-87). 진열대로 고른 무기는 종류와 상관없이 1·2번 칸에 들어간다. [몬스터 테이블 규격](mode-monster-tables.md) 5장.
 

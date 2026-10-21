@@ -135,7 +135,7 @@ public partial class SurvivorRules : ModeRules
     {
         // Every survivor here keeps unlimited reserves; slot-3 kinds recharge on a cooldown (M-26).
         foreach (var p in Stage.Players)
-            if (IsInstanceValid(p)) p.Loadout.UseOnslaughtAmmo(Rules.SpecialCooldown);
+            if (IsInstanceValid(p)) p.Loadout.UseOnslaughtAmmo(Rules.SpecialCooldown, Rules.SpecialCooldowns);
         if (_wasArming && !Arming)
         {
             // The clock starts when everyone has armed (a client sees it through the shared objective).

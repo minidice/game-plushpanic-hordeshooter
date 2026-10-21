@@ -284,6 +284,42 @@ public partial class CardLabCheck : Node
         Check(clump.All(e => !IsInstanceValid(e) || e.IsDead) && Cards.Pops - pops == 3, "popping one pops the whole clump");
         await Reset();
 
+        // ---------- slot 3: the honk and the rubber duck as weapons (plan 13.1) ----------
+        var cooldowns = ModeTuning.Current.Survivor.SpecialCooldowns;
+        player.Loadout.Equip(3, new WeaponState(ArmoryCatalog.Weapon("honk")));
+        player.Weapons.RefreshVisual();
+        player.Loadout.SelectSlot(3);
+        await Frames(3);
+        var honked = await Common(player.GlobalPosition + new Vector3(2.5f, 0, 0));
+        float honkedHealth = honked.Health;
+        player.SetControls(Vector2.Zero, player.GlobalPosition + new Vector3(3, 1, 0), true);
+        await Frames(2);
+        player.SetControls(Vector2.Zero, player.GlobalPosition + new Vector3(3, 1, 0), false);
+        await Shot("slot3-honk");
+        var honkGun = player.Loadout.Special!;
+        Check(honked.KnockSpeed > 3 && honked.Health < honkedHealth, $"the honk shoves the monster next to you away ({honked.KnockSpeed:0.0} m/s) and hurts it a little");
+        Check(!honkGun.CanFire && honkGun.CooldownLeft > 0 && Mathf.IsEqualApprox(honkGun.ShotCooldown, cooldowns["honk"]),
+            $"then it recharges for its own {cooldowns["honk"]} s (mode_rules special_cooldowns)");
+        await Reset();
+        player.Loadout.Equip(3, new WeaponState(ArmoryCatalog.Weapon("rubber_duck")));
+        player.Weapons.RefreshVisual();
+        player.Loadout.SelectSlot(3);
+        await Frames(3);
+        var duckSpot = OpenSpot(8);
+        var gathered = await Common(duckSpot + new Vector3(4, 0, 0));
+        gathered.Awake = true;
+        player.SetControls(Vector2.Zero, duckSpot + Vector3.Up * .1f, true);
+        await Frames(2);
+        player.SetControls(Vector2.Zero, duckSpot + Vector3.Up * .1f, false);
+        await Until(() => _stage.Lure != null, "the rubber duck flies to the aim point and squeaks there (a lure)", 3);
+        await Shot("slot3-duck");
+        Check(player.Loadout.Special!.CooldownLeft > 0 && Mathf.IsEqualApprox(player.Loadout.Special.ShotCooldown, cooldowns["rubber_duck"]),
+            $"and the duck recharges for {cooldowns["rubber_duck"]} s");
+        await Until(() => _stage.Lure == null, "then it pops", 6);
+        player.Loadout.Unequip(3);
+        player.Loadout.SelectSlot(2);
+        await Reset();
+
         // ---------- cheat reset: the arming cards (M-27 plan 13.1) ----------
         var window = lab.Window;
         var hud = _stage.Hud;
@@ -312,6 +348,7 @@ public partial class CardLabCheck : Node
         Check(player.Loadout.Secondary.Def.Id == first && queue.Count == 2 && window.IsOpen, $"1 picks the first card: slot 1 is the {first}, the slot 2 offer follows");
         window.Pick(1);
         Check(player.Loadout.Primary?.Def.Id == offers[1].Choices[1].Id, "the second offer fills slot 2");
+        await Shot("arming-3");
         Key(Godot.Key.Key3);
         await Idle(2);
         Check(player.Loadout.Special?.Def.Id == offers[2].Choices[2].Id && queue.Count == 0 && !window.IsOpen && !hud.CardWindowOpen,
@@ -389,8 +426,10 @@ public partial class CardLabCheck : Node
         Check(queue.Front!.Kind == CardKind.Special && queue.Front.Choices.Count == 3 && window.IsOpen, "the special offer follows with three special cards");
         await Shot("special");
         int glass = queue.Front.Choices.ToList().FindIndex(c => c.Id == nameof(LabSpecial.GlassCannon));
+        // Level-up picks above may have been "damage +10%" cards, so compare with the multiplier before.
+        float multiplier = player.DamageMultiplier;
         window.Pick(glass);
-        Check(Cards.IsOn(LabSpecial.GlassCannon) && Mathf.IsEqualApprox(player.DamageMultiplier, 2), "glass cannon doubles the survivor's damage");
+        Check(Cards.IsOn(LabSpecial.GlassCannon) && Mathf.IsEqualApprox(player.DamageMultiplier, multiplier * 2), "glass cannon doubles the survivor's damage");
         await Reset();
         Cards.Set(LabSpecial.LastShot, true);
         spot = OpenSpot(10);

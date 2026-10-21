@@ -9,6 +9,8 @@ name_weapontype_bolt_sniper,Bolt-Action Sniper
 name_weapontype_dmr,DMR
 name_weapontype_rocket_launcher,Rocket Launcher
 name_weapontype_mortar,Mortar
+name_weapontype_honk,Honk
+name_weapontype_rubber_duck,Throwable
 name_weapon_frying_pan,Frying Pan
 name_weapon_m1911,M1911
 name_weapon_glock17,Glock 17
@@ -25,6 +27,11 @@ name_weapon_svd,SVD
 name_weapon_m82,Barrett M82
 name_weapon_alabong,Alabong
 name_weapon_mortar,Mortar
+name_weapon_honk,Honk
+name_weapon_rubber_duck,Rubber Duck
+desc_weapon_honk,HONK! Shoves everything around you away (cooldown)
+desc_weapon_rubber_duck,Throws a rubber duck at the aim point: it squeaks commons together, then pops (cooldown)
+ui_card_weapon_cooldown,Cooldown
 fmt_weapon_dual,Dual {0}
 name_weapontype_railgun,Railgun
 name_weapon_railgun,Railgun

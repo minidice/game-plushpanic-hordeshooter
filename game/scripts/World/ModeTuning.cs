@@ -19,9 +19,11 @@ public sealed record SurvivalTuning(float CoreHp, float Prep, float Break, int M
 /// <param name="XpFirst">Team experience for the first level-up; each next one needs <paramref name="XpGrowth"/> times more.</param>
 /// <param name="MidBosses">Boss monster ids the middle stretches draw from (no repeats while unused ones are left).</param>
 /// <param name="FinalBosses">Boss monster ids the last stretch draws from.</param>
+/// <param name="SpecialCooldowns">Slot-3 weapons with their own recharge (seconds, by weapon id); others use <paramref name="SpecialCooldown"/>.</param>
 public sealed record SurvivorTuning(IReadOnlyList<float> Segments, IReadOnlyList<float> SegmentBossHp, float SpawnEvery, int GroupStart, int GroupEnd,
     float BossGroupScale, float SpawnMin, float SpawnMax, float RestAfterNamed, IReadOnlyList<string> WeaponPool, float SpecialCooldown,
-    float XpCommon, float XpNamed, float XpBoss, float XpFirst, float XpGrowth, IReadOnlyList<string> MidBosses, IReadOnlyList<string> FinalBosses)
+    float XpCommon, float XpNamed, float XpBoss, float XpFirst, float XpGrowth, IReadOnlyList<string> MidBosses, IReadOnlyList<string> FinalBosses,
+    IReadOnlyDictionary<string, float> SpecialCooldowns)
 {
     /// <summary>All stretches end to end (the run without boss fights).</summary>
     public float Total => Segments.Sum();
@@ -42,7 +44,7 @@ public sealed class ModeTuning
     private static readonly string[] SurvivorKeys =
         { "segments_s", "segment_boss_hp", "spawn_every_s", "group_start", "group_end", "boss_group_scale", "spawn_min_m", "spawn_max_m",
           "rest_after_named_s", "weapon_pool", "special_cooldown_s", "xp_common", "xp_named", "xp_boss", "xp_first", "xp_growth",
-          "mid_bosses", "final_bosses" };
+          "mid_bosses", "final_bosses", "special_cooldowns" };
     private static readonly string[] DefaultBosses = { "boss" };
     private static readonly float[] DefaultSegments = { 180, 240, 300, 360 };
     private static readonly float[] DefaultSegmentHp = { .35f, .5f, .7f, 1 };
@@ -52,7 +54,8 @@ public sealed class ModeTuning
 
     public SurvivalTuning Survival { get; private set; } = new(900, 8, 10, 60, new[] { DefaultWave }, 3, 5, DefaultLootWeapons);
     public SurvivorTuning Survivor { get; private set; } =
-        new(DefaultSegments, DefaultSegmentHp, 1.3f, 3, 8, .5f, 14, 22, 12, DefaultPool, 25, 1, 10, 40, 12, 1.15f, DefaultBosses, DefaultBosses);
+        new(DefaultSegments, DefaultSegmentHp, 1.3f, 3, 8, .5f, 14, 22, 12, DefaultPool, 25, 1, 10, 40, 12, 1.15f, DefaultBosses, DefaultBosses,
+            new Dictionary<string, float>());
 
     private readonly List<string> _errors = new();
     public IReadOnlyList<string> Errors => _errors;
@@ -168,6 +171,23 @@ public sealed class ModeTuning
         return bosses.Count > 0 ? bosses : fallback;
     }
 
+    /// <summary>Slot-3 weapon id → its own recharge in seconds; each must be a slot-3 weapon with a positive time.</summary>
+    private IReadOnlyDictionary<string, float> ReadCooldowns(JsonElement s, string where, IReadOnlyDictionary<string, float> fallback)
+    {
+        if (!s.TryGetProperty("special_cooldowns", out var obj)) return fallback;
+        if (obj.ValueKind != JsonValueKind.Object) { _errors.Add($"{where}: special_cooldowns must be an object of weapon id → seconds"); return fallback; }
+        var cooldowns = new Dictionary<string, float>();
+        foreach (var p in obj.EnumerateObject())
+        {
+            if (!WeaponDatabase.Current.Weapons.TryGetValue(p.Name, out var def) || def.Slot != WeaponSlot.Special)
+                _errors.Add($"{where}: special_cooldowns '{p.Name}' is not a slot-3 weapon in weapons.csv");
+            else if (p.Value.ValueKind != JsonValueKind.Number || p.Value.GetDouble() <= 0)
+                _errors.Add($"{where}: special_cooldowns '{p.Name}' must be a positive number of seconds");
+            else cooldowns[p.Name] = (float)p.Value.GetDouble();
+        }
+        return cooldowns;
+    }
+
     private void ReadSurvivor(JsonElement s)
     {
         const string where = "mode_rules.json survivor";
@@ -179,7 +199,7 @@ public sealed class ModeTuning
             f.Float("spawn_min_m", d.SpawnMin), f.Float("spawn_max_m", d.SpawnMax), f.Float("rest_after_named_s", d.RestAfterNamed),
             ReadPool(s, where, d.WeaponPool), f.Float("special_cooldown_s", d.SpecialCooldown),
             f.Float("xp_common", d.XpCommon), f.Float("xp_named", d.XpNamed), f.Float("xp_boss", d.XpBoss), f.Float("xp_first", d.XpFirst), f.Float("xp_growth", d.XpGrowth),
-            ReadBosses(s, where, "mid_bosses", d.MidBosses), ReadBosses(s, where, "final_bosses", d.FinalBosses));
+            ReadBosses(s, where, "mid_bosses", d.MidBosses), ReadBosses(s, where, "final_bosses", d.FinalBosses), ReadCooldowns(s, where, d.SpecialCooldowns));
         if (Survivor.SpecialCooldown <= 0) _errors.Add($"{where}: special_cooldown_s must be positive");
         if (Survivor.Segments.Any(x => x <= 0) || Survivor.SegmentBossHp.Any(x => x <= 0)) _errors.Add($"{where}: segments_s and segment_boss_hp must be positive");
         if (Survivor.SegmentBossHp.Count != Survivor.Segments.Count) _errors.Add($"{where}: segment_boss_hp needs one value per segments_s entry");

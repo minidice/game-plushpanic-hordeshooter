@@ -29,7 +29,7 @@ public partial class CardLabRules : ModeRules
     protected override void Tick(float dt)
     {
         foreach (var p in Stage.Players)
-            if (IsInstanceValid(p)) p.Loadout.UseOnslaughtAmmo(Tuning.Survivor.SpecialCooldown);
+            if (IsInstanceValid(p)) p.Loadout.UseOnslaughtAmmo(Tuning.Survivor.SpecialCooldown, Tuning.Survivor.SpecialCooldowns);
     }
 
     protected override void Step(float dt)

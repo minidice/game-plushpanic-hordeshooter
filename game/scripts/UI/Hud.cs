@@ -457,7 +457,8 @@ void fragment() {
             float progress = Mathf.Clamp(gun.ReloadElapsed / gun.ReloadTime, 0, 1);
             c.DrawRect(new Rect2(bar.Position.X + bar.Size.X * progress - 1.5f, bar.Position.Y - 3, 3, bar.Size.Y + 6), UiTheme.Paper);
         }
-        else if (!gun.IsMelee && gun.Mag <= Mathf.Max(1, gun.Def.MagSize / 6))
+        // Recharging weapons (Onslaught slot 3) never reload: the ammo panel shows their recharge instead.
+        else if (!gun.IsMelee && gun.ShotCooldown <= 0 && gun.Mag <= Mathf.Max(1, gun.Def.MagSize / 6))
         {
             c.DrawString(font, center + new Vector2(-60, radius + 32), Loc.Text(gun.Mag == 0 ? "ui_hud_mag_empty" : "ui_hud_ammo_low"),
                 HorizontalAlignment.Center, 120, 16, UiTheme.Accent);

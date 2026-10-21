@@ -1,0 +1,7 @@
+{
+  "kind": "attract",
+  "description": "고무오리: 착지 후 삑삑거리며 일반 몹을 모음(네임드 · 보스는 안 옴). 끝나면 다음 효과",
+  "radius_m": 12,
+  "duration_ms": 3500,
+  "beep_interval_ms": 300
+}

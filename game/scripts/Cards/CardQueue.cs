@@ -127,9 +127,12 @@ public static class ArmingCards
     /// <summary>A weapon as a card: what it is, its round and the numbers that tell guns apart.</summary>
     public static CardChoice WeaponCard(int slot, WeaponDefinition def)
     {
-        var caliber = CaliberDatabase.Get(def.Caliber)?.DisplayName ?? "—";
+        // The honk and the rubber duck are not guns: their own line and "cooldown" instead of numbers and a round.
+        bool gadget = def.Mode is FireMode.Shout or FireMode.Throw;
+        var caliber = gadget ? Loc.Text("ui_card_weapon_cooldown") : CaliberDatabase.Get(def.Caliber)?.DisplayName ?? "—";
         var tag = Loc.Format("fmt_card_weapon_tag", slot, Loc.Text("name_weapontype_" + def.TypeId), caliber);
-        var desc = Loc.Format("fmt_card_weapon_desc", def.Damage, def.MagSize, Mathf.RoundToInt(60f / Mathf.Max(def.FireInterval, .01f)), def.MaxRange);
+        var desc = gadget ? Loc.Text("desc_weapon_" + def.Id)
+            : Loc.Format("fmt_card_weapon_desc", def.Damage, def.MagSize, Mathf.RoundToInt(60f / Mathf.Max(def.FireInterval, .01f)), def.MaxRange);
         var target = slot switch { 1 => CardTarget.Slot1, 2 => CardTarget.Slot2, _ => CardTarget.Slot3 };
         return new CardChoice(def.Id, def.DisplayName, tag, desc, target, def.LoadIcon(), who =>
         {

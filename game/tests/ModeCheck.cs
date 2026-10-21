@@ -92,6 +92,16 @@ public partial class ModeCheck : Node
               tuning.Survivor.WeaponPool.Any(id => ArmoryCatalog.Weapon(id).Slot == WeaponSlot.Special) &&
               tuning.Survivor.WeaponPool.All(id => ArmoryCatalog.Weapon(id).Mode != FireMode.Melee),
             "the card pool has enough guns for two different slot 1 · 2 offers, special weapons for slot 3, no melee");
+        Check(new[] { "honk", "rubber_duck" }.All(id => tuning.Survivor.WeaponPool.Contains(id) && ArmoryCatalog.Weapon(id).Slot == WeaponSlot.Special &&
+              tuning.Survivor.SpecialCooldowns.TryGetValue(id, out float own) && own < tuning.Survivor.SpecialCooldown) &&
+              ArmoryCatalog.Weapon("honk").Mode == FireMode.Shout && ArmoryCatalog.Throwables.ContainsKey(ArmoryCatalog.Weapon("rubber_duck").ThrowableId),
+            "the honk and the rubber duck are slot-3 weapons with their own shorter recharge (the duck throws throwables.csv's rubber duck)");
+        var gadgets = new Loadout(ArmoryCatalog.Weapon(ArmoryCatalog.StartingWeapon));
+        gadgets.UseOnslaughtAmmo(tuning.Survivor.SpecialCooldown, tuning.Survivor.SpecialCooldowns);
+        gadgets.Equip(3, new WeaponState(ArmoryCatalog.Weapon("honk")));
+        Check(Mathf.IsEqualApprox(gadgets.Special!.ShotCooldown, tuning.Survivor.SpecialCooldowns["honk"]), "a honk picked up later gets its own recharge too");
+        var badCooldowns = ModeTuning.FromText("{\"survivor\": {\"special_cooldowns\": {\"m4\": 5, \"honk\": -1}}}").Errors;
+        Check(badCooldowns.Count == 2, "a gun that is not slot 3 and a negative recharge are reported: " + string.Join(" / ", badCooldowns));
         Check(tuning.Survivor.Segments.Count == 4 && tuning.Survivor.Total is > 1000 and < 1200 && tuning.Survivor.SegmentBossHp.Count == 4 &&
               tuning.Survivor.SegmentBossHp[^1] == 1, $"Onslaught runs four boss stretches, about 20 minutes ({tuning.Survivor.Total:0}s)");
         var badSegments = ModeTuning.FromText("{\"survivor\": {\"segments_s\": [60, -1], \"segment_boss_hp\": [1], \"xp_growth\": 0.5}}").Errors;

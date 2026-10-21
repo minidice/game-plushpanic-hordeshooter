@@ -97,8 +97,9 @@
 | `segment_boss_hp` | 구간 보스 체력 = 보스 표 체력 × 이 비율(`segments_s`와 개수가 같아야 함) | 0.35 · 0.5 · 0.7 · 1.0 |
 | `mid_bosses` | 중간 구간 보스 후보(`monsters.csv`의 behavior `boss` + `bosses/<id>.json`). 판마다 무작위, 아직 안 나온 것부터 | boss_bull_giant · boss_balloon_king · boss_spitter_mother |
 | `final_bosses` | 마지막 구간 보스 후보 | boss |
-| `weapon_pool` | 무장 카드에 나올 수 있는 무기 id(근접 제외, 총 6개 이상). 3번 칸 종류는 3번 칸 카드로 | mp5 · m4 · ak47 · m16 · m249 · r870 · benelli_m4 · double_barrel · svd · awm · alabong · mortar · railgun |
+| `weapon_pool` | 무장 카드에 나올 수 있는 무기 id(근접 제외, 총 6개 이상). 3번 칸 종류는 3번 칸 카드로 | mp5 · m4 · ak47 · m16 · m249 · r870 · benelli_m4 · double_barrel · svd · awm · alabong · mortar · railgun · honk · rubber_duck |
 | `special_cooldown_s` | 3번 칸 종류(로켓런처·박격포·레일건)가 쏜 뒤 다시 쓸 수 있을 때까지 | 25초 |
+| `special_cooldowns` | 무기별로 다른 쿨타임(무기 id → 초, 3번 칸 무기만). 없는 무기는 `special_cooldown_s` | 꽥 8초 · 고무오리 14초 |
 | `xp_common` · `xp_named` · `xp_boss` | 등급별 처치 경험치(팀 공유, 임시 수치) | 1 · 10 · 40 |
 | `xp_first` · `xp_growth` | 레벨 2까지 필요한 경험치, 레벨마다 곱하는 배율(1 이상) | 12 · 1.15 |
 

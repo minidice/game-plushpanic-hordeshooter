@@ -66,6 +66,7 @@ public partial class LabCards : Node
     private const float HonkRadius = 3.5f, HonkPower = 130f, HonkDamage = 5f;
     // Rubber duck: every so many hits a squeaky duck drops, gathers commons, then pops.
     private const int DuckEveryHits = 10;
+    public const string RubberDuckId = "rubber_duck";
 
     public Stage Stage { get; set; } = null!;
     // Owner null = a lab switch (every hit); otherwise the survivor who took it.
@@ -81,7 +82,6 @@ public partial class LabCards : Node
     private readonly HashSet<Enemy> _popping = new();
     private int _stuffingThisFrame, _hitsSinceDuck;
     private float _clock;
-    private ThrowableDefinition? _duck;
 
     // Counters for checks and the lab overlay.
     public int Floats { get; private set; }
@@ -397,23 +397,10 @@ public partial class LabCards : Node
     {
         _hitsSinceDuck = 0;
         Ducks++;
-        _duck ??= new ThrowableDefinition
-        {
-            Id = "lab_duck",
-            NameKey = "name_card_rubber_duck",
-            Kind = ArmoryCatalog.Throwables["lure"].Kind,
-            MaxCarry = 1,
-            MaxRange = 6,
-            Color = new Color("ffd23f"),
-            Effects =
-            {
-                new AttractEffect("duck_attract", 12, 3.5f, .3f),
-                new ExplodeEffect("duck_pop", 3.2f, 40, 130, 0),
-            },
-        };
+        // The same duck the slot-3 rubber duck throws (throwables.csv rubber_duck).
         var ground = new Vector3(at.X, 0, at.Z);
         var side = new Vector3(GD.Randf() - .5f, 0, GD.Randf() - .5f).Normalized() * 1.2f;
-        ThrownItem.Throw(Stage, _duck, ground + Vector3.Up * 1.2f, ground + side);
+        ThrownItem.Throw(Stage, ArmoryCatalog.Throwables[RubberDuckId], ground + Vector3.Up * 1.2f, ground + side);
         Stage.Effects.FloatingText(at + Vector3.Up * 1.6f, Loc.Text("fx_card_duck"), new Color("ffd23f"));
     }
 

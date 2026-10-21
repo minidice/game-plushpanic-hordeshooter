@@ -1,0 +1,8 @@
+{
+  "kind": "explode",
+  "description": "고무오리: 모인 몹 위에서 펑",
+  "radius_m": 3.2,
+  "damage": 40,
+  "knockback_power": 130,
+  "self_damage_share": 0
+}

@@ -9,6 +9,8 @@ name_weapontype_bolt_sniper,볼트액션 저격총
 name_weapontype_dmr,반자동 저격총
 name_weapontype_rocket_launcher,로켓런처
 name_weapontype_mortar,박격포
+name_weapontype_honk,꽥
+name_weapontype_rubber_duck,투척물
 name_weapon_frying_pan,프라이팬
 name_weapon_m1911,M1911
 name_weapon_glock17,글록 17
@@ -25,6 +27,11 @@ name_weapon_svd,SVD
 name_weapon_m82,바렛 M82
 name_weapon_alabong,알라봉
 name_weapon_mortar,박격포
+name_weapon_honk,꽥
+name_weapon_rubber_duck,고무오리
+desc_weapon_honk,주변을 꽥! 팍 밀쳐냄 (쿨타임)
+desc_weapon_rubber_duck,조준점에 고무오리를 던짐: 삑삑 일반 몹을 모았다가 펑 (쿨타임)
+ui_card_weapon_cooldown,쿨타임
 fmt_weapon_dual,쌍 {0}
 name_weapontype_railgun,레일건
 name_weapon_railgun,레일건

@@ -1,0 +1,5 @@
+{
+  "kind": "throw",
+  "description": "난전 3번 칸 고무오리(M-27 계획 13.1): 조준점에 고무오리를 던짐(throwables.csv rubber_duck)",
+  "throwable": "rubber_duck"
+}

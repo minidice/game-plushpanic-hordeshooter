@@ -67,9 +67,15 @@
       "awm",
       "alabong",
       "mortar",
-      "railgun"
+      "railgun",
+      "honk",
+      "rubber_duck"
     ],
     "special_cooldown_s": 25,
+    "special_cooldowns": {
+      "honk": 8,
+      "rubber_duck": 14
+    },
     "xp_common": 1,
     "xp_named": 10,
     "xp_boss": 40,

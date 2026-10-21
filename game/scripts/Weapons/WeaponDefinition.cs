@@ -35,6 +35,10 @@ public enum FireMode
     Projectile,
     /// <summary>Lobbed shell that lands on the aim point after a delay, over walls (trait lob).</summary>
     Lob,
+    /// <summary>A blast around the shooter that throws monsters back (trait shout: the honk, plan 13.1).</summary>
+    Shout,
+    /// <summary>Throws a throwable at the aim point instead of a bullet (trait throw: the rubber duck, plan 13.1).</summary>
+    Throw,
 }
 
 /// <summary>
@@ -132,6 +136,12 @@ public sealed class WeaponDefinition
     public float ExplosionSelfShare { get; set; } = .2f;
     /// <summary>Knockback power at the center of the explosion (falls off with distance).</summary>
     public float ExplosionKnockback { get; set; } = 150;
+    /// <summary>Shout weapons: the ring around the shooter, its damage and its push at the centre (trait shout).</summary>
+    public float ShoutRadius { get; set; } = 4;
+    public float ShoutDamage { get; set; }
+    public float ShoutPower { get; set; } = 150;
+    /// <summary>Throw weapons: the throwables.csv id each shot throws (trait throw).</summary>
+    public string ThrowableId { get; set; } = "";
     /// <summary>What this weapon becomes when the same one is picked up again (trait dual_wield).</summary>
     public WeaponDefinition? DualVariant { get; set; }
     public bool Dual { get; set; }

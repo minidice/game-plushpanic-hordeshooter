@@ -100,11 +100,48 @@ public partial class WeaponController : Node
             case FireMode.Lob:
                 if (ends.Count > 0) MortarShell.Fire(Stage, from, ends[0], def);
                 return;
+            case FireMode.Shout:
+                ShoutLook(def);
+                return;
+            case FireMode.Throw:
+                // The thrown item arrives as its own throw event.
+                return;
         }
         if (def.ChargeTime > 0) foreach (var end in ends) Stage.Effects.Beam(from, end, RailColor);
         else foreach (var end in ends) Stage.Effects.Tracer(from, end, false);
         _flashTime = .045f;
         _muzzleIndex++;
+    }
+
+    /// <summary>
+    /// The honk (plan 13.1): every monster inside the ring around the shooter is thrown back and takes a little damage,
+    /// stronger near the centre. The hit names its shooter, so card effects follow it.
+    /// </summary>
+    private void Shout(WeaponDefinition def)
+    {
+        ShoutLook(def);
+        var center = _player.GlobalPosition;
+        foreach (var enemy in Stage.Enemies.ToList())
+        {
+            if (!IsInstanceValid(enemy) || enemy.IsDead) continue;
+            var away = enemy.GlobalPosition - center;
+            away.Y = 0;
+            float d = away.Length();
+            if (d > def.ShoutRadius + enemy.Radius) continue;
+            float falloff = 1 - Mathf.Clamp(d / Mathf.Max(.1f, def.ShoutRadius), 0, 1) * .6f;
+            var dir = d > .01f ? away / d : AimDirection();
+            enemy.TakeHit(new HitInfo(def.ShoutDamage * _player.DamageMultiplier * falloff, dir, enemy.GlobalPosition + Vector3.Up, false,
+                def.ShoutPower * falloff, _player, def.TypeId));
+        }
+    }
+
+    /// <summary>The honk's ring and its words (also what a client shows for someone else's honk).</summary>
+    private void ShoutLook(WeaponDefinition def)
+    {
+        var at = _player.GlobalPosition;
+        Stage.Effects.Puff(at + Vector3.Up * .6f, def.ShoutRadius, new Color("f3f4f1"));
+        Stage.Effects.FloatingText(at + Vector3.Up * 2.8f, Loc.Text("fx_card_honk"), new Color("f3f4f1"));
+        Stage.Cam.AddShake(.15f);
     }
 
     /// <summary>Rebuild the in-hand model if the active weapon changed.</summary>
@@ -387,6 +424,19 @@ public partial class WeaponController : Node
                 var target = LobTarget(def);
                 MortarShell.Fire(Stage, MuzzlePosition, target, def);
                 Stage.Net?.OnShot(_player, def, MuzzlePosition, new[] { target }, _player.AimPoint);
+                break;
+            case FireMode.Shout:
+                Shout(def);
+                Stage.Net?.OnShot(_player, def, MuzzlePosition, System.Array.Empty<Vector3>(), _player.AimPoint);
+                break;
+            case FireMode.Throw:
+                if (ArmoryCatalog.Throwables.TryGetValue(def.ThrowableId, out var throwable))
+                {
+                    var from = _player.GlobalPosition + Vector3.Up * 1.2f;
+                    ThrownItem.Throw(Stage, throwable, from, _player.AimPoint, _player);
+                    Stage.Net?.OnThrow(_player, throwable, from, _player.AimPoint);
+                }
+                Stage.Net?.OnShot(_player, def, MuzzlePosition, System.Array.Empty<Vector3>(), _player.AimPoint);
                 break;
             default:
                 bool anyCrit = false;
