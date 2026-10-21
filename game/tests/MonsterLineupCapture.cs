@@ -85,6 +85,34 @@ public partial class MonsterLineupCapture : Node
         balloon.Pop();
         await Frames(30);
         await Shot("balloon-popped");
+
+        // Onslaught's bosses side by side at their game size (bosses/<id>.json scale): the final one and the middle ones.
+        foreach (var e in stage.AllEnemies.ToList()) e.QueueFree();
+        await Frames(5);
+        var bossIds = new[] { "boss", "boss_bull_giant", "boss_balloon_king", "boss_spitter_mother" };
+        var bosses = bossIds.Select((id, i) => stage.Spawn(MonsterDatabase.Get(id), new Vector3(-7.5f + i * 5, 0, -1), awake: false)).ToList();
+        await Frames(10);
+        foreach (var e in bosses) { e.Awake = true; e.SetPhysicsProcess(false); e.Rig.ShowAs(VisionSystem.Visibility.Visible); }
+        stage.Player.TeleportTo(new Vector3(0, 0, 8));
+        stage.Cam.Close = false;
+        stage.Cam.SnapTo(new Vector3(0, 1.5f, -1));
+        foreach (var (facing, name) in new[] { (new Vector3(.3f, 0, 1), "bosses-front"), (Vector3.Right, "bosses-side") })
+        {
+            foreach (var e in bosses) e.Rig.Face(facing);
+            ulong until = Time.GetTicksMsec() + 1500;
+            while (Time.GetTicksMsec() < until) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            await Shot(name);
+        }
+        // Each middle boss up close, turned toward the camera.
+        stage.Cam.Close = true;
+        foreach (var e in bosses.Skip(1))
+        {
+            e.Rig.Face(new Vector3(.3f, 0, 1));
+            stage.Cam.SnapTo(e.GlobalPosition + new Vector3(0, 1.2f, .5f));
+            ulong until = Time.GetTicksMsec() + 800;
+            while (Time.GetTicksMsec() < until) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            await Shot(e.Monster.Id + "-close");
+        }
         GetTree().Quit();
     }
 }

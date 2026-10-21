@@ -16,7 +16,9 @@ ENEMIES=['humanoid','crawler','tether','leaper','spitter']
 BOSS_ONLY='--boss-only' in sys.argv
 NAMED_ONLY='--named-only' in sys.argv
 NAMED=['bull','balloon']
-SELECTED=['boss'] if BOSS_ONLY else NAMED if NAMED_ONLY else PLAYERS if '--players-only' in sys.argv else ENEMIES if '--enemies-only' in sys.argv else PLAYERS+ENEMIES
+MIDBOSSES=['boss_balloon_king','boss_spitter_mother']
+MIDBOSS_ONLY='--midboss-only' in sys.argv
+SELECTED=['boss'] if BOSS_ONLY else MIDBOSSES if MIDBOSS_ONLY else NAMED if NAMED_ONLY else PLAYERS if '--players-only' in sys.argv else ENEMIES if '--enemies-only' in sys.argv else PLAYERS+ENEMIES
 
 def clear():
     bpy.ops.object.select_all(action='SELECT')
@@ -47,12 +49,35 @@ def named_dimensions(kind, head_only):
     ys=[point.y for point in points]
     return {'width':max(xs)-min(xs),'depth':max(ys)-min(ys)}
 
+
+def midboss_dimensions(kind, head_only):
+    points=[]
+    limb_pivots={'boss_leftArm','boss_rightArm',f'{kind}_leftLeg',f'{kind}_rightLeg','LeftFoot','RightFoot'}
+    core_body={'boss_balloon_king':'round_plush_body','boss_spitter_mother':'pear_shaped_body'}[kind]
+    for obj in bpy.context.scene.objects:
+        if obj.type!='MESH': continue
+        ancestors=[]
+        node=obj
+        while node:
+            ancestors.append(node.name)
+            node=node.parent
+        in_head='Head' in ancestors
+        is_limb=any(name in ancestors for name in limb_pivots)
+        if head_only != in_head or (not head_only and (is_limb or 'Deform' not in ancestors or obj.name!=core_body)): continue
+        for vertex in obj.data.vertices:
+            points.append(obj.matrix_world @ vertex.co)
+    assert points, f'{kind}: missing {"Head" if head_only else "body"} geometry'
+    # Blender imports glTF with model width on X and forward depth on Y.
+    xs=[point.x for point in points]
+    ys=[point.y for point in points]
+    return {'width':max(xs)-min(xs),'depth':max(ys)-min(ys)}
+
 reports=[]
 for kind in SELECTED:
     clear()
     bpy.ops.import_scene.gltf(filepath=str(OUT/f'{kind}-source.glb'))
     player=kind in PLAYERS
-    if not player and kind not in ['boss']+NAMED:
+    if not player and kind not in ['boss']+NAMED+MIDBOSSES:
         # Preserve authored limbs instead of baking them into Deform and adding duplicate arms at runtime.
         deform=bpy.data.objects['Deform']
         low=kind=='crawler';leap=kind=='leaper';fat=kind=='spitter'
@@ -69,13 +94,15 @@ for kind in SELECTED:
                 assert all(abs(obj.matrix_world[r][c]-world[r][c])<1e-6 for r in range(4) for c in range(4))
     keep={f'{kind}_{p}' for p in ['root','body','deform','torso','head','helmet','beret','goggles','headset','vest','vestPadded','pack','weapon','tail','beak','leftFoot','rightFoot','leftArm','rightArm','leftEar','rightEar']}
     keep.update({'Muzzle','Body','Deform','Head','LeftFoot','RightFoot','Weapon'})
+    if kind in MIDBOSSES:
+        keep.update({f'{kind}_leftLeg',f'{kind}_rightLeg','boss_leftArm','boss_rightArm'})
     if kind in NAMED:
         keep.update({f'{kind}_leftArm',f'{kind}_rightArm',f'{kind}_leftLeg',f'{kind}_rightLeg'})
         if kind=='bull': keep.add('bull_tail')
     keep.update(f'{kind}_{p}' for p in ['leftEye','rightEye','leftBrow','rightBrow','snout','crestShort','crestSwept'])
     groups={}
     before=0
-    dimensions={'body':named_dimensions(kind,False),'head':named_dimensions(kind,True)} if kind in NAMED else None
+    dimensions=({'body':named_dimensions(kind,False),'head':named_dimensions(kind,True)} if kind in NAMED else {'body':midboss_dimensions(kind,False),'head':midboss_dimensions(kind,True)} if kind in MIDBOSSES else None)
     for obj in list(bpy.context.scene.objects):
         if obj.type!='MESH': continue
         before+=triangles(obj)
@@ -89,7 +116,7 @@ for kind in SELECTED:
             bpy.ops.object.modifier_apply(modifier=mod.name)
         elif not player and len(obj.data.polygons)>60:
             mod=obj.modifiers.new('Crowd budget','DECIMATE')
-            mod.ratio=(.25 if kind=='bull' else .32) if kind in NAMED else .38
+            mod.ratio=(.25 if kind=='bull' else .32) if kind in NAMED else .8 if kind=='boss_balloon_king' and obj.name=='great_balloon_head' else (.44 if kind=='boss_balloon_king' else .5) if kind in MIDBOSSES else .38
             bpy.ops.object.modifier_apply(modifier=mod.name)
         anchor=obj.parent
         while anchor and anchor.name not in keep: anchor=anchor.parent
@@ -115,16 +142,16 @@ for kind in SELECTED:
     path=target/f'{kind}.glb'
     bpy.ops.export_scene.gltf(filepath=str(path),export_format='GLB',export_animations=False,export_extras=True)
     report={'id':kind,'source_triangles':before,'triangles':sum(triangles(o) for o in meshes),'meshes':len(meshes),'materials':sorted({m.name for o in meshes for m in o.data.materials if m}),'bytes':path.stat().st_size,'nodes':[o.name for o in bpy.context.scene.objects],'forward':'+Z','notes':'No bones. Runtime object pivots. Beret included for runtime visibility. Source vertex colors preserved.'}
-    if kind in NAMED:
+    if kind in NAMED+MIDBOSSES:
         report['body_dimensions']=dimensions['body']
         report['head_dimensions']=dimensions['head']
-        report['notes']='No bones. Named arm, leg, foot and tail pivots retained for runtime object animation.'
+        report['notes']='No bones. Named arm, leg, foot and tail pivots retained for runtime object animation.' if kind in NAMED else 'No bones. Boss arm, leg and foot pivots retained for runtime object animation.'
     (target/f'{kind}-report.json').write_text(json.dumps(report,indent=2),encoding='utf8')
     reports.append(report)
     print('ROSTER_ASSET '+json.dumps({k:v for k,v in report.items() if k not in ['nodes','materials']}))
     assert report['triangles'] < (30000 if player else 4500),report
     if player: assert all(any(m.startswith(f'custom_{channel}_') for m in report['materials']) for channel in ['body','beak','hat','vest','pack','wing','tail','feet','eyes','hair'])
-    elif kind!='boss':
+    elif kind!='boss' and kind not in MIDBOSSES:
         if kind in NAMED:
             budget=3000 if kind=='bull' else 2500
             assert report['triangles']<budget,report
@@ -138,12 +165,21 @@ for kind in SELECTED:
             if kind=='bull': assert 'bull_tail_mesh' in report['nodes'],report
         else:
             assert all(f'{kind}_{side}Arm' in report['nodes'] and f'{kind}_{side}Arm_mesh' in report['nodes'] for side in ['left','right'])
+    elif kind in MIDBOSSES:
+        assert report['triangles'] < 4000,report
+        required=[f'{kind}_root','Body','Deform','Head','Muzzle','Weapon','boss_leftArm','boss_rightArm',f'{kind}_leftLeg',f'{kind}_rightLeg','LeftFoot','RightFoot','boss_leftArm_mesh','boss_rightArm_mesh',f'{kind}_leftLeg_mesh',f'{kind}_rightLeg_mesh','LeftFoot_mesh','RightFoot_mesh']
+        assert all(name in report['nodes'] for name in required),(kind,[name for name in required if name not in report['nodes']])
+        body=dimensions['body'];head=dimensions['head']
+        assert body['depth']>=body['width']*.8,(kind,body)
+        assert head['depth']>=head['width']*.85,(kind,head)
+        # The balloon king keeps cream and ink materials of its own for the face, fur and glint.
+        assert len(report['materials'])<=(6 if kind=='boss_balloon_king' else 5),(kind,report['materials'])
     else:
         assert report['triangles'] < 4500,report
         assert all(name in report['nodes'] for name in ['boss_leftArm','boss_rightArm','boss_leftArm_mesh','boss_rightArm_mesh']),report
 
 if '--no-preview' in sys.argv:
-    contact='boss-contact' if BOSS_ONLY else 'named-contact' if NAMED_ONLY else 'players-contact' if '--players-only' in sys.argv else 'enemies-contact' if '--enemies-only' in sys.argv else 'roster-contact'
+    contact='boss-contact' if BOSS_ONLY else 'midboss-contact' if MIDBOSS_ONLY else 'named-contact' if NAMED_ONLY else 'players-contact' if '--players-only' in sys.argv else 'enemies-contact' if '--enemies-only' in sys.argv else 'roster-contact'
     (OUT/f'{contact}-summary.json').write_text(json.dumps(reports,indent=2),encoding='utf8')
     sys.exit(0)
 
@@ -158,14 +194,14 @@ def aim(obj,target):obj.rotation_euler=(Vector(target)-obj.location).to_track_qu
 clear()
 floor=material('Studio floor',(.045,.06,.075))
 label=material('Labels',(.8,.86,.9))
-for row,kinds in enumerate([PLAYERS,ENEMIES,NAMED] if NAMED_ONLY else [PLAYERS,ENEMIES]):
+for row,kinds in enumerate([MIDBOSSES] if MIDBOSS_ONLY else [PLAYERS,ENEMIES,NAMED] if NAMED_ONLY else [PLAYERS,ENEMIES]):
     for i,kind in enumerate(kinds):
         if kind not in SELECTED: continue
-        path=ROOT/'game'/'assets'/('characters' if row==0 else 'enemies')/kind/f'{kind}.glb'
+        path=ROOT/'game'/'assets'/('characters' if kind in PLAYERS else 'enemies')/kind/f'{kind}.glb'
         bpy.ops.import_scene.gltf(filepath=str(path))
         root=bpy.data.objects.get(f'{kind}_root')
         root.location=( (i-(len(kinds)-1)/2)*2.3, 2.0-row*3.7, 0)
-        if row==0:
+        if kind in PLAYERS:
             for suffix in ['beret','weapon_mesh','vestPadded','headset','crestShort','crestSwept']:
                 o=bpy.data.objects.get(f'{kind}_{suffix}')
                 if o:
@@ -187,7 +223,7 @@ scene.world.color=(.23,.23,.23)
 for name,pos,power,size in [('Key',(-5,-5,10),1600,7),('Fill',(6,-2,6),1000,6),('Rim',(1,6,9),1800,5)]:
     bpy.ops.object.light_add(type='AREA',location=pos);o=bpy.context.object;o.name=name;o.data.energy=power;o.data.shape='DISK';o.data.size=size;aim(o,(0,0,1))
 scene.view_settings.view_transform='AgX'
-contact='boss-contact' if BOSS_ONLY else 'players-contact' if '--players-only' in sys.argv else 'enemies-contact' if '--enemies-only' in sys.argv else 'roster-contact'
+contact='boss-contact' if BOSS_ONLY else 'midboss-contact' if MIDBOSS_ONLY else 'players-contact' if '--players-only' in sys.argv else 'enemies-contact' if '--enemies-only' in sys.argv else 'roster-contact'
 if '--players-only' in sys.argv:
     camera.location=(2,-13,9);aim(camera,(0,2,1));camera.data.ortho_scale=10
     scene.render.resolution_y=700

@@ -1,6 +1,6 @@
 {
   "description": "난전 중간 보스 '거대 황소': 네임드 황소 모델(bull.glb)을 키운 임시 보스. 돌진 위주, 66%부터 뛰어올라 내려찍기, 33%부터 황소 무리 소환 (doc/mode-monster-tables.md 3장).",
-  "scale": 2.3,
+  "scale": 1.6,
   "phases": [
     {"from_hp_pct": 100, "skills": ["charge"], "speed": 1.0, "cooldown_scale": 1.0},
     {"from_hp_pct": 66, "skills": ["charge", "slam"], "speed": 1.1, "cooldown_scale": 0.85, "notice": "msg_boss_bull_giant_2", "pose": "rear_roar", "pose_s": 1.0},

@@ -18,6 +18,7 @@
 - [x] 카드 창 1차(2026-10-21, M-27 · T-22, 실험실에서): 하데스식 세로 3장, 받은 순서 · 받을 때 정해진 3장 유지, 무장 1 · 2 · 3번 칸 카드(닫기 없음), 레벨업 카드 ✕ · F로 미루기 + 배지 ×N, 열려 있는 동안 걷기 · 도약만
 - [x] 정식 난전 카드 흐름 1차(2026-10-21, M-27): 진열대 · 강화 진열대 제거, 시작 때 1 · 2 · 3번 칸 무장 카드, 팀 공유 경험치 → 레벨업 일반 카드(실험실 카드 + 반복 카드 피해 · 회복 · 구급상자), 보스 기준 4구간(3 · 4 · 5 · 6분, 구간 보스 체력 35~100%), 중간 보스 = 특별 카드, 최종 보스 = 클리어, Lv · 경험치 막대, 멀티 동기화(방장 판정, 카드 번호) ([규격](mode-monster-tables.md) 5장)
 - [x] 20분 판 내용 1차(2026-10-21, M-27 · Q-24): 모드 표를 구간 시계로(보스전 동안 멈춤), 4구간 표(일반 체력 0.6 → 1.25, 구간마다 named 증가), 구간 보스 무작위(`mid_bosses` · `final_bosses`, 겹치지 않게), 임시 중간 보스 3종(거대 황소 · 풍선 대왕 · 토사물 어미), 보스 소환 몬스터 지정 ([규격](mode-monster-tables.md) 2 · 3 · 5장)
+- [x] 난전 중간 보스 전용 모델(2026-10-21, A-17): 풍선 대왕(금관 · 망토 · 풍선 다발) · 토사물 어미(뒤쪽 후드 · 입 깔때기 · 등 주머니), Codex 2회 + Claude 마무리, 보스 크기 정리(중간 약 3 m < 최종 약 3.2 m), `MonsterLineupCapture`에 보스 줄 · 근접 렌더 ([지시문](model-briefs/midbosses-balloon-spitter.md))
 - [ ] 난전 개편(M-27) 나머지: 소환수(드론 · 부사수 · 펫), 레벨업 일반 카드 · 보스 특별 카드, 총 분류별 풀, 하데스식 카드 창 · + 아이콘 · 버프 줄 ([계획](onslaught-cards-plan.md))
 - [ ] 거점·난전 다음: 팀원 직접 교환·큰 배낭·탈출, 전용 맵·전용 보스 모델, 멀티에서 보스 연출 동기화(I-77), 수치 플레이 조정
 - [x] 멀티 메뉴: 방 만들기, 주소로 참가(2인 테스트). 방 코드·공개방은 준비 중
@@ -155,6 +156,11 @@
 
 - C# 빌드 경고·오류 0. `ModeCheck` 81개(창 모드, 화면 밖 화살표 포함)·79개(헤드리스), `MapCheck` 25, `WeaponHandlingCheck` 30, `Integration` 148, `NetSyncCheck` 28, `NetCodecCheck` 11, `LobbyCheck` 31, `MenuCheck` 39, `SquadCheck` 50, `SpawnCheck` 41, `CombatPacingCheck` 44, `ReloadPoseCheck` 279, `EnemyAttackCheck` 79, `VisionTierCheck` 23 통과.
 - 렌더: `output/map-open-field.png`·`mode-survivor-rack.png`(들판·진열대·바닥 글씨·무장 목표), `mode-survivor-arrow.png`(화면 밖 팀원 화살표, `∞` 탄약, "난전 · 들판"). 실제 손으로 하는 난이도·들판 성능은 미확인(I-26·I-80). 2인 멀티로 들판·진열대를 해 보지는 않음.
+
+### 이번 변경 확인 기록 — 2026-10-21 (중간 보스 전용 모델)
+
+- 최적화(Blender `--midboss-only --no-preview`) 단언 통과: 풍선 대왕 삼각형 3,752 · 재질 6, 토사물 어미 3,352 · 재질 5, 노드 · 두께 조건. C# 빌드 경고 · 오류 0. `ModeCheck` 117(헤드리스) · 121(창 모드), `MapCheck` 24, `OnslaughtNetCheck` 16, `CardLabCheck` 68, `HitFlashCheck`, `EnemyAttackCheck` 79, `EnemyExpansion` 60, `CorpseTierCheck` 36, `CorpseReactionCheck` 29, `SpawnCheck` 41, `NetSyncCheck` 28, `NetCodecCheck` 12, `LobbyCheck` 31, `MenuCheck` 39, `SquadCheck` 50, `InventoryCheck` 41, `WeaponHandlingCheck` 36, `CombatPacingCheck` 44, `Integration` 148(적 외형 목록 검사를 11개로 갱신) 통과.
+- 렌더: `output/lineup-bosses-front/side.png`, `lineup-boss_balloon_king-close.png` · `lineup-boss_spitter_mother-close.png` · `lineup-boss_bull_giant-close.png`(`MonsterLineupCapture`), 게임 화면 `mode-survivor-boss_balloon_king.png` · `mode-survivor-boss_spitter_mother.png`(`ModeCheck` 창 모드). 이전 모습은 로컬 `output/before-midboss/`. 손으로 싸워 본 보스 체감은 미확인(I-85).
 
 ### 이번 변경 확인 기록 — 2026-10-21 (20분 판 내용 1차)
 

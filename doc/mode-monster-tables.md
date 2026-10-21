@@ -13,7 +13,7 @@
 |---|---|---|
 | `common` | 일반 시체 정책(100개 목표, 밀리고 휴면, T-14·T-15) | 감염체, 인간형·기어오는 감염체, 야생 라쿤, 무장 랫서판다 |
 | `named` | 고정 시체, 별도 수명(T-16) | 풍선·황소·낚아채는·덮치는·토사물 감염체, 랫서판다 정예병 |
-| `boss` | **`named`와 같음** (`MonsterDefinition.KeepsCorpse`) | 거대 두목 황소(`boss`, 난전 최종 보스), 난전 중간 보스 거대 황소 · 풍선 대왕 · 토사물 어미(`boss_bull_giant` · `boss_balloon_king` · `boss_spitter_mother`, 2026-10-21 기존 모델을 키운 임시 보스) |
+| `boss` | **`named`와 같음** (`MonsterDefinition.KeepsCorpse`) | 거대 두목 황소(`boss`, 난전 최종 보스), 난전 중간 보스 거대 황소 · 풍선 대왕 · 토사물 어미(`boss_bull_giant` · `boss_balloon_king` · `boss_spitter_mother`, 2026-10-21. 풍선 대왕 · 토사물 어미는 전용 모델) |
 
 ## 2. 모드별 몬스터 테이블 (M-24)
 
@@ -64,13 +64,13 @@
 
 **몸동작 `pose`** (2026-10-21, `CharacterRig.ApplyBossPose`, 새 보스도 이름만 적으면 씀): `crouch_leap`(웅크려 두 팔 올림 → 뛰어오름), `land`(착지에 납작 · 팔 내려침, 내려찍기 뒤 자동), `rear_roar`(뒤로 젖혀 팔 벌리고 포효 · 몸 부풂), `sweep_aim`(몸통을 좌우로 비틀며 조준), `recoil`(뒤로 밀림, 탄막 뒤 · 벽에 박은 뒤 자동), `shake_off`(몸 털기), `paw_ground`(앞발 긁기), `gallop`(크게 출렁이며 달림 · 먼지). 내려찍기 착지에는 먼지 고리 · 화면 흔들림 · 오프라인에서만 0.07초 멈춤(히트스톱). 마지막 페이즈는 코에서 김이 남.
 
-**난전 중간 보스 (2026-10-21, 임시)**: 새 모델을 만들기 전에 기존 네임드 모델을 키워 구간마다 다른 보스가 나오게 했다. 모두 체력 12000(`monsters.csv`)에 구간 비율(`segment_boss_hp`)을 곱하고, 돌진 특성(`boss_charge`)은 데이터 검사 때문에 갖지만 `charge` 스킬이 있는 페이즈에서만 돌진한다.
+**난전 중간 보스 (2026-10-21)**: 처음에는 기존 네임드 모델을 키운 임시 외형이었고, 같은 날 풍선 대왕 · 토사물 어미는 Codex 전용 모델로 바꿨다([지시문](model-briefs/midbosses-balloon-spitter.md)). 거대 황소는 네임드 황소 모델을 키운 그대로. 모두 체력 12000(`monsters.csv`)에 구간 비율(`segment_boss_hp`)을 곱하고, 돌진 특성(`boss_charge`)은 데이터 검사 때문에 갖지만 `charge` 스킬이 있는 페이즈에서만 돌진한다.
 
 | id | 이름 | 외형 · `scale` | 100% → 66% → 33% |
 |---|---|---|---|
-| `boss_bull_giant` | 거대 황소 | `bull.glb` × 2.3 | 돌진 → + 뛰어 내려찍기 → + 황소 2마리 소환(`monster: bull`), 빨라짐 |
-| `boss_balloon_king` | 풍선 대왕 | `balloon.glb` × 2.6, 이동 2.4 m/s | 넓은 부채꼴 9발 · 풍선 3개 소환(`monster: balloon`) → + 통통 튀어 내려찍기(8 m · 높이 3.5 m) → 탄막 대기 0.6배 |
-| `boss_spitter_mother` | 토사물 어미 | 토사물 감염체 × 2.2 | 굵은 탄 5발 부채꼴 · 제자리 내려찍기 → + 테마 일반 6마리 소환 → 빨라짐 |
+| `boss_bull_giant` | 거대 황소 | `bull.glb` × 1.6 | 돌진 → + 뛰어 내려찍기 → + 황소 2마리 소환(`monster: bull`), 빨라짐 |
+| `boss_balloon_king` | 풍선 대왕 | 전용 `boss_balloon_king.glb`(금관 · 빨간 망토 · 풍선 다발) × 1.5, 이동 2.4 m/s | 넓은 부채꼴 9발 · 풍선 3개 소환(`monster: balloon`) → + 통통 튀어 내려찍기(8 m · 높이 3.5 m) → 탄막 대기 0.6배 |
+| `boss_spitter_mother` | 토사물 어미 | 전용 `boss_spitter_mother.glb`(뒤쪽 후드 · 입 깔때기 · 등 부하 주머니) × 1.5 | 굵은 탄 5발 부채꼴 · 제자리 내려찍기 → + 테마 일반 6마리 소환 → 빨라짐 |
 
 **지금 값 (`boss.json`)**: 체력 12000(`monsters.csv`, 2~3분 전투 목표의 제안값).
 - 1페이즈(100%): 돌진(앞발 긁기 → 출렁이며 달림) · 내려찍기(7 m 안이면 최대 6 m 뛰어 2.4 m 높이로, 준비 1.25초).

@@ -1,0 +1,47 @@
+{
+  "id": "boss_balloon_king",
+  "source_triangles": 7728,
+  "triangles": 3752,
+  "meshes": 8,
+  "materials": [
+    "king_blue_balloon",
+    "king_body",
+    "king_cape",
+    "king_cream",
+    "king_gold",
+    "king_ink"
+  ],
+  "bytes": 124916,
+  "nodes": [
+    "boss_balloon_king_root",
+    "Body",
+    "Deform",
+    "Deform_mesh",
+    "boss_leftArm",
+    "boss_leftArm_mesh",
+    "boss_balloon_king_leftLeg",
+    "boss_balloon_king_leftLeg_mesh",
+    "LeftFoot",
+    "LeftFoot_mesh",
+    "boss_rightArm",
+    "boss_rightArm_mesh",
+    "boss_balloon_king_rightLeg",
+    "boss_balloon_king_rightLeg_mesh",
+    "RightFoot",
+    "RightFoot_mesh",
+    "Head",
+    "Head_mesh",
+    "Muzzle",
+    "Weapon"
+  ],
+  "forward": "+Z",
+  "notes": "No bones. Boss arm, leg and foot pivots retained for runtime object animation.",
+  "body_dimensions": {
+    "width": 0.8189393877983093,
+    "depth": 0.7417692542076111
+  },
+  "head_dimensions": {
+    "width": 1.3200000524520874,
+    "depth": 1.3784636855125427
+  }
+}

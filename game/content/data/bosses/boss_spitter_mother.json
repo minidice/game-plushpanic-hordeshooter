@@ -1,6 +1,6 @@
 {
-  "description": "난전 중간 보스 '토사물 어미': 토사물 감염체 모델을 키운 임시 보스. 굵은 탄 다섯 발 부채꼴과 제자리 내려찍기, 66%부터 테마 일반 몹 소환, 33%부터 빨라짐 (doc/mode-monster-tables.md 3장).",
-  "scale": 2.2,
+  "description": "난전 중간 보스 '토사물 어미': 전용 모델(boss_spitter_mother.glb, 2026-10-21 Codex, doc/model-briefs/midbosses-balloon-spitter.md). 굵은 탄 다섯 발 부채꼴과 제자리 내려찍기, 66%부터 테마 일반 몹 소환, 33%부터 빨라짐 (doc/mode-monster-tables.md 3장).",
+  "scale": 1.5,
   "phases": [
     {"from_hp_pct": 100, "skills": ["fan_shot", "slam"], "speed": 1.0, "cooldown_scale": 1.0},
     {"from_hp_pct": 66, "skills": ["fan_shot", "slam", "summon"], "speed": 1.1, "cooldown_scale": 0.85, "notice": "msg_boss_spitter_mother_2", "pose": "rear_roar", "pose_s": 1.0},

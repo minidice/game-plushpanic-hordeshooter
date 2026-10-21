@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CharacterDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/Characters/CharacterDefinition.cs" id="1_def"]
+[ext_resource type="PackedScene" path="res://assets/enemies/boss_spitter_mother/boss_spitter_mother.glb" id="2_model"]
+
+[resource]
+script = ExtResource("1_def")
+Id = "boss_spitter_mother"
+DisplayName = "name_monster_boss_spitter_mother"
+Description = "Onslaught middle boss Spew Mother (doc/model-briefs/midbosses-balloon-spitter.md). Authored by Codex, runtime object pivots. Stats in monsters.csv; the game scales it by bosses/boss_spitter_mother.json."
+Role = 1
+Model = ExtResource("2_model")
+ModelFacesPositiveZ = true
+BodyNode = "Body"
+DeformNode = "Deform"
+HeadNode = "Head"
+LeftFootNode = "LeftFoot"
+RightFootNode = "RightFoot"
+WeaponNode = "Weapon"
+MuzzleNode = "Muzzle"
+ColliderRadius = 0.7
+ColliderHeight = 1.9
+MoveSpeed = 2.8
+MaxHealth = 12000
+StepRate = 8.0
+WaddleDegrees = 9.0
+StuffingColor = Color(0.78, 0.82, 0.5, 1)

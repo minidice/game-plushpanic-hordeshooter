@@ -443,7 +443,7 @@ public partial class ModeCheck : Node
             await Until(() => rules.BossArrived && rules.Boss != null, $"boss {rules.Segment + 1} arrives", 4);
             boss = rules.Boss!;
             met.Add(boss.Monster.Id);
-            Check(boss.Definition.ColliderRadius > CharacterCatalog.Enemy(boss.Monster.LookId).ColliderRadius * 1.8f && rules.BarLabel.Contains(boss.Monster.DisplayName) &&
+            Check(boss.Definition.ColliderRadius > CharacterCatalog.Enemy(boss.Monster.LookId).ColliderRadius * 1.4f && rules.BarLabel.Contains(boss.Monster.DisplayName) &&
                   stage.Notice == Loc.Format("fmt_survivor_midboss", boss.Monster.DisplayName),
                 $"stretch {rules.Segment + 1}: {boss.Monster.DisplayName}, its look scaled up, named on the bar and in the notice");
             if (boss.Monster.Id == "boss_balloon_king")

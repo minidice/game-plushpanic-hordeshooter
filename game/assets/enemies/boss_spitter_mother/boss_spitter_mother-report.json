@@ -1,0 +1,46 @@
+{
+  "id": "boss_spitter_mother",
+  "source_triangles": 6704,
+  "triangles": 3352,
+  "meshes": 8,
+  "materials": [
+    "mother_cream",
+    "mother_hood",
+    "mother_ink",
+    "mother_minion_pouches",
+    "mother_skin"
+  ],
+  "bytes": 114828,
+  "nodes": [
+    "boss_spitter_mother_root",
+    "Body",
+    "Deform",
+    "Deform_mesh",
+    "boss_leftArm",
+    "boss_leftArm_mesh",
+    "boss_spitter_mother_leftLeg",
+    "boss_spitter_mother_leftLeg_mesh",
+    "LeftFoot",
+    "LeftFoot_mesh",
+    "boss_rightArm",
+    "boss_rightArm_mesh",
+    "boss_spitter_mother_rightLeg",
+    "boss_spitter_mother_rightLeg_mesh",
+    "RightFoot",
+    "RightFoot_mesh",
+    "Head",
+    "Head_mesh",
+    "Muzzle",
+    "Weapon"
+  ],
+  "forward": "+Z",
+  "notes": "No bones. Boss arm, leg and foot pivots retained for runtime object animation.",
+  "body_dimensions": {
+    "width": 1.4038962125778198,
+    "depth": 1.2239192724227905
+  },
+  "head_dimensions": {
+    "width": 1.2649567127227783,
+    "depth": 1.718767762184143
+  }
+}

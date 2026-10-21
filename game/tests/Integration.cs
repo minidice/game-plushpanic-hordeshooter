@@ -56,7 +56,8 @@ public partial class Integration : Node
         var players = CharacterCatalog.LoadAll(CharacterCatalog.PlayerDir);
         Check(players.Count >= 3 && players.Any(p => p.Id == "goose") && players.Any(p => p.Model == null), "catalog lists GLB and placeholder player characters");
         var enemies = CharacterCatalog.LoadAll(CharacterCatalog.EnemyDir).Select(e => e.Id).ToHashSet();
-        Check(enemies.SetEquals(new[] { "plush", "balloon", "bull", "humanoid", "crawler", "tether", "leaper", "spitter", "boss" }), "catalog lists all nine enemy model definitions (boss added 2026-10-21)");
+        Check(enemies.SetEquals(new[] { "plush", "balloon", "bull", "humanoid", "crawler", "tether", "leaper", "spitter", "boss", "boss_balloon_king", "boss_spitter_mother" }),
+            "catalog lists all eleven enemy model definitions (boss and the two Onslaught middle bosses added 2026-10-21)");
 
         var goose = CharacterRig.Create(CharacterCatalog.Player("goose"));
         Check(!goose.IsPlaceholder && goose.Muzzle.Name == "Muzzle" && goose.Head != null && goose.Body.Name == "goose_body", "GLB rig resolves named parts");

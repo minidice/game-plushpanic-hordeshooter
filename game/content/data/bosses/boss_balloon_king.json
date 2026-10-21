@@ -1,6 +1,6 @@
 {
-  "description": "난전 중간 보스 '풍선 대왕': 풍선 모델(balloon.glb)을 키운 임시 보스. 돌진 없이 느리게 다가오며 넓은 부채꼴 탄막과 풍선 소환, 66%부터 통통 튀어 내려찍기 (doc/mode-monster-tables.md 3장).",
-  "scale": 2.6,
+  "description": "난전 중간 보스 '풍선 대왕': 전용 모델(boss_balloon_king.glb, 2026-10-21 Codex, doc/model-briefs/midbosses-balloon-spitter.md). 돌진 없이 느리게 다가오며 넓은 부채꼴 탄막과 풍선 소환, 66%부터 통통 튀어 내려찍기 (doc/mode-monster-tables.md 3장).",
+  "scale": 1.5,
   "phases": [
     {"from_hp_pct": 100, "skills": ["fan_shot", "summon"], "speed": 1.0, "cooldown_scale": 1.0},
     {"from_hp_pct": 66, "skills": ["fan_shot", "summon", "slam"], "speed": 1.1, "cooldown_scale": 0.85, "notice": "msg_boss_balloon_king_2", "pose": "shake_off", "pose_s": 1.0},
