@@ -15,6 +15,8 @@ public partial class CardWindow : CanvasLayer
     public Stage Stage { get; set; } = null!;
     public CardQueue Queue { get; set; } = null!;
     public bool IsOpen { get; private set; }
+    /// <summary>Set on a client: a pick is sent to the host instead of applied here.</summary>
+    public System.Action<int>? PickHandler { get; set; }
 
     private Control _root = null!, _dim = null!;
     private VBoxContainer _panel = null!;
@@ -108,8 +110,9 @@ public partial class CardWindow : CanvasLayer
 
     public void Pick(int index)
     {
-        if (!IsOpen) return;
-        Queue.Choose(Stage.Player, index);
+        if (!IsOpen || Queue.Front is not { } offer || index < 0 || index >= offer.Choices.Count) return;
+        if (PickHandler != null) PickHandler(index);
+        else Queue.Choose(Stage.Player, index);
     }
 
     private void SetOpen(bool open)

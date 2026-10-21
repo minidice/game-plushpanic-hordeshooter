@@ -53,6 +53,9 @@ void fragment() {
         // Survival's base health / Survivor's boss countdown and health, top center.
         var modeBar = Place(new Paint { Name = "ModeBar", Painter = DrawModeBar, CustomMinimumSize = new Vector2(440, 30) }, .5f, 0, new Vector2(0, 26), true, false, centerX: true);
         modeBar.Visible = Stage.ModeRules != null;
+        // Onslaught's experience: a thin bar with the level under the top bar (decisions.md M-27).
+        var subBar = Place(new Paint { Name = "SubBar", Painter = DrawSubBar, CustomMinimumSize = new Vector2(440, 14) }, .5f, 0, new Vector2(0, 62), true, false, centerX: true);
+        subBar.Visible = Stage.ModeRules != null;
 
         var arrows = new Paint { Name = "OffscreenArrows", Painter = DrawOffscreenArrows };
         arrows.SetAnchorsPreset(Control.LayoutPreset.FullRect);
@@ -332,6 +335,17 @@ void fragment() {
         var font = c.GetThemeDefaultFont();
         c.DrawString(font, new Vector2(1, 22), rules.BarLabel, HorizontalAlignment.Center, size.X, 16, new Color(0, 0, 0, .7f));
         c.DrawString(font, new Vector2(0, 21), rules.BarLabel, HorizontalAlignment.Center, size.X, 16, HudWhite);
+    }
+
+    private void DrawSubBar(Control c)
+    {
+        if (Stage.ModeRules is not { } rules || rules.SubBarLabel.Length == 0) return;
+        var size = c.Size;
+        c.DrawRect(new Rect2(Vector2.Zero, size), new Color(.03f, .05f, .09f, .75f));
+        float t = Mathf.Clamp(rules.SubBarFraction, 0, 1);
+        if (t > 0) c.DrawRect(new Rect2(2, 2, (size.X - 4) * t, size.Y - 4), new Color("7fd4ff"));
+        var font = c.GetThemeDefaultFont();
+        c.DrawString(font, new Vector2(-64, 12), rules.SubBarLabel, HorizontalAlignment.Right, 58, 13, HudWarm);
     }
 
     private void DrawHealth(Control c)

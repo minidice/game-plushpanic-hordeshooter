@@ -11,14 +11,23 @@ public enum CardKind { Arming, Normal, Special }
 /// <summary>Who a card changes; drawn large on the card so nobody has to pick a target afterwards (plan 5.1).</summary>
 public enum CardTarget { Slot1, Slot2, Slot3, Self, Summon, Common }
 
-/// <summary>One of the three cards on offer.</summary>
-public sealed record CardChoice(string Id, string Name, string Tag, string Description, CardTarget Target, Texture2D? Icon, Action<Player> Apply);
+/// <summary>
+/// One of the three cards on offer. <paramref name="Key"/> names the card for the network (<see cref="CardCatalog.FromKey"/>
+/// rebuilds the same card on any PC); <paramref name="Apply"/> only runs on the deciding PC.
+/// </summary>
+public sealed record CardChoice(string Id, string Name, string Tag, string Description, CardTarget Target, Texture2D? Icon, Action<Player> Apply,
+    string Key = "");
 
 /// <summary>Three cards to pick one from. The cards are drawn when the offer is made and never change (plan 3장).</summary>
 public sealed class CardOffer
 {
     public CardKind Kind { get; init; }
-    public string Title { get; init; } = "";
+    /// <summary>Numbers the offers of one queue (given when added); a client's pick names the offer it answers.</summary>
+    public int Serial { get; set; }
+    /// <summary>Language key of the title, with <see cref="TitleArg"/> filled in when it is 0 or more (slot numbers).</summary>
+    public string TitleKey { get; init; } = "";
+    public int TitleArg { get; init; } = -1;
+    public string Title => TitleArg >= 0 ? Loc.Format(TitleKey, TitleArg) : Loc.Text(TitleKey);
     public IReadOnlyList<CardChoice> Choices { get; init; } = Array.Empty<CardChoice>();
     /// <summary>Arming cards must be picked; level-up and boss cards can be put off with X.</summary>
     public bool CanClose => Kind != CardKind.Arming;
@@ -31,6 +40,7 @@ public sealed class CardOffer
 public sealed class CardQueue
 {
     private readonly List<CardOffer> _offers = new();
+    private int _nextSerial;
 
     public int Count => _offers.Count;
     public CardOffer? Front => _offers.Count > 0 ? _offers[0] : null;
@@ -38,11 +48,14 @@ public sealed class CardQueue
     /// <summary>Raised when an offer is added, picked or the queue is cleared.</summary>
     public event Action? Changed;
     public int Picked { get; private set; }
+    /// <summary>Goes up on every change (the host sends a client its queue again when this moves).</summary>
+    public int Version { get; private set; }
 
     public void Add(CardOffer offer)
     {
+        if (offer.Serial == 0) offer.Serial = ++_nextSerial;
         _offers.Add(offer);
-        Changed?.Invoke();
+        Touch();
     }
 
     /// <summary>Takes card <paramref name="index"/> of the front offer and applies it to <paramref name="who"/>.</summary>
@@ -53,13 +66,35 @@ public sealed class CardQueue
         _offers.RemoveAt(0);
         Picked++;
         choice.Apply(who);
-        Changed?.Invoke();
+        Touch();
         return choice;
+    }
+
+    /// <summary>A client's pick on its way to the host: the front offer goes away here at once, the host applies it.</summary>
+    public void DropFront()
+    {
+        if (_offers.Count == 0) return;
+        _offers.RemoveAt(0);
+        Touch();
+    }
+
+    /// <summary>A client takes the host's copy of its queue as it is.</summary>
+    public void Replace(IEnumerable<CardOffer> offers)
+    {
+        _offers.Clear();
+        _offers.AddRange(offers);
+        Touch();
     }
 
     public void Clear()
     {
         _offers.Clear();
+        Touch();
+    }
+
+    private void Touch()
+    {
+        Version++;
         Changed?.Invoke();
     }
 }
@@ -84,7 +119,8 @@ public static class ArmingCards
     private static CardOffer Offer(int slot, IEnumerable<WeaponDefinition> defs) => new()
     {
         Kind = CardKind.Arming,
-        Title = Loc.Format("fmt_card_arming_title", slot),
+        TitleKey = "fmt_card_arming_title",
+        TitleArg = slot,
         Choices = defs.Select(d => WeaponCard(slot, d)).ToList(),
     };
 
@@ -97,9 +133,12 @@ public static class ArmingCards
         var target = slot switch { 1 => CardTarget.Slot1, 2 => CardTarget.Slot2, _ => CardTarget.Slot3 };
         return new CardChoice(def.Id, def.DisplayName, tag, desc, target, def.LoadIcon(), who =>
         {
-            if (slot == 3) who.Loadout.Equip(3, new WeaponState(def));
-            else who.Loadout.SetSlot(slot, def);
-            who.Weapons.RefreshVisual();
-        });
+            if (slot == 3)
+            {
+                who.Loadout.Equip(3, new WeaponState(def));
+                who.Weapons.RefreshVisual();
+            }
+            else who.Weapons.PlaceInSlot(slot, def);
+        }, $"w|{def.Id}|{slot}");
     }
 }

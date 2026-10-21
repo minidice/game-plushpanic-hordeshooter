@@ -249,6 +249,30 @@ public partial class StageNet : Node
         _batch.Begin(NetEvent.BarrelExplode); _batch.W.U16(barrel.NetId);
     }
 
+    /// <summary>Host: one client's card queue and the mode's card state (Onslaught, decisions.md M-27). False = not sent yet.</summary>
+    public bool SendCards(Player who, byte[] data)
+    {
+        if (Role != NetRole.Host || !Started) return false;
+        int peer = Peers.FirstOrDefault(p => p.Value == who).Key;
+        if (peer == 0 || peer == HostPeer || !_readyPeers.Contains(peer)) return false;
+        BytesSent += data.Length;
+        RpcId(peer, MethodName.HostCards, data);
+        return true;
+    }
+
+    [Rpc(MultiplayerApi.RpcMode.Authority, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
+    private void HostCards(byte[] data) => _stage.ModeRules?.ApplyCardSync(data);
+
+    /// <summary>Client: which card we picked; the host applies it to our survivor.</summary>
+    public void RequestCardPick(int serial, int index) => Send(MethodName.ClientPickCard, serial, index);
+
+    [Rpc(MultiplayerApi.RpcMode.AnyPeer, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
+    private void ClientPickCard(int serial, int index)
+    {
+        if (Role != NetRole.Host || !Peers.TryGetValue(Multiplayer.GetRemoteSenderId(), out var who)) return;
+        _stage.ModeRules?.PickCard(who, serial, index);
+    }
+
     /// <summary>Client: an Outpost inventory drag goes to the host, which applies it to our survivor (decisions.md M-25).</summary>
     public void RequestInventory(int from, int to) => Send(MethodName.ClientInventory, from, to);
 

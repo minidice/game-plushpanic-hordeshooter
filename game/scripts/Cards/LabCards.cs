@@ -71,11 +71,19 @@ public partial class LabCards : Node
     public bool IsOn(LabCard card) => _on.Contains(card);
     public bool IsOn(LabSpecial card) => _specials.Contains(card);
 
-    public void Set(LabSpecial card, bool on)
+    /// <summary>Switches a special on or off; glass cannon doubles <paramref name="who"/>'s damage (the local survivor by default).</summary>
+    public void Set(LabSpecial card, bool on, Player? who = null)
     {
+        bool was = _specials.Contains(card);
         if (on) _specials.Add(card); else _specials.Remove(card);
-        if (card == LabSpecial.GlassCannon) Stage.Player.DamageMultiplier = on ? GlassCannonDamage : 1f;
+        if (card != LabSpecial.GlassCannon || was == on) return;
+        if (on) _glassOwner = who ?? Stage.Player;
+        if (_glassOwner != null && IsInstanceValid(_glassOwner))
+            _glassOwner.DamageMultiplier = on ? _glassOwner.DamageMultiplier * GlassCannonDamage : _glassOwner.DamageMultiplier / GlassCannonDamage;
+        if (!on) _glassOwner = null;
     }
+
+    private Player? _glassOwner;
 
     public static string Key(string prefix, LabSpecial card) => prefix + card switch
     {

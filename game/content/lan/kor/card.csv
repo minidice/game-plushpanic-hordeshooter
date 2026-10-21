@@ -51,3 +51,10 @@ ui_card_special_title,보스 보상 — 특별 카드
 tag_card_special,특별 카드 · 규칙
 fmt_cardlab_specials,특별 카드: {0}
 ui_cardlab_none,없음
+tag_card_self,나 · 여러 번 고를 수 있음
+name_card_r_damage,솜 단련
+desc_card_r_damage,내 모든 피해 +10% (쌓임)
+name_card_r_heal,솜 보충
+desc_card_r_heal,지금 최대 체력의 40% 회복
+name_card_r_medkit,구급상자
+desc_card_r_medkit,구급상자 +1 (최대 3)

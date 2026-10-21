@@ -88,8 +88,14 @@ public partial class ModeCheck : Node
         kit.SelectSlot(1);
         for (int i = 0; i < 26; i++) kit.TickIdle(1);
         Check(rocket.CooldownLeft == 0 && rocket.Mag == rocket.Def.MagSize && rocket.CanFire, "it recharges while put away too");
-        Check(tuning.Survivor.WeaponPool.Count >= tuning.Survivor.RackSize && tuning.Survivor.WeaponPool.All(id => ArmoryCatalog.Weapon(id).Mode != FireMode.Melee),
-            "the rack pool lists guns only");
+        Check(tuning.Survivor.WeaponPool.Count(id => ArmoryCatalog.Weapon(id).Slot != WeaponSlot.Special) >= 6 &&
+              tuning.Survivor.WeaponPool.Any(id => ArmoryCatalog.Weapon(id).Slot == WeaponSlot.Special) &&
+              tuning.Survivor.WeaponPool.All(id => ArmoryCatalog.Weapon(id).Mode != FireMode.Melee),
+            "the card pool has enough guns for two different slot 1 · 2 offers, special weapons for slot 3, no melee");
+        Check(tuning.Survivor.Segments.Count == 4 && tuning.Survivor.Total is > 1000 and < 1200 && tuning.Survivor.SegmentBossHp.Count == 4 &&
+              tuning.Survivor.SegmentBossHp[^1] == 1, $"Onslaught runs four boss stretches, about 20 minutes ({tuning.Survivor.Total:0}s)");
+        var badSegments = ModeTuning.FromText("{\"survivor\": {\"segments_s\": [60, -1], \"segment_boss_hp\": [1], \"xp_growth\": 0.5}}").Errors;
+        Check(badSegments.Count == 3, "a negative stretch, a missing boss share and a shrinking xp curve are reported: " + string.Join(" / ", badSegments));
 
         var bossDef = MonsterDatabase.Get(BossEnemy.MonsterId);
         Check(bossDef.Behavior == MonsterBehavior.Boss && bossDef.BullCharge != null && bossDef.IsSpecial && bossDef.Tier == MonsterTier.Boss,
@@ -213,22 +219,44 @@ public partial class ModeCheck : Node
         Check(stage.Map is OpenFieldMap && stage.Map.TitleKey == "ui_map_open_field", "Onslaught plays its own open field");
         Check(rules.GroupSize == r.GroupStart && rules.BarLabel.Length > 0 && !rules.BossArrived, "the bar counts down to the boss");
 
-        // Arming: two racks of rack_size random weapons; each pick goes to its slot with unlimited reserves.
-        Check(rules.RackItems.Count == r.RackSize && rules.RackItems.All(i => r.WeaponPool.Contains(i.Weapon!.Id)), $"a rack of {r.RackSize} weapons from the pool lies on the floor");
-        await Shot("survivor-rack");
-        var first = rules.RackItems[0].Weapon!;
-        rules.RackItems[0].Use(stage.Player);
+        // Arming: three card offers in the card window (slot 1 gun, slot 2 gun, slot 3 special); each pick fills its slot (M-27).
+        var queue = rules.LocalQueue;
+        await Until(() => queue.Count == SurvivorRules.ArmingPicks, "the three arming offers wait in the card window", 2);
+        Check(queue.Offers.All(o => o.Kind == CardKind.Arming) && rules.Window.IsOpen && !queue.Front!.CanClose && !stage.Interactables.OfType<WeaponPickup>().Any(),
+            "the card window opens on the slot 1 offer, cannot be closed, and nothing lies on the floor");
+        Check(queue.Offers[0].Choices.Concat(queue.Offers[1].Choices).All(c => r.WeaponPool.Contains(c.Id) && ArmoryCatalog.Weapon(c.Id).Slot != WeaponSlot.Special) &&
+              queue.Offers[2].Choices.All(c => ArmoryCatalog.Weapon(c.Id).Slot == WeaponSlot.Special),
+            "slots 1 and 2 offer guns from the pool, slot 3 special weapons");
+        await Shot("survivor-arming");
+        string first = queue.Front!.Choices[0].Id;
+        rules.Window.Pick(0);
         await Frames(2);
-        Check(stage.Player.Loadout.Secondary.Def == first && stage.Player.Loadout.ActiveSlot == 1 && rules.Arming && rules.RackItems.Count == r.RackSize,
-            $"the first pick ({first.Id}) becomes slot 1 and a second rack opens");
+        Check(stage.Player.Loadout.Secondary.Def.Id == first && rules.Arming && queue.Count == 2 && rules.ObjectiveText.Contains("2/3"),
+            $"the first card ({first}) becomes slot 1 and the slot 2 offer follows");
         await Seconds(2);
         Check(rules.SpawnedThisMatch == 0 && rules.MatchTime == 0, "nothing comes and the clock waits while arming");
-        var second = rules.RackItems[1].Weapon!;
-        rules.RackItems[1].Use(stage.Player);
+        string second = queue.Front!.Choices[1].Id;
+        rules.Window.Pick(1);
+        string third = queue.Front!.Choices[2].Id;
+        rules.Window.Pick(2);
         await Frames(2);
-        Check(stage.Player.Loadout.Primary?.Def == second && !rules.Arming && stage.Objective == Objective.ModeGoal && rules.RackItems.Count == 0,
-            $"the second pick ({second.Id}) becomes slot 2 and the match starts");
-        Check(stage.Player.Loadout.Secondary.HasInfiniteReserve && stage.Player.Loadout.Primary!.HasInfiniteReserve, "both picks have unlimited reserves");
+        Check(stage.Player.Loadout.Primary?.Def.Id == second && stage.Player.Loadout.Special?.Def.Id == third && !rules.Arming &&
+              stage.Objective == Objective.ModeGoal && !rules.Window.IsOpen, $"slot 2 is the {second}, slot 3 the {third}, and the match starts");
+        Check(stage.Player.Loadout.Secondary.HasInfiniteReserve && stage.Player.Loadout.Primary!.HasInfiniteReserve, "both guns have unlimited reserves");
+        Check(stage.Hud.FindChild("SpecialSlot", true, false) is Control { Visible: true }, "the slot 3 tile shows in Onslaught now");
+
+        // Experience: every kill fills the team bar; a level-up opens a card.
+        Check(rules.Level == 1 && rules.SubBarLabel == Loc.Format("fmt_hud_level", 1) && stage.Hud.FindChild("SubBar", true, false) is Control { Visible: true },
+            "the experience bar starts at level 1 under the top bar");
+        rules.AddXp(rules.XpNeeded);
+        await Frames(2);
+        Check(rules.Level == 2 && queue.Count == 1 && queue.Front!.Kind == CardKind.Normal && queue.Front.Choices.Count == 3 && rules.Window.IsOpen,
+            "a full bar levels up and opens a level-up card");
+        await Shot("survivor-levelup");
+        var levelCard = queue.Front.Choices[0];
+        rules.Window.Pick(0);
+        Check(queue.Count == 0 && (levelCard.Key.StartsWith("c|") ? rules.Cards.IsOn(Enum.Parse<LabCard>(levelCard.Id)) : levelCard.Key.StartsWith("r|")),
+            $"picking it applies the card ({levelCard.Key})");
 
         await Until(() => rules.SpawnedThisMatch > 0, "the swarm starts once armed");
         var start = stage.Player.GlobalPosition;
@@ -241,15 +269,12 @@ public partial class ModeCheck : Node
         stage.AdvanceClockForTest(45.2f - rules.MatchTime);
         await Until(() => rules.NamedSent >= 1, "a named monster arrives at its table time");
         Check(rules.ObjectiveText == Loc.Text("ui_objective_survivor_named"), "the objective asks to take it down");
+        int levelBefore = rules.Level;
+        float xpBefore = rules.Xp;
         foreach (var e in stage.AllEnemies.Where(e => e.IsSpecial).ToList()) e.Burn(99999);
         await Until(() => rules.RestLeft > 0, "once the named are down the rest starts");
-        Check(rules.UpgradeRacks >= 1 && rules.RackItems.Count == r.RackSize, "a fallen named drops an upgrade rack");
-        var upgrade = rules.RackItems[0].Weapon!;
-        stage.Player.TeleportTo(rules.RackItems[0].GlobalPosition);
-        rules.RackItems[0].Use(stage.Player);
-        await Frames(2);
-        Check(stage.Player.Loadout.Current.Def == upgrade && stage.Player.Loadout.Current.HasInfiniteReserve && rules.RackItems.Count == 0,
-            $"the upgrade ({upgrade.Id}) replaces the weapon in hand and the rack is gone");
+        Check(rules.Level > levelBefore || rules.Xp >= xpBefore + r.XpNamed - .01f, "a named kill gives the team its experience");
+        Check(!stage.Interactables.OfType<WeaponPickup>().Any(), "and drops nothing on the floor (no racks in Onslaught)");
 
         // Teammates off screen get an arrow on the screen edge (drawn only with a real window, like the hit arcs).
         if (Windowed)
@@ -282,10 +307,12 @@ public partial class ModeCheck : Node
             await Seconds(12);
             await Shot("survivor-swarm");
         }
-        stage.AdvanceClockForTest(r.BossAt - 1 - rules.MatchTime);
-        Check(rules.GroupSize == r.GroupEnd || rules.GroupSize == r.GroupEnd - 1, "groups grow toward the boss");
-        await Until(() => rules.BossArrived && rules.Boss != null, "the boss arrives on time", 4);
+        stage.AdvanceClockForTest(rules.SegmentLength - 1 - rules.SegmentTime);
+        Check(rules.GroupSize > r.GroupStart && rules.Segment == 0, "groups grow through the first stretch");
+        await Until(() => rules.BossArrived && rules.Boss != null, "the first stretch's boss arrives on time", 4);
         var boss = rules.Boss!;
+        Check(!rules.FinalSegment && Mathf.IsEqualApprox(boss.MaxHealth, boss.Monster.Hp * r.SegmentBossHp[0]) && Mathf.IsEqualApprox(boss.Health, boss.MaxHealth),
+            $"it is a middle boss with {r.SegmentBossHp[0]:P0} health");
         Check(boss.Definition.ColliderRadius > CharacterCatalog.Enemy("bull").ColliderRadius * 1.5f && boss.Rig.Model.FindChild("boss_leftArm", true, false) != null,
             "the boss wears its own model (boss.glb, arms kept), scaled up");
         if (Windowed)
@@ -301,7 +328,7 @@ public partial class ModeCheck : Node
             await Shot("survivor-boss-close");
             stage.Cam.Close = false;
         }
-        Check(rules.ObjectiveText == Loc.Text("ui_objective_survivor_boss") && rules.BarLabel.Contains(Loc.Text("name_monster_boss")), "the objective and bar switch to the boss");
+        Check(rules.ObjectiveText == Loc.Text("ui_objective_survivor_midboss") && rules.BarLabel.Contains(Loc.Text("name_monster_boss")), "the objective and bar switch to the boss"); 
 
         // Slam: a red disc, then everyone inside is hit and launched.
         Check(boss.Phase == 0 && !boss.CurrentPhase.Skills.Contains("summon"), "phase 1 has no summon yet");
@@ -374,8 +401,28 @@ public partial class ModeCheck : Node
         Check(stage.GetChildren().OfType<EnemyProjectile>().Count() >= fan.Count, $"it fires {fan.Count} shots in a fan");
         await Seconds(1.5f);
         await Shot("survivor-boss");
+        // The middle boss down: everyone's special card first, then its experience; the next stretch starts.
+        int offersBefore = queue.Count;
         boss.Burn(boss.MaxHealth);
-        await Until(() => stage.State == StageState.Cleared, "killing the boss clears the match", 2);
+        await Frames(2);
+        Check(stage.State == StageState.Playing && rules.Segment == 1 && !rules.BossArrived && queue.Count > offersBefore &&
+              queue.Offers[offersBefore].Kind == CardKind.Special, "a middle boss down gives a special card (before any level-up) and opens stretch 2");
+        Check(rules.BarLabel.Contains($"2/{rules.Segments}") && rules.BossIn > rules.SegmentLength - 1, "the bar counts down to the second boss: " + rules.BarLabel);
+        // The other stretches; the last boss is the final one and ends it.
+        while (!rules.FinalSegment)
+        {
+            stage.AdvanceClockForTest(rules.SegmentLength - rules.SegmentTime + .1f);
+            await Until(() => rules.BossArrived && rules.Boss != null, $"boss {rules.Segment + 1} arrives", 4);
+            rules.Boss!.Burn(rules.Boss.MaxHealth);
+            await Frames(2);
+        }
+        stage.AdvanceClockForTest(rules.SegmentLength - rules.SegmentTime + .1f);
+        await Until(() => rules.BossArrived && rules.Boss != null, "the final boss arrives after the last stretch", 4);
+        boss = rules.Boss!;
+        Check(Mathf.IsEqualApprox(boss.MaxHealth, boss.Monster.Hp) && rules.BarLabel.Contains(Loc.Text("name_monster_boss_final")) &&
+              rules.ObjectiveText == Loc.Text("ui_objective_survivor_boss"), "the final boss has full health and its own name on the bar");
+        boss.Burn(boss.MaxHealth);
+        await Until(() => stage.State == StageState.Cleared, "killing the final boss clears the match", 2);
         Check(rules.ResultText == Loc.Text("msg_result_survivor_clear") && stage.SpecialKills >= 1, "the end screen names the boss kill");
         await Frames(10);
         await Shot("survivor-clear");

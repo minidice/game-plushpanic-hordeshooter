@@ -15,7 +15,15 @@ public partial class BossEnemy : BullEnemy
     public const string MonsterId = "boss";
 
     public BossDefinition Data { get; private set; } = null!;
-    public float MaxHealth => Monster.Hp;
+    public float MaxHealth => Monster.Hp * _healthScale;
+    private float _healthScale = 1;
+
+    /// <summary>A lighter middle boss (Onslaught's stretches, mode_rules.json segment_boss_hp): full health at that share.</summary>
+    public void SetHealthScale(float scale)
+    {
+        _healthScale = Mathf.Max(.01f, scale);
+        Health = MaxHealth;
+    }
     public int Phase { get; private set; }
     public BossPhase CurrentPhase => Data.Phases[Phase];
     /// <summary>

@@ -16,7 +16,8 @@
 - [x] 개편 6단계(2026-10-21, M-25): 거점 배낭 4×5 = 20칸(I로 열기, 드래그 장착·옮기기·바닥 버리기, 마우스 오버 정보), 탄 종류 8개와 배낭 탄으로 장전, 바닥 무기·탄약 더미·구급상자가 배낭으로, 네임드 처치 시 전리품 3~5개 흩뿌림, 멀티 동기화(방장 판정)
 - [x] 카드 실험실 1차(2026-10-21, T-22): `Start-Game.ps1 -CardLab`, 난전 들판에서 카드 6장(풍선탄 · 찍찍이탄 · 솜 폭발 · 당구 · 꽥 장전 · 고무오리)을 켜고 끄며 시험, 몬스터 카드 상태(부풂 · 둥실 · 찍찍이 · 날아감) ([아이디어 풀](onslaught-card-ideas.md) 6장)
 - [x] 카드 창 1차(2026-10-21, M-27 · T-22, 실험실에서): 하데스식 세로 3장, 받은 순서 · 받을 때 정해진 3장 유지, 무장 1 · 2 · 3번 칸 카드(닫기 없음), 레벨업 카드 ✕ · F로 미루기 + 배지 ×N, 열려 있는 동안 걷기 · 도약만
-- [ ] 난전 개편(M-27, 계획만): 진열대 → 카드 선택, 소환수(드론 · 부사수 · 펫), 레벨업 일반 카드 · 보스 특별 카드, 총 분류별 풀, 하데스식 카드 창 · + 아이콘 · 버프 줄 ([계획](onslaught-cards-plan.md))
+- [x] 정식 난전 카드 흐름 1차(2026-10-21, M-27): 진열대 · 강화 진열대 제거, 시작 때 1 · 2 · 3번 칸 무장 카드, 팀 공유 경험치 → 레벨업 일반 카드(실험실 카드 + 반복 카드 피해 · 회복 · 구급상자), 보스 기준 4구간(3 · 4 · 5 · 6분, 구간 보스 체력 35~100%), 중간 보스 = 특별 카드, 최종 보스 = 클리어, Lv · 경험치 막대, 멀티 동기화(방장 판정, 카드 번호) ([규격](mode-monster-tables.md) 5장)
+- [ ] 난전 개편(M-27) 나머지: 소환수(드론 · 부사수 · 펫), 레벨업 일반 카드 · 보스 특별 카드, 총 분류별 풀, 하데스식 카드 창 · + 아이콘 · 버프 줄 ([계획](onslaught-cards-plan.md))
 - [ ] 거점·난전 다음: 팀원 직접 교환·큰 배낭·탈출, 전용 맵·전용 보스 모델, 멀티에서 보스 연출 동기화(I-77), 수치 플레이 조정
 - [x] 멀티 메뉴: 방 만들기, 주소로 참가(2인 테스트). 방 코드·공개방은 준비 중
 - [x] 멀티 테스트 실행: 한 PC 두 창(`Start-Multi-Test.cmd`), 방장 LAN 주소 안내, 다른 PC용 Windows 실행 파일(`Export-Game.cmd` → `build/HordeShooter-windows.zip`)
@@ -153,6 +154,11 @@
 
 - C# 빌드 경고·오류 0. `ModeCheck` 81개(창 모드, 화면 밖 화살표 포함)·79개(헤드리스), `MapCheck` 25, `WeaponHandlingCheck` 30, `Integration` 148, `NetSyncCheck` 28, `NetCodecCheck` 11, `LobbyCheck` 31, `MenuCheck` 39, `SquadCheck` 50, `SpawnCheck` 41, `CombatPacingCheck` 44, `ReloadPoseCheck` 279, `EnemyAttackCheck` 79, `VisionTierCheck` 23 통과.
 - 렌더: `output/map-open-field.png`·`mode-survivor-rack.png`(들판·진열대·바닥 글씨·무장 목표), `mode-survivor-arrow.png`(화면 밖 팀원 화살표, `∞` 탄약, "난전 · 들판"). 실제 손으로 하는 난이도·들판 성능은 미확인(I-26·I-80). 2인 멀티로 들판·진열대를 해 보지는 않음.
+
+### 이번 변경 확인 기록 — 2026-10-21 (정식 난전 카드 흐름 1차)
+
+- C# 빌드 오류 0. `ModeCheck` 101개(헤드리스)·105개(창 모드: 무장 카드 3번, 레벨업, 네임드 경험치, 구간 보스 4번, 최종 보스 클리어), 새 `OnslaughtNetCheck` 16개(한 PC ENet 방장 + 파티원: 무장 카드 전달 · 고른 카드로 방장이 무장, 레벨업 카드, 중간 보스 특별 카드 · 다음 구간, 2회 실행 모두 통과), `MapCheck` 24, `CardLabCheck` 68, `NetSyncCheck` 28, `NetCodecCheck` 12, `LobbyCheck` 31, `MenuCheck` 39, `SquadCheck` 50, `InventoryCheck` 41, `WeaponHandlingCheck` 36, `EnemyAttackCheck` 79, `SpawnCheck` 41, `CombatPacingCheck` 44, `Integration`(`Start-Game.ps1 -Test`) 148 통과.
+- 렌더: `output/mode-survivor-arming.png`(1번 칸 무장 카드, "보스 1/4까지 3:00", Lv 막대, 3번 칸 타일), `mode-survivor-levelup.png`(레벨 업! 카드 3장: 반복 카드 + 실험실 카드), `mode-survivor-swarm.png`(무리 · 경험치 막대 · 박격포 3번 칸). 2인 실제 플레이 · 20분 판 전체 손으로 해 보기는 미확인(I-85).
 
 ### 이번 변경 확인 기록 — 2026-10-21 (개편 6단계, 거점 배낭)
 

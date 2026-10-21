@@ -35,6 +35,9 @@ public abstract partial class ModeRules : Node
     /// <summary>0–1 fill of the top bar. A client gets it from the host's snapshot.</summary>
     public float BarFraction { get; protected set; }
     public virtual Color BarColor => UiTheme.Accent;
+    /// <summary>A thin second bar under the top bar (Onslaught's experience); empty hides it.</summary>
+    public virtual string SubBarLabel => "";
+    public virtual float SubBarFraction => 0;
     /// <summary>One line for the end screen.</summary>
     public virtual string ResultText => "";
     /// <summary>The thing monsters attack besides the survivors (Survival's base).</summary>
@@ -61,6 +64,12 @@ public abstract partial class ModeRules : Node
 
     /// <summary>Client: the host's bar value from the snapshot.</summary>
     public virtual void ApplyNetBar(float fraction) => BarFraction = fraction;
+
+    /// <summary>Host: a client picked card <paramref name="index"/> of its offer <paramref name="serial"/> (Onslaught, decisions.md M-27).</summary>
+    public virtual void PickCard(Player who, int serial, int index) { }
+
+    /// <summary>Client: the host's copy of this survivor's cards and the mode's card state.</summary>
+    public virtual void ApplyCardSync(byte[] data) { }
 
     /// <summary>A random open, reachable spot, off every screen if there is one.</summary>
     protected Vector3? PickSpot(IEnumerable<Vector3> candidates)

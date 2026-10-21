@@ -5,18 +5,20 @@ using System.Linq;
 namespace HordeShooter;
 
 /// <summary>
-/// Onslaught (code Survivor, doc/menu-multiplayer-plan.md 3.1, decisions.md M-26) on its own open field:
-/// first every person picks two weapons from racks on the floor (three random ones from weapon_pool each),
-/// reserves never run out and slot 3-type weapons recharge on a cooldown instead of reloading. Then masses of commons
-/// close in from every side, bigger groups as time goes on; who comes is the mode table (modes/survivor_spawns.csv,
-/// seconds since arming). Named ones arrive at set times; each one that falls drops an upgrade rack, and once they are
-/// all down the swarm pauses for rest_after_named_s (M-24). At boss_at_s a skill-using boss (<see cref="BossEnemy"/>)
-/// arrives; killing it clears the match. Level-up abilities are not in this version.
+/// Onslaught (code Survivor, decisions.md M-26 · M-27) on its own open field. Every person first picks three cards: a
+/// slot 1 gun, a slot 2 gun and a slot 3 special weapon (<see cref="ArmingCards"/>); reserves never run out and slot 3
+/// kinds recharge instead of reloading. Then masses of commons close in from every side; who comes is the mode table
+/// (modes/survivor_spawns.csv, seconds since arming). Every kill fills a shared experience bar; each level gives every
+/// person a level-up card. The run is cut into stretches (mode_rules.json survivor.segments_s): at the end of each
+/// one a boss comes; a middle boss down gives everyone a special card and starts the next stretch's clock, the last
+/// one down clears the match. Cards are drawn and applied by the deciding PC; a client is sent its own queue
+/// (<see cref="CardCatalog"/>) and only sends back which card it picked.
 /// </summary>
 public partial class SurvivorRules : ModeRules
 {
-    /// <summary>Picks every person makes before the swarm starts (slot 1, then slot 2).</summary>
-    public const int ArmingPicks = 2;
+    /// <summary>Picks every person makes before the swarm starts (slot 1, 2 and 3).</summary>
+    public const int ArmingPicks = 3;
+    public const float SyncEvery = .5f;
 
     public override GameMode Mode => GameMode.Survivor;
     public SurvivorTuning Rules => Tuning.Survivor;
@@ -31,23 +33,36 @@ public partial class SurvivorRules : ModeRules
     public float MatchTime => Arming ? 0 : Mathf.Max(0, Time - _armedAt);
     /// <summary>Seconds of the rest after a named wave (no swarm groups), 0 when none.</summary>
     public float RestLeft => Mathf.Max(0, _restUntil - MatchTime);
-    /// <summary>The weapons lying in the current rack(s) (checks, the HUD prompt).</summary>
-    public IReadOnlyList<WeaponPickup> RackItems => _racks.SelectMany(r => r.Items).Where(IsInstanceValid).ToList();
-    public int UpgradeRacks { get; private set; }
 
-    private sealed class Rack
-    {
-        public int Slot;          // 1 or 2 for the arming racks, 0 = an upgrade (goes to the weapon in hand)
-        public bool Upgrade;
-        public readonly List<WeaponPickup> Items = new();
-        public readonly HashSet<Player> Taken = new();
-        public Node3D? Label;
-    }
+    // ---------- stretches and bosses ----------
+    /// <summary>Which stretch is running (0-based); its boss is the last one when it is the last stretch.</summary>
+    public int Segment { get; private set; }
+    public int Segments => Rules.Segments.Count;
+    public bool FinalSegment => Segment >= Segments - 1;
+    public float SegmentTime => Mathf.Max(0, MatchTime - _segmentStart);
+    public float SegmentLength => Rules.Segments[Mathf.Min(Segment, Segments - 1)];
+    /// <summary>Seconds until this stretch's boss comes (0 once it is out).</summary>
+    public float BossIn => BossArrived ? 0 : Mathf.Max(0, SegmentLength - SegmentTime);
 
-    private float _spawnTimer = 1.5f, _namedThrough = -1, _restUntil, _armedAt;
+    // ---------- experience ----------
+    public int Level { get; private set; } = 1;
+    public float Xp { get; private set; }
+    public float XpNeeded => Rules.XpFirst * Mathf.Pow(Rules.XpGrowth, Level - 1);
+    public float XpFraction => _netXp >= 0 ? _netXp : Mathf.Clamp(Xp / XpNeeded, 0, 1);
+
+    // ---------- cards ----------
+    /// <summary>The card effects (decisions.md T-22's lab engine; the deciding PC runs them).</summary>
+    public LabCards Cards { get; private set; } = null!;
+    /// <summary>This PC's survivor's waiting offers (a client's is the host's copy).</summary>
+    public CardQueue LocalQueue { get; } = new();
+    public CardWindow Window { get; private set; } = null!;
+
+    private float _spawnTimer = 1.5f, _namedThrough = -1, _restUntil, _armedAt, _segmentStart, _syncTimer, _netXp = -1;
     private readonly List<(Enemy Enemy, Vector3 Last)> _named = new();
-    private readonly List<Rack> _racks = new();
-    private readonly Dictionary<Player, int> _picks = new();
+    private readonly Dictionary<Player, CardQueue> _queues = new();
+    private readonly HashSet<Player> _armed = new();
+    private readonly HashSet<int> _pendingPicks = new();
+    private readonly Dictionary<Player, (int Version, int Level, int Segment, bool Boss)> _sent = new();
 
     /// <summary>Everyone starts by arming (on every PC, so a client's clock starts when the host's does).</summary>
     public override Objective InitialObjective => Objective.ModeArming;
@@ -55,20 +70,49 @@ public partial class SurvivorRules : ModeRules
     public override void _Ready()
     {
         base._Ready();
-        if (Stage.Authoritative) OpenRack(1);
+        Cards = new LabCards { Name = "CardEffects", Stage = Stage };
+        AddChild(Cards);
+        Window = new CardWindow { Name = "CardWindow", Stage = Stage, Queue = LocalQueue };
+        if (!Stage.Authoritative) Window.PickHandler = index =>
+        {
+            // The pick names its offer; until the host confirms it, that offer stays hidden here even if an older copy arrives.
+            if (LocalQueue.Front is not { } offer) return;
+            _pendingPicks.Add(offer.Serial);
+            Stage.Net?.RequestCardPick(offer.Serial, index);
+            LocalQueue.DropFront();
+        };
+        AddChild(Window);
+        if (Stage.Authoritative) Stage.EnemyKilled += OnKilled;
     }
 
+    public override void _ExitTree()
+    {
+        if (Stage.Authoritative) Stage.EnemyKilled -= OnKilled;
+    }
+
+    /// <summary>A survivor's queue on the deciding PC (the local one is <see cref="LocalQueue"/>).</summary>
+    public CardQueue QueueOf(Player who)
+    {
+        if (who == Stage.Player) return LocalQueue;
+        if (!_queues.TryGetValue(who, out var queue)) _queues[who] = queue = new CardQueue();
+        return queue;
+    }
+
+    private int ArmingLeft(Player who) => QueueOf(who).Offers.Count(o => o.Kind == CardKind.Arming);
+
     public override string ObjectiveText => Stage.State == StageState.Cleared ? Loc.Text("ui_objective_survivor_cleared")
-        : Arming ? Loc.Format("fmt_objective_survivor_arm", Mathf.Min(ArmingPicks, _picks.GetValueOrDefault(Stage.Player) + 1), ArmingPicks)
-        : BossArrived ? Loc.Text("ui_objective_survivor_boss")
-        : RestLeft > 0 ? Loc.Format("fmt_objective_survivor_rest", Mathf.CeilToInt(RestLeft), Clock(Rules.BossAt - MatchTime))
+        : Arming ? Loc.Format("fmt_objective_survivor_arm", Mathf.Clamp(ArmingPicks - ArmingLeft(Stage.Player) + 1, 1, ArmingPicks), ArmingPicks)
+        : BossArrived ? Loc.Text(FinalSegment ? "ui_objective_survivor_boss" : "ui_objective_survivor_midboss")
+        : RestLeft > 0 ? Loc.Format("fmt_objective_survivor_rest", Mathf.CeilToInt(RestLeft), Clock(BossIn))
         : _named.Count > 0 ? Loc.Text("ui_objective_survivor_named")
-        : Loc.Format("fmt_objective_survivor_hold", Clock(Rules.BossAt - MatchTime));
+        : Loc.Format("fmt_objective_survivor_hold", Clock(BossIn));
 
     public override string BarLabel => BossArrived
-        ? Loc.Format("fmt_bar_boss", Loc.Text("name_monster_boss"), Mathf.CeilToInt(BarFraction * 100))
-        : Loc.Format("fmt_bar_boss_eta", Clock(Rules.BossAt - MatchTime));
+        ? Loc.Format("fmt_bar_boss", Loc.Text(FinalSegment ? "name_monster_boss_final" : "name_monster_boss"), Mathf.CeilToInt(BarFraction * 100))
+        : Loc.Format("fmt_bar_boss_segment", Segment + 1, Segments, Clock(BossIn));
     public override Color BarColor => BossArrived ? UiTheme.Danger : UiTheme.Accent;
+    public override string SubBarLabel => Loc.Format("fmt_hud_level", Level);
+    public override float SubBarFraction => XpFraction;
     public override string ResultText => Stage.State == StageState.Cleared
         ? Loc.Text("msg_result_survivor_clear")
         : BossArrived ? Loc.Format("fmt_result_survivor_boss", Mathf.CeilToInt(BarFraction * 100)) : Loc.Format("fmt_result_survivor_lost", Clock(MatchTime));
@@ -89,8 +133,15 @@ public partial class SurvivorRules : ModeRules
         }
         // A client learns about the boss from its spawn event (it is a puppet there).
         if (Boss == null && !Stage.Authoritative && Stage.AllEnemies.OfType<BossEnemy>().FirstOrDefault() is { } puppet) Arrive(puppet);
-        if (!BossArrived) BarFraction = Mathf.Clamp(MatchTime / Rules.BossAt, 0, 1);
+        if (!BossArrived) BarFraction = Mathf.Clamp(SegmentTime / SegmentLength, 0, 1);
         else if (Stage.Authoritative && Boss != null) BarFraction = IsInstanceValid(Boss) && !Boss.IsDead ? Boss.Health / Boss.MaxHealth : 0;
+        if (!Stage.Authoritative) return;
+
+        // Everyone (also who joins later) gets the three arming offers once; the clock waits for the first ones.
+        foreach (var p in Humans.Where(p => _armed.Add(p)))
+            foreach (var offer in ArmingCards.Draw(Rules.WeaponPool, Rng)) QueueOf(p).Add(offer);
+        if (Arming && Humans.Any() && Humans.All(p => ArmingLeft(p) == 0)) Stage.SetModeObjective(Objective.ModeGoal);
+        SyncClients(dt);
     }
 
     public override void ApplyNetBar(float fraction)
@@ -101,12 +152,9 @@ public partial class SurvivorRules : ModeRules
     protected override void Step(float dt)
     {
         if (Arming) return;
-        if (!BossArrived && MatchTime >= Rules.BossAt) SpawnBoss();
-        if (BossArrived && (Boss == null || !IsInstanceValid(Boss) || Boss.IsDead))
-        {
-            Stage.EndMode(true, "msg_survivor_clear");
-            return;
-        }
+        if (!BossArrived && SegmentTime >= SegmentLength) SpawnBoss();
+        // A boss that left without dying (a check removed it) counts as down.
+        if (BossArrived && (Boss == null || !IsInstanceValid(Boss))) BossDown();
         if (!BossArrived) UpdateNamed();
         _spawnTimer -= dt;
         if (_spawnTimer > 0 || RestLeft > 0) return;
@@ -114,86 +162,96 @@ public partial class SurvivorRules : ModeRules
         SpawnGroup();
     }
 
-    // ---------- weapon racks ----------
-
-    /// <summary>The people who pick weapons (AI squadmates keep their own).</summary>
+    /// <summary>The people who pick cards (AI squadmates keep their own weapons).</summary>
     private IEnumerable<Player> Humans => Stage.AlivePlayers.Where(p => !p.IsBot);
 
-    private void OpenRack(int slot, Vector3? at = null, bool upgrade = false)
+    // ---------- experience and cards ----------
+
+    private void OnKilled(Enemy enemy, Vector3 direction, float force)
     {
-        var center = at ?? Stage.Map.PlayerStart + new Vector3(0, 0, -3.2f);
-        var rack = new Rack { Slot = slot, Upgrade = upgrade };
-        var pool = Rules.WeaponPool.OrderBy(_ => Rng.Randi()).Take(Rules.RackSize).ToList();
-        for (int i = 0; i < pool.Count; i++)
+        if (Stage.State != StageState.Playing) return;
+        bool boss = enemy is BossEnemy && enemy == Boss;
+        // A boss first gives its special card, then its experience (and maybe a level-up card after it).
+        if (boss) BossDown();
+        AddXp(enemy.Monster.Tier switch { MonsterTier.Boss => Rules.XpBoss, MonsterTier.Named => Rules.XpNamed, _ => Rules.XpCommon });
+    }
+
+    /// <summary>Shared experience; every level-up gives every person a level-up offer.</summary>
+    public void AddXp(float amount)
+    {
+        if (!Stage.Authoritative || Arming) return;
+        Xp += amount;
+        while (Xp >= XpNeeded)
         {
-            var spot = center + new Vector3((i - (pool.Count - 1) * .5f) * 2.4f, 0, 0);
-            if (Stage.Flow.IsBlocked(spot)) spot = center;
-            var def = ArmoryCatalog.Weapon(pool[i]);
-            var item = WeaponPickup.ForWeapon(Stage, spot, def);
-            item.Prompt = Loc.Format(upgrade ? "fmt_use_rack_upgrade" : "fmt_use_rack", def.DisplayName, slot);
-            rack.Items.Add(item);
-        }
-        var label = new Label3D
-        {
-            Text = Loc.Text(upgrade ? "ui_floor_rack_upgrade" : "ui_floor_rack"), Position = center + new Vector3(0, .03f, 1.4f),
-            RotationDegrees = new Vector3(-90, 0, 0), FontSize = 64, PixelSize = .012f, Modulate = new Color("ffcf5c", .9f), OutlineSize = 0,
-        };
-        Stage.AddChild(label);
-        rack.Label = label;
-        _racks.Add(rack);
-        if (upgrade)
-        {
-            UpgradeRacks++;
-            Stage.ShowNotice(Loc.Text("msg_rack_upgrade"), 3);
+            Xp -= XpNeeded;
+            Level++;
+            foreach (var p in Humans) QueueOf(p).Add(CardCatalog.LevelUp(Cards, Rng));
+            Stage.ShowNotice(Loc.Format("fmt_level_up", Level), 2);
+            Stage.Sfx.Play("pickup", 0, 1.4f);
         }
     }
 
-    /// <summary>A weapon from a rack goes to that rack's slot (an upgrade to the weapon in hand), with Onslaught's ammo rules.</summary>
-    public override bool TakePickup(WeaponPickup pickup, Player who)
+    /// <summary>A client picked card <paramref name="index"/> of offer <paramref name="serial"/>; a pick for an offer already gone is ignored.</summary>
+    public override void PickCard(Player who, int serial, int index)
     {
-        var rack = _racks.FirstOrDefault(r => r.Items.Contains(pickup));
-        if (rack == null || pickup.Weapon is not { } def) return false;
-        if (who.IsBot || rack.Taken.Contains(who)) return true;
-        if (!rack.Upgrade && _picks.GetValueOrDefault(who) + 1 != rack.Slot) return true;
-        int slot = rack.Upgrade ? (who.Loadout.ActiveSlot == 3 ? 2 : who.Loadout.ActiveSlot) : rack.Slot;
-        who.Weapons.PlaceInSlot(slot, def);
-        rack.Taken.Add(who);
-        rack.Items.Remove(pickup);
-        Stage.RemovePickupFromWorld(pickup);
-        Stage.Effects.FloatingText(who.GlobalPosition + Vector3.Up * 2.6f, def.DisplayName, new Color("ffcf5c"));
-        if (who.IsLocal) Stage.Sfx.Play("pickup");
-        else Stage.Sfx.PlayAt("pickup", who.GlobalPosition + Vector3.Up);
-        if (!rack.Upgrade) _picks[who] = rack.Slot;
-        // An arming rack closes when every person has taken from it; an upgrade rack after the first pick.
-        if (rack.Upgrade || Humans.All(rack.Taken.Contains)) CloseRack(rack);
-        if (!rack.Upgrade && Humans.All(p => _picks.GetValueOrDefault(p) >= rack.Slot))
-        {
-            if (rack.Slot < ArmingPicks) OpenRack(rack.Slot + 1);
-            else Stage.SetModeObjective(Objective.ModeGoal);
-        }
-        return true;
+        var queue = QueueOf(who);
+        if (Stage.Authoritative && queue.Front?.Serial == serial) queue.Choose(who, index);
     }
 
-    private void CloseRack(Rack rack)
+    /// <summary>Host: each client gets its queue, the level and the stretch when they change, and the bar twice a second.</summary>
+    private void SyncClients(float dt)
     {
-        foreach (var item in rack.Items.Where(IsInstanceValid)) Stage.RemovePickupFromWorld(item);
-        rack.Items.Clear();
-        rack.Label?.QueueFree();
-        _racks.Remove(rack);
+        if (Stage.Net is not { Role: NetRole.Host } net) return;
+        _syncTimer -= dt;
+        bool periodic = _syncTimer <= 0;
+        if (periodic) _syncTimer = SyncEvery;
+        foreach (var p in Humans.Where(p => p != Stage.Player))
+        {
+            var queue = QueueOf(p);
+            var now = (queue.Version, Level, Segment, BossArrived);
+            if (!periodic && _sent.TryGetValue(p, out var last) && last == now) continue;
+            if (net.SendCards(p, EncodeFor(p))) _sent[p] = now;
+        }
+    }
+
+    public byte[] EncodeFor(Player who)
+    {
+        var w = new NetWriter();
+        w.U16(Level);
+        w.Unit(XpFraction);
+        w.U8(Segment);
+        w.F32(SegmentTime);
+        w.U8(BossArrived ? 1 : 0);
+        CardCatalog.Write(w, QueueOf(who).Offers);
+        return w.ToArray();
+    }
+
+    /// <summary>Client: the host's view of this survivor's cards and the run.</summary>
+    public override void ApplyCardSync(byte[] data)
+    {
+        var r = new NetReader(data);
+        Level = r.U16();
+        _netXp = Mathf.Clamp(r.Unit(), 0, 1);
+        Segment = r.U8();
+        _segmentStart = MatchTime - r.F32();
+        bool bossOut = r.U8() == 1;
+        if (!bossOut && BossArrived) { BossArrived = false; Boss = null; }
+        var offers = CardCatalog.Read(r);
+        _pendingPicks.RemoveWhere(serial => offers.All(o => o.Serial != serial));
+        LocalQueue.Replace(offers.Where(o => !_pendingPicks.Contains(o.Serial)));
     }
 
     // ---------- named and swarm ----------
 
-    /// <summary>Named rows that are due arrive; each one down drops an upgrade rack, the last one down starts the rest.</summary>
+    /// <summary>Named rows that are due arrive; the last one down starts a short rest.</summary>
     private void UpdateNamed()
     {
         bool had = _named.Count > 0;
         for (int i = _named.Count - 1; i >= 0; i--)
         {
-            var (enemy, last) = _named[i];
+            var (enemy, _) = _named[i];
             if (IsInstanceValid(enemy) && !enemy.IsDead) { _named[i] = (enemy, enemy.GlobalPosition); continue; }
             _named.RemoveAt(i);
-            OpenRack(0, last, upgrade: true);
         }
         if (had && _named.Count == 0 && Rules.RestAfterNamed > 0)
         {
@@ -215,10 +273,13 @@ public partial class SurvivorRules : ModeRules
         _namedThrough = MatchTime;
     }
 
-    /// <summary>Group size grows from group_start to group_end until the boss, then drops to boss_group_scale of that.</summary>
+    /// <summary>Group size grows from group_start to group_end over the whole run, and drops to boss_group_scale while a boss is out.</summary>
     public int GroupSize => BossArrived
-        ? Mathf.Max(1, Mathf.RoundToInt(Rules.GroupEnd * Rules.BossGroupScale))
-        : Mathf.RoundToInt(Mathf.Lerp(Rules.GroupStart, Rules.GroupEnd, Mathf.Clamp(MatchTime / Rules.BossAt, 0, 1)));
+        ? Mathf.Max(1, Mathf.RoundToInt(Mathf.Lerp(Rules.GroupStart, Rules.GroupEnd, Progress) * Rules.BossGroupScale))
+        : Mathf.RoundToInt(Mathf.Lerp(Rules.GroupStart, Rules.GroupEnd, Progress));
+
+    /// <summary>How far through the run (0–1): finished stretches plus this one's clock.</summary>
+    private float Progress => Mathf.Clamp((Rules.Segments.Take(Segment).Sum() + Mathf.Min(SegmentTime, SegmentLength)) / Rules.Total, 0, 1);
 
     /// <summary>A group of commons on a ring around a random person, off screen where possible.</summary>
     public int SpawnGroup()
@@ -240,12 +301,15 @@ public partial class SurvivorRules : ModeRules
         return spawned;
     }
 
-    /// <summary>Brings the boss out now (also used by checks to skip the wait).</summary>
+    // ---------- bosses ----------
+
+    /// <summary>This stretch's boss comes now (also used by checks to skip the wait), with the stretch's health share.</summary>
     public BossEnemy SpawnBoss()
     {
         var leader = Stage.Leader.GlobalPosition;
         var at = PickSpot(Stage.Flow.OpenCellsNear(leader, 11, 16)) ?? leader + Vector3.Right * 10;
         var boss = Stage.SpawnEnemy<BossEnemy>(MonsterDatabase.Get(BossEnemy.MonsterId), at, awake: true);
+        boss.SetHealthScale(Rules.SegmentBossHp[Mathf.Min(Segment, Rules.SegmentBossHp.Count - 1)]);
         Arrive(boss);
         return boss;
     }
@@ -255,8 +319,25 @@ public partial class SurvivorRules : ModeRules
         Boss = boss;
         BossArrived = true;
         BarFraction = 1;
-        Stage.ShowNotice(Loc.Text("msg_survivor_boss"), 4);
+        Stage.ShowNotice(Loc.Text(FinalSegment ? "msg_survivor_boss" : "msg_survivor_midboss"), 4);
         Stage.Sfx.Play("bull_snort", 4, .6f);
         Stage.Cam.AddShake(.45f);
+    }
+
+    /// <summary>The last boss down clears the match; a middle one gives everyone a special card and starts the next stretch.</summary>
+    private void BossDown()
+    {
+        if (!BossArrived) return;
+        if (FinalSegment)
+        {
+            Stage.EndMode(true, "msg_survivor_clear");
+            return;
+        }
+        BossArrived = false;
+        Boss = null;
+        foreach (var p in Humans) QueueOf(p).Add(CardCatalog.BossReward(Cards, Rng));
+        Segment++;
+        _segmentStart = MatchTime;
+        Stage.ShowNotice(Loc.Format("fmt_survivor_midboss_down", Segment, Segments), 4);
     }
 }

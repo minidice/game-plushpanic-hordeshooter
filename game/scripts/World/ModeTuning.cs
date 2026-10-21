@@ -14,8 +14,16 @@ public sealed record SurvivalTuning(float CoreHp, float Prep, float Break, int M
     public float Total => Prep + Waves.Sum(w => w.Duration) + Break * System.Math.Max(0, Waves.Count - 1);
 }
 
-public sealed record SurvivorTuning(float BossAt, float SpawnEvery, int GroupStart, int GroupEnd, float BossGroupScale,
-    float SpawnMin, float SpawnMax, float RestAfterNamed, IReadOnlyList<string> WeaponPool, int RackSize, float SpecialCooldown);
+/// <param name="Segments">Seconds of each stretch before its boss (decisions.md M-27 Q-21): the clock of the next one starts when its boss falls; the last boss is the final one.</param>
+/// <param name="SegmentBossHp">Boss health share for each stretch's boss (the last is usually 1).</param>
+/// <param name="XpFirst">Team experience for the first level-up; each next one needs <paramref name="XpGrowth"/> times more.</param>
+public sealed record SurvivorTuning(IReadOnlyList<float> Segments, IReadOnlyList<float> SegmentBossHp, float SpawnEvery, int GroupStart, int GroupEnd,
+    float BossGroupScale, float SpawnMin, float SpawnMax, float RestAfterNamed, IReadOnlyList<string> WeaponPool, float SpecialCooldown,
+    float XpCommon, float XpNamed, float XpBoss, float XpFirst, float XpGrowth)
+{
+    /// <summary>All stretches end to end (the run without boss fights).</summary>
+    public float Total => Segments.Sum();
+}
 
 /// <summary>
 /// Survival and Survivor timing from content/data/mode_rules.json (doc/menu-multiplayer-plan.md 3.1). Which monsters come
@@ -30,14 +38,17 @@ public sealed class ModeTuning
     private static readonly string[] DefaultLootWeapons = { "mp5", "m4", "ak47", "r870", "svd" };
     private static readonly string[] WaveKeys = { "duration_s", "every_s", "group" };
     private static readonly string[] SurvivorKeys =
-        { "boss_at_s", "spawn_every_s", "group_start", "group_end", "boss_group_scale", "spawn_min_m", "spawn_max_m", "rest_after_named_s",
-          "weapon_pool", "rack_size", "special_cooldown_s" };
+        { "segments_s", "segment_boss_hp", "spawn_every_s", "group_start", "group_end", "boss_group_scale", "spawn_min_m", "spawn_max_m",
+          "rest_after_named_s", "weapon_pool", "special_cooldown_s", "xp_common", "xp_named", "xp_boss", "xp_first", "xp_growth" };
+    private static readonly float[] DefaultSegments = { 180, 240, 300, 360 };
+    private static readonly float[] DefaultSegmentHp = { .35f, .5f, .7f, 1 };
     private static readonly string[] DefaultPool = { "mp5", "m4", "ak47", "m249", "r870", "benelli_m4", "svd", "alabong", "railgun" };
 
     private static readonly SurvivalWave DefaultWave = new(40, 4.5f, 5);
 
     public SurvivalTuning Survival { get; private set; } = new(900, 8, 10, 60, new[] { DefaultWave }, 3, 5, DefaultLootWeapons);
-    public SurvivorTuning Survivor { get; private set; } = new(150, 1.3f, 3, 8, .5f, 14, 22, 12, DefaultPool, 3, 25);
+    public SurvivorTuning Survivor { get; private set; } =
+        new(DefaultSegments, DefaultSegmentHp, 1.3f, 3, 8, .5f, 14, 22, 12, DefaultPool, 25, 1, 10, 40, 12, 1.15f);
 
     private readonly List<string> _errors = new();
     public IReadOnlyList<string> Errors => _errors;
@@ -123,20 +134,37 @@ public sealed class ModeTuning
         return pool.Count > 0 ? pool : fallback;
     }
 
+    /// <summary>A list of numbers (segments, health shares); the fallback when missing or not a list of numbers.</summary>
+    private IReadOnlyList<float> Numbers(JsonElement s, string where, string key, IReadOnlyList<float> fallback)
+    {
+        if (!s.TryGetProperty(key, out var list)) return fallback;
+        if (list.ValueKind != JsonValueKind.Array || list.GetArrayLength() == 0 || list.EnumerateArray().Any(x => x.ValueKind != JsonValueKind.Number))
+        {
+            _errors.Add($"{where}: {key} must be a list of numbers");
+            return fallback;
+        }
+        return list.EnumerateArray().Select(x => (float)x.GetDouble()).ToList();
+    }
+
     private void ReadSurvivor(JsonElement s)
     {
         const string where = "mode_rules.json survivor";
         Unknown(s, where, SurvivorKeys);
         var d = Survivor;
         var f = new JsonFields(s, where, _errors);
-        Survivor = new SurvivorTuning(f.Float("boss_at_s", d.BossAt), f.Float("spawn_every_s", d.SpawnEvery), f.Int("group_start", d.GroupStart),
-            f.Int("group_end", d.GroupEnd), f.Float("boss_group_scale", d.BossGroupScale),
+        Survivor = new SurvivorTuning(Numbers(s, where, "segments_s", d.Segments), Numbers(s, where, "segment_boss_hp", d.SegmentBossHp),
+            f.Float("spawn_every_s", d.SpawnEvery), f.Int("group_start", d.GroupStart), f.Int("group_end", d.GroupEnd), f.Float("boss_group_scale", d.BossGroupScale),
             f.Float("spawn_min_m", d.SpawnMin), f.Float("spawn_max_m", d.SpawnMax), f.Float("rest_after_named_s", d.RestAfterNamed),
-            ReadPool(s, where, d.WeaponPool), f.Int("rack_size", d.RackSize), f.Float("special_cooldown_s", d.SpecialCooldown));
-        if (Survivor.RackSize < 1 || Survivor.RackSize > Survivor.WeaponPool.Count) _errors.Add($"{where}: rack_size must be between 1 and the weapon_pool size");
+            ReadPool(s, where, d.WeaponPool), f.Float("special_cooldown_s", d.SpecialCooldown),
+            f.Float("xp_common", d.XpCommon), f.Float("xp_named", d.XpNamed), f.Float("xp_boss", d.XpBoss), f.Float("xp_first", d.XpFirst), f.Float("xp_growth", d.XpGrowth));
         if (Survivor.SpecialCooldown <= 0) _errors.Add($"{where}: special_cooldown_s must be positive");
-        Positive(where, ("boss_at_s", Survivor.BossAt), ("spawn_every_s", Survivor.SpawnEvery), ("group_start", Survivor.GroupStart),
-            ("spawn_min_m", Survivor.SpawnMin));
+        if (Survivor.Segments.Any(x => x <= 0) || Survivor.SegmentBossHp.Any(x => x <= 0)) _errors.Add($"{where}: segments_s and segment_boss_hp must be positive");
+        if (Survivor.SegmentBossHp.Count != Survivor.Segments.Count) _errors.Add($"{where}: segment_boss_hp needs one value per segments_s entry");
+        if (Survivor.XpGrowth < 1) _errors.Add($"{where}: xp_growth must be 1 or more");
+        if (Survivor.WeaponPool.Count(id => ArmoryCatalog.Weapon(id).Slot != WeaponSlot.Special) < 6)
+            _errors.Add($"{where}: weapon_pool needs at least six guns for slot 1 and slot 2 cards");
+        Positive(where, ("spawn_every_s", Survivor.SpawnEvery), ("group_start", Survivor.GroupStart), ("spawn_min_m", Survivor.SpawnMin),
+            ("xp_first", Survivor.XpFirst), ("xp_common", Survivor.XpCommon));
         if (Survivor.RestAfterNamed < 0) _errors.Add($"{where}: rest_after_named_s must not be negative");
         if (Survivor.SpawnMax < Survivor.SpawnMin) _errors.Add($"{where}: spawn_max_m is smaller than spawn_min_m");
     }

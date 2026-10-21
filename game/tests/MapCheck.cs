@@ -122,10 +122,10 @@ public partial class MapCheck : Node
         Check(stage.Hud.FindChild("ObjectivePanel", true, false) is Control panel && !Labels(panel).Contains(Loc.Text("ui_hud_stage")),
             "the HUD title does not call another map Stage 1");
         var survivor = (SurvivorRules)stage.ModeRules!;
+        await Until(() => survivor.LocalQueue.Count == SurvivorRules.ArmingPicks, "the arming cards are offered on the flat map");
         for (int pick = 0; pick < SurvivorRules.ArmingPicks; pick++)
         {
-            Check(survivor.RackItems.Count > 0, $"rack {pick + 1} lies on the flat map");
-            survivor.RackItems[0].Use(stage.Player);
+            survivor.LocalQueue.Choose(stage.Player, 0);
             await Frames(2);
         }
         await Until(() => survivor.SpawnedThisMatch > 0, "Onslaught's swarm comes in on the flat map once armed");

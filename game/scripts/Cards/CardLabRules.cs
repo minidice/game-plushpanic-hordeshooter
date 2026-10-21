@@ -82,13 +82,7 @@ public partial class CardLabRules : ModeRules
     {
         var off = LabCards.All.Where(c => !Cards.IsOn(c)).OrderBy(_ => Rng.Randf()).Take(3).ToList();
         if (off.Count == 0) return;
-        Queue.Add(new CardOffer
-        {
-            Kind = CardKind.Normal,
-            Title = Loc.Text("ui_card_levelup_title"),
-            Choices = off.Select(c => new CardChoice(c.ToString(), Loc.Text(LabCards.Key("name_card_", c)), Loc.Text("tag_card_common"),
-                Loc.Text(LabCards.Key("desc_card_", c)), CardTarget.Common, null, _ => Cards.Set(c, true))).ToList(),
-        });
+        Queue.Add(new CardOffer { Kind = CardKind.Normal, TitleKey = "ui_card_levelup_title", Choices = off.Select(c => CardCatalog.Lab(c, Cards)).ToList() });
     }
 
     /// <summary>A boss-reward cheat: the stand-in special cards that are still off, as a special (gold) offer.</summary>
@@ -96,14 +90,7 @@ public partial class CardLabRules : ModeRules
     {
         var off = LabCards.Specials.Where(s => !Cards.IsOn(s)).ToList();
         if (off.Count == 0) return;
-        Queue.Add(new CardOffer
-        {
-            Kind = CardKind.Special,
-            Title = Loc.Text("ui_card_special_title"),
-            Choices = off.Select(s => new CardChoice(s.ToString(), Loc.Text(LabCards.Key("name_card_", s)), Loc.Text("tag_card_special"),
-                Loc.Text(LabCards.Key("desc_card_", s)), s == LabSpecial.GlassCannon ? CardTarget.Self : CardTarget.Common, null,
-                _ => Cards.Set(s, true))).ToList(),
-        });
+        Queue.Add(new CardOffer { Kind = CardKind.Special, TitleKey = "ui_card_special_title", Choices = off.Select(s => CardCatalog.Special(s, Cards)).ToList() });
     }
 
     /// <summary>A training log at <paramref name="at"/> (it never dies and stays put).</summary>

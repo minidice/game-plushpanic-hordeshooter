@@ -228,9 +228,8 @@ msg_survival_clear,구조대 도착! 거점을 지켰습니다
 msg_survival_core_lost,발전기가 부서졌습니다...
 ui_objective_survivor_cleared,보스 처치!
 ui_objective_survivor_boss,보스를 쓰러뜨리세요
-fmt_objective_survivor_hold,몰려오는 무리를 버티세요 — 보스까지 {0}
+fmt_objective_survivor_hold,몰려오는 무리를 버티세요 — 다음 보스까지 {0}
 fmt_bar_boss,{0}  {1}%
-fmt_bar_boss_eta,보스 등장까지 {0}
 msg_result_survivor_clear,보스를 쓰러뜨렸습니다
 fmt_result_survivor_boss,보스 체력 {0}%를 남기고 쓰러졌습니다
 fmt_result_survivor_lost,{0} 버티고 쓰러졌습니다
@@ -246,11 +245,13 @@ ui_objective_survivor_named,강한 적을 쓰러뜨리세요
 fmt_survivor_rest,강한 적을 쓰러뜨렸습니다! {0}초 동안 정비하세요
 msg_survivor_named,강한 적이 나타났다!
 ui_map_open_field,들판
-fmt_objective_survivor_arm,무기를 고르세요 ({0}/{1}) — 바닥의 무기 중 하나를 E로 줍기
-ui_floor_rack,무기 고르기
-ui_floor_rack_upgrade,강화 무기
-fmt_use_rack,{0} 고르기 → {1}번 칸
-fmt_use_rack_upgrade,{0}(으)로 손에 든 무기 바꾸기
+fmt_objective_survivor_arm,무기 카드를 고르세요 ({0}/{1}) — 1 · 2 · 3번 칸
 msg_survivor_armed,준비 완료! 사방에서 몰려온다
-msg_rack_upgrade,강화 무기가 떨어졌다! 하나를 골라 바꾸세요
 fmt_hud_cooldown,충전 {0}초
+# 난전 카드 흐름 (decisions.md M-27)
+ui_objective_survivor_midboss,중간 보스를 쓰러뜨리세요 — 특별 카드
+fmt_bar_boss_segment,보스 {0}/{1}까지 {2}
+msg_survivor_midboss,중간 보스 등장! 쓰러뜨리면 특별 카드
+fmt_survivor_midboss_down,중간 보스 격파! 특별 카드 — 다음 구간 ({0}/{1})
+fmt_level_up,레벨 {0}! 카드를 고르세요
+fmt_hud_level,Lv {0}

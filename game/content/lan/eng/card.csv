@@ -51,3 +51,10 @@ ui_card_special_title,Boss reward — special card
 tag_card_special,Special card · rule
 fmt_cardlab_specials,Special cards: {0}
 ui_cardlab_none,none
+tag_card_self,You · can be taken again
+name_card_r_damage,Stuffing drill
+desc_card_r_damage,All your damage +10% (stacks)
+name_card_r_heal,Restuff
+desc_card_r_heal,Heal 40% of your max health now
+name_card_r_medkit,Medkit
+desc_card_r_medkit,One more medkit (up to 3)
