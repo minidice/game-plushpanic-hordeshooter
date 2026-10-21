@@ -226,6 +226,31 @@ public partial class CharacterRig : Node3D
         UpdateWeaponGrip();
     }
 
+    /// <summary>
+    /// A limp corpse pose instead of the standing one (I-83): the head droops forward and rolls to <paramref name="side"/>
+    /// (−1 or 1), the feet splay out and the arms flop. Built from the parts every model has (head, feet) and the arm
+    /// nodes some have; nothing here can be undone, so it is only for corpses.
+    /// </summary>
+    public void ApplyDeathPose(float side)
+    {
+        float f = _forwardSign;
+        float r = Definition.ColliderRadius / Mathf.Max(Definition.ModelScale, .001f);
+        if (Head != null) Head.Transform = _headHome * new Transform3D(Basis.FromEuler(new Vector3(.55f * f, 0, .35f * side)), Vector3.Zero);
+        LeftFoot.Transform = Splay(_leftHome, -1, r);
+        RightFoot.Transform = Splay(_rightHome, 1, r);
+        Weapon.Transform = _weaponHome * new Transform3D(Basis.FromEuler(new Vector3(-.5f * f, 0, .4f * side)), Vector3.Zero);
+        foreach (var s in new[] { -1f, 1f })
+            if (Model.FindChild(s < 0 ? "*_leftArm" : "*_rightArm", true, false) is Node3D arm)
+                arm.Rotation += new Vector3(0, 0, s * .9f);
+        // Zombies' reaching arms drop.
+        foreach (var child in Deform.GetChildren())
+            if (child is MeshInstance3D arm && arm.Name.ToString().StartsWith("ZombieArm"))
+                arm.RotationDegrees = new Vector3(15 * f, arm.RotationDegrees.Y * 3, 0);
+    }
+
+    private static Transform3D Splay(Transform3D home, float side, float radius) =>
+        home * new Transform3D(Basis.FromEuler(new Vector3(0, 0, side * .5f)), new Vector3(side * radius * .15f, radius * .05f, 0));
+
     /// <summary>Squash used while lying on the ground as a corpse.</summary>
     public void SetSquash(float amount)
     {

@@ -69,6 +69,22 @@ public partial class CorpseReactionCheck : Node3D
                 var fixedBody = _stage.Effects.NamedCorpses.Last().Visual!;
                 Check(MinimumMeshY(fixedBody.Rig!) >= -.02f, id + " fixed corpse geometry stays above ground");
             }
+            // A named corpse topples into its fixed pose (I-83): it starts upright, never dips into the floor on the
+            // way down, and ends lying exactly where its body was placed at once.
+            var topple = _stage.Spawn(MonsterDatabase.Get("bull"), _origin + new Vector3(8, 0, -9), true);
+            topple.SetPhysicsProcess(false); topple.Die(Vector3.Right, 20);
+            var toppled = _stage.Effects.NamedCorpses.Last().Visual!;
+            var lyingAt = toppled.GlobalTransform;
+            Check(toppled.Rig!.Rotation.X > 1.4f, "a named corpse starts upright and falls over");
+            float lowest = float.PositiveInfinity;
+            ulong until = Time.GetTicksMsec() + (ulong)((Effects.ToppleSeconds + Effects.ReboundSeconds) * 1000) + 300;
+            while (Time.GetTicksMsec() < until)
+            {
+                await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+                lowest = Mathf.Min(lowest, MinimumMeshY(toppled.Rig!));
+            }
+            Check(lowest >= -.02f, $"it never sinks into the floor while falling (lowest {lowest:0.000} m)");
+            Check(toppled.Rig!.Rotation.Length() < .01f && toppled.GlobalTransform.IsEqualApprox(lyingAt), "and ends lying in its fixed pose, its body never moved");
             await Frames(90);
             Check(named.Rig!.Visible && !named.Rig.IsSilhouette, "death restores full corpse materials from a living silhouette");
             var fresh = _stage.Spawn(MonsterDatabase.Get("humanoid"), _origin + new Vector3(2, 0, -1), true);

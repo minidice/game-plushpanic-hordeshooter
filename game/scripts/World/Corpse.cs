@@ -16,7 +16,7 @@ public partial class Corpse : RigidBody3D
 
     public CharacterRig? Rig { get; set; }
     public NamedCorpseRecord? NamedRecord { get; internal set; }
-    private float _calm, _sinceKick;
+    private float _calm, _sinceKick, _lastFall;
 
     public override void _Ready()
     {
@@ -36,6 +36,16 @@ public partial class Corpse : RigidBody3D
         _sinceKick += dt;
         bool calm = LinearVelocity.LengthSquared() < CalmSpeed * CalmSpeed && AngularVelocity.LengthSquared() < CalmSpin * CalmSpin;
         _calm = calm ? _calm + dt : 0;
+        // Hitting the ground after a fall: a quick squash that relaxes (I-83).
+        if (_lastFall < -2.5f && LinearVelocity.Y > -.5f) Flop(Mathf.Clamp(-_lastFall / 8f, .25f, .55f));
+        _lastFall = LinearVelocity.Y;
+    }
+
+    private void Flop(float amount)
+    {
+        if (Rig == null) return;
+        var rig = Rig;
+        rig.CreateTween().TweenMethod(Callable.From<float>(rig.SetSquash), amount, .1f, .3f).SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
     }
 
     public bool ReadyToRest => !Sleeping && !Freeze && _calm >= CalmSeconds && _sinceKick >= KickGrace;

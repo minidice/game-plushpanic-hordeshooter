@@ -67,6 +67,7 @@ public partial class CardLabRules : ModeRules
         Trickle = false;
         ClearEnemies();
         foreach (var c in LabCards.All) Cards.Set(c, false);
+        foreach (var s in LabCards.Specials) Cards.Set(s, false);
         Queue.Clear();
         var loadout = Stage.Player.Loadout;
         loadout.SetSlot(1, ArmoryCatalog.Weapon(ArmoryCatalog.StartingWeapon));
@@ -90,9 +91,33 @@ public partial class CardLabRules : ModeRules
         });
     }
 
+    /// <summary>A boss-reward cheat: the stand-in special cards that are still off, as a special (gold) offer.</summary>
+    public void TestSpecial()
+    {
+        var off = LabCards.Specials.Where(s => !Cards.IsOn(s)).ToList();
+        if (off.Count == 0) return;
+        Queue.Add(new CardOffer
+        {
+            Kind = CardKind.Special,
+            Title = Loc.Text("ui_card_special_title"),
+            Choices = off.Select(s => new CardChoice(s.ToString(), Loc.Text(LabCards.Key("name_card_", s)), Loc.Text("tag_card_special"),
+                Loc.Text(LabCards.Key("desc_card_", s)), s == LabSpecial.GlassCannon ? CardTarget.Self : CardTarget.Common, null,
+                _ => Cards.Set(s, true))).ToList(),
+        });
+    }
+
+    /// <summary>A training log at <paramref name="at"/> (it never dies and stays put).</summary>
+    public TrainingDummy SpawnDummy(Vector3 at) => Stage.SpawnEnemy<TrainingDummy>(MonsterDatabase.Get("plush"), new Vector3(at.X, 0, at.Z), awake: false);
+
+    public void RemoveDummies()
+    {
+        foreach (var d in Stage.AllEnemies.OfType<TrainingDummy>().ToList()) d.QueueFree();
+    }
+
+    /// <summary>Removes the monsters; training logs stay.</summary>
     public void ClearEnemies()
     {
         foreach (var e in Stage.Enemies.ToList())
-            if (IsInstanceValid(e) && !e.IsDead) e.QueueFree();
+            if (IsInstanceValid(e) && !e.IsDead && e is not TrainingDummy) e.QueueFree();
     }
 }

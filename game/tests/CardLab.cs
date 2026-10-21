@@ -9,7 +9,8 @@ namespace HordeShooter.Tests;
 /// the six lab cards on and off to feel the goofy chains. Keyboard only, so the mouse keeps aiming:
 /// F1–F6 cards, 0 all on/off, F7 a horde ring, F8 a named, F9 trickle, F10 slow motion, F11/F12 next gun in slot 1/2,
 /// Backspace clears the monsters, Home is the cheat reset (frying pan only, then the slot 1 · 2 · 3 arming cards in the
-/// card window), L offers a test level-up card, F reopens put-off cards. The survivor cannot be hurt.
+/// card window), L offers a normal (level-up) card, K a special (boss reward) card, F reopens put-off cards, T puts a
+/// training log at the cursor (Shift+T removes them). The survivor cannot be hurt.
 /// Run with <c>Start-Game.ps1 -CardLab</c>.
 /// </summary>
 public partial class CardLab : Node
@@ -19,7 +20,7 @@ public partial class CardLab : Node
     public Stage Stage { get; private set; } = null!;
     public CardLabRules Rules { get; private set; } = null!;
     public CardWindow Window { get; private set; } = null!;
-    private Label _cards = null!, _keys = null!, _stats = null!;
+    private Label _cards = null!, _keys = null!, _stats = null!, _specials = null!;
     private int _gun1, _gun2, _named;
     private IReadOnlyList<string> _pool = new List<string>();
 
@@ -60,6 +61,7 @@ public partial class CardLab : Node
         panel.AddChild(box);
         box.AddChild(Hud.HudLabel(Loc.Text("ui_cardlab_title"), 18, Hud.HudWarm));
         box.AddChild(_cards = Hud.HudLabel("", 14, Hud.HudWhite));
+        box.AddChild(_specials = Hud.HudLabel("", 13, new Color("ffcf5a")));
         box.AddChild(_keys = Hud.HudLabel("", 12, Hud.HudMuted));
         box.AddChild(_stats = Hud.HudLabel("", 12, Hud.HudMuted));
     }
@@ -72,6 +74,8 @@ public partial class CardLab : Node
             "\n      " + Loc.Text(CardKey("desc_card_", c))));
         _keys.Text = Loc.Format("ui_cardlab_keys", Loc.Text(Rules.Trickle ? "ui_cardlab_on" : "ui_cardlab_off"),
             Loc.Text(Engine.TimeScale < 1 ? "ui_cardlab_on" : "ui_cardlab_off"));
+        var specials = LabCards.Specials.Where(cards.IsOn).Select(s => Loc.Text(LabCards.Key("name_card_", s))).ToList();
+        _specials.Text = Loc.Format("fmt_cardlab_specials", specials.Count > 0 ? string.Join(" · ", specials) : Loc.Text("ui_cardlab_none"));
         _stats.Text = Loc.Format("fmt_cardlab_stats", cards.Floats, cards.Pops, cards.LargestClump, cards.ClumpBursts,
             cards.StuffingBursts, cards.BilliardHits, cards.Honks, cards.Ducks);
     }
@@ -108,6 +112,9 @@ public partial class CardLab : Node
             case Key.Backspace: Rules.ClearEnemies(); break;
             case Key.Home: Rules.CheatReset(); break;
             case Key.L: Rules.TestLevelUp(); break;
+            case Key.K: Rules.TestSpecial(); break;
+            case Key.T when key.ShiftPressed: Rules.RemoveDummies(); break;
+            case Key.T: Rules.SpawnDummy(Stage.Player.AimPoint); break;
             default: return;
         }
         GetViewport().SetInputAsHandled();

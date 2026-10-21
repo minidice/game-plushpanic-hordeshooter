@@ -498,10 +498,14 @@ public partial class Enemy : CharacterBody3D
         QueueFree();
     }
 
+    /// <summary>A body flies at most this hard and only part of it sideways, so corpses land near where they fell (I-83).</summary>
+    public const float CorpseMaxPush = 9f, CorpseSideShare = .6f;
+
     protected void SpawnCorpse(Vector3 direction, float force, float radius, float height)
     {
         direction.Y = 0;
-        var impulse = direction.Normalized() * force + Vector3.Up * (force * .7f + 2f);
+        force = Mathf.Min(force, CorpseMaxPush);
+        var impulse = direction.Normalized() * force * CorpseSideShare + Vector3.Up * (force * .4f + 1.6f);
         var torque = new Vector3(Rng.RandfRange(-2, 2), Rng.RandfRange(-1, 1), Rng.RandfRange(-2, 2)) * (1 + force * .15f);
         Stage.Effects.SpawnCorpse(Rig, radius, height, impulse, torque, Monster);
     }

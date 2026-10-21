@@ -26,7 +26,8 @@ ui_cardlab_off,off
 ui_cardlab_keys,"F7 Horde · F8 Named · F9 Trickle {0}
 F10 Slow {1} · F11 Next slot-1 gun · F12 Next slot-2 gun
 Backspace Clear · 0 All cards on/off
-Home Cheat reset (slot 1 · 2 · 3 cards) · L Level-up card · F Open put-off cards"
+Home Cheat reset (slot 1 · 2 · 3 cards) · L Normal card (level-up) · K Special card (boss reward)
+F Open put-off cards · T Training log at the cursor · Shift+T Remove logs"
 fmt_cardlab_stats,"Float {0} · Pop {1} · Largest clump {2} · Burst {3}
 Stuffing {4} · Billiards {5} · Honk {6} · Duck {7}"
 # Card window (decisions.md M-27)
@@ -38,3 +39,15 @@ ui_card_hint_closable,Click or 1 · 2 · 3  ·  ✕ or F to put it off (F opens 
 ui_card_levelup_title,Level up!
 ui_card_plus_key,F
 tag_card_common,Shared card · every gun
+fmt_cardlab_dps,DPS {0}
+fx_card_last_shot,Last shot!
+name_card_helium_party,Helium party
+name_card_last_shot,Last shot
+name_card_glass_cannon,Glass cannon
+desc_card_helium_party,Any bullet sometimes floats a common at once. Shoot a floating one to pop it (named and bosses stay down)
+desc_card_last_shot,The last round of a magazine explodes where it hits
+desc_card_glass_cannon,All damage ×2 · Price: half your max health (none in the lab, you cannot be hurt there)
+ui_card_special_title,Boss reward — special card
+tag_card_special,Special card · rule
+fmt_cardlab_specials,Special cards: {0}
+ui_cardlab_none,none

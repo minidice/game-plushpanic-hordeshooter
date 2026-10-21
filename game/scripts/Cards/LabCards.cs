@@ -7,6 +7,9 @@ namespace HordeShooter;
 /// <summary>The six cards of the first lab set (doc/onslaught-card-ideas.md 5장).</summary>
 public enum LabCard { Balloon, Velcro, StuffingBurst, Billiards, HonkReload, RubberDuck }
 
+/// <summary>Three stand-in special cards for the boss-reward cheat (plan 6.3): rules for every gun, one with a price.</summary>
+public enum LabSpecial { HeliumParty, LastShot, GlassCannon }
+
 /// <summary>
 /// Card lab prototype (decisions.md M-27, `[임시]`): six Onslaught cards that can be switched on and off while
 /// playing, to see whether the goofy chains are fun and readable before the real card system exists. Every card
@@ -17,6 +20,10 @@ public enum LabCard { Balloon, Velcro, StuffingBurst, Billiards, HonkReload, Rub
 public partial class LabCards : Node
 {
     public static readonly LabCard[] All = { LabCard.Balloon, LabCard.Velcro, LabCard.StuffingBurst, LabCard.Billiards, LabCard.HonkReload, LabCard.RubberDuck };
+    public static readonly LabSpecial[] Specials = { LabSpecial.HeliumParty, LabSpecial.LastShot, LabSpecial.GlassCannon };
+
+    // Helium party: a hit sometimes floats a common at once. Last shot: the shot that empties a magazine explodes.
+    private const float HeliumChance = .12f, LastShotRadius = 3.2f, LastShotPower = 150f, LastShotDamage = 60f, GlassCannonDamage = 2f;
 
     // Balloon rounds: each hit inflates, a full monster floats; shooting a floating one pops it.
     private const float InflatePerHit = .12f, InflatePerDamage = 1 / 250f, FloatSeconds = 4f;
@@ -37,6 +44,8 @@ public partial class LabCards : Node
 
     public Stage Stage { get; set; } = null!;
     private readonly HashSet<LabCard> _on = new();
+    private readonly HashSet<LabSpecial> _specials = new();
+    private ulong _lastShotFrame;
     private readonly Dictionary<Enemy, float> _billiardsReady = new();
     private readonly Dictionary<Enemy, int> _clumpOf = new();
     private readonly Dictionary<Player, bool> _wasReloading = new();
@@ -54,11 +63,26 @@ public partial class LabCards : Node
     public int BilliardHits { get; private set; }
     public int Honks { get; private set; }
     public int Ducks { get; private set; }
+    public int LastShots { get; private set; }
 
     /// <summary>How many monsters are in <paramref name="enemy"/>'s velcro clump this frame (0 = none).</summary>
     public int ClumpSize(Enemy enemy) => _clumpOf.TryGetValue(enemy, out int clump) ? _clumpOf.Count(c => c.Value == clump) : 0;
 
     public bool IsOn(LabCard card) => _on.Contains(card);
+    public bool IsOn(LabSpecial card) => _specials.Contains(card);
+
+    public void Set(LabSpecial card, bool on)
+    {
+        if (on) _specials.Add(card); else _specials.Remove(card);
+        if (card == LabSpecial.GlassCannon) Stage.Player.DamageMultiplier = on ? GlassCannonDamage : 1f;
+    }
+
+    public static string Key(string prefix, LabSpecial card) => prefix + card switch
+    {
+        LabSpecial.HeliumParty => "helium_party",
+        LabSpecial.LastShot => "last_shot",
+        _ => "glass_cannon",
+    };
 
     /// <summary>Loc key of a card: name_card_balloon, desc_card_stuffing_burst…</summary>
     public static string Key(string prefix, LabCard card) => prefix + card switch
@@ -102,11 +126,18 @@ public partial class LabCards : Node
     private void OnHit(Enemy enemy, HitInfo hit)
     {
         if (!Stage.Authoritative) return;
-        if (IsOn(LabCard.Balloon) && enemy is not BossEnemy)
+        bool helium = IsOn(LabSpecial.HeliumParty) && !enemy.IsSpecial;
+        if ((IsOn(LabCard.Balloon) || helium) && enemy.Floating) Pop(enemy, hit.Direction);
+        else if (IsOn(LabCard.Balloon) && enemy is not BossEnemy)
         {
-            if (enemy.Floating) Pop(enemy, hit.Direction);
-            else if (enemy.AddInflate(InflatePerHit + hit.Damage * InflatePerDamage, FloatSeconds)) StartFloating(enemy);
+            if (enemy.AddInflate(InflatePerHit + hit.Damage * InflatePerDamage, FloatSeconds)) StartFloating(enemy);
             else if (!enemy.IsDead) Stage.Sfx.PlayAt("balloon_inflate", enemy.GlobalPosition + Vector3.Up, -6, 1 + enemy.Inflate);
+        }
+        else if (helium && !enemy.IsDead && GD.Randf() < HeliumChance && enemy.AddInflate(1, FloatSeconds)) StartFloating(enemy);
+        if (IsOn(LabSpecial.LastShot) && Stage.Player.Gun is { Mag: 0, IsMelee: false } && Engine.GetPhysicsFrames() != _lastShotFrame)
+        {
+            _lastShotFrame = Engine.GetPhysicsFrames();
+            LastShot(hit.Point);
         }
         if (IsOn(LabCard.Velcro) && !enemy.IsDead) enemy.StickyTime = StickySeconds;
         if (IsOn(LabCard.RubberDuck) && ++_hitsSinceDuck >= DuckEveryHits && Stage.Lure == null) DropDuck(hit.Point);
@@ -281,6 +312,18 @@ public partial class LabCards : Node
         var side = new Vector3(GD.Randf() - .5f, 0, GD.Randf() - .5f).Normalized() * 1.2f;
         ThrownItem.Throw(Stage, _duck, ground + Vector3.Up * 1.2f, ground + side);
         Stage.Effects.FloatingText(at + Vector3.Up * 1.6f, Loc.Text("fx_card_duck"), new Color("ffd23f"));
+    }
+
+    // ---------- specials ----------
+
+    /// <summary>The magazine's last round goes off where it hits.</summary>
+    private void LastShot(Vector3 at)
+    {
+        LastShots++;
+        Stage.Effects.Explosion(at, LastShotRadius, new Color("ffb347"));
+        Stage.Sfx.PlayAt("explosion", at + Vector3.Up);
+        Stage.Effects.FloatingText(at + Vector3.Up * 2f, Loc.Text("fx_card_last_shot"), new Color("ffb347"));
+        ShoveAround(at, LastShotRadius, LastShotPower, LastShotDamage, null);
     }
 
     // ---------- shared ----------

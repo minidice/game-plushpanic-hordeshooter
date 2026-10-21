@@ -26,7 +26,8 @@ ui_cardlab_off,끔
 ui_cardlab_keys,"F7 적 무리 · F8 네임드 · F9 계속 나오기 {0}
 F10 느리게 {1} · F11 1번 무기 바꾸기 · F12 2번 무기 바꾸기
 Backspace 적 지우기 · 0 카드 모두 켜기/끄기
-Home 치트 초기화(1 · 2 · 3번 칸 카드) · L 레벨업 카드 · F 미룬 카드 열기"
+Home 치트 초기화(1 · 2 · 3번 칸 카드) · L 일반 카드(레벨업) · K 특별 카드(보스 보상)
+F 미룬 카드 열기 · T 통나무 놓기(커서 위치) · Shift+T 통나무 치우기"
 fmt_cardlab_stats,"둥실 {0} · 펑 {1} · 덩어리 최대 {2} · 찍! {3}
 솜 폭발 {4} · 당구 {5} · 꽥 {6} · 오리 {7}"
 # 카드 창 (decisions.md M-27)
@@ -38,3 +39,15 @@ ui_card_hint_closable,클릭 또는 1 · 2 · 3  ·  ✕ 또는 F로 미뤄 두�
 ui_card_levelup_title,레벨 업!
 ui_card_plus_key,F
 tag_card_common,공용 카드 · 모든 총
+fmt_cardlab_dps,DPS {0}
+fx_card_last_shot,마지막 한 발!
+name_card_helium_party,헬륨 파티
+name_card_last_shot,마지막 한 발
+name_card_glass_cannon,유리 대포
+desc_card_helium_party,모든 총알이 가끔 일반 몹을 바로 띄움. 떠 있는 몹을 쏘면 펑 (네임드 · 보스는 안 뜸)
+desc_card_last_shot,탄창의 마지막 한 발이 맞은 자리에서 폭발
+desc_card_glass_cannon,모든 피해 2배 · 대가: 최대 체력 절반 (실험실은 무적이라 대가 없음)
+ui_card_special_title,보스 보상 — 특별 카드
+tag_card_special,특별 카드 · 규칙
+fmt_cardlab_specials,특별 카드: {0}
+ui_cardlab_none,없음

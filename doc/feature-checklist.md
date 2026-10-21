@@ -176,3 +176,14 @@
 - 회귀: `Integration` 148, `ModeCheck` 79, `MenuCheck` 39, `NetSyncCheck` 28, `LobbyCheck` 31, `InventoryCheck` 41, `WeaponHandlingCheck` 36, `SquadCheck` 50, `InputCheck` 14(창 모드) 통과. 카드 고른 클릭이 사격으로 이어지지 않게 한 수정 뒤 `CardLabCheck` · `InventoryCheck` · `ModeCheck` · `InputCheck`를 다시 돌려 통과.
 - 렌더 `output/cardlab-arming-1.png`(1번 칸 무기 카드 3장), `cardlab-levelup.png`(레벨업 카드와 ✕), `cardlab-plus-badge.png`(+ ×2 F 배지). 손으로 해 본 느낌은 미확인.
 
+### 이번 변경 확인 기록 — 2026-10-21 (훈련용 통나무 · 특별 카드 치트)
+
+- `CardLabCheck` 68개(헤드리스)·69개(창 모드) 통과: L 일반 · K 특별 카드가 받은 순서대로 쌓임, 특별 카드 3장(유리 대포 피해 2배, 마지막 한 발 폭발, 헬륨 파티는 일반 몹만 띄움), T 통나무가 커서 자리에 서고 어떤 피해 · 풍선 펑에도 죽지 않고 제자리, 몹 지우기에도 남음, Shift+T로 치움.
+- 회귀: `Integration` 148, `ModeCheck` 79, `EnemyAttackCheck` 79 통과.
+- 렌더 `output/cardlab-special.png`(금색 특별 카드 창), `cardlab-training-log.png`(통나무 피해 숫자 · DPS — 검사 중 9999 밀치기가 섞여 DPS가 크게 보임), 죽는 모습 확인용 `output/death-*.png`(I-83).
+
+### 이번 변경 확인 기록 — 2026-10-21 (죽는 모습 1차, 코드만)
+
+- 늘어진 시체 자세 · 날아가는 거리 줄임 · 착지 찌그러짐 · 네임드 넘어지기(I-83). `CorpseReactionCheck` 29개(새 3개: 네임드가 선 자세에서 넘어짐, 넘어지는 동안 바닥 아래로 안 들어감, 몸은 그대로 고정 자세로 끝남), `CorpseTierCheck` 36, `CorpseBoundsCheck` 1, `CorpsePileCheck` 2, `CorpseRetentionCheck` 16, `EnemyExpansion` 60, `CombatPacingCheck` 44, `ModeCheck` 79, `CardLabCheck` 68, `NetSyncCheck` 28, `EnemyAttackCheck` 79, `SpawnCheck` 41, `Integration` 148 통과.
+- 렌더 `output/death-*.png`(`tests/DeathCapture.tscn`): 시체가 쓰러진 자리 근처(몇 m 안)에 발을 벌리고 누움. 손으로 해 본 느낌은 미확인.
+

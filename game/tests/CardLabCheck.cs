@@ -95,6 +95,7 @@ public partial class CardLabCheck : Node
     private async Task Reset()
     {
         foreach (var c in LabCards.All) Cards.Set(c, false);
+        foreach (var s in LabCards.Specials) Cards.Set(s, false);
         _rules.ClearEnemies();
         await Frames(3);
     }
@@ -300,6 +301,76 @@ public partial class CardLabCheck : Node
             await Click(((Control)window.FindChild("Card2", true, false)!).GetGlobalRect().GetCenter());
             Check(queue.Count == 0 && LabCards.All.Count(Cards.IsOn) == before + 1, "clicking a card picks it");
         }
+        await Reset();
+
+        // ---------- special cards (boss-reward cheat) ----------
+        Key(Godot.Key.L);
+        Key(Godot.Key.K);
+        await Idle(2);
+        Check(queue.Count == 2 && queue.Offers[0].Kind == CardKind.Normal && queue.Offers[1].Kind == CardKind.Special,
+            "L gives a normal card, K a special one, and they wait in the order they came");
+        window.Pick(0);
+        Check(queue.Front!.Kind == CardKind.Special && queue.Front.Choices.Count == 3 && window.IsOpen, "the special offer follows with three special cards");
+        await Shot("special");
+        int glass = queue.Front.Choices.ToList().FindIndex(c => c.Id == nameof(LabSpecial.GlassCannon));
+        window.Pick(glass);
+        Check(Cards.IsOn(LabSpecial.GlassCannon) && Mathf.IsEqualApprox(player.DamageMultiplier, 2), "glass cannon doubles the survivor's damage");
+        await Reset();
+        Cards.Set(LabSpecial.LastShot, true);
+        spot = OpenSpot(10);
+        var lastTarget = await Common(spot);
+        var lastNeighbour = await Common(spot + new Vector3(1.4f, 0, 0));
+        player.Loadout.SelectSlot(2);
+        player.Gun.SetAmmo(0, player.Gun.Reserve);
+        Tap(lastTarget);
+        Check(Cards.LastShots == 1 && lastNeighbour.KnockSpeed > 3, "with an empty magazine the hit explodes (last shot)");
+        await Reset();
+        Cards.Set(LabSpecial.HeliumParty, true);
+        spot = OpenSpot(10);
+        var floaty = await Common(spot);
+        var bull = _stage.Spawn(MonsterDatabase.Get("bull"), spot + new Vector3(3, 0, 0), awake: false);
+        await Frames(2);
+        for (int i = 0; i < 80 && !floaty.Floating; i++) Tap(floaty, .01f);
+        for (int i = 0; i < 80; i++) Tap(bull, .01f);
+        Check(floaty.Floating && !bull.Floating, "helium party floats commons now and then, never a named one");
+        Cards.Set(LabSpecial.HeliumParty, false);
+        Cards.Set(LabSpecial.GlassCannon, false);
+        await Reset();
+
+        // ---------- the training log ----------
+        var logAt = OpenSpot(5);
+        player.SetControls(Vector2.Zero, logAt + Vector3.Up, false);
+        await Frames(2);
+        Key(Godot.Key.T);
+        await Frames(3);
+        var log = _stage.Enemies.OfType<TrainingDummy>().SingleOrDefault();
+        Check(log != null && log.GlobalPosition.DistanceTo(new Vector3(player.AimPoint.X, 0, player.AimPoint.Z)) < 1.5f, "T puts a training log at the cursor");
+        var logHome = log!.GlobalPosition;
+        for (int i = 0; i < 3; i++) Tap(log, 100);
+        log.Shove(Vector3.Right, 200, 9999);
+        await Frames(20);
+        Check(!log.IsDead && IsInstanceValid(log) && log.TotalDamage >= 300 + 9999 && log.Dps > 0, $"it takes any damage without dying (DPS {log.Dps:0})");
+        Check(log.GlobalPosition.DistanceTo(logHome) < .05f, "and does not move off its spot");
+        Cards.Set(LabCard.Balloon, true);
+        for (int i = 0; i < 12; i++) Tap(log);
+        Check(!log.IsDead && IsInstanceValid(log), "a balloon pop cannot kill it either");
+        Key(Godot.Key.Backspace);
+        await Frames(3);
+        Check(IsInstanceValid(log) && _stage.Enemies.Contains(log), "clearing the monsters leaves the log");
+        if (Windowed)
+        {
+            // A few real shots at it for the render: damage numbers and DPS.
+            player.Loadout.SelectSlot(2);
+            for (int t = 0; t < 60; t++)
+            {
+                player.SetControls(Vector2.Zero, log.GlobalPosition + Vector3.Up, t % 8 == 0);
+                await Frames(1);
+            }
+            await Shot("training-log");
+        }
+        _rules.RemoveDummies();
+        await Frames(3);
+        Check(!_stage.AllEnemies.OfType<TrainingDummy>().Any(), "Shift+T clears the logs");
         await Reset();
 
         // ---------- every card on, a real fight (window only) ----------

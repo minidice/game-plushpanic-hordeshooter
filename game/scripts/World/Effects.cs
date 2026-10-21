@@ -209,6 +209,8 @@ public partial class Effects : Node3D
         }
         body.GlobalPosition = origin + Vector3.Up * height * .5f;
         rig.ResetPose();
+        // Limp, not a statue (I-83). The roll side follows the facing, so every PC poses a named corpse the same way.
+        rig.ApplyDeathPose(Mathf.Sin(rig.GlobalRotation.Y * 7.3f) >= 0 ? 1 : -1);
         rig.Visible = true; // corpses are scenery, even if the enemy died outside the vision cone
         rig.ShowAs(VisionSystem.Visibility.Visible);
         rig.Reparent(body);
@@ -234,8 +236,44 @@ public partial class Effects : Node3D
             if (float.IsFinite(bottom))
                 body.GlobalPosition += Vector3.Up * Mathf.Max(0, origin.Y + .02f - bottom);
             body.NamedRecord.DeathYaw = yaw;
+            Topple(body, rig, origin);
         }
         return body;
+    }
+
+    public const float ToppleSeconds = .45f, ReboundSeconds = .22f;
+
+    /// <summary>
+    /// A named corpse is placed at its fixed resting pose at once (T-16); only its look falls there: the model starts
+    /// upright where the monster stood and tips over onto the body, then flops (I-83).
+    /// </summary>
+    private static void Topple(Corpse body, CharacterRig rig, Vector3 feet)
+    {
+        var restPosition = rig.Position;
+        var restRotation = rig.Rotation;
+        var upright = new Vector3(Mathf.Pi * .5f, 0, 0);
+        var startPosition = body.ToLocal(feet);
+        void Pose(float t)
+        {
+            if (!IsInstanceValid(rig)) return;
+            // Falls faster and faster, then a small rebound where the head end lifts and drops again.
+            float fall = Mathf.Min(t / ToppleSeconds, 1);
+            float rebound = t > ToppleSeconds ? Mathf.Sin(Mathf.Pi * Mathf.Min((t - ToppleSeconds) / ReboundSeconds, 1)) * .12f : 0;
+            rig.Rotation = upright.Lerp(restRotation, fall * fall) + new Vector3(rebound, 0, 0);
+            rig.Position = startPosition.Lerp(restPosition, fall * fall);
+            // Splayed feet and the swing can reach below the floor for a moment: lift so nothing sinks into it.
+            float bottom = RestingMeshBottom(rig);
+            if (float.IsFinite(bottom) && bottom < feet.Y) rig.GlobalPosition += Vector3.Up * (feet.Y - bottom);
+        }
+        Pose(0);
+        var tween = rig.CreateTween();
+        tween.TweenMethod(Callable.From<float>(Pose), 0f, ToppleSeconds + ReboundSeconds, ToppleSeconds + ReboundSeconds);
+        tween.TweenCallback(Callable.From(() =>
+        {
+            if (!IsInstanceValid(rig)) return;
+            rig.Rotation = restRotation;
+            rig.Position = restPosition;
+        }));
     }
 
     private static float RestingMeshBottom(Node node)
