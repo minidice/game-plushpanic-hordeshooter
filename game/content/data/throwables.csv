@@ -4,4 +4,4 @@ frag,name_throwable_frag,frag,2,16,2200,false,frag_blast,4f5c35,,
 molotov,name_throwable_molotov,fire,2,16,0,true,molotov_fire,d27a2a,,
 flashbang,name_throwable_flashbang,flash,2,16,1600,false,flash_stun;flash_blind,c8ccd2,,
 lure,name_throwable_lure,lure,2,16,0,false,lure_attract;lure_blast,ff5aa0,,
-rubber_duck,name_throwable_rubber_duck,lure,1,16,0,false,duck_attract;duck_pop,ffd23f,,
+rubber_duck,name_throwable_rubber_duck,lure,1,16,0,false,duck_attract;duck_pop,ffd23f,res://assets/weapons/rubber_duck.glb,res://assets/icons/rubber_duck.png

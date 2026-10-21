@@ -21,6 +21,7 @@
 - [x] 난전 중간 보스 전용 모델(2026-10-21, A-17): 풍선 대왕(금관 · 망토 · 풍선 다발) · 토사물 어미(뒤쪽 후드 · 입 깔때기 · 등 주머니), Codex 2회 + Claude 마무리, 보스 크기 정리(중간 약 3 m < 최종 약 3.2 m), `MonsterLineupCapture`에 보스 줄 · 근접 렌더 ([지시문](model-briefs/midbosses-balloon-spitter.md))
 - [x] 실험실 피드백 반영 1차(2026-10-21, M-27 계획 13.2): 카드는 고른 사람의 것(명중에 쏜 사람 · 무기 분류), 풍선탄 4방 펑 · 네임드 면역, 카드 트리(풍선탄 · 찍찍이 강화 Lv), 당구 저격 · 샷건 전용(관통 당구 · 산탄 볼링), 꽥 · 고무오리는 레벨업에서 제외, 실험실 L = 난전 레벨업 제안
 - [x] 난전 3번 칸 꽥 · 고무오리 1차(2026-10-21, M-27 계획 13.1): 발사 방식 `shout`(주변 밀쳐내기) · `throw`(투척물 던지기), 3번 칸 무장 카드 후보 5종, 난전 전용 무기별 쿨타임 `special_cooldowns`, 실험실 오리 카드도 같은 오리
+- [x] 꽥 경적 · 고무오리 전용 모델 · 아이콘(2026-10-21, A-17 · I-87): Codex Blender 스크립트(`gadget-models.py`) + Claude 수정(축 · 색 · 부리 · 크기), 던진 오리도 같은 모델, 아이콘은 `render-weapon-icons.py --only`
 - [ ] 난전 개편(M-27) 나머지: 소환수(드론 · 부사수 · 펫), 레벨업 일반 카드 · 보스 특별 카드, 총 분류별 풀, 하데스식 카드 창 · + 아이콘 · 버프 줄 ([계획](onslaught-cards-plan.md))
 - [ ] 거점·난전 다음: 팀원 직접 교환·큰 배낭·탈출, 전용 맵·전용 보스 모델, 멀티에서 보스 연출 동기화(I-77), 수치 플레이 조정
 - [x] 멀티 메뉴: 방 만들기, 주소로 참가(2인 테스트). 방 코드·공개방은 준비 중
@@ -158,6 +159,11 @@
 
 - C# 빌드 경고·오류 0. `ModeCheck` 81개(창 모드, 화면 밖 화살표 포함)·79개(헤드리스), `MapCheck` 25, `WeaponHandlingCheck` 30, `Integration` 148, `NetSyncCheck` 28, `NetCodecCheck` 11, `LobbyCheck` 31, `MenuCheck` 39, `SquadCheck` 50, `SpawnCheck` 41, `CombatPacingCheck` 44, `ReloadPoseCheck` 279, `EnemyAttackCheck` 79, `VisionTierCheck` 23 통과.
 - 렌더: `output/map-open-field.png`·`mode-survivor-rack.png`(들판·진열대·바닥 글씨·무장 목표), `mode-survivor-arrow.png`(화면 밖 팀원 화살표, `∞` 탄약, "난전 · 들판"). 실제 손으로 하는 난이도·들판 성능은 미확인(I-26·I-80). 2인 멀티로 들판·진열대를 해 보지는 않음.
+
+### 이번 변경 확인 기록 — 2026-10-21 (꽥 · 고무오리 전용 모델 · 아이콘)
+
+- Blender `gadget-models.py` 내보내기 검사 통과(경적 삼각형 1,568 · 메시 3 · 재질 4, 오리 2,444 · 4 · 4, `Muzzle` 앞쪽 거리 = `length_m`). `CardLabCheck` 84(헤드리스) · 85(창 모드, 근접 렌더 포함), `ModeCheck` 120, `OnslaughtNetCheck` 16, `MapCheck` 24, `HitFlashCheck`, `EnemyAttackCheck` 79, `SpawnCheck` 41, `NetSyncCheck` 28, `NetCodecCheck` 12, `LobbyCheck` 31, `MenuCheck` 39, `SquadCheck` 50, `InventoryCheck` 41, `WeaponHandlingCheck` 36, `CombatPacingCheck` 44, `SupplyCheck` 12, `ReloadPoseCheck` 279, `Integration` 148 통과.
+- 렌더: `game/assets/icons/honk.png` · `rubber_duck.png`, `output/cardlab-arming-3.png` · `cardlab-slot3-honk-close.png` · `cardlab-slot3-duck-thrown.png` · `cardlab-slot3-duck-hand.png`. 이전 모습은 로컬 `output/before-gadget/`.
 
 ### 이번 변경 확인 기록 — 2026-10-21 (3번 칸 꽥 · 고무오리)
 

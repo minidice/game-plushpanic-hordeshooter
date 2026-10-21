@@ -296,8 +296,17 @@ public partial class CardLabCheck : Node
         await Frames(2);
         player.SetControls(Vector2.Zero, player.GlobalPosition + new Vector3(3, 1, 0), false);
         await Shot("slot3-honk");
+        if (Windowed)
+        {
+            // Up close: the horn in hand (its own model, honk.glb).
+            _stage.Cam.Close = true;
+            _stage.Cam.SnapTo(player.GlobalPosition);
+            await Frames(10);
+            await Shot("slot3-honk-close");
+        }
         var honkGun = player.Loadout.Special!;
         Check(honked.KnockSpeed > 3 && honked.Health < honkedHealth, $"the honk shoves the monster next to you away ({honked.KnockSpeed:0.0} m/s) and hurts it a little");
+        _stage.Cam.Close = false;
         Check(!honkGun.CanFire && honkGun.CooldownLeft > 0 && Mathf.IsEqualApprox(honkGun.ShotCooldown, cooldowns["honk"]),
             $"then it recharges for its own {cooldowns["honk"]} s (mode_rules special_cooldowns)");
         await Reset();
@@ -313,6 +322,21 @@ public partial class CardLabCheck : Node
         player.SetControls(Vector2.Zero, duckSpot + Vector3.Up * .1f, false);
         await Until(() => _stage.Lure != null, "the rubber duck flies to the aim point and squeaks there (a lure)", 3);
         await Shot("slot3-duck");
+        if (Windowed)
+        {
+            // Up close: the thrown duck on the ground (rubber_duck.glb), then the next one in hand.
+            var duck = _stage.Lure!;
+            _stage.Cam.Close = true;
+            _stage.Cam.Target = null;
+            _stage.Cam.SnapTo(duck.GlobalPosition);
+            await Frames(10);
+            await Shot("slot3-duck-thrown");
+            _stage.Cam.Target = player;
+            _stage.Cam.SnapTo(player.GlobalPosition);
+            await Frames(10);
+            await Shot("slot3-duck-hand");
+            _stage.Cam.Close = false;
+        }
         Check(player.Loadout.Special!.CooldownLeft > 0 && Mathf.IsEqualApprox(player.Loadout.Special.ShotCooldown, cooldowns["rubber_duck"]),
             $"and the duck recharges for {cooldowns["rubber_duck"]} s");
         await Until(() => _stage.Lure == null, "then it pops", 6);

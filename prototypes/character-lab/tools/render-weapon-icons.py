@@ -3,8 +3,10 @@
 Run: blender --background --python prototypes/character-lab/tools/render-weapon-icons.py
 The frying pan is built here from primitives because it has no world GLB yet.
 """
+import argparse
 import csv
 import math
+import sys
 from pathlib import Path
 
 import bpy
@@ -14,6 +16,14 @@ from mathutils import Vector
 ROOT = Path(__file__).resolve().parents[3]
 OUT = ROOT / "game/assets/icons"
 OUT.mkdir(parents=True, exist_ok=True)
+
+
+def requested_ids():
+    blender_args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--only", help="comma-separated weapon IDs to render")
+    args = parser.parse_args(blender_args)
+    return set(args.only.split(",")) if args.only else None
 
 
 def material(name, color, metal, rough):
@@ -71,6 +81,14 @@ def area_light(name, position, energy, size, center):
 
 with (ROOT / "game/content/data/weapons.csv").open(encoding="utf-8-sig", newline="") as source:
     weapons = [row for row in csv.DictReader(source) if not row["id"].startswith("#")]
+
+only = requested_ids()
+if only is not None:
+    known_ids = {weapon["id"] for weapon in weapons}
+    unknown_ids = only - known_ids
+    if unknown_ids:
+        raise SystemExit(f"Unknown weapon ID(s): {', '.join(sorted(unknown_ids))}")
+    weapons = [weapon for weapon in weapons if weapon["id"] in only]
 
 for weapon in weapons:
     bpy.ops.wm.read_factory_settings(use_empty=True)
