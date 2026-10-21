@@ -101,6 +101,11 @@ public sealed class WeaponDefinition
     public float AimRangeMultiplier { get; set; } = 1;
     /// <summary>Move speed while aiming, on top of <see cref="MoveSpeedScale"/>.</summary>
     public float AimMoveScale { get; set; } = .5f;
+    /// <summary>
+    /// How far the view reaches toward the cursor while aiming, against a rifle (1). 0 = aiming does not move the view
+    /// (shotguns); above 1 the camera also zooms out so the survivor stays on screen (snipers see 1.5× further).
+    /// </summary>
+    public float AimView { get; set; } = 1;
     /// <summary>While aiming, focus on a target (the crit) builds this much faster.</summary>
     public float AimFocusMultiplier { get; set; } = 1;
     /// <summary>Damage multiplier of a crit (a focused hit).</summary>

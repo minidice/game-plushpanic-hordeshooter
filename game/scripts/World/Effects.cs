@@ -153,6 +153,19 @@ public partial class Effects : Node3D
         Stage.Cam.AddShake(.55f);
     }
 
+    /// <summary>A soft pop for frequent card effects: a quick fading ball and a few bits, no light or camera shake.</summary>
+    public void Puff(Vector3 at, float radius, Color color)
+    {
+        var mat = Mat.Fade(new Color(color, .55f));
+        var ball = Mat.Mesh(this, _unitSphere, at, mat);
+        ball.Scale = Vector3.One * .15f;
+        var tween = ball.CreateTween().SetParallel();
+        tween.TweenProperty(ball, "scale", Vector3.One * radius * .7f, .14f);
+        tween.TweenProperty(mat, "albedo_color:a", 0f, .28f);
+        tween.Chain().TweenCallback(FreeLater(ball));
+        Burst(at, Vector3.Up, color, 14, 5f, .1f);
+    }
+
     public void FloatingText(Vector3 at, string text, Color color)
     {
         var label = new Label3D

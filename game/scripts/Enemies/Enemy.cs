@@ -167,6 +167,11 @@ public partial class Enemy : CharacterBody3D
             Hurt = Mathf.Max(Hurt, .35f);
             desired = Vector3.Zero;
         }
+        else if (Floating)
+        {
+            CancelMelee();
+            desired = Vector3.Zero;
+        }
         else if (Lurable && Stage.Lure is { } lure && LureDirection(lure, dt) is { } toLure)
         {
             CancelMelee();
@@ -180,11 +185,12 @@ public partial class Enemy : CharacterBody3D
             FlinchTime -= dt;
             desired *= .25f;
         }
+        bool floating = CardStep(ref desired, dt);
         desired += Stage.Crowd.Separation(this) * 2.2f;
         Knock = Knock.MoveToward(Vector3.Zero, dt * 14f);
         var horizontal = desired + Knock;
         bool grounded = IsOnFloor() && Velocity.Y <= 0;
-        Velocity = new Vector3(horizontal.X, grounded ? -.1f : Velocity.Y - Gravity * dt, horizontal.Z);
+        Velocity = new Vector3(horizontal.X, floating ? FloatLift(dt) : grounded ? -.1f : Velocity.Y - Gravity * dt, horizontal.Z);
         MoveAndSlide();
         AfterMove(dt);
 
@@ -442,6 +448,7 @@ public partial class Enemy : CharacterBody3D
         Rig.Jolt(flat * 4f);
         Stage.Effects.Stuffing(hit.Point, -flat, Definition.StuffingColor, hit.Crit ? 16 : 5);
         if (Health > 0) Stage.Sfx.PlayAt("zombie_hit", hit.Point);
+        Stage.RaiseEnemyHit(this, hit);
         if (Health <= 0) Die(flat, hit.Crit ? 7.5f : 5f);
     }
 

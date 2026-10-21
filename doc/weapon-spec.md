@@ -49,6 +49,7 @@ type=assault_rifle  ◀──── m4,assault_rifle,M4,11,,,,       buckshot.js
 | `start_mags` | 처음 주웠을 때 예비 탄창 수 | |
 | `refillable` | 탄약 더미로 충전 가능 | `true/false` |
 | `caliber` | 탄 종류(거점 배낭에서만 쓰임, M-25). 근접은 빈 칸 | `content/data/calibers.csv`의 id |
+| `aim_view` | 조준할 때 화면이 커서 쪽으로 가는 정도(C-26). 소총 = 1(최대 26 m × 48%), 0 = 조준해도 그대로, 1을 넘으면 화면도 넓어져(넘은 만큼 × 0.8) 생존자가 화면 안에 남음 | 0~3. 샷건 0, 권총 · 기관단총 0.6, 경기관총 · 로켓 0.8, 소총 1, 레일건 1.3, 지정사수 1.6, 저격 1.7 |
 | `pierce` | 한 발이 뚫고 지나가는 적 수(관통마다 대미지 ×0.8) | 1 = 관통 없음 |
 | `spread_deg` `spread_per_shot_deg` `move_spread_deg` `max_spread_deg` | 퍼짐(조준원): 기본, 발당 증가, 이동 중 추가, 최대 | 도 |
 | `recoil_power` | **반동 넉백 파워(쏜 사람).** 거리 대신 파워라 옵션으로 줄일 수 있음 (5장) | 권총 8, 샷건 60, 로켓 100 |

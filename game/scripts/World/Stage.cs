@@ -45,6 +45,8 @@ public partial class Stage : Node3D
     public GameMode Mode { get; private set; } = GameMode.Scenario;
     /// <summary>Set before adding to the tree to play another map than the mode's own (checks, a generated map).</summary>
     public StageMap? MapOverride { get; set; }
+    /// <summary>Set before adding to the tree to run other rules than the mode's own (the card lab).</summary>
+    public ModeRules? RulesOverride { get; set; }
     /// <summary>Survival / Survivor rules (null in Scenario).</summary>
     public ModeRules? ModeRules { get; private set; }
     /// <summary>Tests turn this off so the director only spawns on request.</summary>
@@ -55,6 +57,8 @@ public partial class Stage : Node3D
     public bool Authoritative => Role != NetRole.Client;
     /// <summary>Raised by the host when an enemy dies, with the direction and force of its fall.</summary>
     public event System.Action<Enemy, Vector3, float>? EnemyKilled;
+    /// <summary>Raised by the deciding PC when a bullet, pellet or swing hits an enemy (before it may die).</summary>
+    public event System.Action<Enemy, HitInfo>? EnemyHit;
     /// <summary>A client asks the host to use an interactable instead of using it itself.</summary>
     public System.Action<Interactable>? RequestUse { get; set; }
     private int _nextInteractableId;
@@ -69,6 +73,8 @@ public partial class Stage : Node3D
         else _nextInteractableId = System.Math.Max(_nextInteractableId, item.NetId);
         Interactables.Add(item);
     }
+
+    internal void RaiseEnemyHit(Enemy enemy, HitInfo hit) => EnemyHit?.Invoke(enemy, hit);
 
     internal void RaiseEnemyKilled(Enemy enemy, Vector3 direction, float force)
     {
@@ -206,7 +212,7 @@ public partial class Stage : Node3D
         RefreshRouteFlows();
         // Scenario fills areas ahead and sends waves from the stage's entries; the other modes spawn by their own rules.
         if (Mode == GameMode.Scenario && Map.Encounters is { } encounters) Director.UseEncounters(encounters);
-        ModeRules = ModeRules.Create(Mode);
+        ModeRules = RulesOverride ?? ModeRules.Create(Mode);
         if (ModeRules != null)
         {
             Objective = ModeRules.InitialObjective;

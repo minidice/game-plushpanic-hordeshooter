@@ -50,6 +50,7 @@ public partial class WeaponHandlingCheck : Node
         player.ManualControl = true;
         player.Invulnerable = true;
         await Speeds(player);
+        await AimView(player);
         await Aiming(player);
         await Mortar(player);
         await Railgun(player);
@@ -121,6 +122,48 @@ public partial class WeaponHandlingCheck : Node
         player.PressCancel();
         await Frames(2);
         Check(!player.Weapons.AimingThrow, "right click cancels the throw aim");
+    }
+
+    /// <summary>How far the camera leans (and zooms) toward a far cursor while aiming with <paramref name="weapon"/>.</summary>
+    private async Task<(float Lean, float Size)> AimedView(Player player, string weapon)
+    {
+        player.Weapons.Pickup(ArmoryCatalog.Weapon(weapon), null);
+        player.HoldAim(false);
+        player.TeleportTo(new Vector3(12, 0, .5f));
+        player.SetControls(Vector2.Zero, player.GlobalPosition + new Vector3(40, 1, 0), false);
+        _stage.Cam.SnapTo(player.GlobalPosition + Vector3.Up * .8f);
+        var rest = _stage.Cam.GlobalPosition;
+        player.HoldAim(true);
+        for (int i = 0; i < 90; i++) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        var lean = _stage.Cam.GlobalPosition - rest;
+        lean.Y = 0;
+        float size = _stage.Cam.Size;
+        await Shot("aim-" + weapon);
+        player.HoldAim(false);
+        return (lean.Length(), size);
+    }
+
+    /// <summary>Aiming reaches as far as the gun's aim_view: a shotgun not at all, a rifle as before, a sniper ~1.5× (zooming out).</summary>
+    private async Task AimView(Player player)
+    {
+        var shotgun = await AimedView(player, "r870");
+        var rifle = await AimedView(player, "m4");
+        var sniper = await AimedView(player, "awm");
+        float RifleReach(float lean, float size) => lean + size * 16f / 9f / 2f;
+        Check(shotgun.Lean < 4f && Mathf.IsEqualApprox(shotgun.Size, CameraRig.WideSize, .05f), $"aiming a shotgun barely moves the view ({shotgun.Lean:0.0} m)");
+        Check(rifle.Lean > 8f && Mathf.IsEqualApprox(rifle.Size, CameraRig.WideSize, .05f), $"aiming a rifle leans the view toward the cursor ({rifle.Lean:0.0} m)");
+        float ratio = RifleReach(sniper.Lean, sniper.Size) / RifleReach(rifle.Lean, rifle.Size);
+        Check(sniper.Size > CameraRig.WideSize * 1.3f && ratio >= 1.45f,
+            $"aiming a sniper zooms out and sees about 1.5× further than a rifle ({ratio:0.00}×, size {sniper.Size:0.0})");
+        await Frames(40);
+        for (int i = 0; i < 60; i++) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        Check(Mathf.IsEqualApprox(_stage.Cam.Size, CameraRig.WideSize, .1f), "letting go zooms back in");
+        // A special weapon only slows its holder while it is in hand.
+        player.Weapons.Pickup(ArmoryCatalog.Weapon("m4"), null);
+        player.Weapons.Pickup(ArmoryCatalog.Weapon("alabong"), null);
+        Check(player.Loadout.ActiveSlot == 3 && player.HandlingSpeedScale < 1, "holding the rocket launcher slows walking");
+        player.Weapons.SelectSlot(2);
+        Check(Mathf.IsEqualApprox(player.HandlingSpeedScale, ArmoryCatalog.Weapon("m4").MoveSpeedScale), "carrying it in slot 3 while holding the rifle does not");
     }
 
     private async Task Aiming(Player player)

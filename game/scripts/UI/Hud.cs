@@ -30,6 +30,9 @@ void fragment() {
     private PanelContainer _endPanel = null!, _pausePanel = null!;
     private ShaderMaterial _darkVignette = null!, _hurtVignette = null!, _heliumVignette = null!;
 
+    /// <summary>The card pick window is open (<see cref="CardWindow"/>): the mouse shows and only walking and leaping work.</summary>
+    public bool CardWindowOpen { get; set; }
+
     public override void _Ready()
     {
         ProcessMode = ProcessModeEnum.Always;
@@ -192,7 +195,7 @@ void fragment() {
         UpdateEndPanel(stage, player);
         _pausePanel.Visible = Paused;
         if (InventoryOpen && (!playing || Paused || player.IsDead)) SetInventoryOpen(false);
-        bool captured = playing && !Paused && !InventoryOpen && GetWindow().HasFocus();
+        bool captured = playing && !Paused && !InventoryOpen && !CardWindowOpen && GetWindow().HasFocus();
         var mode = captured ? Input.MouseModeEnum.Hidden : Input.MouseModeEnum.Visible;
         if (Input.MouseMode != mode) Input.MouseMode = mode;
     }

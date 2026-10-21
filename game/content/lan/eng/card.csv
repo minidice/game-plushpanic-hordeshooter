@@ -1,0 +1,40 @@
+﻿key,text
+# Card lab (doc/onslaught-card-ideas.md, decisions.md M-27 [temporary])
+name_card_balloon,Balloon rounds
+name_card_velcro,Velcro rounds
+name_card_stuffing_burst,Stuffing burst
+name_card_billiards,Billiards
+name_card_honk_reload,Honk reload
+name_card_rubber_duck,Rubber duck
+desc_card_balloon,Hits inflate monsters until they float. Shoot a floating one to pop it
+desc_card_velcro,Hit monsters stick together. Five in a clump burst
+desc_card_stuffing_burst,Kills burst into stuffing that pushes neighbours away
+desc_card_billiards,A flying monster sends whoever it hits flying
+desc_card_honk_reload,Reloading honks and pushes everything back
+desc_card_rubber_duck,Every tenth hit drops a squeaky duck that gathers monsters and pops
+fx_card_float,Float
+fx_card_pop,Pop!
+fx_card_velcro_burst,Rrrip!
+fx_card_billiards,Clack!
+fx_card_honk,HONK!
+fx_card_duck,Squeak!
+ui_cardlab_objective,Card lab — F1–F6 switch cards
+ui_cardlab_title,Card lab
+fmt_cardlab_card,"F{0}  {1}  {2}"
+ui_cardlab_on,ON
+ui_cardlab_off,off
+ui_cardlab_keys,"F7 Horde · F8 Named · F9 Trickle {0}
+F10 Slow {1} · F11 Next slot-1 gun · F12 Next slot-2 gun
+Backspace Clear · 0 All cards on/off
+Home Cheat reset (slot 1 · 2 · 3 cards) · L Level-up card · F Open put-off cards"
+fmt_cardlab_stats,"Float {0} · Pop {1} · Largest clump {2} · Burst {3}
+Stuffing {4} · Billiards {5} · Honk {6} · Duck {7}"
+# Card window (decisions.md M-27)
+fmt_card_arming_title,Pick your slot {0} weapon
+fmt_card_weapon_tag,Slot {0} · {1} · {2}
+fmt_card_weapon_desc,Damage {0} · Mag {1} · {2} rpm · Range {3} m
+ui_card_hint_arming,Pick one to go on  ·  Click or 1 · 2 · 3
+ui_card_hint_closable,Click or 1 · 2 · 3  ·  ✕ or F to put it off (F opens it again)
+ui_card_levelup_title,Level up!
+ui_card_plus_key,F
+tag_card_common,Shared card · every gun

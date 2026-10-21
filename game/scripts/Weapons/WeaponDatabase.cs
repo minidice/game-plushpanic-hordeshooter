@@ -64,7 +64,7 @@ public sealed class WeaponDatabase
         "fire_interval_ms", "reload_ms", "reload_shell_ms", "mag_size", "max_mags", "start_mags", "refillable", "pierce",
         "spread_deg", "spread_per_shot_deg", "move_spread_deg", "max_spread_deg", "recoil_power", "hit_power",
         "traits", "fire_sound", "model", "icon", "color", "accent_color", "length_m", "noise_m",
-        "move_speed_pct", "aim_range_mult", "aim_move_pct", "aim_focus_mult", "crit_mult", "caliber",
+        "move_speed_pct", "aim_range_mult", "aim_move_pct", "aim_focus_mult", "crit_mult", "caliber", "aim_view",
     };
 
     private static readonly string[] Required = { "name", "slot", "category", "fire_mode", "damage", "max_range_m", "fire_interval_ms" };
@@ -182,6 +182,7 @@ public sealed class WeaponDatabase
             AimFocusMultiplier = p.Float("aim_focus_mult", 1),
             CritMultiplier = p.Float("crit_mult", 2.5f),
             Caliber = cells["caliber"],
+            AimView = p.Float("aim_view", 1),
         };
         def.EffectiveRange = p.Float("effective_range_m", def.MaxRange);
         def.Thickness = Thickness[def.Category];
@@ -189,6 +190,7 @@ public sealed class WeaponDatabase
         if (def.MoveSpeedScale <= 0 || def.AimMoveScale <= 0) _errors.Add($"{where}: move_speed_pct·aim_move_pct는 0보다 커야 합니다");
         if (def.AimRangeMultiplier < 1 || def.AimFocusMultiplier < 1 || def.CritMultiplier < 1)
             _errors.Add($"{where}: aim_range_mult·aim_focus_mult·crit_mult는 1 이상이어야 합니다");
+        if (def.AimView is < 0 or > 3) _errors.Add($"{where}: aim_view는 0~3이어야 합니다 (0 = 조준해도 화면이 그대로, 1 = 소총)");
 
         // Slot 1 never runs dry (L4D rule); elsewhere "inf" also means unlimited.
         bool infinite = def.Slot == WeaponSlot.Secondary || p.IsInfinite("max_mags");

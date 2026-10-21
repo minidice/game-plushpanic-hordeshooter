@@ -3,6 +3,8 @@ param(
     [switch]$Test,
     [switch]$InputCheck,
     [switch]$Capture,
+    # Onslaught card lab (doc/onslaught-card-ideas.md): switch the lab cards on and off while playing.
+    [switch]$CardLab,
     # Two-player test (doc/multiplayer-sync-design.md): one window hosts, another joins.
     [switch]$NetHost,
     [string]$NetJoin,
@@ -27,6 +29,8 @@ try {
     } elseif ($InputCheck) {
         & $console --path $PSScriptRoot res://tests/InputCheck.tscn
         if ($LASTEXITCODE -ne 0) { throw 'Input check failed (exit 2 = window had no focus).' }
+    } elseif ($CardLab) {
+        & $console --path $PSScriptRoot res://tests/CardLab.tscn
     } elseif ($Capture) {
         & $console --path $PSScriptRoot res://tests/Capture.tscn
         if ($LASTEXITCODE -ne 0) { throw 'Capture failed.' }

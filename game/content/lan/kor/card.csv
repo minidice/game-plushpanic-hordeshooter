@@ -1,0 +1,40 @@
+﻿key,text
+# 카드 실험실 (doc/onslaught-card-ideas.md, decisions.md M-27 [임시])
+name_card_balloon,풍선탄
+name_card_velcro,찍찍이탄
+name_card_stuffing_burst,솜 폭발
+name_card_billiards,당구
+name_card_honk_reload,꽥 장전
+name_card_rubber_duck,고무오리 미끼
+desc_card_balloon,맞을수록 부풀다 떠오름. 떠 있는 적을 쏘면 펑
+desc_card_velcro,맞은 적끼리 달라붙어 덩어리. 다섯이면 터짐
+desc_card_stuffing_burst,처치하면 솜이 터져 주변을 밀어냄
+desc_card_billiards,날아가던 적이 부딪힌 적을 날려 보냄
+desc_card_honk_reload,장전할 때 꽥! 주변을 밀어냄
+desc_card_rubber_duck,열 번 맞힐 때마다 고무오리가 떨어져 적을 모았다 펑
+fx_card_float,둥실
+fx_card_pop,펑!
+fx_card_velcro_burst,찍!
+fx_card_billiards,딱!
+fx_card_honk,꽥!
+fx_card_duck,삑!
+ui_cardlab_objective,카드 실험실 — F1~F6 카드 켜고 끄기
+ui_cardlab_title,카드 실험실
+fmt_cardlab_card,"F{0}  {1}  {2}"
+ui_cardlab_on,켬
+ui_cardlab_off,끔
+ui_cardlab_keys,"F7 적 무리 · F8 네임드 · F9 계속 나오기 {0}
+F10 느리게 {1} · F11 1번 무기 바꾸기 · F12 2번 무기 바꾸기
+Backspace 적 지우기 · 0 카드 모두 켜기/끄기
+Home 치트 초기화(1 · 2 · 3번 칸 카드) · L 레벨업 카드 · F 미룬 카드 열기"
+fmt_cardlab_stats,"둥실 {0} · 펑 {1} · 덩어리 최대 {2} · 찍! {3}
+솜 폭발 {4} · 당구 {5} · 꽥 {6} · 오리 {7}"
+# 카드 창 (decisions.md M-27)
+fmt_card_arming_title,{0}번 칸 무기 고르기
+fmt_card_weapon_tag,{0}번 칸 · {1} · {2}
+fmt_card_weapon_desc,피해 {0} · 탄창 {1} · 분당 {2}발 · 사거리 {3} m
+ui_card_hint_arming,하나를 골라야 다음으로 넘어갑니다  ·  클릭 또는 1 · 2 · 3
+ui_card_hint_closable,클릭 또는 1 · 2 · 3  ·  ✕ 또는 F로 미뤄 두기 (F로 다시 열기)
+ui_card_levelup_title,레벨 업!
+ui_card_plus_key,F
+tag_card_common,공용 카드 · 모든 총

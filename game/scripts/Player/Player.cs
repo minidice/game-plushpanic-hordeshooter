@@ -95,6 +95,8 @@ public partial class Player : CharacterBody3D
     private readonly RandomNumberGenerator _rng = new();
     private Vector2 _move;
     private bool _fire, _firePressed, _reloadPressed, _healPressed, _throwPressed, _rollPressed, _cancelPressed, _aimHeld;
+    /// <summary>Set while the card window is open, cleared once the fire button is let go.</summary>
+    private bool _fireAfterCards;
     private int _cycle;
     private int _slotPressed;
     private Vector3 _push, _tumbleDirection, _rollDirection;
@@ -216,8 +218,12 @@ public partial class Player : CharacterBody3D
         if (Input.IsActionJustPressed(GameInput.Slot2)) _slotPressed = 2;
         if (Input.IsActionJustPressed(GameInput.Slot3)) _slotPressed = 3;
         _aimHeld = Input.IsActionPressed(GameInput.AltFire) || Input.IsActionPressed(GameInput.Aim);
-        // With the backpack open the mouse drags items: no shooting, aiming or throwing.
-        if (Stage.Hud?.InventoryOpen == true) _fire = _firePressed = _aimHeld = _throwPressed = _cancelPressed = false;
+        // With the backpack or the card window open the mouse is for them: no shooting, aiming or throwing.
+        if (Stage.Hud is { } hud && (hud.InventoryOpen || hud.CardWindowOpen)) _fire = _firePressed = _aimHeld = _throwPressed = _cancelPressed = false;
+        // 1 · 2 · 3 pick a card while the card window is open; the click that picked one does not start firing.
+        if (Stage.Hud?.CardWindowOpen == true) { _slotPressed = 0; _fireAfterCards = true; }
+        if (_fireAfterCards && !Input.IsActionPressed(GameInput.Fire)) _fireAfterCards = false;
+        if (_fireAfterCards) _fire = _firePressed = false;
 
         var camera = GetViewport().GetCamera3D();
         if (camera == null) return;

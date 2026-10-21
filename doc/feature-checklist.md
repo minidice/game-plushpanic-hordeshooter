@@ -14,7 +14,10 @@
 - [x] 개편 4단계(2026-10-21, L-13): 맵 인터페이스 `StageMap`(Stage 1은 그 하위 클래스, 모드별 맵 선택 자리, 검사용 맵 교체) ([레벨 규칙](level-design-rules.md))
 - [x] 개편 5단계(2026-10-21, M-26): 난전 전용 들판(나무·돌기둥 무작위 산포, 방에서는 같은 씨앗), 바닥 진열대로 무기 2개 고르기, 예비탄 무제한, 3번 칸 종류 25초 충전, 네임드 처치 시 강화 진열대, 화면 밖 팀원·보스 화살표
 - [x] 개편 6단계(2026-10-21, M-25): 거점 배낭 4×5 = 20칸(I로 열기, 드래그 장착·옮기기·바닥 버리기, 마우스 오버 정보), 탄 종류 8개와 배낭 탄으로 장전, 바닥 무기·탄약 더미·구급상자가 배낭으로, 네임드 처치 시 전리품 3~5개 흩뿌림, 멀티 동기화(방장 판정)
-- [ ] 거점·난전 다음: 레벨업 능력 선택, 팀원 직접 교환·큰 배낭·탈출, 전용 맵·전용 보스 모델, 멀티에서 보스 연출 동기화(I-77), 수치 플레이 조정
+- [x] 카드 실험실 1차(2026-10-21, T-22): `Start-Game.ps1 -CardLab`, 난전 들판에서 카드 6장(풍선탄 · 찍찍이탄 · 솜 폭발 · 당구 · 꽥 장전 · 고무오리)을 켜고 끄며 시험, 몬스터 카드 상태(부풂 · 둥실 · 찍찍이 · 날아감) ([아이디어 풀](onslaught-card-ideas.md) 6장)
+- [x] 카드 창 1차(2026-10-21, M-27 · T-22, 실험실에서): 하데스식 세로 3장, 받은 순서 · 받을 때 정해진 3장 유지, 무장 1 · 2 · 3번 칸 카드(닫기 없음), 레벨업 카드 ✕ · F로 미루기 + 배지 ×N, 열려 있는 동안 걷기 · 도약만
+- [ ] 난전 개편(M-27, 계획만): 진열대 → 카드 선택, 소환수(드론 · 부사수 · 펫), 레벨업 일반 카드 · 보스 특별 카드, 총 분류별 풀, 하데스식 카드 창 · + 아이콘 · 버프 줄 ([계획](onslaught-cards-plan.md))
+- [ ] 거점·난전 다음: 팀원 직접 교환·큰 배낭·탈출, 전용 맵·전용 보스 모델, 멀티에서 보스 연출 동기화(I-77), 수치 플레이 조정
 - [x] 멀티 메뉴: 방 만들기, 주소로 참가(2인 테스트). 방 코드·공개방은 준비 중
 - [x] 멀티 테스트 실행: 한 PC 두 창(`Start-Multi-Test.cmd`), 방장 LAN 주소 안내, 다른 PC용 Windows 실행 파일(`Export-Game.cmd` → `build/HordeShooter-windows.zip`)
 - [x] AI 분대원 선택(없음 / 1명 기본 / 3명) 저장
@@ -102,7 +105,7 @@
 
 실행: `game/Start-Game.cmd`. 기본 통합 검사: `game/Start-Game.ps1 -Test`.
 
-빌드·가져오기 후 Godot 테스트 장면: `CombatPacingCheck.tscn`, `EnemyAttackCheck.tscn`, `TailMeleeCheck.tscn`, `HitFlashCheck.tscn`, 생존·서바이버는 `ModeCheck.tscn`, 거점 배낭은 `InventoryCheck.tscn`. 실제 화면 검사는 별도 캡처 장면과 플레이로 보완한다. 수치나 동작을 바꿀 때 해당 검사와 문서도 같이 갱신한다.
+빌드·가져오기 후 Godot 테스트 장면: `CombatPacingCheck.tscn`, `EnemyAttackCheck.tscn`, `TailMeleeCheck.tscn`, `HitFlashCheck.tscn`, 생존·서바이버는 `ModeCheck.tscn`, 거점 배낭은 `InventoryCheck.tscn`, 카드 실험실은 `CardLabCheck.tscn`. 실제 화면 검사는 별도 캡처 장면과 플레이로 보완한다. 수치나 동작을 바꿀 때 해당 검사와 문서도 같이 갱신한다.
 
 상세 규격: [무기](weapon-spec.md), [캐릭터](character-model-spec.md), [적·투척물](throwable-monster-spec.md), [사운드](sound-spec.md), [다국어](localization.md).
 
@@ -155,3 +158,21 @@
 
 - C# 빌드 경고·오류 0. 새 `InventoryCheck` 41개(헤드리스)·43개(창 모드, 실제 마우스 드래그로 장착·바닥 버리기 포함) 통과( 탄 종류 표, 배낭 쌓기·꺼내기·합치기·바꾸기, 바닥 무기 장착/배낭, 드래그 장착·넣기·바닥 버리기, 배낭 탄으로 장전, 탄약 더미, G·Q, 구급상자 자동 보충, 일부만 줍기, 네임드 전리품, 배낭 화면). `NetCodecCheck` 12(배낭 왕복 추가), `ModeCheck` 79(헤드리스)·81(창 모드), `Integration`(`Start-Game.ps1 -Test`) 148, `MapCheck` 25, `NetSyncCheck` 28, `LobbyCheck` 31, `MenuCheck` 39, `SquadCheck` 50, `SpawnCheck` 41, `CombatPacingCheck` 44, `WeaponHandlingCheck` 30, `SupplyCheck` 12, `InputCheck` 14(창 모드. 헤드리스로 잘못 돌렸을 때는 마우스 조준 검사가 실패 — 창 전용 검사라 정상) 통과.
 - 렌더 `output/inventory-open.png`: 배낭 화면(장착 칸 1·2·3·G·Q, 4×5 칸, 무기 아이콘·탄 묶음 색·투척물 도형·구급상자, 안내 문구)과 네임드 전리품. 마우스 드래그는 창 모드 검사의 가상 입력으로 확인(헤드리스 Godot은 GUI 판정을 하지 않아 생략). 2인 멀티 실제 플레이 미확인(I-81).
+
+### 이번 변경 확인 기록 — 2026-10-21 (카드 실험실 1차)
+
+- C# 빌드 경고·오류 0. 새 `CardLabCheck` 37개 통과(헤드리스·창 모드: 실험실 규칙, F키 조작, 패널, 카드 6장 각각, 찍찍이 + 풍선 덩어리가 같이 뜨고 같이 터짐). 회귀: `Integration`(`Start-Game.ps1 -Test`) 148, `ModeCheck` 79, `MapCheck` 25, `InventoryCheck` 41, `NetSyncCheck` 28, `NetCodecCheck` 12, `CombatPacingCheck` 44, `EnemyAttackCheck` 79, `WeaponHandlingCheck` 30, `SpawnCheck` 41, `SquadCheck` 50, `CorpseRetentionCheck` 16, `HitFlashCheck`, `EnemyExpansion` 60, `SupplyCheck` 12 통과.
+- 렌더 `output/cardlab-chaos-110.png`·`cardlab-chaos-200.png`(모든 카드를 켠 싸움: 부푼 몹 · 찍찍이 고리 · 삑! · 딱! · 실험실 패널), `cardlab-clump-float.png`(떠오른 덩어리, 화면 왼쪽 위). 손으로 해 본 재미 · 가독성은 미확인(I-82).
+
+### 이번 변경 확인 기록 — 2026-10-21 (총 분류별 조준 시야)
+
+- 새 열 `aim_view`(C-26): 샷건은 조준해도 화면이 거의 그대로(2.8 m), 소총은 그대로(11.8 m), 저격은 화면이 넓어지며(크기 17 → 26.4) 소총의 약 1.55배까지 보임. 특수무기는 들고 있을 때만 느려짐을 검사로 확인(이미 그렇게 동작).
+- `WeaponHandlingCheck` 36개 통과(헤드리스 · 창 모드), 렌더 `output/weapons-aim-r870.png` · `weapons-aim-m4.png` · `weapons-aim-awm.png`.
+- 회귀: `Integration` 148, `ModeCheck` 79, `MapCheck` 25, `MenuCheck` 39, `NetSyncCheck` 28, `CombatPacingCheck` 44, `SquadCheck` 50, `SupplyCheck` 12, `InventoryCheck` 41, `CardLabCheck` 37, `InputCheck` 14(창 모드) 통과.
+
+### 이번 변경 확인 기록 — 2026-10-21 (카드 창 1차)
+
+- C# 빌드 경고·오류 0. `CardLabCheck` 57개(헤드리스)·58개(창 모드, 카드 실제 클릭 포함) 통과: Home 치트 초기화 → 1 · 2 · 3번 칸 무장 카드(닫기 없음, 1 · 2번 칸 총이 겹치지 않음, 3번 칸 특수무기), 키 1 · 2 · 3과 클릭으로 고르기, 레벨업 카드 F로 미루기 · + 배지 ×2 · 같은 3장 유지 · 받은 순서 유지.
+- 회귀: `Integration` 148, `ModeCheck` 79, `MenuCheck` 39, `NetSyncCheck` 28, `LobbyCheck` 31, `InventoryCheck` 41, `WeaponHandlingCheck` 36, `SquadCheck` 50, `InputCheck` 14(창 모드) 통과. 카드 고른 클릭이 사격으로 이어지지 않게 한 수정 뒤 `CardLabCheck` · `InventoryCheck` · `ModeCheck` · `InputCheck`를 다시 돌려 통과.
+- 렌더 `output/cardlab-arming-1.png`(1번 칸 무기 카드 3장), `cardlab-levelup.png`(레벨업 카드와 ✕), `cardlab-plus-badge.png`(+ ×2 F 배지). 손으로 해 본 느낌은 미확인.
+

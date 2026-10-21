@@ -50,19 +50,24 @@ public partial class CameraRig : Camera3D
             {
                 var lead = Player.AimPoint - Player.GlobalPosition;
                 lead.Y = 0;
-                // Aiming looks much further toward the cursor, like a scope (decisions.md C-26).
-                float aim = Player.AimBlend;
-                goal += lead.LimitLength(14f + 12f * aim) * (.22f + .26f * aim);
+                // Aiming looks further toward the cursor, like a scope (decisions.md C-26): as far as the gun's aim_view
+                // (rifle 1, shotgun 0); beyond 1 the zoom-out below makes room so the survivor stays on screen.
+                float aim = Player.AimBlend * Player.Gun.Def.AimView;
+                float lean = Mathf.Min(aim, 1);
+                goal += lead.LimitLength((14f + 12f * lean) * Mathf.Max(1, aim)) * (.22f + .26f * lean);
             }
         }
         _focus = _focus.Lerp(goal, 1 - Mathf.Exp(-dt * 5f));
-        Size = Mathf.Lerp(Size, Close ? CloseSize : WideSize, 1 - Mathf.Exp(-dt * 8f));
+        Size = Mathf.Lerp(Size, (Close ? CloseSize : WideSize) * AimZoom, 1 - Mathf.Exp(-dt * 8f));
 
         _trauma = Mathf.Max(0, _trauma - dt * 1.6f);
         float shake = _trauma * _trauma;
         var offset = new Vector3(_rng.RandfRange(-1, 1), _rng.RandfRange(-1, 1), 0) * shake * .6f;
         Place(_focus, offset);
     }
+
+    /// <summary>Zoom-out while aiming a gun whose aim_view is above 1 (a sniper sees about 1.5× further than a rifle).</summary>
+    public float AimZoom => Player is { IsDead: false } p ? 1 + Mathf.Max(0, p.Gun.Def.AimView - 1) * .8f * p.AimBlend : 1;
 
     private void Place(Vector3 focus, Vector3 shake)
     {
