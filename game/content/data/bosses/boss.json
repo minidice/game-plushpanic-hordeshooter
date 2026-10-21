@@ -1,15 +1,15 @@
 {
-  "description": "난전(서바이버) 보스 '거대 두목 황소'의 페이즈와 스킬 (doc/mode-monster-tables.md). 파일 이름 = monsters.csv의 몬스터 id. 페이즈는 체력 %가 from_hp_pct 이하로 내려가면 시작. 스킬 대기 시간은 페이즈의 cooldown_scale을 곱함. 수치는 첫 제안값",
+  "description": "난전(서바이버) 보스 '거대 두목 황소'의 페이즈와 스킬 (doc/mode-monster-tables.md). 파일 이름 = monsters.csv의 몬스터 id. 페이즈는 체력 %가 from_hp_pct 이하로 내려가면 시작. 스킬 대기 시간은 페이즈의 cooldown_scale을 곱함. 수치는 첫 제안값 몸동작(pose)은 CharacterRig.BossPoses 이름, 방향 문서 8.1.",
   "scale": 1.7,
   "phases": [
-    { "from_hp_pct": 100, "skills": ["charge", "slam"], "speed": 1.0, "cooldown_scale": 1.0 },
-    { "from_hp_pct": 66, "skills": ["charge", "slam", "summon"], "speed": 1.1, "cooldown_scale": 0.85, "notice": "msg_boss_phase2" },
-    { "from_hp_pct": 33, "skills": ["charge", "slam", "summon", "fan_shot"], "speed": 1.35, "cooldown_scale": 0.6, "notice": "msg_boss_enraged" }
+    {"from_hp_pct": 100, "skills": ["charge", "slam"], "speed": 1.0, "cooldown_scale": 1.0},
+    {"from_hp_pct": 66, "skills": ["charge", "slam", "summon"], "speed": 1.1, "cooldown_scale": 0.85, "notice": "msg_boss_phase2", "pose": "rear_roar", "pose_s": 1.0},
+    {"from_hp_pct": 33, "skills": ["charge", "slam", "summon", "fan_shot"], "speed": 1.35, "cooldown_scale": 0.6, "notice": "msg_boss_enraged", "pose": "shake_off", "pose_s": 1.2}
   ],
   "skills": {
-    "charge": { "kind": "charge", "description": "황소 돌진. 수치는 monster_traits/boss_charge.json" },
-    "slam": { "kind": "slam", "range_m": 4.5, "radius_m": 5.5, "windup_s": 1.1, "damage": 22, "cooldown_s": 6 },
-    "summon": { "kind": "summon", "count": 6, "cooldown_s": 13, "hp_scale": 0.6 },
-    "fan_shot": { "kind": "fan_shot", "range_m": 16, "windup_s": 0.9, "damage": 8, "cooldown_s": 7, "count": 7, "spread_deg": 70, "speed_mps": 14 }
+    "charge": {"kind": "charge", "description": "황소 돌진. 수치는 monster_traits/boss_charge.json", "pose": "paw_ground", "run_pose": "gallop"},
+    "slam": {"kind": "slam", "range_m": 7, "radius_m": 5.5, "windup_s": 1.25, "damage": 22, "cooldown_s": 6, "pose": "crouch_leap", "leap_m": 6, "leap_height_m": 2.4},
+    "summon": {"kind": "summon", "count": 6, "cooldown_s": 13, "hp_scale": 0.6, "windup_s": 0.9, "pose": "rear_roar"},
+    "fan_shot": {"kind": "fan_shot", "range_m": 16, "windup_s": 0.9, "damage": 8, "cooldown_s": 7, "count": 7, "spread_deg": 70, "speed_mps": 14, "pose": "sweep_aim"}
   }
 }

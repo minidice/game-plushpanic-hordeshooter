@@ -18,8 +18,16 @@ public partial class BossEnemy : BullEnemy
     public float MaxHealth => Monster.Hp;
     public int Phase { get; private set; }
     public BossPhase CurrentPhase => Data.Phases[Phase];
-    /// <summary>Winding up a slam or a fan of shots (stands still; a flashbang cuts it short).</summary>
-    public bool Casting => _casting != null;
+    /// <summary>
+    /// Winding up a slam, a fan of shots or a summon roar, or roaring at a new phase (stands still; a flashbang cuts a
+    /// windup short).
+    /// </summary>
+    public bool Casting => _casting != null || _roarLeft > 0;
+    /// <summary>Mid-air in a slam leap (checks, renders).</summary>
+    public bool Leaping => _casting is { Kind: BossSkillKind.Slam, Leap: > 0 } && _leapHeight > .05f;
+    public float LeapHeight => _leapHeight;
+    public bool Roaring => _roarLeft > 0;
+    public const float LeapStart = .62f, LandSeconds = .35f, RecoilSeconds = .3f, HitStopSeconds = .07f;
     /// <summary>How often each skill has gone off (checks, tuning).</summary>
     public IReadOnlyDictionary<BossSkillKind, int> Uses => _uses;
 
@@ -27,7 +35,13 @@ public partial class BossEnemy : BullEnemy
     private readonly Dictionary<BossSkillKind, int> _uses = new();
     private BossSkill? _casting;
     private float _castTime;
-    private Vector3 _castAt, _castDir;
+    private Vector3 _castAt, _castDir, _leapFrom;
+    private float _leapHeight;
+    // Poses after a move (landing, fan recoil), the phase roar, and the charge's own clock.
+    private string _afterPose = "", _roarPose = "";
+    private float _afterLeft, _afterTime, _roarLeft, _roarTime, _stateTime, _steamTimer, _dustTimer;
+    private bool _roarPending;
+    private Mode _lastState = Mode.Chase;
     private MeshInstance3D? _disc, _fill;
     private StandardMaterial3D? _discMat;
     private readonly List<MeshInstance3D> _lanes = new();
@@ -44,12 +58,19 @@ public partial class BossEnemy : BullEnemy
 
     protected override Vector3 Think(float dt)
     {
-        if (Casting)
+        if (_roarLeft > 0)
+        {
+            _roarLeft -= dt;
+            return Vector3.Zero;
+        }
+        if (_casting != null)
         {
             TickCast(dt);
             return Vector3.Zero;
         }
         UpdatePhase();
+        if (_roarPending && State == Mode.Chase) StartRoar();
+        if (_roarLeft > 0) return Vector3.Zero;
         foreach (var id in _cooldowns.Keys.ToList()) _cooldowns[id] -= dt;
         if (State == Mode.Chase && StunTime <= 0 && Awake && TryStartSkill(dt)) return Vector3.Zero;
         return base.Think(dt);
@@ -70,6 +91,18 @@ public partial class BossEnemy : BullEnemy
         Stage.Cam.AddShake(.3f);
         // A new phase opens with its new skills nearly ready.
         foreach (var id in CurrentPhase.Skills) _cooldowns[id] = Mathf.Min(_cooldowns.GetValueOrDefault(id), 1.5f);
+        // It stops to roar or shake itself (data: the phase's pose); mid-charge it waits until the charge is over.
+        if (CurrentPhase.Pose != "" && CurrentPhase.PoseTime > 0) _roarPending = true;
+    }
+
+    private void StartRoar()
+    {
+        _roarPending = false;
+        _roarPose = CurrentPhase.Pose;
+        _roarLeft = _roarTime = CurrentPhase.PoseTime;
+        Stage.Sfx.PlayAt("bull_snort", GlobalPosition + Vector3.Up, 6, .45f);
+        Stage.Effects.SonarPing(GlobalPosition);
+        Stage.Cam.AddShake(.45f);
     }
 
     private bool TryStartSkill(float dt)
@@ -81,7 +114,8 @@ public partial class BossEnemy : BullEnemy
             switch (skill.Kind)
             {
                 case BossSkillKind.Summon:
-                    Summon(skill);
+                    if (skill.Windup > 0) StartCast(skill, target);
+                    else Summon(skill);
                     return true;
                 case BossSkillKind.Slam when target != null && Flat(target.GlobalPosition - GlobalPosition).Length() < skill.Range + Radius:
                 case BossSkillKind.FanShot when target != null && Flat(target.GlobalPosition - GlobalPosition).Length() < skill.Range && HasLineOfSight(dt):
@@ -103,7 +137,7 @@ public partial class BossEnemy : BullEnemy
     {
         var skill = Data.Skills.Values.FirstOrDefault(s => s.Kind == kind);
         if (skill == null || IsDead || Casting) return false;
-        if (kind == BossSkillKind.Summon) { Summon(skill); return true; }
+        if (kind == BossSkillKind.Summon && skill.Windup <= 0) { Summon(skill); return true; }
         StartCast(skill, Target ?? Stage.NearestAlivePlayer(GlobalPosition));
         return true;
     }
@@ -116,10 +150,18 @@ public partial class BossEnemy : BullEnemy
         _castAt = GlobalPosition;
         var to = target != null ? Flat(target.GlobalPosition - GlobalPosition) : Rig.Forward;
         _castDir = to.LengthSquared() > .01f ? to.Normalized() : Vector3.Forward;
+        _leapFrom = GlobalPosition;
+        _leapHeight = 0;
+        if (skill.Kind == BossSkillKind.Slam && skill.Leap > 0)
+        {
+            // It jumps at the target and lands in the middle of the red disc (no farther than leap_m, never into a wall).
+            var landing = GlobalPosition + _castDir * Mathf.Min(to.Length(), skill.Leap);
+            if (!Stage.Flow.IsBlocked(landing)) _castAt = new Vector3(landing.X, GlobalPosition.Y, landing.Z);
+        }
         RevealTo(target, skill.Windup + VisionSystem.RevealAfterHit);
         Stage.Sfx.PlayAt("bull_snort", GlobalPosition + Vector3.Up, 3, .7f);
         if (skill.Kind == BossSkillKind.Slam) ShowDisc(skill.Radius);
-        else ShowLanes(skill);
+        else if (skill.Kind == BossSkillKind.FanShot) ShowLanes(skill);
     }
 
     private void TickCast(float dt)
@@ -130,16 +172,84 @@ public partial class BossEnemy : BullEnemy
         Kick = .4f + .6f * t;
         Hurt = Mathf.Max(Hurt, .25f * t);
         if (skill.Kind == BossSkillKind.FanShot) FaceOverride = _castDir;
+        if (skill.Kind == BossSkillKind.Slam && skill.Leap > 0) Leap(skill, t);
         if (_fill != null) _fill.Scale = new Vector3(Mathf.Max(.02f, t), 1, Mathf.Max(.02f, t));
         if (_discMat != null) _discMat.AlbedoColor = new Color(1, .2f, .15f, .16f + .14f * Mathf.Abs(Mathf.Sin(_castTime * 14)));
         foreach (var lane in _lanes) lane.Scale = new Vector3(1, 1, Mathf.Max(.05f, t));
         if (_castTime < skill.Windup) return;
         _casting = null;
+        _leapHeight = 0;
         HideTelegraphs();
+        if (skill.Kind == BossSkillKind.Summon)
+        {
+            Summon(skill);
+            return;
+        }
         Cooldown(skill);
         Used(skill);
         if (skill.Kind == BossSkillKind.Slam) Slam(skill);
         else FanShot(skill);
+    }
+
+    /// <summary>The last part of a slam windup is the jump: across to the disc's middle in an arc.</summary>
+    private void Leap(BossSkill skill, float t)
+    {
+        FaceOverride = _castDir;
+        if (t < LeapStart) return;
+        float u = (t - LeapStart) / (1 - LeapStart);
+        var at = _leapFrom.Lerp(_castAt, Mathf.SmoothStep(0, 1, u));
+        GlobalPosition = new Vector3(at.X, GlobalPosition.Y, at.Z);
+        _leapHeight = 4 * u * (1 - u) * skill.LeapHeight;
+    }
+
+    private void After(string pose, float seconds)
+    {
+        _afterPose = pose;
+        _afterLeft = _afterTime = seconds;
+    }
+
+    /// <summary>A heavy landing freezes the world for a blink (offline only: a match cannot stop for one PC).</summary>
+    private void HitStop()
+    {
+        if (Stage.Role != NetRole.Offline || Engine.TimeScale < .99f) return;
+        Engine.TimeScale = .05f;
+        GetTree().CreateTimer(HitStopSeconds, true, false, true).Timeout += () => Engine.TimeScale = 1;
+    }
+
+    /// <summary>Skill, phase and charge poses from the boss data on top of the walk (doc/mode-weapon-direction.md 8.1).</summary>
+    protected override void AfterAnimate(float dt)
+    {
+        if (State != _lastState) { _lastState = State; _stateTime = 0; }
+        _stateTime += dt;
+        var charge = Data.Skills.Values.FirstOrDefault(s => s.Kind == BossSkillKind.Charge);
+        if (_casting is { } cast)
+            Rig.ApplyBossPose(cast.Pose, Mathf.Clamp(_castTime / Mathf.Max(.01f, cast.Windup), 0, 1), _leapHeight);
+        else if (_roarLeft > 0)
+            Rig.ApplyBossPose(_roarPose, 1 - _roarLeft / Mathf.Max(.01f, _roarTime));
+        else if (_afterLeft > 0)
+        {
+            _afterLeft -= dt;
+            Rig.ApplyBossPose(_afterPose, 1 - _afterLeft / Mathf.Max(.01f, _afterTime));
+        }
+        else if (State == Mode.Windup && charge != null)
+            Rig.ApplyBossPose(charge.Pose, _stateTime / Mathf.Max(.01f, Monster.BullCharge!.WindupTime));
+        else if (State == Mode.Charge && charge != null)
+        {
+            Rig.ApplyBossPose(charge.RunPose, _stateTime * 2.6f);
+            if ((_dustTimer -= dt) <= 0)
+            {
+                _dustTimer = .1f;
+                Stage.Effects.Puff(GlobalPosition + Vector3.Up * .2f - ChargeDirection * Radius, .9f, new Color("8a7a66"));
+            }
+        }
+        else if (State == Mode.Dazed && _stateTime < RecoilSeconds * 2)
+            Rig.ApplyBossPose("recoil", _stateTime / (RecoilSeconds * 2));
+        // The last phase steams from the nose.
+        if (Phase > 0 && Phase == Data.Phases.Count - 1 && (_steamTimer -= dt) <= 0)
+        {
+            _steamTimer = .5f;
+            Stage.Effects.Puff(GlobalPosition + Vector3.Up * Definition.ColliderHeight * .85f + Rig.Forward * Radius, .5f, new Color("c9c4bd"));
+        }
     }
 
     private void Slam(BossSkill skill)
@@ -150,6 +260,11 @@ public partial class BossEnemy : BullEnemy
         Stage.Sfx.PlayAt("bull_bonk", _castAt + Vector3.Up, 4, .6f);
         Stage.Cam.AddShake(.6f);
         Kick = 1;
+        // Landing: a dust ring the size of the disc, the body flattens, the world stops for a blink.
+        Stage.Effects.Puff(_castAt + Vector3.Up * .3f, r, new Color("b7a38a"));
+        Stage.Effects.Stuffing(_castAt + Vector3.Up * .4f, Vector3.Up, new Color("b7a38a"), 30);
+        After("land", LandSeconds);
+        HitStop();
         foreach (var player in Stage.AlivePlayers.ToList())
         {
             var away = Flat(player.GlobalPosition - _castAt);
@@ -185,6 +300,7 @@ public partial class BossEnemy : BullEnemy
         }
         Stage.Sfx.PlayAt("shot_shotgun", from, 3, .7f);
         Stage.Cam.AddShake(.25f);
+        After("recoil", RecoilSeconds);
     }
 
     /// <summary>Roars and calls commons in a ring around itself.</summary>
@@ -195,6 +311,7 @@ public partial class BossEnemy : BullEnemy
         Used(skill);
         Kick = 1;
         Stage.Effects.SonarPing(GlobalPosition);
+        Stage.Cam.AddShake(.3f);
         Stage.Effects.FloatingText(GlobalPosition + Vector3.Up * (Definition.ColliderHeight + .8f), Loc.Text("boss_summon"), new Color("ffcf5c"));
         Stage.Sfx.PlayAt("bull_snort", GlobalPosition + Vector3.Up, 2, .5f);
         int count = Mathf.Min(skill.Count, HordeDirector.MaxCommons - Stage.Director.AliveCommons);
@@ -207,6 +324,8 @@ public partial class BossEnemy : BullEnemy
             var minion = Stage.SpawnCommon(at, awake: true);
             minion.ScaleHealth(skill.HpScale);
             minion.LeapDown(dir);
+            // They burst out of the ground.
+            Stage.Effects.Stuffing(at + Vector3.Up * .3f, Vector3.Up, new Color("8a7a66"), 12);
         }
     }
 
@@ -214,6 +333,7 @@ public partial class BossEnemy : BullEnemy
     {
         if (_casting != null) Cooldown(_casting);
         _casting = null;
+        _leapHeight = 0;
         HideTelegraphs();
     }
 

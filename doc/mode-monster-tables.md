@@ -43,24 +43,26 @@
 파일: `game/content/data/bosses/<monster id>.json`. 파일 이름이 `monsters.csv`의 id다(`boss.json` = 거대 두목 황소).
 
 - `scale`: 외형과 충돌 크기 배율 (예전 `mode_rules.json` survivor.boss.scale). 외형 자체는 `monsters.csv`의 `look`(`boss` → `content/enemies/boss.tres` → `assets/enemies/boss/boss.glb`, 2026-10-21 전용 모델).
-- `phases`: 체력이 `from_hp_pct` % **이하**가 되면 그 페이즈. 첫 페이즈는 100, 내림차순. 각 페이즈: `skills`(쓸 스킬 이름), `speed`(이동 배율), `cooldown_scale`(스킬 대기 배율), `notice`(들어갈 때 알림 언어 키, 생략 가능).
+- `phases`: 체력이 `from_hp_pct` % **이하**가 되면 그 페이즈. 첫 페이즈는 100, 내림차순. 각 페이즈: `skills`(쓸 스킬 이름), `speed`(이동 배율), `cooldown_scale`(스킬 대기 배율), `notice`(들어갈 때 알림 언어 키, 생략 가능), `pose`·`pose_s`(들어갈 때 그 자세로 몇 초 멈춰 포효 · 몸 털기, 생략 가능. 돌진 중이면 끝난 뒤에).
 - `skills`: 이름 → `kind`와 수치.
 
 | kind | 하는 일 | 항목 |
 |---|---|---|
-| `charge` | 황소 돌진. 이 스킬이 있는 페이즈에서만 돌진. 수치는 `monster_traits/boss_charge.json` | 없음 |
-| `slam` | 대상이 `range_m` 안이면 `windup_s` 동안 빨간 원이 차오른 뒤 반경 `radius_m` 안 모두 `damage` + 날려 보냄(자기 부하도 날아감) | `range_m` `radius_m` `windup_s` `damage` `cooldown_s` |
-| `summon` | 포효하고 주위에 테마 일반 `count`마리, 체력 ×`hp_scale` | `count` `cooldown_s` `hp_scale` |
-| `fan_shot` | 대상이 `range_m` 안이고 보이면, `windup_s` 동안 바닥에 빨간 선이 뻗은 뒤 `spread_deg` 부채꼴로 `count`발(발당 `damage`, 속도 `speed_mps`) | `range_m` `windup_s` `damage` `cooldown_s` `count` `spread_deg` `speed_mps` |
+| `charge` | 황소 돌진. 이 스킬이 있는 페이즈에서만 돌진. 수치는 `monster_traits/boss_charge.json`. `pose` = 돌진 준비 자세, `run_pose` = 달리는 자세 | `pose` `run_pose` |
+| `slam` | 대상이 `range_m` 안이면 `windup_s` 동안 빨간 원이 차오른 뒤 반경 `radius_m` 안 모두 `damage` + 날려 보냄(자기 부하도 날아감). `leap_m` > 0이면 원은 대상 쪽 최대 `leap_m` 지점(벽이면 제자리)에 생기고, 준비의 마지막 38%에 높이 `leap_height_m`로 뛰어 원 가운데 착지 | `range_m` `radius_m` `windup_s` `damage` `cooldown_s` `pose` `leap_m` `leap_height_m` |
+| `summon` | 포효하고 주위에 테마 일반 `count`마리, 체력 ×`hp_scale`. `windup_s` > 0이면 그동안 포효 자세로 멈춘 뒤 땅에서 솟음 | `count` `cooldown_s` `hp_scale` `windup_s` `pose` |
+| `fan_shot` | 대상이 `range_m` 안이고 보이면, `windup_s` 동안 바닥에 빨간 선이 뻗은 뒤 `spread_deg` 부채꼴로 `count`발(발당 `damage`, 속도 `speed_mps`) | `range_m` `windup_s` `damage` `cooldown_s` `count` `spread_deg` `speed_mps` `pose` |
+
+**몸동작 `pose`** (2026-10-21, `CharacterRig.ApplyBossPose`, 새 보스도 이름만 적으면 씀): `crouch_leap`(웅크려 두 팔 올림 → 뛰어오름), `land`(착지에 납작 · 팔 내려침, 내려찍기 뒤 자동), `rear_roar`(뒤로 젖혀 팔 벌리고 포효 · 몸 부풂), `sweep_aim`(몸통을 좌우로 비틀며 조준), `recoil`(뒤로 밀림, 탄막 뒤 · 벽에 박은 뒤 자동), `shake_off`(몸 털기), `paw_ground`(앞발 긁기), `gallop`(크게 출렁이며 달림 · 먼지). 내려찍기 착지에는 먼지 고리 · 화면 흔들림 · 오프라인에서만 0.07초 멈춤(히트스톱). 마지막 페이즈는 코에서 김이 남.
 
 **지금 값 (`boss.json`)**: 체력 12000(`monsters.csv`, 2~3분 전투 목표의 제안값).
-- 1페이즈(100%): 돌진·내려찍기.
-- 2페이즈(66%): 소환이 더해짐, 이동 1.1배, 대기 0.85배, "보스가 더 사나워졌습니다".
-- 3페이즈(33%): 부채꼴 탄막이 더해짐, 이동 1.35배, 대기 0.6배, "보스가 격노했습니다".
+- 1페이즈(100%): 돌진(앞발 긁기 → 출렁이며 달림) · 내려찍기(7 m 안이면 최대 6 m 뛰어 2.4 m 높이로, 준비 1.25초).
+- 2페이즈(66%): 소환(0.9초 포효)이 더해짐, 이동 1.1배, 대기 0.85배, "보스가 더 사나워졌습니다", 1초 포효.
+- 3페이즈(33%): 부채꼴 탄막(몸통 비틀기)이 더해짐, 이동 1.35배, 대기 0.6배, "보스가 격노했습니다", 1.2초 몸 털기.
 
 예전의 "체력 50% 격노"(M-22)는 이 3페이즈로 바뀌었다. 섬광탄은 여전히 내려찍기·탄막 준비를 끊는다.
 
-**오류 보고(T-4)**: 모르는 kind·항목, 없는 스킬을 쓰는 페이즈, 100에서 시작하지 않거나 내림차순이 아닌 페이즈, 언어 표에 없는 알림 키, 0 이하의 대기·속도. 파일이 없으면 돌진만 하는 한 페이즈 보스로 동작한다.
+**오류 보고(T-4)**: 모르는 kind·항목·자세 이름, 없는 스킬을 쓰는 페이즈, 100에서 시작하지 않거나 내림차순이 아닌 페이즈, 언어 표에 없는 알림 키, 0 이하의 대기·속도, 음수 `leap_m`·`leap_height_m`·`pose_s`. 파일이 없으면 돌진만 하는 한 페이즈 보스로 동작한다.
 
 ## 4. 멀티
 

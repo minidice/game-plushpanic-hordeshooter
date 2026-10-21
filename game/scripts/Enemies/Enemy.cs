@@ -203,6 +203,7 @@ public partial class Enemy : CharacterBody3D
         if (IsMeleeAttacking) Rig.ApplyEnemyAttackPose(_meleeTime, MeleeWindup, MeleeRecovery);
         if (this is BullEnemy bull && bull.State is BullEnemy.Mode.Windup or BullEnemy.Mode.Charge)
             Rig.ApplyBullChargePose(bull.State == BullEnemy.Mode.Charge ? 1f : .65f);
+        AfterAnimate(dt);
 
         if (GlobalPosition.Y < -10) Die(Vector3.Up, 0);
     }
@@ -241,6 +242,9 @@ public partial class Enemy : CharacterBody3D
     }
 
     protected virtual void AfterMove(float dt) { }
+
+    /// <summary>Extra body motion on top of the frame's animation (a boss's skill poses).</summary>
+    protected virtual void AfterAnimate(float dt) { }
 
     /// <summary>Walk to and hit the base when it is nearer than the survivor <paramref name="playerDist"/> away; null = go for the survivor.</summary>
     private Vector3? CoreChase(BaseCore core, float playerDist, float dt)

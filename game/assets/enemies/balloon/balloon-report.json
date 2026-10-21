@@ -1,0 +1,45 @@
+{
+  "id": "balloon",
+  "source_triangles": 7080,
+  "triangles": 2264,
+  "meshes": 8,
+  "materials": [
+    "balloon_body",
+    "balloon_head",
+    "balloon_ink",
+    "balloon_white"
+  ],
+  "bytes": 71812,
+  "nodes": [
+    "balloon_root",
+    "Body",
+    "Deform",
+    "Deform_mesh",
+    "balloon_leftArm",
+    "balloon_leftArm_mesh",
+    "balloon_leftLeg",
+    "balloon_leftLeg_mesh",
+    "LeftFoot",
+    "LeftFoot_mesh",
+    "balloon_rightArm",
+    "balloon_rightArm_mesh",
+    "balloon_rightLeg",
+    "balloon_rightLeg_mesh",
+    "RightFoot",
+    "RightFoot_mesh",
+    "Head",
+    "Head_mesh",
+    "Muzzle",
+    "Weapon"
+  ],
+  "forward": "+Z",
+  "notes": "No bones. Named arm, leg, foot and tail pivots retained for runtime object animation.",
+  "body_dimensions": {
+    "width": 0.7200000286102295,
+    "depth": 0.6600000262260437
+  },
+  "head_dimensions": {
+    "width": 1.1200000047683716,
+    "depth": 1.1510000228881836
+  }
+}

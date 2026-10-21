@@ -18,11 +18,17 @@ public enum BossSkillKind
     FanShot,
 }
 
+/// <param name="Pose">Body motion while winding up (<see cref="CharacterRig.BossPoses"/>); for a charge, the pawing before it.</param>
+/// <param name="RunPose">Charge only: the body motion while running.</param>
+/// <param name="Leap">Slam only: how far it jumps toward the target before landing (0 = slams where it stands).</param>
+/// <param name="LeapHeight">Slam only: how high the jump goes.</param>
 public sealed record BossSkill(string Id, BossSkillKind Kind, float Range, float Radius, float Windup, float Damage, float Cooldown,
-    int Count, float SpreadDegrees, float Speed, float HpScale);
+    int Count, float SpreadDegrees, float Speed, float HpScale, string Pose = "", string RunPose = "", float Leap = 0, float LeapHeight = 0);
 
 /// <summary>One phase: starts when health falls to <see cref="FromHpPct"/>% and uses <see cref="Skills"/>.</summary>
-public sealed record BossPhase(float FromHpPct, IReadOnlyList<string> Skills, float SpeedScale, float CooldownScale, string NoticeKey);
+/// <param name="Pose">Body motion when the phase starts (it stands still for <paramref name="PoseTime"/> seconds); empty = none.</param>
+public sealed record BossPhase(float FromHpPct, IReadOnlyList<string> Skills, float SpeedScale, float CooldownScale, string NoticeKey,
+    string Pose = "", float PoseTime = 0);
 
 /// <summary>
 /// An RPG-style boss (decisions.md M-24): phases by health and skills as data, content/data/bosses/&lt;monster id&gt;.json.
@@ -54,10 +60,10 @@ public sealed class BossDatabase
 
     private static readonly Dictionary<BossSkillKind, string[]> KindKeys = new()
     {
-        [BossSkillKind.Charge] = Array.Empty<string>(),
-        [BossSkillKind.Slam] = new[] { "range_m", "radius_m", "windup_s", "damage", "cooldown_s" },
-        [BossSkillKind.Summon] = new[] { "count", "cooldown_s", "hp_scale" },
-        [BossSkillKind.FanShot] = new[] { "range_m", "windup_s", "damage", "cooldown_s", "count", "spread_deg", "speed_mps" },
+        [BossSkillKind.Charge] = new[] { "pose", "run_pose" },
+        [BossSkillKind.Slam] = new[] { "range_m", "radius_m", "windup_s", "damage", "cooldown_s", "pose", "leap_m", "leap_height_m" },
+        [BossSkillKind.Summon] = new[] { "count", "cooldown_s", "hp_scale", "windup_s", "pose" },
+        [BossSkillKind.FanShot] = new[] { "range_m", "windup_s", "damage", "cooldown_s", "count", "spread_deg", "speed_mps", "pose" },
     };
 
     private readonly Dictionary<string, BossDefinition> _bosses = new();
@@ -130,8 +136,11 @@ public sealed class BossDatabase
                         if (p.Name is not ("kind" or "description") && !KindKeys[kind.Value].Contains(p.Name))
                             _errors.Add($"{at}: unknown key '{p.Name}' (가능: {string.Join(", ", KindKeys[kind.Value])})");
                     var sf = new JsonFields(s.Value, at, _errors);
-                    var skill = new BossSkill(s.Name, kind.Value, sf.Float("range_m", 5), sf.Float("radius_m", 5), sf.Float("windup_s", 1), sf.Float("damage", 10),
-                        sf.Float("cooldown_s", 8), sf.Int("count", 6), sf.Float("spread_deg", 60), sf.Float("speed_mps", 14), sf.Float("hp_scale", 1));
+                    var skill = new BossSkill(s.Name, kind.Value, sf.Float("range_m", 5), sf.Float("radius_m", 5),
+                        sf.Float("windup_s", kind == BossSkillKind.Summon ? 0 : 1), sf.Float("damage", 10),
+                        sf.Float("cooldown_s", 8), sf.Int("count", 6), sf.Float("spread_deg", 60), sf.Float("speed_mps", 14), sf.Float("hp_scale", 1),
+                        Pose(sf.String("pose", ""), at), Pose(sf.String("run_pose", ""), at), sf.Float("leap_m", 0), sf.Float("leap_height_m", 0));
+                    if (skill.Leap < 0 || skill.LeapHeight < 0) _errors.Add($"{at}: leap_m and leap_height_m must not be negative");
                     if (kind != BossSkillKind.Charge && (skill.Cooldown <= 0 || skill.Windup < 0 || skill.Count < 0))
                         _errors.Add($"{at}: cooldown_s must be positive, windup_s and count not negative");
                     skills[s.Name] = skill;
@@ -143,14 +152,16 @@ public sealed class BossDatabase
                 {
                     string at = $"{where} phases[{phases.Count}]";
                     foreach (var p in ph.EnumerateObject())
-                        if (p.Name is not ("from_hp_pct" or "skills" or "speed" or "cooldown_scale" or "notice")) _errors.Add($"{at}: unknown key '{p.Name}' (typo?)");
+                        if (p.Name is not ("from_hp_pct" or "skills" or "speed" or "cooldown_scale" or "notice" or "pose" or "pose_s")) _errors.Add($"{at}: unknown key '{p.Name}' (typo?)");
                     var pf = new JsonFields(ph, at, _errors);
                     var names = ph.TryGetProperty("skills", out var arr) && arr.ValueKind == JsonValueKind.Array
                         ? arr.EnumerateArray().Select(x => x.GetString() ?? "").ToList() : new List<string>();
                     foreach (var name in names.Where(n => !skills.ContainsKey(n))) _errors.Add($"{at}: skill '{name}' is not in skills");
                     var notice = pf.String("notice", "");
                     if (notice != "" && !Loc.Has(notice)) _errors.Add($"{at}: notice key '{notice}' is not in content/lan/{Loc.Fallback}/");
-                    var phase = new BossPhase(pf.Float("from_hp_pct", 100), names.Where(skills.ContainsKey).ToList(), pf.Float("speed", 1), pf.Float("cooldown_scale", 1), notice);
+                    var phase = new BossPhase(pf.Float("from_hp_pct", 100), names.Where(skills.ContainsKey).ToList(), pf.Float("speed", 1), pf.Float("cooldown_scale", 1), notice,
+                        Pose(pf.String("pose", ""), at), pf.Float("pose_s", 0));
+                    if (phase.PoseTime < 0) _errors.Add($"{at}: pose_s must not be negative");
                     if (phase.SpeedScale <= 0 || phase.CooldownScale <= 0) _errors.Add($"{at}: speed and cooldown_scale must be positive");
                     phases.Add(phase);
                 }
@@ -161,5 +172,13 @@ public sealed class BossDatabase
             _bosses[id] = new BossDefinition { Id = id, Scale = scale, Phases = phases.Count > 0 ? phases : Fallback(id).Phases, Skills = skills };
         }
         catch (JsonException e) { _errors.Add($"{where}: JSON 오류 — {e.Message}"); }
+    }
+
+    /// <summary>A pose name from the data, reported when the toolkit does not know it (then no pose).</summary>
+    private string Pose(string name, string at)
+    {
+        if (name == "" || CharacterRig.BossPoses.Contains(name)) return name;
+        _errors.Add($"{at}: unknown pose '{name}' (가능: {string.Join(", ", CharacterRig.BossPoses)})");
+        return "";
     }
 }

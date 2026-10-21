@@ -187,3 +187,15 @@
 - 늘어진 시체 자세 · 날아가는 거리 줄임 · 착지 찌그러짐 · 네임드 넘어지기(I-83). `CorpseReactionCheck` 29개(새 3개: 네임드가 선 자세에서 넘어짐, 넘어지는 동안 바닥 아래로 안 들어감, 몸은 그대로 고정 자세로 끝남), `CorpseTierCheck` 36, `CorpseBoundsCheck` 1, `CorpsePileCheck` 2, `CorpseRetentionCheck` 16, `EnemyExpansion` 60, `CombatPacingCheck` 44, `ModeCheck` 79, `CardLabCheck` 68, `NetSyncCheck` 28, `EnemyAttackCheck` 79, `SpawnCheck` 41, `Integration` 148 통과.
 - 렌더 `output/death-*.png`(`tests/DeathCapture.tscn`): 시체가 쓰러진 자리 근처(몇 m 안)에 발을 벌리고 누움. 손으로 해 본 느낌은 미확인.
 
+### 이번 변경 확인 기록 — 2026-10-21 (보스 몸동작, A-18)
+
+- 자세 8종(`crouch_leap` `land` `rear_roar` `sweep_aim` `recoil` `shake_off` `paw_ground` `gallop`)을 `boss.json`에서 이름으로 고름. 내려찍기 점프 착지(먼지 고리 · 히트스톱), 0.9초 포효 소환(땅에서 솟음), 돌진 앞발 긁기 · 출렁 · 먼지, 페이즈 포효 · 몸 털기, 마지막 페이즈 콧김.
+- `ModeCheck` 86개(헤드리스)·90개(창 모드) 통과: 모르는 자세 · 음수 값 오류 보고, 보스 데이터의 동작 이름, 2.4 m 높이로 뛰어 대상이 서 있던 곳(몸이 겹칠 수 없어 0.8 m 옆)에 착지, 페이즈 포효, 포효 뒤 소환. 회귀: `Integration` 148, `EnemyAttackCheck` 79, `EnemyExpansion` 60, `NetSyncCheck` 28, `CardLabCheck` 68, `MapCheck` 25, `CombatPacingCheck` 44, `HitFlashCheck`, `CorpseReactionCheck` 29 통과.
+- 렌더 `output/mode-survivor-slam.png`(웅크려 팔 올림) · `slam-air.png`(공중) · `slam-land.png` · `phase-roar.png` · `summon-roar.png` · `charge-paw.png` · `charge-gallop.png` · `fan.png`. 손으로 해 본 느낌 · 파티원 화면은 미확인(I-77).
+
+### 이번 변경 확인 기록 — 2026-10-21 (네임드 황소 · 풍선 정식 모델, A-17 2차)
+
+- Codex 모델 `bull.glb`(삼각형 2,644) · `balloon.glb`(2,264), 몸통 앞뒤 깊이 ≥ 폭 0.8 · 관절 피벗(팔 · 다리 · 발 · 꼬리). `bull.tres`·`balloon.tres`가 모델을 씀.
+- `EnemyExpansion` 60, `EnemyAttackCheck` 79, `CorpseTierCheck` 36, `CorpseReactionCheck` 29, `CorpseRetentionCheck` 16, `HitFlashCheck`(모델 있는 황소는 생성 팔 없음 검사 추가), `ModeCheck` 86, `SpawnCheck` 41, `CombatPacingCheck` 44, `NetSyncCheck` 28, `CardLabCheck` 68, `VisionTierCheck` 23, `Integration` 148 통과.
+- 렌더 `output/lineup-*.png`(`tests/MonsterLineupCapture.tscn`, 빈 바닥 · 시야 끔 · 조명): 앞 · 옆 · 뒤, 황소 돌진 준비, 풍선 부풂 · 펑.
+

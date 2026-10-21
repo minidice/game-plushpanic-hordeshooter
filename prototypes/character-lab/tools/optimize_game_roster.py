@@ -14,7 +14,9 @@ OUT=BASE/'output'/'roster'
 PLAYERS=['goose','duck','raccoon','redpanda']
 ENEMIES=['humanoid','crawler','tether','leaper','spitter']
 BOSS_ONLY='--boss-only' in sys.argv
-SELECTED=['boss'] if BOSS_ONLY else PLAYERS if '--players-only' in sys.argv else ENEMIES if '--enemies-only' in sys.argv else PLAYERS+ENEMIES
+NAMED_ONLY='--named-only' in sys.argv
+NAMED=['bull','balloon']
+SELECTED=['boss'] if BOSS_ONLY else NAMED if NAMED_ONLY else PLAYERS if '--players-only' in sys.argv else ENEMIES if '--enemies-only' in sys.argv else PLAYERS+ENEMIES
 
 def clear():
     bpy.ops.object.select_all(action='SELECT')
@@ -24,12 +26,33 @@ def clear():
 
 def triangles(obj): return sum(len(p.vertices)-2 for p in obj.data.polygons)
 
+def named_dimensions(kind, head_only):
+    points=[]
+    pivots=[f'{kind}_leftArm',f'{kind}_rightArm',f'{kind}_leftLeg',f'{kind}_rightLeg',f'{kind}_tail','LeftFoot','RightFoot']
+    for obj in bpy.context.scene.objects:
+        if obj.type!='MESH': continue
+        ancestors=[]
+        node=obj
+        while node:
+            ancestors.append(node.name)
+            node=node.parent
+        in_head='Head' in ancestors
+        is_limb=any(name in ancestors for name in pivots)
+        if head_only != in_head or (not head_only and (is_limb or 'Deform' not in ancestors)): continue
+        for vertex in obj.data.vertices:
+            points.append(obj.matrix_world @ vertex.co)
+    assert points, f'{kind}: missing {"Head" if head_only else "body"} geometry'
+    # Blender imports glTF with model width on X and forward depth on Y.
+    xs=[point.x for point in points]
+    ys=[point.y for point in points]
+    return {'width':max(xs)-min(xs),'depth':max(ys)-min(ys)}
+
 reports=[]
 for kind in SELECTED:
     clear()
     bpy.ops.import_scene.gltf(filepath=str(OUT/f'{kind}-source.glb'))
     player=kind in PLAYERS
-    if not player and kind!='boss':
+    if not player and kind not in ['boss']+NAMED:
         # Preserve authored limbs instead of baking them into Deform and adding duplicate arms at runtime.
         deform=bpy.data.objects['Deform']
         low=kind=='crawler';leap=kind=='leaper';fat=kind=='spitter'
@@ -46,9 +69,13 @@ for kind in SELECTED:
                 assert all(abs(obj.matrix_world[r][c]-world[r][c])<1e-6 for r in range(4) for c in range(4))
     keep={f'{kind}_{p}' for p in ['root','body','deform','torso','head','helmet','beret','goggles','headset','vest','vestPadded','pack','weapon','tail','beak','leftFoot','rightFoot','leftArm','rightArm','leftEar','rightEar']}
     keep.update({'Muzzle','Body','Deform','Head','LeftFoot','RightFoot','Weapon'})
+    if kind in NAMED:
+        keep.update({f'{kind}_leftArm',f'{kind}_rightArm',f'{kind}_leftLeg',f'{kind}_rightLeg'})
+        if kind=='bull': keep.add('bull_tail')
     keep.update(f'{kind}_{p}' for p in ['leftEye','rightEye','leftBrow','rightBrow','snout','crestShort','crestSwept'])
     groups={}
     before=0
+    dimensions={'body':named_dimensions(kind,False),'head':named_dimensions(kind,True)} if kind in NAMED else None
     for obj in list(bpy.context.scene.objects):
         if obj.type!='MESH': continue
         before+=triangles(obj)
@@ -62,7 +89,7 @@ for kind in SELECTED:
             bpy.ops.object.modifier_apply(modifier=mod.name)
         elif not player and len(obj.data.polygons)>60:
             mod=obj.modifiers.new('Crowd budget','DECIMATE')
-            mod.ratio=.38
+            mod.ratio=(.25 if kind=='bull' else .32) if kind in NAMED else .38
             bpy.ops.object.modifier_apply(modifier=mod.name)
         anchor=obj.parent
         while anchor and anchor.name not in keep: anchor=anchor.parent
@@ -88,19 +115,35 @@ for kind in SELECTED:
     path=target/f'{kind}.glb'
     bpy.ops.export_scene.gltf(filepath=str(path),export_format='GLB',export_animations=False,export_extras=True)
     report={'id':kind,'source_triangles':before,'triangles':sum(triangles(o) for o in meshes),'meshes':len(meshes),'materials':sorted({m.name for o in meshes for m in o.data.materials if m}),'bytes':path.stat().st_size,'nodes':[o.name for o in bpy.context.scene.objects],'forward':'+Z','notes':'No bones. Runtime object pivots. Beret included for runtime visibility. Source vertex colors preserved.'}
+    if kind in NAMED:
+        report['body_dimensions']=dimensions['body']
+        report['head_dimensions']=dimensions['head']
+        report['notes']='No bones. Named arm, leg, foot and tail pivots retained for runtime object animation.'
     (target/f'{kind}-report.json').write_text(json.dumps(report,indent=2),encoding='utf8')
     reports.append(report)
     print('ROSTER_ASSET '+json.dumps({k:v for k,v in report.items() if k not in ['nodes','materials']}))
     assert report['triangles'] < (30000 if player else 4500),report
     if player: assert all(any(m.startswith(f'custom_{channel}_') for m in report['materials']) for channel in ['body','beak','hat','vest','pack','wing','tail','feet','eyes','hair'])
     elif kind!='boss':
-        assert all(f'{kind}_{side}Arm' in report['nodes'] and f'{kind}_{side}Arm_mesh' in report['nodes'] for side in ['left','right'])
+        if kind in NAMED:
+            budget=3000 if kind=='bull' else 2500
+            assert report['triangles']<budget,report
+            required=[f'{kind}_root','Body','Deform','Head','Muzzle','Weapon',f'{kind}_leftArm',f'{kind}_rightArm',f'{kind}_leftLeg',f'{kind}_rightLeg','LeftFoot','RightFoot']
+            if kind=='bull': required.append('bull_tail')
+            assert all(name in report['nodes'] for name in required),report
+            body=dimensions['body'];head=dimensions['head']
+            assert body['depth']>=body['width']*.8,(kind,body)
+            assert head['depth']>=head['width']*.85,(kind,head)
+            assert all(f'{kind}_{side}Arm_mesh' in report['nodes'] and f'{kind}_{side}Leg_mesh' in report['nodes'] for side in ['left','right']),report
+            if kind=='bull': assert 'bull_tail_mesh' in report['nodes'],report
+        else:
+            assert all(f'{kind}_{side}Arm' in report['nodes'] and f'{kind}_{side}Arm_mesh' in report['nodes'] for side in ['left','right'])
     else:
         assert report['triangles'] < 4500,report
         assert all(name in report['nodes'] for name in ['boss_leftArm','boss_rightArm','boss_leftArm_mesh','boss_rightArm_mesh']),report
 
 if '--no-preview' in sys.argv:
-    contact='boss-contact' if BOSS_ONLY else 'players-contact' if '--players-only' in sys.argv else 'enemies-contact' if '--enemies-only' in sys.argv else 'roster-contact'
+    contact='boss-contact' if BOSS_ONLY else 'named-contact' if NAMED_ONLY else 'players-contact' if '--players-only' in sys.argv else 'enemies-contact' if '--enemies-only' in sys.argv else 'roster-contact'
     (OUT/f'{contact}-summary.json').write_text(json.dumps(reports,indent=2),encoding='utf8')
     sys.exit(0)
 
@@ -115,7 +158,7 @@ def aim(obj,target):obj.rotation_euler=(Vector(target)-obj.location).to_track_qu
 clear()
 floor=material('Studio floor',(.045,.06,.075))
 label=material('Labels',(.8,.86,.9))
-for row,kinds in enumerate([PLAYERS,ENEMIES]):
+for row,kinds in enumerate([PLAYERS,ENEMIES,NAMED] if NAMED_ONLY else [PLAYERS,ENEMIES]):
     for i,kind in enumerate(kinds):
         if kind not in SELECTED: continue
         path=ROOT/'game'/'assets'/('characters' if row==0 else 'enemies')/kind/f'{kind}.glb'

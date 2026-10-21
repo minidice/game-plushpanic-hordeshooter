@@ -62,7 +62,14 @@ public partial class HitFlashCheck : Node
                 corpse.Free(); // Active flash teardown must not access freed meshes.
                 other.Free();
             }
-            var bull=CharacterRig.Create(CharacterCatalog.Enemy("bull"));AddChild(bull);
+            // Authored arms are used as they are: the bull model has its own shoulder pivots (named-bull-balloon.md).
+            var authored=CharacterRig.Create(CharacterCatalog.Enemy("bull"));AddChild(authored);
+            authored.InitializeEnemyAttackPose();
+            Require(authored.Pose.GetNodeOrNull("EnemyLeftArm")==null && authored.Model.FindChild("bull_leftArm",true,false)!=null,"a model with arm pivots gets no generated arms");
+            authored.Free();
+            // A look without a model (code shapes) still gets generated arms.
+            var shapeOnly=(CharacterDefinition)CharacterCatalog.Enemy("bull").Duplicate();shapeOnly.Model=null;
+            var bull=CharacterRig.Create(shapeOnly);AddChild(bull);
             bull.InitializeEnemyAttackPose();
             var fallback=bull.Pose.GetNode<MeshInstance3D>("EnemyLeftArm");
             var fallbackHome=fallback.MaterialOverlay;

@@ -35,8 +35,8 @@
 | `tether` / named | 늘어진 혀, 큰 얼굴 | 연결로 플레이어를 끌어당기고 구속. 연결과 공격 전조가 보여야 함 |
 | `leaper` / named | 둥근 후드, 낮게 웅크린 몸 | 도약 후 달라붙어 구속. 일반 보행과 도약 준비 자세 구분 |
 | `spitter` / named | 부푼 볼·배, 오므린 입 | 토사물 원거리 공격. 입과 발사 방향이 읽혀야 함 |
-| `balloon` / named | 부푼 둥근 풍선형 몸 | 파열 행동. 파열 관련 수치는 `balloon_pop.json` 참조 |
-| `bull` / named | 큰 얼굴의 둥근 황소형 | 예고 후 돌격, 돌격 중 충돌 피해. 평상시 접촉과 구분 |
+| `balloon` / named | 통통한 작은 몸 위의 커다란 풍선 머리(`balloon.glb`, 2026-10-21 Codex, [지시문](model-briefs/named-bull-balloon.md)). 터지면 `Head`가 사라지고 몸만 남음 | 파열 행동. 파열 관련 수치는 `balloon_pop.json` 참조 |
+| `bull` / named | 앞으로 숙인 땅딸막한 황소 인형, 크고 굵은 뿔 · 튀어나온 크림색 주둥이(`bull.glb`, 2026-10-21 Codex, [지시문](model-briefs/named-bull-balloon.md)). 보스와 달리 금장 없음 | 예고 후 돌격, 돌격 중 충돌 피해. 평상시 접촉과 구분 |
 | `wild_animal` / common | 현재 장비 없는 라쿤 | 야생 동물 근접. 라쿤 얼굴·귀·꼬리 특징 유지 |
 | `armed_animal` / common | 현재 총을 든 랫서판다 | 사격 전조와 엄폐 차폐가 있는 일반 원거리 적. 탄은 40m/s 가는 구적탄(C-22) |
 | `armed_veteran` / named | 현재 랫서판다 무장 모델 재사용 | 정예 원거리 적. 별도 정예 외형의 충분한 식별성은 후속 검토; named 분류도 M-8의 검토 대상 |

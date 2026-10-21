@@ -51,6 +51,8 @@ public partial class ModeCheck : Node
         return _stage;
     }
 
+    private static Vector3 Flat(Vector3 v) => new(v.X, 0, v.Z);
+
     private async Task Shot(string name)
     {
         if (!Windowed) return;
@@ -122,6 +124,14 @@ public partial class ModeCheck : Node
             ["test"] = "{\"phases\": [{\"from_hp_pct\": 90, \"skills\": [\"nope\"]}, {\"from_hp_pct\": 95}], \"skills\": {\"x\": {\"kind\": \"laser\"}, \"s\": {\"kind\": \"slam\", \"radius\": 3}}}",
         }).Errors;
         Check(badBoss.Count == 5, "a missing skill, a first phase below 100, phases going up, an unknown kind and an unknown key are reported: " + string.Join(" / ", badBoss));
+        var badPose = BossDatabase.FromText(new Dictionary<string, string>
+        {
+            ["test"] = "{\"phases\": [{\"from_hp_pct\": 100, \"skills\": [\"s\"], \"pose\": \"moonwalk\", \"pose_s\": -1}], \"skills\": {\"s\": {\"kind\": \"slam\", \"pose\": \"twirl\", \"leap_m\": -2}}}",
+        }).Errors;
+        Check(badPose.Count == 4, "an unknown phase pose, a negative pose_s, an unknown skill pose and a negative leap are reported: " + string.Join(" / ", badPose));
+        Check(bossData.Skills["slam"].Pose == "crouch_leap" && bossData.Skills["slam"].Leap > 0 && bossData.Skills["summon"].Windup > 0 &&
+              bossData.Skills["charge"].RunPose == "gallop" && bossData.Phases[1].Pose != "" && bossData.Phases[1].PoseTime > 0,
+            "the boss data names its motions: leaping slam, roaring summon, galloping charge, a roar at each phase");
         Check(BossEnemy.MonsterId == bossData.Id && bossDef.Hp >= 8000, $"the boss is built for a 2–3 minute fight ({bossDef.Hp} HP)");
 
         // ---------- scenario is unchanged ----------
@@ -301,10 +311,25 @@ public partial class ModeCheck : Node
         stage.Player.Invulnerable = false;
         int before = stage.Player.Health, slams = boss.Uses.GetValueOrDefault(BossSkillKind.Slam);
         var slam = boss.Data.Skills.Values.First(k => k.Kind == BossSkillKind.Slam);
+        var leapFrom = boss.GlobalPosition;
+        var targetAt = stage.Player.GlobalPosition;
         Check(boss.StartSkill(BossSkillKind.Slam) && boss.Casting, "the slam winds up");
         await Frames(Mathf.CeilToInt(slam.Windup * .6f * Engine.PhysicsTicksPerSecond));
         await Shot("survivor-slam");
+        await Until(() => boss.Leaping, "then it jumps", 2);
+        float peak = 0;
+        bool airShot = false;
+        while (boss.Casting)
+        {
+            peak = Mathf.Max(peak, boss.LeapHeight);
+            if (!airShot && boss.LeapHeight > slam.LeapHeight * .9f) { airShot = true; await Shot("survivor-slam-air"); }
+            await Frames(1);
+        }
+        await Shot("survivor-slam-land");
         await Until(() => boss.Uses.GetValueOrDefault(BossSkillKind.Slam) == slams + 1, "the slam lands after its windup", 3);
+        float landed = Flat(boss.GlobalPosition - targetAt).Length();
+        Check(peak > slam.LeapHeight * .8f && landed < boss.Radius + stage.Player.Definition.ColliderRadius + .5f && Flat(boss.GlobalPosition - leapFrom).Length() > 1f,
+            $"it leaps {peak:0.0} m high onto where the target stood and lands there ({landed:0.0} m off, bodies cannot overlap)");
         Check(stage.Player.Health < before, $"the slam hurts a player inside the disc ({before} → {stage.Player.Health})");
         stage.Player.Invulnerable = true;
 
@@ -312,10 +337,28 @@ public partial class ModeCheck : Node
         boss.Burn(boss.MaxHealth * .4f);
         await Until(() => boss.Phase == 1 && boss.CurrentPhase.Skills.Contains("summon"), "below 66% the second phase starts", 3);
         Check(stage.Notice == Loc.Text("msg_boss_phase2"), "the new phase is announced");
+        await Until(() => boss.Roaring, "it stops to roar at the new phase", 2);
+        await Shot("survivor-phase-roar");
         await Until(() => !boss.Casting, "the boss is free to summon", 4);
         var summon = boss.Data.Skills.Values.First(k => k.Kind == BossSkillKind.Summon);
         int alive = stage.AllEnemies.Count();
-        Check(boss.StartSkill(BossSkillKind.Summon) && stage.AllEnemies.Count() == alive + summon.Count, "the summon calls a ring of commons");
+        int summons = boss.Uses.GetValueOrDefault(BossSkillKind.Summon);
+        Check(boss.StartSkill(BossSkillKind.Summon) && boss.Casting && stage.AllEnemies.Count() == alive, "the summon starts with a roar, nobody comes yet");
+        await Frames(Mathf.CeilToInt(summon.Windup * .5f * Engine.PhysicsTicksPerSecond));
+        await Shot("survivor-summon-roar");
+        await Until(() => boss.Uses.GetValueOrDefault(BossSkillKind.Summon) == summons + 1, "then the roar ends", 3);
+        Check(stage.AllEnemies.Count() >= alive + summon.Count, "and a ring of commons bursts out");
+        if (Windowed)
+        {
+            // The charge's pawing and gallop for the render review.
+            await Until(() => !boss.Casting && boss.State == BullEnemy.Mode.Chase, "the boss is free to charge", 6);
+            boss.StartWindup((stage.Player.GlobalPosition - boss.GlobalPosition).Normalized());
+            await Seconds(.5f);
+            await Shot("survivor-charge-paw");
+            await Until(() => boss.State == BullEnemy.Mode.Charge, "it charges", 3);
+            await Seconds(.25f);
+            await Shot("survivor-charge-gallop");
+        }
 
         // Phase 3 below 33%: faster, and the fan of shots.
         boss.Burn(boss.MaxHealth * .3f);

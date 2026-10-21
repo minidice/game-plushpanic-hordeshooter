@@ -1,0 +1,47 @@
+{
+  "id": "bull",
+  "source_triangles": 10608,
+  "triangles": 2644,
+  "meshes": 9,
+  "materials": [
+    "bull_cream",
+    "bull_fur",
+    "bull_ink",
+    "bull_pink"
+  ],
+  "bytes": 84484,
+  "nodes": [
+    "bull_root",
+    "Body",
+    "Deform",
+    "Deform_mesh",
+    "bull_leftLeg",
+    "bull_leftLeg_mesh",
+    "LeftFoot",
+    "LeftFoot_mesh",
+    "bull_leftArm",
+    "bull_leftArm_mesh",
+    "bull_rightLeg",
+    "bull_rightLeg_mesh",
+    "RightFoot",
+    "RightFoot_mesh",
+    "bull_rightArm",
+    "bull_rightArm_mesh",
+    "Head",
+    "Head_mesh",
+    "Muzzle",
+    "Weapon",
+    "bull_tail",
+    "bull_tail_mesh"
+  ],
+  "forward": "+Z",
+  "notes": "No bones. Named arm, leg, foot and tail pivots retained for runtime object animation.",
+  "body_dimensions": {
+    "width": 1.1399999856948853,
+    "depth": 1.1832729578018188
+  },
+  "head_dimensions": {
+    "width": 1.4748519659042358,
+    "depth": 1.3469890356063843
+  }
+}

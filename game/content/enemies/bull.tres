@@ -1,13 +1,23 @@
-[gd_resource type="Resource" script_class="CharacterDefinition" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="CharacterDefinition" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/Characters/CharacterDefinition.cs" id="1_def"]
+[ext_resource type="PackedScene" path="res://assets/enemies/bull/bull.glb" id="2_model"]
 
 [resource]
 script = ExtResource("1_def")
 Id = "bull"
 DisplayName = "name_monster_bull"
-Description = "외형 전용. 체력·속도·무게 같은 능력치는 content/data/monsters.csv에 있습니다."
+Description = "Named bull (doc/model-briefs/named-bull-balloon.md). Authored by Codex, runtime object pivots (arms, legs, feet, tail). Stats in monsters.csv."
 Role = 1
+Model = ExtResource("2_model")
+ModelFacesPositiveZ = true
+BodyNode = "Body"
+DeformNode = "Deform"
+HeadNode = "Head"
+LeftFootNode = "LeftFoot"
+RightFootNode = "RightFoot"
+WeaponNode = "Weapon"
+MuzzleNode = "Muzzle"
 Shape = 3
 PrimaryColor = Color(0.55, 0.38, 0.28, 1)
 SecondaryColor = Color(0.12, 0.08, 0.06, 1)
