@@ -12,3 +12,6 @@ wild_animal,name_monster_wild_animal,common,plush,false,32,4.8,0.9,5,900,0.35,8,
 armed_animal,name_monster_armed_animal,shooter,plush,false,42,3.4,1,6,1000,0.35,12,animal_shot,common
 armed_veteran,name_monster_armed_veteran,shooter,plush,false,110,3,1.7,10,1000,0.35,14,veteran_shot,named
 boss,name_monster_boss,boss,boss,false,12000,3.2,8,14,1300,0.5,30,boss_charge,boss
+boss_bull_giant,name_monster_boss_bull_giant,boss,bull,false,12000,3.6,8,12,1300,0.5,30,boss_charge,boss
+boss_balloon_king,name_monster_boss_balloon_king,boss,balloon,false,12000,2.4,8,10,1300,0.5,30,boss_charge,boss
+boss_spitter_mother,name_monster_boss_spitter_mother,boss,spitter,false,12000,2.8,8,12,1300,0.5,30,boss_charge,boss

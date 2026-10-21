@@ -1,8 +1,36 @@
 monster,role,theme,weight,count,from,until,hp_scale,damage_scale
-#몬스터 id 또는 @common(테마 일반 풀)·@special(테마 특수 풀),역할(common=무리 채우기 / named=그 시점에 count마리),테마(any zombie animals armed),가중치(common),수(named),시작(난전=초),끝(이 값 미만까지; 빈칸=끝까지),체력 배율,공격력 배율
-@common,common,any,100,,0,,0.6,1
-crawler,common,zombie,30,,60,,0.6,1
-wild_animal,common,animals,30,,60,,0.6,1
-armed_animal,common,armed,20,,60,,0.6,1
+#몬스터 id 또는 @common(테마 일반 풀)·@special(테마 특수 풀),역할(common=무리 채우기 / named=그 시점에 count마리),테마(any zombie animals armed),가중치(common),수(named),시작(난전=구간 시계 초: 구간을 이어 붙인 시간, 보스전 동안 멈춤. 구간 1 0~180 · 2 180~420 · 3 420~720 · 4 720~1080),끝(이 값 미만까지; 빈칸=끝까지),체력 배율,공격력 배율
+#구간 1 (약 3분): 약한 무리, 1분부터 테마별 빠른 몹
+@common,common,any,100,,0,180,0.6,1
+crawler,common,zombie,30,,60,180,0.6,1
+wild_animal,common,animals,30,,60,180,0.6,1
+armed_animal,common,armed,20,,60,180,0.6,1
 @special,named,any,,1,45,,1,1
 @special,named,any,,2,100,,1,1
+#구간 2 (약 4분): 체력 0.8, 빠른 몹 · 무장 동물이 늘어남, 네임드 둘씩
+@common,common,any,100,,180,420,0.8,1
+crawler,common,zombie,40,,180,420,0.8,1
+wild_animal,common,animals,40,,180,420,0.8,1
+armed_animal,common,armed,30,,180,420,0.8,1
+armed_animal,common,animals,15,,300,420,0.8,1
+@special,named,any,,2,220,,1.1,1
+@special,named,any,,3,330,,1.1,1
+#구간 3 (약 5분): 체력 1.0 · 공격 1.1, 네임드 셋, 황소 둘
+@common,common,any,100,,420,720,1,1.1
+crawler,common,zombie,50,,420,720,1,1.1
+wild_animal,common,animals,50,,420,720,1,1.1
+armed_animal,common,armed,40,,420,720,1,1.1
+armed_animal,common,any,15,,540,720,1,1.1
+@special,named,any,,3,470,,1.3,1.1
+bull,named,any,,2,580,,1.3,1.1
+@special,named,any,,3,660,,1.3,1.1
+#구간 4 (약 6분, 최종 보스 앞): 체력 1.25 · 공격 1.2, 네임드 넷 · 다섯, 무장 고참
+@common,common,any,100,,720,,1.25,1.2
+crawler,common,zombie,60,,720,,1.25,1.2
+wild_animal,common,animals,60,,720,,1.25,1.2
+armed_animal,common,armed,50,,720,,1.25,1.2
+armed_animal,common,any,20,,720,,1.25,1.2
+@special,named,any,,3,770,,1.6,1.2
+armed_veteran,named,any,,2,860,,1.3,1.2
+@special,named,any,,4,900,,1.6,1.2
+@special,named,any,,5,1000,,1.6,1.2

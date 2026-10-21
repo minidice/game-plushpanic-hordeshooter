@@ -10,7 +10,8 @@ public enum SpawnRole { Common, Named }
 /// <summary>
 /// One row of a mode's monster table. <see cref="Monster"/> is a monsters.csv id, or <c>@common</c> / <c>@special</c>
 /// for the stage theme's own pools. <see cref="From"/>/<see cref="Until"/> are wave numbers in Outpost (survival) and
-/// seconds in Onslaught (survivor); <see cref="Until"/> is exclusive, infinity when the cell is empty.
+/// seconds of the run clock in Onslaught (survivor: the stretches end to end, standing still while a boss is out, see
+/// <see cref="SurvivorRules.RunTime"/>); <see cref="Until"/> is exclusive, infinity when the cell is empty.
 /// </summary>
 public sealed record ModeSpawnRow(string Monster, SpawnRole Role, string Theme, float Weight, int Count, float From, float Until,
     float HpScale, float DamageScale)

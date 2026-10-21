@@ -251,7 +251,14 @@ fmt_hud_cooldown,Recharge {0}s
 # Onslaught card flow (decisions.md M-27)
 ui_objective_survivor_midboss,Take down the middle boss — special card
 fmt_bar_boss_segment,Boss {0}/{1} in {2}
-msg_survivor_midboss,A middle boss! Take it down for a special card
+fmt_survivor_midboss,Middle boss: {0}! Take it down for a special card
+fmt_boss_final,Final boss {0}
+msg_boss_bull_giant_2,The giant bull starts leaping and slamming!
+msg_boss_bull_giant_3,The giant bull calls its herd!
+msg_boss_balloon_king_2,The Balloon King starts bouncing!
+msg_boss_balloon_king_3,The Balloon King is angry: faster volleys
+msg_boss_spitter_mother_2,The Spew Mother calls her brood!
+msg_boss_spitter_mother_3,The Spew Mother is enraged!
 fmt_survivor_midboss_down,Middle boss down! Special card — next stretch ({0}/{1})
 fmt_level_up,Level {0}! Pick a card
 fmt_hud_level,Lv {0}

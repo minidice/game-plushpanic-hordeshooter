@@ -96,6 +96,14 @@ public partial class ModeCheck : Node
               tuning.Survivor.SegmentBossHp[^1] == 1, $"Onslaught runs four boss stretches, about 20 minutes ({tuning.Survivor.Total:0}s)");
         var badSegments = ModeTuning.FromText("{\"survivor\": {\"segments_s\": [60, -1], \"segment_boss_hp\": [1], \"xp_growth\": 0.5}}").Errors;
         Check(badSegments.Count == 3, "a negative stretch, a missing boss share and a shrinking xp curve are reported: " + string.Join(" / ", badSegments));
+        var mids = tuning.Survivor.MidBosses;
+        Check(mids.Distinct().Count() >= tuning.Survivor.Segments.Count - 1 && tuning.Survivor.FinalBosses.Contains(BossEnemy.MonsterId) &&
+              mids.Concat(tuning.Survivor.FinalBosses).All(id => MonsterDatabase.Get(id).Tier == MonsterTier.Boss && BossDatabase.Current.Bosses.ContainsKey(id)),
+            $"enough different middle bosses for the three middle stretches ({string.Join(", ", mids)}), the bull chief as the final one");
+        Check(mids.All(id => BossDatabase.Get(id).Phases.Count == 3) && mids.Select(id => string.Join("+", BossDatabase.Get(id).Phases[0].Skills)).Distinct().Count() == mids.Count,
+            "each middle boss has three phases and opens with its own skills");
+        var badBosses = ModeTuning.FromText("{\"survivor\": {\"mid_bosses\": [\"bull\", \"ghost\"]}}").Errors;
+        Check(badBosses.Count == 3, "a non-boss, an unknown id and an empty boss list are reported: " + string.Join(" / ", badBosses));
 
         var bossDef = MonsterDatabase.Get(BossEnemy.MonsterId);
         Check(bossDef.Behavior == MonsterBehavior.Boss && bossDef.BullCharge != null && bossDef.IsSpecial && bossDef.Tier == MonsterTier.Boss,
@@ -114,6 +122,16 @@ public partial class ModeCheck : Node
         Check(outpost.NamedDue(0, 1, "zombie").Count() == 0 && outpost.NamedDue(1, 3, "zombie").Count() == 2, "named ones open waves 2 and 3, not wave 1");
         Check(onslaught.PickCommon(30, "armed", rng)!.Monster == "@common" && Enumerable.Range(0, 100).Any(_ => onslaught.PickCommon(80, "armed", rng)!.Monster == "armed_animal"),
             "theme rows only join when they match the stage theme and time");
+        // The Onslaught table runs the whole run clock: every stretch has its own, tougher commons and more named.
+        var ends = tuning.Survivor.Segments.Select((_, i) => tuning.Survivor.Segments.Take(i + 1).Sum()).ToList();
+        var starts = ends.Select((end, i) => i == 0 ? 0f : ends[i - 1]).ToList();
+        var hp = starts.Select(t => onslaught.Rows.First(row => row.Monster == "@common" && row.ActiveAt(t + 1)).HpScale).ToList();
+        Check(hp.Zip(hp.Skip(1)).All(p => p.Second > p.First) && hp[0] < 1 && hp[^1] > 1, "commons get tougher stretch by stretch: " + string.Join(" → ", hp));
+        var named = starts.Select((t, i) => onslaught.NamedDue(t - .01f, ends[i] - .01f, "zombie").Sum(row => row.Count)).ToList();
+        Check(named.All(n => n >= 2) && named.Zip(named.Skip(1)).All(p => p.Second >= p.First) && onslaught.NamedDue(ends[^2], ends[^1], "zombie").Any(row => row.From > ends[^1] - 120),
+            "every stretch sends named ones, more each time, up to the last minutes: " + string.Join(", ", named));
+        Check(Enumerable.Range(0, 300).Select(_ => onslaught.PickCommon(ends[^1] - 10, "zombie", rng)!.Monster).Contains("crawler"),
+            "the last stretch still mixes the theme's fast ones in");
         var badTable = ModeSpawnTable.FromText("test", "monster,role,theme,weight,count,from,until,hp_scale,damage_scale,extra\n" +
             "ghost,common,any,1,,0,,1,1,\n@common,boss,any,1,,0,,1,1,\n@common,common,space,0,,5,2,0,1,\n").Errors;
         Check(badTable.Count >= 6, "a table with an unknown column, monster, role and theme, zero weight and scale, and until before from is reported: " + string.Join(" / ", badTable));
@@ -307,10 +325,17 @@ public partial class ModeCheck : Node
             await Seconds(12);
             await Shot("survivor-swarm");
         }
+        Check(r.MidBosses.Contains(rules.NextBoss), $"the first stretch drew a middle boss ({rules.NextBoss})");
+        // The bull chief has the full skill set the checks below go through.
+        rules.NextBoss = BossEnemy.MonsterId;
         stage.AdvanceClockForTest(rules.SegmentLength - 1 - rules.SegmentTime);
         Check(rules.GroupSize > r.GroupStart && rules.Segment == 0, "groups grow through the first stretch");
         await Until(() => rules.BossArrived && rules.Boss != null, "the first stretch's boss arrives on time", 4);
         var boss = rules.Boss!;
+        float runAtBoss = rules.RunTime;
+        await Seconds(1);
+        Check(Mathf.IsEqualApprox(rules.RunTime, runAtBoss) && runAtBoss < r.Segments[0] && runAtBoss > r.Segments[0] - .1f,
+            $"the table's run clock stands still at the stretch's end while its boss is out ({runAtBoss:0.00}s)");
         Check(!rules.FinalSegment && Mathf.IsEqualApprox(boss.MaxHealth, boss.Monster.Hp * r.SegmentBossHp[0]) && Mathf.IsEqualApprox(boss.Health, boss.MaxHealth),
             $"it is a middle boss with {r.SegmentBossHp[0]:P0} health");
         Check(boss.Definition.ColliderRadius > CharacterCatalog.Enemy("bull").ColliderRadius * 1.5f && boss.Rig.Model.FindChild("boss_leftArm", true, false) != null,
@@ -408,18 +433,54 @@ public partial class ModeCheck : Node
         Check(stage.State == StageState.Playing && rules.Segment == 1 && !rules.BossArrived && queue.Count > offersBefore &&
               queue.Offers[offersBefore].Kind == CardKind.Special, "a middle boss down gives a special card (before any level-up) and opens stretch 2");
         Check(rules.BarLabel.Contains($"2/{rules.Segments}") && rules.BossIn > rules.SegmentLength - 1, "the bar counts down to the second boss: " + rules.BarLabel);
-        // The other stretches; the last boss is the final one and ends it.
+        Check(Mathf.Abs(rules.RunTime - r.Segments[0]) < .5f, $"the run clock picks up where the first stretch ended ({rules.RunTime:0.0}s)");
+        // The other stretches, each with its own middle boss; the last boss is the final one and ends it.
+        var met = new List<string>();
+        rules.NextBoss = "boss_balloon_king";
         while (!rules.FinalSegment)
         {
             stage.AdvanceClockForTest(rules.SegmentLength - rules.SegmentTime + .1f);
             await Until(() => rules.BossArrived && rules.Boss != null, $"boss {rules.Segment + 1} arrives", 4);
-            rules.Boss!.Burn(rules.Boss.MaxHealth);
+            boss = rules.Boss!;
+            met.Add(boss.Monster.Id);
+            Check(boss.Definition.ColliderRadius > CharacterCatalog.Enemy(boss.Monster.LookId).ColliderRadius * 1.8f && rules.BarLabel.Contains(boss.Monster.DisplayName) &&
+                  stage.Notice == Loc.Format("fmt_survivor_midboss", boss.Monster.DisplayName),
+                $"stretch {rules.Segment + 1}: {boss.Monster.DisplayName}, its look scaled up, named on the bar and in the notice");
+            if (boss.Monster.Id == "boss_balloon_king")
+            {
+                // Its summon calls balloons, not the theme's commons.
+                await Until(() => !boss.Casting && boss.State == BullEnemy.Mode.Chase, "the balloon king is between skills", 6);
+                var call = boss.Data.Skills.Values.First(k => k.Kind == BossSkillKind.Summon);
+                int balloons = stage.AllEnemies.Count(e => e.Monster.Id == "balloon");
+                int calls = boss.Uses.GetValueOrDefault(BossSkillKind.Summon);
+                Check(call.Monster == "balloon" && boss.StartSkill(BossSkillKind.Summon), "the balloon king calls its balloons");
+                await Until(() => boss.Uses.GetValueOrDefault(BossSkillKind.Summon) == calls + 1, "the call ends", 3);
+                Check(stage.AllEnemies.Count(e => e.Monster.Id == "balloon") >= balloons + call.Count, $"{call.Count} balloons come out");
+            }
+            if (Windowed)
+            {
+                // The boss's special cards wait behind the X, so the boss itself is in view.
+                rules.Window.Close();
+                foreach (var e in stage.AllEnemies.Where(e => e != boss).ToList()) e.QueueFree();
+                boss.Stun(3);
+                stage.Player.TeleportTo(boss.GlobalPosition + new Vector3(-5.5f, 0, 3f));
+                stage.Player.SetControls(Vector2.Zero, boss.GlobalPosition + Vector3.Up, false);
+                stage.Cam.Close = true;
+                stage.Cam.SnapTo(stage.Player.GlobalPosition);
+                await Seconds(1.5f);
+                await Shot("survivor-" + boss.Monster.Id);
+                stage.Cam.Close = false;
+            }
+            boss.Burn(boss.MaxHealth);
             await Frames(2);
         }
+        Check(met.Count == r.Segments.Count - 2 && met.Distinct().Count() == met.Count && met.All(r.MidBosses.Contains),
+            "no middle boss comes twice: " + string.Join(", ", met));
         stage.AdvanceClockForTest(rules.SegmentLength - rules.SegmentTime + .1f);
         await Until(() => rules.BossArrived && rules.Boss != null, "the final boss arrives after the last stretch", 4);
         boss = rules.Boss!;
-        Check(Mathf.IsEqualApprox(boss.MaxHealth, boss.Monster.Hp) && rules.BarLabel.Contains(Loc.Text("name_monster_boss_final")) &&
+        Check(Mathf.IsEqualApprox(boss.MaxHealth, boss.Monster.Hp) && r.FinalBosses.Contains(boss.Monster.Id) &&
+              rules.BarLabel.Contains(Loc.Format("fmt_boss_final", boss.Monster.DisplayName)) &&
               rules.ObjectiveText == Loc.Text("ui_objective_survivor_boss"), "the final boss has full health and its own name on the bar");
         boss.Burn(boss.MaxHealth);
         await Until(() => stage.State == StageState.Cleared, "killing the final boss clears the match", 2);

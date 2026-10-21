@@ -251,7 +251,14 @@ fmt_hud_cooldown,충전 {0}초
 # 난전 카드 흐름 (decisions.md M-27)
 ui_objective_survivor_midboss,중간 보스를 쓰러뜨리세요 — 특별 카드
 fmt_bar_boss_segment,보스 {0}/{1}까지 {2}
-msg_survivor_midboss,중간 보스 등장! 쓰러뜨리면 특별 카드
+fmt_survivor_midboss,중간 보스 {0} 등장! 쓰러뜨리면 특별 카드
+fmt_boss_final,최종 보스 {0}
+msg_boss_bull_giant_2,거대 황소가 뛰어올라 내려찍습니다!
+msg_boss_bull_giant_3,거대 황소가 무리를 부릅니다!
+msg_boss_balloon_king_2,풍선 대왕이 통통 튀어 오릅니다!
+msg_boss_balloon_king_3,풍선 대왕이 화났습니다! 탄막이 빨라집니다
+msg_boss_spitter_mother_2,토사물 어미가 새끼들을 부릅니다!
+msg_boss_spitter_mother_3,토사물 어미가 격노했습니다!
 fmt_survivor_midboss_down,중간 보스 격파! 특별 카드 — 다음 구간 ({0}/{1})
 fmt_level_up,레벨 {0}! 카드를 고르세요
 fmt_hud_level,Lv {0}

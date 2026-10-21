@@ -8,10 +8,10 @@ namespace HordeShooter;
 /// Onslaught (code Survivor, decisions.md M-26 · M-27) on its own open field. Every person first picks three cards: a
 /// slot 1 gun, a slot 2 gun and a slot 3 special weapon (<see cref="ArmingCards"/>); reserves never run out and slot 3
 /// kinds recharge instead of reloading. Then masses of commons close in from every side; who comes is the mode table
-/// (modes/survivor_spawns.csv, seconds since arming). Every kill fills a shared experience bar; each level gives every
-/// person a level-up card. The run is cut into stretches (mode_rules.json survivor.segments_s): at the end of each
-/// one a boss comes; a middle boss down gives everyone a special card and starts the next stretch's clock, the last
-/// one down clears the match. Cards are drawn and applied by the deciding PC; a client is sent its own queue
+/// (modes/survivor_spawns.csv on the run clock, <see cref="RunTime"/>). Every kill fills a shared experience bar; each
+/// level gives every person a level-up card. The run is cut into stretches (mode_rules.json survivor.segments_s): at
+/// the end of each one a boss comes, drawn from mid_bosses (final_bosses for the last); a middle boss down gives
+/// everyone a special card and starts the next stretch's clock, the last one down clears the match. Cards are drawn and applied by the deciding PC; a client is sent its own queue
 /// (<see cref="CardCatalog"/>) and only sends back which card it picked.
 /// </summary>
 public partial class SurvivorRules : ModeRules
@@ -43,6 +43,13 @@ public partial class SurvivorRules : ModeRules
     public float SegmentLength => Rules.Segments[Mathf.Min(Segment, Segments - 1)];
     /// <summary>Seconds until this stretch's boss comes (0 once it is out).</summary>
     public float BossIn => BossArrived ? 0 : Mathf.Max(0, SegmentLength - SegmentTime);
+    /// <summary>
+    /// The mode table's clock: finished stretches plus this one's time, standing still at the stretch's last moment while
+    /// its boss is out, so the table follows the stretches however long the boss fights take (0 to the sum of segments_s).
+    /// </summary>
+    public float RunTime => Arming ? 0 : Rules.Segments.Take(Segment).Sum() + Mathf.Min(SegmentTime, SegmentLength - .01f);
+    /// <summary>The boss monster id this stretch ends with (the deciding PC draws it; checks may set it).</summary>
+    public string NextBoss { get; set; } = "";
 
     // ---------- experience ----------
     public int Level { get; private set; } = 1;
@@ -63,6 +70,7 @@ public partial class SurvivorRules : ModeRules
     private readonly HashSet<Player> _armed = new();
     private readonly HashSet<int> _pendingPicks = new();
     private readonly Dictionary<Player, (int Version, int Level, int Segment, bool Boss)> _sent = new();
+    private readonly HashSet<string> _bossesMet = new();
 
     /// <summary>Everyone starts by arming (on every PC, so a client's clock starts when the host's does).</summary>
     public override Objective InitialObjective => Objective.ModeArming;
@@ -108,8 +116,12 @@ public partial class SurvivorRules : ModeRules
         : Loc.Format("fmt_objective_survivor_hold", Clock(BossIn));
 
     public override string BarLabel => BossArrived
-        ? Loc.Format("fmt_bar_boss", Loc.Text(FinalSegment ? "name_monster_boss_final" : "name_monster_boss"), Mathf.CeilToInt(BarFraction * 100))
+        ? Loc.Format("fmt_bar_boss", BossName, Mathf.CeilToInt(BarFraction * 100))
         : Loc.Format("fmt_bar_boss_segment", Segment + 1, Segments, Clock(BossIn));
+    /// <summary>The boss that is out by its own name, marked when it is the final one.</summary>
+    private string BossName => Boss is { } boss && IsInstanceValid(boss)
+        ? FinalSegment ? Loc.Format("fmt_boss_final", boss.Monster.DisplayName) : boss.Monster.DisplayName
+        : Loc.Text("name_monster_boss");
     public override Color BarColor => BossArrived ? UiTheme.Danger : UiTheme.Accent;
     public override string SubBarLabel => Loc.Format("fmt_hud_level", Level);
     public override float SubBarFraction => XpFraction;
@@ -129,6 +141,7 @@ public partial class SurvivorRules : ModeRules
             // The clock starts when everyone has armed (a client sees it through the shared objective).
             _wasArming = false;
             _armedAt = Time;
+            if (Stage.Authoritative && NextBoss == "") NextBoss = DrawBoss();
             Stage.ShowNotice(Loc.Text("msg_survivor_armed"), 3);
         }
         // A client learns about the boss from its spawn event (it is a puppet there).
@@ -258,7 +271,7 @@ public partial class SurvivorRules : ModeRules
             _restUntil = MatchTime + Rules.RestAfterNamed;
             Stage.ShowNotice(Loc.Format("fmt_survivor_rest", Mathf.CeilToInt(Rules.RestAfterNamed)), 3);
         }
-        foreach (var row in Table.NamedDue(_namedThrough, MatchTime, Stage.ThemeId).ToList())
+        foreach (var row in Table.NamedDue(_namedThrough, RunTime, Stage.ThemeId).ToList())
         {
             var leader = Stage.Leader.GlobalPosition;
             if (PickSpot(Stage.Flow.OpenCellsNear(leader, 11, 16)) is not { } at) continue;
@@ -270,7 +283,7 @@ public partial class SurvivorRules : ModeRules
             NamedSent += row.Count;
             Stage.ShowNotice(Loc.Text("msg_survivor_named"), 3);
         }
-        _namedThrough = MatchTime;
+        _namedThrough = RunTime;
     }
 
     /// <summary>Group size grows from group_start to group_end over the whole run, and drops to boss_group_scale while a boss is out.</summary>
@@ -278,8 +291,8 @@ public partial class SurvivorRules : ModeRules
         ? Mathf.Max(1, Mathf.RoundToInt(Mathf.Lerp(Rules.GroupStart, Rules.GroupEnd, Progress) * Rules.BossGroupScale))
         : Mathf.RoundToInt(Mathf.Lerp(Rules.GroupStart, Rules.GroupEnd, Progress));
 
-    /// <summary>How far through the run (0–1): finished stretches plus this one's clock.</summary>
-    private float Progress => Mathf.Clamp((Rules.Segments.Take(Segment).Sum() + Mathf.Min(SegmentTime, SegmentLength)) / Rules.Total, 0, 1);
+    /// <summary>How far through the run (0–1) on the run clock.</summary>
+    private float Progress => Mathf.Clamp(RunTime / Rules.Total, 0, 1);
 
     /// <summary>A group of commons on a ring around a random person, off screen where possible.</summary>
     public int SpawnGroup()
@@ -293,7 +306,7 @@ public partial class SurvivorRules : ModeRules
         int spawned = 0;
         for (int i = 0; i < count; i++)
         {
-            if (Table.PickCommon(MatchTime, Stage.ThemeId, Rng) is not { } row) break;
+            if (Table.PickCommon(RunTime, Stage.ThemeId, Rng) is not { } row) break;
             ModeSpawnTable.Spawn(Stage, row, Near(at));
             spawned++;
         }
@@ -303,12 +316,26 @@ public partial class SurvivorRules : ModeRules
 
     // ---------- bosses ----------
 
+    /// <summary>
+    /// The boss for the stretch that is starting: a middle one not met yet in this match when there is one left, or one
+    /// of the final bosses for the last stretch.
+    /// </summary>
+    private string DrawBoss()
+    {
+        var pool = FinalSegment ? Rules.FinalBosses : Rules.MidBosses;
+        var fresh = pool.Where(id => !_bossesMet.Contains(id)).ToList();
+        var from = fresh.Count > 0 ? fresh : pool.ToList();
+        return from[Rng.RandiRange(0, from.Count - 1)];
+    }
+
     /// <summary>This stretch's boss comes now (also used by checks to skip the wait), with the stretch's health share.</summary>
     public BossEnemy SpawnBoss()
     {
         var leader = Stage.Leader.GlobalPosition;
         var at = PickSpot(Stage.Flow.OpenCellsNear(leader, 11, 16)) ?? leader + Vector3.Right * 10;
-        var boss = Stage.SpawnEnemy<BossEnemy>(MonsterDatabase.Get(BossEnemy.MonsterId), at, awake: true);
+        if (NextBoss == "") NextBoss = DrawBoss();
+        _bossesMet.Add(NextBoss);
+        var boss = Stage.SpawnEnemy<BossEnemy>(MonsterDatabase.Get(NextBoss), at, awake: true);
         boss.SetHealthScale(Rules.SegmentBossHp[Mathf.Min(Segment, Rules.SegmentBossHp.Count - 1)]);
         Arrive(boss);
         return boss;
@@ -319,7 +346,7 @@ public partial class SurvivorRules : ModeRules
         Boss = boss;
         BossArrived = true;
         BarFraction = 1;
-        Stage.ShowNotice(Loc.Text(FinalSegment ? "msg_survivor_boss" : "msg_survivor_midboss"), 4);
+        Stage.ShowNotice(FinalSegment ? Loc.Text("msg_survivor_boss") : Loc.Format("fmt_survivor_midboss", boss.Monster.DisplayName), 4);
         Stage.Sfx.Play("bull_snort", 4, .6f);
         Stage.Cam.AddShake(.45f);
     }
@@ -338,6 +365,7 @@ public partial class SurvivorRules : ModeRules
         foreach (var p in Humans) QueueOf(p).Add(CardCatalog.BossReward(Cards, Rng));
         Segment++;
         _segmentStart = MatchTime;
+        NextBoss = DrawBoss();
         Stage.ShowNotice(Loc.Format("fmt_survivor_midboss_down", Segment, Segments), 4);
     }
 }

@@ -1,0 +1,14 @@
+{
+  "description": "난전 중간 보스 '거대 황소': 네임드 황소 모델(bull.glb)을 키운 임시 보스. 돌진 위주, 66%부터 뛰어올라 내려찍기, 33%부터 황소 무리 소환 (doc/mode-monster-tables.md 3장).",
+  "scale": 2.3,
+  "phases": [
+    {"from_hp_pct": 100, "skills": ["charge"], "speed": 1.0, "cooldown_scale": 1.0},
+    {"from_hp_pct": 66, "skills": ["charge", "slam"], "speed": 1.1, "cooldown_scale": 0.85, "notice": "msg_boss_bull_giant_2", "pose": "rear_roar", "pose_s": 1.0},
+    {"from_hp_pct": 33, "skills": ["charge", "slam", "summon"], "speed": 1.3, "cooldown_scale": 0.7, "notice": "msg_boss_bull_giant_3", "pose": "shake_off", "pose_s": 1.2}
+  ],
+  "skills": {
+    "charge": {"kind": "charge", "description": "돌진 수치는 monster_traits/boss_charge.json", "pose": "paw_ground", "run_pose": "gallop"},
+    "slam": {"kind": "slam", "range_m": 7, "radius_m": 5, "windup_s": 1.1, "damage": 18, "cooldown_s": 7, "pose": "crouch_leap", "leap_m": 6, "leap_height_m": 2.2},
+    "summon": {"kind": "summon", "description": "네임드 황소 둘", "monster": "bull", "count": 2, "cooldown_s": 18, "hp_scale": 0.5, "windup_s": 0.9, "pose": "rear_roar"}
+  }
+}

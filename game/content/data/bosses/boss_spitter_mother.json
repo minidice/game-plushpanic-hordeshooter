@@ -1,0 +1,14 @@
+{
+  "description": "난전 중간 보스 '토사물 어미': 토사물 감염체 모델을 키운 임시 보스. 굵은 탄 다섯 발 부채꼴과 제자리 내려찍기, 66%부터 테마 일반 몹 소환, 33%부터 빨라짐 (doc/mode-monster-tables.md 3장).",
+  "scale": 2.2,
+  "phases": [
+    {"from_hp_pct": 100, "skills": ["fan_shot", "slam"], "speed": 1.0, "cooldown_scale": 1.0},
+    {"from_hp_pct": 66, "skills": ["fan_shot", "slam", "summon"], "speed": 1.1, "cooldown_scale": 0.85, "notice": "msg_boss_spitter_mother_2", "pose": "rear_roar", "pose_s": 1.0},
+    {"from_hp_pct": 33, "skills": ["fan_shot", "slam", "summon"], "speed": 1.35, "cooldown_scale": 0.6, "notice": "msg_boss_spitter_mother_3", "pose": "shake_off", "pose_s": 1.2}
+  ],
+  "skills": {
+    "fan_shot": {"kind": "fan_shot", "range_m": 16, "windup_s": 0.9, "damage": 10, "cooldown_s": 5, "count": 5, "spread_deg": 50, "speed_mps": 12, "pose": "sweep_aim"},
+    "slam": {"kind": "slam", "range_m": 5, "radius_m": 4.5, "windup_s": 1.2, "damage": 20, "cooldown_s": 7, "pose": "crouch_leap"},
+    "summon": {"kind": "summon", "description": "테마 일반 몹", "count": 6, "cooldown_s": 12, "hp_scale": 0.6, "windup_s": 0.9, "pose": "rear_roar"}
+  }
+}

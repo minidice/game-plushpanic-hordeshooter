@@ -17,6 +17,7 @@
 - [x] 카드 실험실 1차(2026-10-21, T-22): `Start-Game.ps1 -CardLab`, 난전 들판에서 카드 6장(풍선탄 · 찍찍이탄 · 솜 폭발 · 당구 · 꽥 장전 · 고무오리)을 켜고 끄며 시험, 몬스터 카드 상태(부풂 · 둥실 · 찍찍이 · 날아감) ([아이디어 풀](onslaught-card-ideas.md) 6장)
 - [x] 카드 창 1차(2026-10-21, M-27 · T-22, 실험실에서): 하데스식 세로 3장, 받은 순서 · 받을 때 정해진 3장 유지, 무장 1 · 2 · 3번 칸 카드(닫기 없음), 레벨업 카드 ✕ · F로 미루기 + 배지 ×N, 열려 있는 동안 걷기 · 도약만
 - [x] 정식 난전 카드 흐름 1차(2026-10-21, M-27): 진열대 · 강화 진열대 제거, 시작 때 1 · 2 · 3번 칸 무장 카드, 팀 공유 경험치 → 레벨업 일반 카드(실험실 카드 + 반복 카드 피해 · 회복 · 구급상자), 보스 기준 4구간(3 · 4 · 5 · 6분, 구간 보스 체력 35~100%), 중간 보스 = 특별 카드, 최종 보스 = 클리어, Lv · 경험치 막대, 멀티 동기화(방장 판정, 카드 번호) ([규격](mode-monster-tables.md) 5장)
+- [x] 20분 판 내용 1차(2026-10-21, M-27 · Q-24): 모드 표를 구간 시계로(보스전 동안 멈춤), 4구간 표(일반 체력 0.6 → 1.25, 구간마다 named 증가), 구간 보스 무작위(`mid_bosses` · `final_bosses`, 겹치지 않게), 임시 중간 보스 3종(거대 황소 · 풍선 대왕 · 토사물 어미), 보스 소환 몬스터 지정 ([규격](mode-monster-tables.md) 2 · 3 · 5장)
 - [ ] 난전 개편(M-27) 나머지: 소환수(드론 · 부사수 · 펫), 레벨업 일반 카드 · 보스 특별 카드, 총 분류별 풀, 하데스식 카드 창 · + 아이콘 · 버프 줄 ([계획](onslaught-cards-plan.md))
 - [ ] 거점·난전 다음: 팀원 직접 교환·큰 배낭·탈출, 전용 맵·전용 보스 모델, 멀티에서 보스 연출 동기화(I-77), 수치 플레이 조정
 - [x] 멀티 메뉴: 방 만들기, 주소로 참가(2인 테스트). 방 코드·공개방은 준비 중
@@ -154,6 +155,11 @@
 
 - C# 빌드 경고·오류 0. `ModeCheck` 81개(창 모드, 화면 밖 화살표 포함)·79개(헤드리스), `MapCheck` 25, `WeaponHandlingCheck` 30, `Integration` 148, `NetSyncCheck` 28, `NetCodecCheck` 11, `LobbyCheck` 31, `MenuCheck` 39, `SquadCheck` 50, `SpawnCheck` 41, `CombatPacingCheck` 44, `ReloadPoseCheck` 279, `EnemyAttackCheck` 79, `VisionTierCheck` 23 통과.
 - 렌더: `output/map-open-field.png`·`mode-survivor-rack.png`(들판·진열대·바닥 글씨·무장 목표), `mode-survivor-arrow.png`(화면 밖 팀원 화살표, `∞` 탄약, "난전 · 들판"). 실제 손으로 하는 난이도·들판 성능은 미확인(I-26·I-80). 2인 멀티로 들판·진열대를 해 보지는 않음.
+
+### 이번 변경 확인 기록 — 2026-10-21 (20분 판 내용 1차)
+
+- C# 빌드 경고·오류 0. `ModeCheck` 117개(헤드리스, 2회)·121개(창 모드, 2회: 중간 보스 후보 · 보스 목록 오류, 구간마다 일반 체력 증가 · named 증가 · 마지막 구간 표, 보스전 동안 구간 시계 멈춤 · 다음 구간에서 이어짐, 중간 보스가 겹치지 않음, 풍선 대왕의 풍선 소환, 보스 이름 막대 · 알림, 최종 보스 "최종 보스 …"), `OnslaughtNetCheck` 16(2회), `MapCheck` 24, `CardLabCheck` 68, `HitFlashCheck`, `EnemyAttackCheck` 79, `SpawnCheck` 41, `NetSyncCheck` 28, `LobbyCheck` 31, `MenuCheck` 39, `SquadCheck` 50, `InventoryCheck` 41, `WeaponHandlingCheck` 36, `CombatPacingCheck` 44, `NetCodecCheck` 12, `Integration`(`Start-Game.ps1 -Test`) 148 통과.
+- 렌더: `output/mode-survivor-boss_balloon_king.png`(풍선 대왕 2.6배, 막대 · 알림 이름), `mode-survivor-boss_bull_giant.png`(거대 황소 2.3배, 앞 구간 풍선 대왕 시체 유지). 토사물 어미는 무작위 순서상 두 번의 창 모드 실행에서 나오지 않아 렌더 없음. 20분 판을 손으로 해 본 난이도 · 보스 체감은 미확인(I-85).
 
 ### 이번 변경 확인 기록 — 2026-10-21 (정식 난전 카드 흐름 1차)
 

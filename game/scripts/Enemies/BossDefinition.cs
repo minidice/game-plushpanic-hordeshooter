@@ -22,8 +22,10 @@ public enum BossSkillKind
 /// <param name="RunPose">Charge only: the body motion while running.</param>
 /// <param name="Leap">Slam only: how far it jumps toward the target before landing (0 = slams where it stands).</param>
 /// <param name="LeapHeight">Slam only: how high the jump goes.</param>
+/// <param name="Monster">Summon only: the monsters.csv id it calls; empty = the stage theme's commons.</param>
 public sealed record BossSkill(string Id, BossSkillKind Kind, float Range, float Radius, float Windup, float Damage, float Cooldown,
-    int Count, float SpreadDegrees, float Speed, float HpScale, string Pose = "", string RunPose = "", float Leap = 0, float LeapHeight = 0);
+    int Count, float SpreadDegrees, float Speed, float HpScale, string Pose = "", string RunPose = "", float Leap = 0, float LeapHeight = 0,
+    string Monster = "");
 
 /// <summary>One phase: starts when health falls to <see cref="FromHpPct"/>% and uses <see cref="Skills"/>.</summary>
 /// <param name="Pose">Body motion when the phase starts (it stands still for <paramref name="PoseTime"/> seconds); empty = none.</param>
@@ -62,7 +64,7 @@ public sealed class BossDatabase
     {
         [BossSkillKind.Charge] = new[] { "pose", "run_pose" },
         [BossSkillKind.Slam] = new[] { "range_m", "radius_m", "windup_s", "damage", "cooldown_s", "pose", "leap_m", "leap_height_m" },
-        [BossSkillKind.Summon] = new[] { "count", "cooldown_s", "hp_scale", "windup_s", "pose" },
+        [BossSkillKind.Summon] = new[] { "count", "cooldown_s", "hp_scale", "windup_s", "pose", "monster" },
         [BossSkillKind.FanShot] = new[] { "range_m", "windup_s", "damage", "cooldown_s", "count", "spread_deg", "speed_mps", "pose" },
     };
 
@@ -139,8 +141,11 @@ public sealed class BossDatabase
                     var skill = new BossSkill(s.Name, kind.Value, sf.Float("range_m", 5), sf.Float("radius_m", 5),
                         sf.Float("windup_s", kind == BossSkillKind.Summon ? 0 : 1), sf.Float("damage", 10),
                         sf.Float("cooldown_s", 8), sf.Int("count", 6), sf.Float("spread_deg", 60), sf.Float("speed_mps", 14), sf.Float("hp_scale", 1),
-                        Pose(sf.String("pose", ""), at), Pose(sf.String("run_pose", ""), at), sf.Float("leap_m", 0), sf.Float("leap_height_m", 0));
+                        Pose(sf.String("pose", ""), at), Pose(sf.String("run_pose", ""), at), sf.Float("leap_m", 0), sf.Float("leap_height_m", 0),
+                        sf.String("monster", ""));
                     if (skill.Leap < 0 || skill.LeapHeight < 0) _errors.Add($"{at}: leap_m and leap_height_m must not be negative");
+                    if (skill.Monster != "" && !MonsterDatabase.Current.Monsters.ContainsKey(skill.Monster))
+                        _errors.Add($"{at}: monster '{skill.Monster}' is not in monsters.csv");
                     if (kind != BossSkillKind.Charge && (skill.Cooldown <= 0 || skill.Windup < 0 || skill.Count < 0))
                         _errors.Add($"{at}: cooldown_s must be positive, windup_s and count not negative");
                     skills[s.Name] = skill;

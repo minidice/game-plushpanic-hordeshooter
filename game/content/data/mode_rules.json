@@ -74,6 +74,14 @@
     "xp_named": 10,
     "xp_boss": 40,
     "xp_first": 12,
-    "xp_growth": 1.15
+    "xp_growth": 1.15,
+    "mid_bosses": [
+      "boss_bull_giant",
+      "boss_balloon_king",
+      "boss_spitter_mother"
+    ],
+    "final_bosses": [
+      "boss"
+    ]
   }
 }

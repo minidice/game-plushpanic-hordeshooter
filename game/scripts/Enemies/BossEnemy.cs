@@ -322,14 +322,15 @@ public partial class BossEnemy : BullEnemy
         Stage.Cam.AddShake(.3f);
         Stage.Effects.FloatingText(GlobalPosition + Vector3.Up * (Definition.ColliderHeight + .8f), Loc.Text("boss_summon"), new Color("ffcf5c"));
         Stage.Sfx.PlayAt("bull_snort", GlobalPosition + Vector3.Up, 2, .5f);
-        int count = Mathf.Min(skill.Count, HordeDirector.MaxCommons - Stage.Director.AliveCommons);
+        // Commons stay under the swarm cap; a named summon (bulls, balloons) is a handful by design.
+        int count = skill.Monster == "" ? Mathf.Min(skill.Count, HordeDirector.MaxCommons - Stage.Director.AliveCommons) : skill.Count;
         for (int i = 0; i < count; i++)
         {
             float angle = Mathf.Tau * i / Mathf.Max(1, count) + Rng.RandfRange(-.2f, .2f);
             var dir = new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle));
             var at = GlobalPosition + dir * (Radius + 1.6f);
             if (Stage.Flow.IsBlocked(at)) at = GlobalPosition + dir * (Radius + .6f);
-            var minion = Stage.SpawnCommon(at, awake: true);
+            var minion = skill.Monster == "" ? Stage.SpawnCommon(at, awake: true) : Stage.Spawn(MonsterDatabase.Get(skill.Monster), at, awake: true);
             minion.ScaleHealth(skill.HpScale);
             minion.LeapDown(dir);
             // They burst out of the ground.
