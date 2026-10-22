@@ -502,9 +502,11 @@ public partial class Stage : Node3D
     }
 
     /// <summary>
-    /// By prompt, not node name: Godot renames same-named siblings, so a second "Medkit" was not one (I-61).
+    /// By pickup kind, not node name (Godot renames same-named siblings, so a second "Medkit" was not one, I-61) and
+    /// not prompt text key (a renamed key broke nothing loudly, I-94 ②).
     /// </summary>
-    public static bool IsMedkit(Interactable item) => item.PromptKey == "ui_use_medkit";
+    public static bool IsMedkit(Interactable item) => item.Pickup == PickupKind.Medkit;
+    public static bool IsAmmo(Interactable item) => item.Pickup == PickupKind.Ammo;
 
     /// <summary>A squadmate takes an ammo pile or a medkit (they never take weapons, decisions.md M-13).</summary>
     public bool TakePickup(Interactable item, Player who)
@@ -519,7 +521,7 @@ public partial class Stage : Node3D
             Sfx.PlayAt("pickup", who.GlobalPosition + Vector3.Up);
             return true;
         }
-        if (item.PromptKey == "ui_use_ammo") { RefillAmmo(who); return true; }
+        if (IsAmmo(item)) { RefillAmmo(who); return true; }
         return false;
     }
 

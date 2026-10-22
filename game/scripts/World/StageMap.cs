@@ -289,13 +289,14 @@ public abstract partial class StageMap
         _stage.AddChild(node);
         StageArt.Ammo(node);
         var use = Use(at, "ui_use_ammo", () => { });
+        use.Pickup = PickupKind.Ammo;
         use.OnUse = who => _stage.RefillAmmo(who ?? _stage.Player);
         use.Radius = 1.6f;
     }
 
     protected void Medkit(Vector3 at)
     {
-        var node = new Interactable { Name = "Medkit", Position = at, Prompt = "ui_use_medkit", Radius = 1.6f };
+        var node = new Interactable { Name = "Medkit", Position = at, Prompt = "ui_use_medkit", Radius = 1.6f, Pickup = PickupKind.Medkit };
         _stage.AddChild(node);
         _stage.AddInteractable(node);
         StageArt.Box(node, new Vector3(0, .15f, 0), new Vector3(.6f, .3f, .45f), "d3d8cc", true);

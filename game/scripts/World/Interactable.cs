@@ -3,6 +3,9 @@ using System;
 
 namespace HordeShooter;
 
+/// <summary>Floor supplies the squad AI and pickups tell apart (everything else is <see cref="None"/>).</summary>
+public enum PickupKind { None, Medkit, Ammo }
+
 /// <summary>Anything the player can use with the interact key. The stage shows the nearest one's prompt.</summary>
 public partial class Interactable : Node3D
 {
@@ -14,8 +17,11 @@ public partial class Interactable : Node3D
         get => Loc.Text(_prompt);
         set => _prompt = value;
     }
-    /// <summary>The prompt's text key, for code that needs to know what kind of thing this is.</summary>
-    public string PromptKey => _prompt;
+    /// <summary>
+    /// Which floor supply this is. Code asks this, never the prompt's text key, so renaming a text key cannot quietly stop
+    /// squadmates and pickups from finding medkits and ammo (I-94 ②).
+    /// </summary>
+    public PickupKind Pickup { get; set; }
     public float Radius { get; set; } = 1.9f;
     public bool Enabled { get; set; } = true;
     /// <summary>Seconds the interact key must be held (0: a press uses it).</summary>

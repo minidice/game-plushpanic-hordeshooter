@@ -178,6 +178,11 @@
 - C# 빌드 경고 · 오류 0. 새 `StageTransitionCheck` 143(헤드리스 · 창 모드 모두), `Start-Game.ps1 -Test` → `Integration` 148, `MapCheck` 24, `VisionTierCheck` 23, `SupplyCheck` 12, `SquadCheck` 50, `ModeCheck` 123, `SpawnCheck` 41, `AudioMixCheck` 6, `CombatPacingCheck` 44, `WeaponHandlingCheck` 36, `NetSyncCheck` 32, `MenuCheck` 44, `LobbyCheck` 31 통과. 전환 소품은 Blender 스크립트 단언 통과(삼각형 · 부위 · 뚜껑 방향).
 - 렌더 `output/transition-0-stage1-street.png`(비교용 Stage 1 실내 직교) → `transition-1-safehouse-hatch`(바닥 해치 · 길게 누르기 안내) → `-2-closing`(원 닫힘) → `-3-title`(STAGE 2 · 숲속 벙커길) → `-4-opening`(벙커 해치에서 원 열림) → `-5-arrival` · `-6-arrival-close`(야외 원근 기본 · 확대) → `-7-forest` · `-bridge` · `-yard` · `-safehouse`. 참고 영상 프레임과 비교해 전환 순서 · 주변 오브젝트 · 시점 변화가 대응함을 확인. 영상의 비 · 어두운 석양 색감은 미적용(I-91). 손으로 해 본 Stage 2 플레이 · 성능 · 멀티 다음 구역은 미확인(I-26 · I-90 · I-91).
 
+### 이번 변경 확인 기록 — 2026-10-22 (보급 종류 판별, I-94 ②)
+
+- C# 빌드 경고 · 오류 0. 헤드리스: `SquadCheck` 50 → 51(문구 키가 아니라 `Interactable.Pickup` 종류로 구급상자 · 탄약을 알아봄), `SupplyCheck` 12, `NetSyncCheck` 32, `MapCheck` 24, `StageTransitionCheck` 164, `ModeCheck` 123 통과.
+- `Integration`: `Start-Game.ps1 -Test`에서 1회 "shotgun pellets hit several enemies" 실패(73번째, 알려진 무작위 실패 I-65), 바로 재실행 2회 148 통과. 종료 경고(I-17) 2~20개는 실행마다 다름.
+
 ### 이번 변경 확인 기록 — 2026-10-22 (난전 카드 규칙 3차 1단계, M-29)
 
 - C# 빌드 경고 · 오류 0. `CardLabCheck` 85 → 100: 유리 대포가 팀 전원 대미지 2배 · 최대 체력 절반 · 나중에 들어온 사람도 · 끄면 원래대로, 카드 동기화의 특별 카드 비트, 마지막 한 발(아무도 안 쏜 명중 · 소환수 물기는 아님, 쏜 사람 몫, 파티원 자기 빈 탄창에서 터짐 · 탄이 남으면 안 터짐), 피해 출처(소환수 물기 = 주인, 무기 폭발 = 주인 몫 + 배율, 주인 없는 폭발은 아무 몫 없음, 풍선 터짐 · 당구 · 솜 폭발이 시작한 사람 몫, 솜 폭발은 처치한 사람 카드일 때만, 찍찍이 덩어리는 주인 레벨).

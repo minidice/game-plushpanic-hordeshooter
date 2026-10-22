@@ -113,7 +113,7 @@ public partial class SquadCheck : Node
         var taker = stage.Squad[2].Bot;
         taker.Medkits = 0;
         foreach (var other in stage.Squad) if (other.Bot != taker) other.Bot.Medkits = 1;
-        var medkit = new Interactable { Name = "MedkitTest", Prompt = "ui_use_medkit", Radius = 1.6f };
+        var medkit = new Interactable { Name = "MedkitTest", Prompt = "ui_use_medkit", Radius = 1.6f, Pickup = PickupKind.Medkit };
         stage.AddChild(medkit);
         medkit.GlobalPosition = taker.GlobalPosition + new Vector3(-2.5f, 0, 1.5f);
         stage.Interactables.Add(medkit);
@@ -121,6 +121,13 @@ public partial class SquadCheck : Node
         Check(taker.Medkits == 1 && !medkit.Enabled, "a squadmate walks over and picks up a nearby medkit by itself");
         var weapon = stage.Interactables.OfType<WeaponPickup>().First();
         Check(!stage.TakePickup(weapon, taker), "a squadmate never takes a floor weapon");
+        // The supply kind decides, not the prompt's text key (I-94 ②): a renamed key still works, a look-alike key does not.
+        var renamedAmmo = new Interactable { Prompt = "ui_use_ammo_renamed", Pickup = PickupKind.Ammo };
+        var lookAlike = new Interactable { Prompt = "ui_use_medkit" };
+        Check(Stage.IsAmmo(renamedAmmo) && !Stage.IsMedkit(renamedAmmo) && !Stage.IsMedkit(lookAlike) && !Stage.IsAmmo(lookAlike),
+            "supplies are told apart by their kind, not their prompt text key");
+        renamedAmmo.Free();
+        lookAlike.Free();
 
         // Catch up: a squadmate stuck far behind and off screen reappears on the walked trail.
         var straggler = stage.Squad[2];

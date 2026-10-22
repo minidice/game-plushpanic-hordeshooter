@@ -225,7 +225,7 @@ public partial class SquadBrain : Node
             if (_unreachable.TryGetValue(item, out float until) && until > _clock) continue;
             // Only on the way: something near the leader, not a detour.
             if (item.GlobalPosition.DistanceTo(leaderAt) > 10f) continue;
-            bool kind = (wantsMedkit && Stage.IsMedkit(item)) || (lowAmmo && item.PromptKey == "ui_use_ammo");
+            bool kind = (wantsMedkit && Stage.IsMedkit(item)) || (lowAmmo && Stage.IsAmmo(item));
             if (!kind) continue;
             // Not something the leader has not reached yet.
             if (_stage.Progress(item.GlobalPosition) < leaderProgress - 1f) continue;
