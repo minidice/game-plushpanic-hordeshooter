@@ -34,7 +34,7 @@
 | `HandColor` | 게임 무기를 쥐는 손과 좀비 팔의 색 | 크림색 |
 | `Shape`, `PrimaryColor`, `SecondaryColor` | 대체 모델 모양(`0` 캡슐 / `1` 둥근형 / `2` 풍선 / `3` 황소)과 색 | |
 | `ColliderRadius`, `ColliderHeight` | 충돌 캡슐. **게임플레이 판정은 모델이 아니라 이 값 기준** | 0.45 / 1.8 |
-| `MoveSpeed`, `MaxHealth` | 이동 속도(m/s), 체력 | 4.2 / 100 |
+| `MoveSpeed`, `MaxHealth` | 이동 속도(m/s), 체력. **플레이어 정의 전용** — 몬스터의 속도 · 체력은 `content/data/monsters.csv`에서 오므로 `content/enemies/*.tres`에는 적지 않는다(I-94) | 4.2 / 100 |
 | `StepRate`, `WaddleDegrees` | 뒤뚱거림 속도와 좌우 기울기(도) | 13 / 7 |
 | `StuffingColor` | 피격 시 터지는 솜 색 (큐트 고어) | 크림색 |
 | `MirrorPlayerSpecies`, `ZombieTint` | 적 정의 전용. 아래 4장 | false / 초록 |

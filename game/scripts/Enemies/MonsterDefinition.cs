@@ -61,7 +61,8 @@ public sealed class MonsterDefinition
     public RangedTrait? Ranged { get; set; }
     /// <summary>Named and boss corpses stay fixed and on their own timer; only commons are scenery (T-16, T-21).</summary>
     public bool KeepsCorpse => Tier != MonsterTier.Common;
-    public bool IsSpecial => Behavior != MonsterBehavior.Common && (Behavior != MonsterBehavior.Shooter || Id == "armed_veteran");
+    /// <summary>Named and boss monsters (the tier column): counted apart from commons, not lured or inflated by cards.</summary>
+    public bool IsSpecial => Tier != MonsterTier.Common;
 }
 
 /// <summary>Loads <see cref="MonsterDefinition"/>s. Errors are collected with file/row context, not thrown.</summary>

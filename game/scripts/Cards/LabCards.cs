@@ -30,8 +30,9 @@ public partial class LabCards : Node
     public static readonly LabSpecial[] Specials = { LabSpecial.HeliumParty, LabSpecial.LastShot, LabSpecial.GlassCannon };
     /// <summary>The cards a level-up can offer; the honk and the rubber duck move to slot 3 as weapons (plan 13.1), lab only for now.</summary>
     public static readonly LabCard[] LevelUpCards = { LabCard.Balloon, LabCard.Velcro, LabCard.StuffingBurst, LabCard.Billiards };
-    /// <summary>Weapon kinds billiards works with: sniper hits are cue balls, shotgun pellets bowl (plan 13.2).</summary>
-    public static readonly string[] SniperTypes = { "bolt_sniper", "dmr" }, ShotgunTypes = { "shotgun" };
+    /// <summary>Weapon kinds billiards works with (weapon_types.csv category): sniper hits are cue balls, shotgun pellets bowl (plan 13.2).</summary>
+    public static bool IsSniperType(string? type) => WeaponDatabase.Current.CategoryOfType(type) == WeaponCategory.Sniper;
+    public static bool IsShotgunType(string? type) => WeaponDatabase.Current.CategoryOfType(type) == WeaponCategory.Shotgun;
 
     public static IEnumerable<CardUpgrade> UpgradesOf(LabCard card) => card switch
     {
@@ -220,7 +221,7 @@ public partial class LabCards : Node
             else if (!enemy.IsDead) Stage.Sfx.PlayAt("balloon_inflate", enemy.GlobalPosition + Vector3.Up, -6, 1 + enemy.Inflate);
         }
         else if (helium && !enemy.IsDead && GD.Randf() < HeliumChance && enemy.AddInflate(1, FloatSeconds)) StartFloating(enemy);
-        if (Has(LabCard.Billiards, shooter) && !enemy.IsDead && (SniperTypes.Contains(hit.WeaponType) || ShotgunTypes.Contains(hit.WeaponType)))
+        if (Has(LabCard.Billiards, shooter) && !enemy.IsDead && (IsSniperType(hit.WeaponType) || IsShotgunType(hit.WeaponType)))
             Cue(enemy, hit);
         if (IsOn(LabSpecial.LastShot) && Stage.Player.Gun is { Mag: 0, IsMelee: false } && Engine.GetPhysicsFrames() != _lastShotFrame)
         {
@@ -333,7 +334,7 @@ public partial class LabCards : Node
     /// </summary>
     private void Cue(Enemy enemy, HitInfo hit)
     {
-        bool sniper = SniperTypes.Contains(hit.WeaponType);
+        bool sniper = IsSniperType(hit.WeaponType);
         enemy.Shove(hit.Direction, sniper ? SniperCuePower : ShotgunCuePower, 0);
         _cueUntil[enemy] = _clock + CueSeconds;
     }

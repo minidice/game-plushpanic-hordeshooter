@@ -26,6 +26,7 @@ public sealed class WeaponDatabase
     public IReadOnlyDictionary<string, string> TraitKinds => _traitKinds;
 
     private readonly Dictionary<string, WeaponDefinition> _weapons = new();
+    private readonly Dictionary<string, WeaponCategory> _typeCategories = new();
     private readonly List<string> _errors = new();
     private readonly Dictionary<string, JsonElement> _traits = new();
     private readonly Dictionary<string, string> _traitKinds = new();
@@ -46,6 +47,10 @@ public sealed class WeaponDatabase
 
     /// <summary>Drop the cache so the next access re-reads the files (e.g. after editing data).</summary>
     public static void Reload() => _current = null;
+
+    /// <summary>The category column of a weapon_types.csv row (null for an unknown or empty type).</summary>
+    public WeaponCategory? CategoryOfType(string? typeId) =>
+        typeId != null && _typeCategories.TryGetValue(typeId, out var category) ? category : null;
 
     private static WeaponDatabase LoadFiles()
     {
@@ -88,6 +93,7 @@ public sealed class WeaponDatabase
             var id = row.Cells.GetValueOrDefault("type", "");
             if (id == "") db._errors.Add($"weapon_types.csv {row.Line}행: type이 비어 있습니다");
             else if (!types.TryAdd(id, row)) db._errors.Add($"weapon_types.csv {row.Line}행: type '{id}'가 중복입니다");
+            else if (Enum.TryParse<WeaponCategory>(row.Cells.GetValueOrDefault("category", ""), true, out var category)) db._typeCategories[id] = category;
         }
 
         var (weaponHeader, weaponRows) = Csv.Parse(weaponsCsv);

@@ -5,27 +5,12 @@ R 재장전   Tab 확대/축소   Esc 일시정지"
 # 메인 메뉴
 ui_menu_title,HORDE SHOOTER  (가칭)
 ui_menu_subtitle,쿼터뷰 협동 호드 슈터 — 프로토타입
-ui_menu_select,캐릭터 선택
 ui_menu_start,출격  [Enter]
-ui_menu_new_character,새 캐릭터: content/characters 에 .tres 를 추가하면 이 목록에 자동으로 나타납니다.
-fmt_menu_details,ID {0}   ·   체력 {1}   ·   속도 {2:0.0}   ·   키 {3:0.00}m
-fmt_menu_model,모델: {0}
-ui_menu_no_model,없음 → 도형 대체 모델
 # HUD
 ui_hud_stage,STAGE 1 · 창고 지구
 fmt_hud_timer,{0:00}:{1:00}    처치 {2}
 fmt_hud_healing,치료 중... {0}%
-ui_hud_medkit,구급상자 1  [Q]
-ui_hud_no_medkit,구급상자 없음
 ui_hud_reload,장전 중
-ui_hud_melee_reserve,근접 · 무제한
-fmt_hud_reserve_infinite,{0} · 예비 무제한
-fmt_hud_reserve,{0} · 예비 {1}
-fmt_hud_reserve_no_refill,{0} · 예비 {1} (보충 불가)
-ui_hud_slot2_empty,[2] 없음
-ui_hud_no_throwable,[G] 투척물 없음
-fmt_hud_roll_cooldown,도약 {0:0.0}초
-ui_hud_roll_ready,[Space] 도약 준비
 fmt_hud_throw_aim,투척 조준: {0} ×{1}   좌클릭 던지기 · 우클릭/G 취소 · 휠 종류 변경
 fmt_hud_helium,헬륨 중독! 시야 좁아짐  {0}초
 ui_hud_stunned,으아악!
@@ -134,10 +119,7 @@ menu_test_options,테스트 옵션
 menu_multi_title,멀티플레이
 menu_multi_rules,테스트 빌드 · 지금은 2명 · 열린 방은 모두 방 목록에 보임 · AI 분대원 없음
 menu_multi_host,방 만들기
-menu_multi_code,방 코드 6자리
 menu_multi_join,참가
-menu_multi_public,공개방 찾기
-menu_multi_soon_hint,멀티플레이는 준비 중입니다. 2인 동기화와 방 코드 접속을 만든 뒤 열립니다.
 menu_multi_address,방장 주소 (방장 화면의 192.168.x.x · 같은 PC면 127.0.0.1)
 menu_multi_test_hint,방 목록에서 방을 골라 [참가]. 목록에 없으면 방장 주소로 직접 참가 (UDP 24680). 같은 버전의 게임끼리만 들어갈 수 있습니다.
 fmt_menu_multi_joining,{0}에 접속하는 중...
