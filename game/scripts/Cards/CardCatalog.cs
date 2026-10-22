@@ -41,7 +41,7 @@ public static class CardCatalog
     {
         if (who == null) return "";
         var types = new[] { who.Loadout.Primary?.Def.TypeId, who.Loadout.Secondary.Def.TypeId };
-        return types.Any(t => LabCards.SniperTypes.Contains(t)) ? "sniper" : types.Any(t => LabCards.ShotgunTypes.Contains(t)) ? "shotgun" : "";
+        return types.Any(LabCards.IsSniperType) ? "sniper" : types.Any(LabCards.IsShotgunType) ? "shotgun" : "";
     }
 
     public static CardChoice Special(LabSpecial card, LabCards? effects) =>

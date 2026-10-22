@@ -5,27 +5,12 @@ R Reload   Tab Zoom   Esc Pause"
 # Main menu
 ui_menu_title,HORDE SHOOTER  (working title)
 ui_menu_subtitle,Isometric co-op horde shooter — prototype
-ui_menu_select,Choose a character
 ui_menu_start,Deploy  [Enter]
-ui_menu_new_character,New character: add a .tres to content/characters and it shows up in this list.
-fmt_menu_details,ID {0}   ·   Health {1}   ·   Speed {2:0.0}   ·   Height {3:0.00}m
-fmt_menu_model,Model: {0}
-ui_menu_no_model,none → stand-in shape model
 # HUD
 ui_hud_stage,STAGE 1 · Warehouse District
 fmt_hud_timer,{0:00}:{1:00}    Kills {2}
 fmt_hud_healing,Healing... {0}%
-ui_hud_medkit,Medkit 1  [Q]
-ui_hud_no_medkit,No medkit
 ui_hud_reload,Reloading
-ui_hud_melee_reserve,Melee · unlimited
-fmt_hud_reserve_infinite,{0} · reserve unlimited
-fmt_hud_reserve,{0} · reserve {1}
-fmt_hud_reserve_no_refill,{0} · reserve {1} (no refill)
-ui_hud_slot2_empty,[2] Empty
-ui_hud_no_throwable,[G] No throwables
-fmt_hud_roll_cooldown,Leap {0:0.0}s
-ui_hud_roll_ready,[Space] Leap ready
 fmt_hud_throw_aim,Aiming throw: {0} ×{1}   LMB throw · RMB/G cancel · Wheel change type
 fmt_hud_helium,Helium high! Vision narrowed  {0}s
 ui_hud_stunned,Aaargh!
@@ -134,10 +119,7 @@ menu_test_options,Test options
 menu_multi_title,Multiplayer
 menu_multi_rules,Test build · 2 players for now · every open room is on the room list · no AI squadmates
 menu_multi_host,Create Room
-menu_multi_code,6-character room code
 menu_multi_join,Join
-menu_multi_public,Browse Public Rooms
-menu_multi_soon_hint,Multiplayer is coming soon. It opens once two-player sync and room-code joining are built.
 menu_multi_address,Host address (the host's 192.168.x.x · 127.0.0.1 on the same PC)
 menu_multi_test_hint,Pick a room on the list and press [Join]. Not listed? Join by the host address (UDP 24680). Only the same game version can join.
 fmt_menu_multi_joining,Connecting to {0}...

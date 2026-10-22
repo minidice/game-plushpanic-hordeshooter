@@ -39,7 +39,8 @@ StuffingColor = Color(1, 0.97, 0.88, 1)
 `;
   await fs.writeFile(new URL(`content/characters/${kind}.tres`,game),text);
 }
-for(const [kind,radius,height,speed,health] of [['humanoid',.40,1.8,3.7,35],['crawler',.43,.9,4.9,28],['tether',.40,1.8,3.0,90],['leaper',.48,1.5,4.8,85],['spitter',.52,1.8,2.7,110]]) {
+// Monster speed and health come from game/content/data/monsters.csv, so enemy looks carry no stats.
+for(const [kind,radius,height] of [['humanoid',.40,1.8],['crawler',.43,.9],['tether',.40,1.8],['leaper',.48,1.5],['spitter',.52,1.8]]) {
   await fs.writeFile(new URL(`content/enemies/${kind}.tres`,game),`[gd_resource type="Resource" script_class="CharacterDefinition" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/Characters/CharacterDefinition.cs" id="1_def"]
@@ -62,8 +63,6 @@ WeaponNode = "Weapon"
 MuzzleNode = "Muzzle"
 ColliderRadius = ${radius}
 ColliderHeight = ${height}
-MoveSpeed = ${speed}
-MaxHealth = ${health}
 StepRate = ${kind==='crawler'?17:13}.0
 WaddleDegrees = ${kind==='crawler'?4:7}.0
 StuffingColor = Color(0.77, 0.85, 0.60, 1)
