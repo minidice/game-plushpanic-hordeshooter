@@ -162,6 +162,21 @@ public partial class Stage : Node3D
 
     public Objective Objective { get; private set; } = Objective.LeaveSafeRoom;
     public StageState State { get; private set; } = StageState.Playing;
+
+    /// <summary>
+    /// Everyone stopped for a team decision (the special card vote, M-29): monsters, clocks, bodies and physics hold
+    /// on every PC; the network, the HUD and the vote keep running. Online too, unlike the pause menu.
+    /// </summary>
+    public bool AllStopped { get; private set; }
+
+    public void SetAllStop(bool on)
+    {
+        if (AllStopped == on) return;
+        AllStopped = on;
+        GetTree().Paused = on || (Hud != null && Hud.Paused && Role == NetRole.Offline);
+        // The link keeps talking so votes and the host's word get through.
+        if (Net != null) Net.ProcessMode = on ? ProcessModeEnum.Always : ProcessModeEnum.Inherit;
+    }
     public float Elapsed { get; private set; }
     public int Kills { get; private set; }
     public int SpecialKills { get; private set; }

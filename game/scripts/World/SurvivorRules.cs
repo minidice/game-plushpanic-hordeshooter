@@ -63,6 +63,9 @@ public partial class SurvivorRules : ModeRules
     /// <summary>This PC's survivor's waiting offers (a client's is the host's copy).</summary>
     public CardQueue LocalQueue { get; } = new();
     public CardWindow Window { get; private set; } = null!;
+    /// <summary>The team's special card vote after a middle boss (M-29; the host decides, clients mirror it).</summary>
+    public SpecialVote Vote { get; private set; } = null!;
+    public VoteWindow VoteWindow { get; private set; } = null!;
     /// <summary>Everyone's companions (the deciding PC's, or a client's copies).</summary>
     public CompanionSquad Companions { get; private set; } = null!;
 
@@ -92,6 +95,11 @@ public partial class SurvivorRules : ModeRules
             LocalQueue.DropFront();
         };
         AddChild(Window);
+        Vote = new SpecialVote { Name = "SpecialVote", Stage = Stage, Limit = Rules.SpecialVote, Won = choice => choice.Apply(Stage.Player) };
+        if (!Stage.Authoritative) Vote.SendStamp = (serial, index) => Stage.Net?.RequestVote(serial, index);
+        AddChild(Vote);
+        VoteWindow = new VoteWindow { Name = "VoteWindow", Stage = Stage, Vote = Vote, NormalCards = Window };
+        AddChild(VoteWindow);
         Companions = new CompanionSquad { Name = "Companions", Stage = Stage };
         AddChild(Companions);
         if (Stage.Authoritative) Stage.EnemyKilled += OnKilled;
@@ -248,6 +256,10 @@ public partial class SurvivorRules : ModeRules
         return w.ToArray();
     }
 
+    public override void ApplyVoteSync(byte[] data) => Vote.Apply(data);
+
+    public override void CastVote(Player who, int serial, int index) => Vote.Stamp(who, serial, index);
+
     /// <summary>Client: the host's view of this survivor's cards and the run.</summary>
     public override void ApplyCardSync(byte[] data)
     {
@@ -362,7 +374,7 @@ public partial class SurvivorRules : ModeRules
         Stage.Cam.AddShake(.45f);
     }
 
-    /// <summary>The last boss down clears the match; a middle one gives everyone a special card and starts the next stretch.</summary>
+    /// <summary>The last boss down clears the match; a middle one stops everyone for the special card vote and starts the next stretch.</summary>
     private void BossDown()
     {
         if (!BossArrived) return;
@@ -373,7 +385,8 @@ public partial class SurvivorRules : ModeRules
         }
         BossArrived = false;
         Boss = null;
-        foreach (var p in Humans) QueueOf(p).Add(CardCatalog.BossReward(Cards, Rng));
+        // Everyone who is still in the match votes, downed or not; AI squadmates do not (M-29).
+        Vote.Begin(CardCatalog.BossReward(Cards, Rng), Stage.Players.Where(p => IsInstanceValid(p) && !p.IsBot && !p.IsDead));
         Segment++;
         _segmentStart = MatchTime;
         NextBoss = DrawBoss();

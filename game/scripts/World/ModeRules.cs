@@ -70,6 +70,10 @@ public abstract partial class ModeRules : Node
 
     /// <summary>Client: the host's copy of this survivor's cards and the mode's card state.</summary>
     public virtual void ApplyCardSync(byte[] data) { }
+    /// <summary>Client: the host's special card vote (M-29).</summary>
+    public virtual void ApplyVoteSync(byte[] data) { }
+    /// <summary>Host: a client's stamp on the special card vote.</summary>
+    public virtual void CastVote(Player who, int serial, int index) { }
 
     /// <summary>A random open, reachable spot, off every screen if there is one.</summary>
     protected Vector3? PickSpot(IEnumerable<Vector3> candidates)

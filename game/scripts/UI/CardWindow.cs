@@ -53,7 +53,7 @@ public partial class CardWindow : CanvasLayer
         head.AddChild(_close);
         for (int i = 0; i < 3; i++)
         {
-            var card = new CardButton(this, i) { Name = "Card" + (i + 1) };
+            var card = new CardButton(Pick, i) { Name = "Card" + (i + 1) };
             _cards.Add(card);
             _panel.AddChild(card);
         }
@@ -171,15 +171,16 @@ public partial class CardWindow : CanvasLayer
 /// <summary>One wide card: number, big icon, name in the target's colour, a tag line and the description.</summary>
 public partial class CardButton : PanelContainer
 {
-    private readonly CardWindow _window;
+    private readonly System.Action<int> _pick;
     private readonly int _index;
     private readonly Label _number, _name, _tag, _desc, _glyph;
     private readonly TextureRect _icon;
     private StyleBoxFlat _normal = null!, _hover = null!;
 
-    public CardButton(CardWindow window, int index)
+    /// <param name="pick">What clicking it does (the card window's pick, or the vote's stamp).</param>
+    public CardButton(System.Action<int> pick, int index)
     {
-        _window = window;
+        _pick = pick;
         _index = index;
         CustomMinimumSize = new Vector2(700, 118);
         MouseFilter = MouseFilterEnum.Stop;
@@ -244,7 +245,7 @@ public partial class CardButton : PanelContainer
         if (e is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left })
         {
             AcceptEvent();
-            _window.Pick(_index);
+            _pick(_index);
         }
     }
 }

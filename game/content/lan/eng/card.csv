@@ -107,3 +107,11 @@ name_card_u_velcro_size,Velcro clump
 desc_card_u_velcro_size,A clump bursts with one fewer monster (5 → 4 → 3)
 name_card_u_velcro_damage,Velcro burst damage
 desc_card_u_velcro_damage,Rrrip! damage +50%
+# Special card vote (decisions.md M-29, onslaught-cards-plan.md 16.5)
+ui_vote_title,Special card vote — it goes to the whole team
+fmt_vote_count,Votes {0}/{1}
+fmt_vote_hint,1 · 2 · 3 or click · anonymous · a stamp cannot be moved · {0}s
+fmt_vote_waiting,Stamped — waiting for the others · {0}s
+ui_vote_spectate,You watch this vote (you vote from the next one)
+ui_vote_tie,Tie! Drawing one at random…
+fmt_vote_result,Team card: {0}

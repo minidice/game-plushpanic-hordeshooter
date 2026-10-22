@@ -107,3 +107,11 @@ name_card_u_velcro_size,찍찍이 덩어리
 desc_card_u_velcro_size,덩어리가 한 마리 적어도 터짐 (5 → 4 → 3)
 name_card_u_velcro_damage,찍찍이 폭발 대미지
 desc_card_u_velcro_damage,찍! 대미지 +50%
+# 특별 카드 투표 (decisions.md M-29, onslaught-cards-plan.md 16.5)
+ui_vote_title,특별 카드 투표 — 팀 전체에 걸립니다
+fmt_vote_count,투표 {0}/{1}
+fmt_vote_hint,1 · 2 · 3 또는 클릭 · 무기명 · 한 번 찍으면 바꿀 수 없음 · {0}초
+fmt_vote_waiting,찍었습니다 — 다른 사람을 기다리는 중 · {0}초
+ui_vote_spectate,이번 투표는 지켜보기만 합니다 (다음 투표부터)
+ui_vote_tie,동률! 무작위로 고르는 중…
+fmt_vote_result,팀 카드: {0}

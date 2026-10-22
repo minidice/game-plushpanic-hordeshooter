@@ -444,12 +444,44 @@ public partial class ModeCheck : Node
         Check(stage.GetChildren().OfType<EnemyProjectile>().Count() >= fan.Count, $"it fires {fan.Count} shots in a fan");
         await Seconds(1.5f);
         await Shot("survivor-boss");
-        // The middle boss down: everyone's special card first, then its experience; the next stretch starts.
+        // The vote's rule (plan 16.5 table): settled early only when the leader cannot be caught.
+        Check(SpecialVote.Settle(new[] { 3, 1, 1 }, 1, false) is [0] && SpecialVote.Settle(new[] { 3, 2, 0 }, 1, false) == null &&
+              SpecialVote.Settle(new[] { 4, 0, 0 }, 2, false) is [0] && SpecialVote.Settle(new[] { 0, 3, 0 }, 1, false) is [1] &&
+              SpecialVote.Settle(new[] { 3, 0, 0 }, 2, false) is [0] && SpecialVote.Settle(new[] { 2, 2, 2 }, 0, false)!.Count == 3,
+            "the vote settles early only when the leader cannot be caught (3·1·1 +1, 4·0 +2, 3·0 +1, 3·0 +2 settle; 3·2 +1 waits; 2·2·2 draws)");
+        Check(SpecialVote.Settle(new[] { 0, 0, 0 }, 4, true)!.Count == 3 && SpecialVote.Settle(new[] { 1, 1, 0 }, 3, true)!.SequenceEqual(new[] { 0, 1 }),
+            "at time up: no stamps draws from all three, otherwise from the most stamped");
+        Check(r.SpecialVote == 60, "the team has 60 seconds to vote (survivor.special_vote_s)");
+
+        // The middle boss down: everyone stops and votes on the special card (M-29), then its experience; the next stretch starts.
         int offersBefore = queue.Count;
+        var bystander = stage.AllEnemies.FirstOrDefault(e => e != boss && !e.IsDead);
         boss.Burn(boss.MaxHealth);
         await Frames(2);
-        Check(stage.State == StageState.Playing && rules.Segment == 1 && !rules.BossArrived && queue.Count > offersBefore &&
-              queue.Offers[offersBefore].Kind == CardKind.Special, "a middle boss down gives a special card (before any level-up) and opens stretch 2");
+        var vote = rules.Vote;
+        Check(stage.State == StageState.Playing && rules.Segment == 1 && !rules.BossArrived && vote.Phase == VotePhase.Voting &&
+              stage.AllStopped && GetTree().Paused && vote.Offer!.Kind == CardKind.Special && vote.Offer.Choices.Count == 3 &&
+              !queue.Offers.Skip(offersBefore).Any(o => o.Kind == CardKind.Special),
+            "a middle boss down stops everyone and opens the special card vote (not a card in each queue) and stretch 2");
+        await Frames(1);
+        await Until(() => vote.Voters == 1 && vote.IsVoter && rules.VoteWindow.GetNode<Control>("VoteRoot").Visible,
+            "the only survivor votes; the vote window is up", 2);
+        float stretchClock = rules.SegmentTime;
+        var bystanderAt = bystander != null && IsInstanceValid(bystander) ? bystander.GlobalPosition : Vector3.Zero;
+        await Seconds(1);
+        Check(Mathf.IsEqualApprox(rules.SegmentTime, stretchClock) && (bystander == null || !IsInstanceValid(bystander) || bystander.GlobalPosition == bystanderAt) &&
+              vote.Left < r.SpecialVote - .5f, "while voting the stretch clock and the monsters hold, the vote's own clock runs");
+        await Shot("survivor-vote");
+        var won = vote.Offer!.Choices[1];
+        vote.StampLocal(1);
+        vote.StampLocal(0);
+        Check(vote.Stamps[1] == 1 && vote.Stamps[0] == 0 && vote.Winner == 1 && vote.Phase == VotePhase.Spinning,
+            "alone, a stamp settles it at once, and a second stamp is ignored");
+        await Until(() => vote.Phase == VotePhase.Countdown, "the winner is shown, then counted down", 4);
+        Check(rules.Cards.IsOn(Enum.Parse<LabSpecial>(won.Id)) && stage.AllStopped, "the winning card goes on before play resumes");
+        await Shot("survivor-vote-countdown");
+        await Until(() => !vote.Active && !stage.AllStopped && !GetTree().Paused, "after 3 · 2 · 1 everyone plays on", 5);
+        Check(stage.State == StageState.Playing && rules.Segment == 1, "the second stretch runs");
         Check(rules.BarLabel.Contains($"2/{rules.Segments}") && rules.BossIn > rules.SegmentLength - 1, "the bar counts down to the second boss: " + rules.BarLabel);
         Check(Mathf.Abs(rules.RunTime - r.Segments[0]) < .5f, $"the run clock picks up where the first stretch ended ({rules.RunTime:0.0}s)");
         // The other stretches, each with its own middle boss; the last boss is the final one and ends it.
@@ -491,6 +523,9 @@ public partial class ModeCheck : Node
             }
             boss.Burn(boss.MaxHealth);
             await Frames(2);
+            Check(rules.Vote.Phase == VotePhase.Voting, $"boss {rules.Segment} down: the vote");
+            rules.Vote.StampLocal(0);
+            await Until(() => !rules.Vote.Active, "voted, play goes on", 8);
         }
         Check(met.Count == r.Segments.Count - 2 && met.Distinct().Count() == met.Count && met.All(r.MidBosses.Contains),
             "no middle boss comes twice: " + string.Join(", ", met));

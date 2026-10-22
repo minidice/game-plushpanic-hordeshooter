@@ -195,3 +195,12 @@
 - 방장이 파티원마다 보내는 난전 카드 동기화(`SurvivorRules.EncodeFor` → `StageNet.HostCards` → `ApplyCardSync`) 끝에 **팀 특별 카드 비트 U8**(`LabCards.SpecialMask`, 비트 n = `LabCards.Specials[n]`)을 더했다. 파티원은 `LabCards.SetSpecialsFromHost`로 받아 유리 대포의 최대 체력 절반을 자기 화면의 모든 생존자에 걸어 HUD 체력 막대가 방장과 같게 보인다(피해 계산은 그대로 방장). 특별 카드가 바뀌면 주기를 기다리지 않고 다시 보낸다.
 - `NetLobby.Protocol`을 6에서 **7**로 올려 이전 빌드와 섞이지 않게 했다.
 - 검사: `CardLabCheck`(특별 카드 비트), `OnslaughtNetCheck` · `NetSyncCheck` · `NetCodecCheck`(실제 송수신).
+
+### 모두 멈춤 · 특별 카드 투표 (2026-10-22, M-29 2단계)
+
+- 중간 보스가 쓰러지면 방장이 `SpecialVote.Begin` → `Stage.SetAllStop(true)`(트리 일시정지, 온라인도). 멈춘 동안 `SpecialVote` · `VoteWindow` · HUD · `StageNet`만 돈다(`ProcessMode.Always`).
+- 방장 → 파티원: `StageNet.HostVote(byte[])`(신뢰 전송), 바뀔 때와 0.25초마다. 내용: 투표 번호 U16, 단계 U8(None이면 여기서 끝), 단계 남은 시간 F32, 투표 인원 · 투표한 수 U8, 카드별 도장 수, 이긴 카드(255 = 아직), 동률 카드 목록, 받는 사람이 투표자인지, **받는 사람 자신의 도장만**(255 = 없음), 카드 3장(`CardCatalog.Write`). 누가 어느 카드를 찍었는지는 보내지 않는다(무기명).
+- 파티원 → 방장: `StageNet.ClientVote(serial, index)`. 방장은 투표 번호가 같고 투표자이고 아직 안 찍었을 때만 센다.
+- 파티원은 단계가 None이 아닌 동기화를 받으면 멈추고, None을 받으면 풀린다. 이긴 카드는 방장에서만 적용(유리 대포의 체력 절반은 기존 특별 카드 비트로 파티원 화면에).
+- `NetLobby.Protocol` 7 → **8**.
+- 검사: `OnslaughtNetCheck`(실제 ENet). 한계 I-95(한 프로세스 검사, 멈춘 동안 소리 없음).

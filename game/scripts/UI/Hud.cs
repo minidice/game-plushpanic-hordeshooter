@@ -215,7 +215,7 @@ void fragment() {
         if (Paused && !_pausePanel.Visible) ShowPauseQuality();
         _pausePanel.Visible = Paused;
         if (InventoryOpen && (!playing || Paused || player.IsDead)) SetInventoryOpen(false);
-        bool captured = playing && !Paused && !InventoryOpen && !CardWindowOpen && GetWindow().HasFocus();
+        bool captured = playing && !Paused && !InventoryOpen && !CardWindowOpen && !stage.AllStopped && GetWindow().HasFocus();
         var mode = captured ? Input.MouseModeEnum.Hidden : Input.MouseModeEnum.Visible;
         if (Input.MouseMode != mode) Input.MouseMode = mode;
     }
@@ -290,7 +290,7 @@ void fragment() {
     {
         Paused = paused;
         // Online the world keeps running for everyone; only the menu opens (multiplayer-sync-design.md 3장).
-        GetTree().Paused = paused && Stage.Role == NetRole.Offline;
+        GetTree().Paused = (paused && Stage.Role == NetRole.Offline) || Stage.AllStopped;
     }
 
     // ---------- painters ----------

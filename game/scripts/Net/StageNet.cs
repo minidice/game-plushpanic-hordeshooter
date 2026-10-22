@@ -265,6 +265,26 @@ public partial class StageNet : Node
     [Rpc(MultiplayerApi.RpcMode.Authority, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
     private void HostCards(byte[] data) => _stage.ModeRules?.ApplyCardSync(data);
 
+    /// <summary>Host: the special card vote as <paramref name="who"/> should see it (M-29).</summary>
+    public void SendVote(Player who, byte[] data)
+    {
+        if (Role != NetRole.Host || !_readyPeers.Contains(who.PeerId)) return;
+        RpcId(who.PeerId, MethodName.HostVote, data);
+    }
+
+    [Rpc(MultiplayerApi.RpcMode.Authority, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
+    private void HostVote(byte[] data) => _stage.ModeRules?.ApplyVoteSync(data);
+
+    /// <summary>Client: our stamp on vote <paramref name="serial"/>; the host counts it.</summary>
+    public void RequestVote(int serial, int index) => Send(MethodName.ClientVote, serial, index);
+
+    [Rpc(MultiplayerApi.RpcMode.AnyPeer, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
+    private void ClientVote(int serial, int index)
+    {
+        if (Role != NetRole.Host || !Peers.TryGetValue(Multiplayer.GetRemoteSenderId(), out var who)) return;
+        _stage.ModeRules?.CastVote(who, serial, index);
+    }
+
     /// <summary>Client: which card we picked; the host applies it to our survivor.</summary>
     public void RequestCardPick(int serial, int index) => Send(MethodName.ClientPickCard, serial, index);
 

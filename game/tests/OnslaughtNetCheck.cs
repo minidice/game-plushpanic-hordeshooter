@@ -111,12 +111,28 @@ public partial class OnslaughtNetCheck : Node
         clientRules.Window.Pick(0);
         await Until(() => hostCopy.Count == 0, $"the client's level-up pick ({card.Key}) is applied by the host");
 
-        // A middle boss down: the next stretch and a special card reach the client.
+        // A middle boss down: both stop and vote on the special card (M-29); the next stretch reaches the client.
         var boss = hostRules.SpawnBoss();
         await Frames(10);
         boss.Burn(boss.MaxHealth);
-        await Until(() => clientRules.Segment == 1 && clientRules.LocalQueue.Offers.Any(o => o.Kind == CardKind.Special),
-            "a middle boss down gives the client its special card and the second stretch");
+        var hostVote = hostRules.Vote;
+        var clientVote = clientRules.Vote;
+        await Until(() => clientVote.Phase == VotePhase.Voting && clientVote.Offer?.Choices.Count == 3 && _client.AllStopped && clientVote.Voters == 2 && clientVote.IsVoter,
+            "the vote reaches the client: everyone stops, three special cards, two voters");
+        Check(clientVote.Offer!.Choices.Select(c => c.Key).SequenceEqual(hostVote.Offer!.Choices.Select(c => c.Key)) && clientVote.Serial == hostVote.Serial,
+            "the client votes on the host's three cards");
+        hostVote.StampLocal(2);
+        await Until(() => clientVote.Voted == 1 && clientVote.Stamps[2] == 1 && clientVote.Mine == -1,
+            "the host's stamp shows on the client as a count on its card, not as its own");
+        Check(hostVote.Phase == VotePhase.Voting, "one stamp of two does not settle it (1 is not more than 0 + 1)");
+        clientVote.StampLocal(2);
+        await Until(() => hostVote.StampsBy.ContainsKey(_host.Players.First(p => p.IsRemote)) && hostVote.Winner == 2,
+            "the client's stamp reaches the host and settles the vote");
+        await Until(() => clientVote.Winner == 2 && clientVote.Mine == 2, "the client sees the winner and its own stamp");
+        string won = hostVote.Offer.Choices[2].Id;
+        await Until(() => !hostVote.Active && !clientVote.Active && !_host.AllStopped && !_client.AllStopped, "after the countdown both play on", 8);
+        Check(hostRules.Cards.IsOn(Enum.Parse<LabSpecial>(won)), "the winning card is the team's on the host");
+        await Until(() => clientRules.Segment == 1, "the second stretch reaches the client");
         Check(!clientRules.BossArrived && clientRules.BarLabel.Contains($"2/{clientRules.Segments}"), "the client's bar counts down to the next boss: " + clientRules.BarLabel);
     }
 

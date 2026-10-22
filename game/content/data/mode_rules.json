@@ -72,6 +72,7 @@
       "rubber_duck"
     ],
     "special_cooldown_s": 25,
+    "special_vote_s": 60,
     "special_cooldowns": {
       "honk": 8,
       "rubber_duck": 14
