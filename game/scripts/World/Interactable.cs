@@ -18,6 +18,8 @@ public partial class Interactable : Node3D
     public string PromptKey => _prompt;
     public float Radius { get; set; } = 1.9f;
     public bool Enabled { get; set; } = true;
+    /// <summary>Seconds the interact key must be held (0: a press uses it).</summary>
+    public float HoldSeconds { get; set; }
     /// <summary>Called with the survivor who used it; null means this PC's player.</summary>
     public Action<Player?>? OnUse { get; set; }
     /// <summary>Same on every PC: level items get it in build order, dropped weapons from the host (multiplayer-sync-design.md 4.4).</summary>

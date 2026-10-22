@@ -17,6 +17,8 @@ public enum Objective
     ModeGoal,
     /// <summary>Onslaught: picking weapons from the floor racks before the swarm starts.</summary>
     ModeArming,
+    /// <summary>Scenario: the safehouse is shut and its hatch leads on to the next stage (decisions.md L-14).</summary>
+    TakeExit,
 }
 
 public enum StageState
@@ -28,8 +30,9 @@ public enum StageState
 
 /// <summary>
 /// Owns one playable stage: systems (flow field, director, vision, effects), the player, enemies,
-/// and the L4D campaign beat: safe room → route → crescendo → safehouse. Geometry comes from
-/// <see cref="StageMap"/> (Stage 1 is <see cref="StageOneLayout"/>); the scenario beats below use Stage 1's doors and panels.
+/// and the L4D campaign beat: safe room → route → crescendo → safehouse → the hatch to the next stage. Geometry and the
+/// doors, panel and safehouse of those beats come from <see cref="StageMap"/> (Stage 1 is <see cref="StageOneLayout"/>,
+/// Stage 2 <see cref="StageTwoMap"/>; I-79).
 /// </summary>
 public partial class Stage : Node3D
 {
@@ -45,6 +48,17 @@ public partial class Stage : Node3D
     public GameMode Mode { get; private set; } = GameMode.Scenario;
     /// <summary>Set before adding to the tree to play another map than the mode's own (checks, a generated map).</summary>
     public StageMap? MapOverride { get; set; }
+    /// <summary>
+    /// Whether shutting a scenario safehouse opens the hatch to the next stage. Null = offline in the running game scene
+    /// (a network match ends at the first safehouse for now, I-90); test scenes stop at the clear unless they ask.
+    /// </summary>
+    public bool? NextStageOverride { get; set; }
+    public bool NextStageEnabled { get; private set; }
+    /// <summary>Whether this stage takes over a stage change in progress (camera ease, carried kit, the opening circle). Null = the running game scene.</summary>
+    public bool? ArrivalOverride { get; set; }
+    /// <summary>How long the interact key has been held on a hold-to-use thing (0..1).</summary>
+    public float HoldProgress { get; private set; }
+    private Interactable? _holding;
     /// <summary>Set before adding to the tree to run other rules than the mode's own (the card lab).</summary>
     public ModeRules? RulesOverride { get; set; }
     /// <summary>Survival / Survivor rules (null in Scenario).</summary>
@@ -169,7 +183,8 @@ public partial class Stage : Node3D
         GameInput.Ensure();
         Mode = ModeOverride ?? (GetTree().CurrentScene == this ? GameSession.Mode : GameMode.Scenario);
         // The map sizes the flow field before it builds into it.
-        var map = MapOverride ?? StageMap.Create(Mode);
+        bool running = GetTree().CurrentScene == this;
+        var map = MapOverride ?? StageMap.Create(Mode, running ? GameSession.ScenarioStage : 1);
         var area = map.Area;
         Flow = new FlowField(area.Position.X, area.Position.Y, area.End.X, area.End.Y);
         Sfx = new Sfx();
@@ -181,10 +196,11 @@ public partial class Stage : Node3D
         AddChild(Director);
         AddChild(Vision);
         AddChild(Effects);
-        BuildEnvironment();
+        BuildEnvironment(map);
 
         if (Role == NetRole.Offline && GetTree().CurrentScene == this) Role = NetLaunch.Pending;
         ReviveEnabled = ReviveOverride ?? (GetTree().CurrentScene == this && GameSettings.ReviveEnabled);
+        NextStageEnabled = NextStageOverride ?? (running && Role == NetRole.Offline);
         // A random field per match offline; in a match everyone builds the host's (GameSession.MapSeed from the room; 1 without a room).
         if (MapOverride == null && GetTree().CurrentScene == this)
             map.Seed = Role == NetRole.Offline ? (int)(GD.Randi() % 1000000) + 1 : GameSession.MapSeed != 0 ? GameSession.MapSeed : 1;
@@ -201,7 +217,11 @@ public partial class Stage : Node3D
         ThemeId = StageTheme.Normalize(ThemeOverride ?? GameSession.SelectedTheme);
         CommonDefinition = MonsterDatabase.Get(StageTheme.Commons(ThemeId)[0]);
 
-        Cam = new CameraRig { Name = "Camera", Target = Player, Player = Player };
+        Cam = new CameraRig { Name = "Camera", Target = Player, Player = Player, View = Map.View };
+        if (_environment.FogEnabled && _environment.FogMode == Godot.Environment.FogModeEnum.Depth) Cam.Haze = _environment;
+        // Coming down the last stage's hatch: the view eases from that stage's look into this one (L-14).
+        bool arriving = (ArrivalOverride ?? running) && StageTransition.Arriving;
+        if (arriving) Cam.Arrive(StageTransition.FromView, StageTransition.ArriveSeconds);
         AddChild(Cam);
         Cam.SnapTo(Map.PlayerStart);
         Effects.RegisterCorpseObserver(Player, Cam);
@@ -212,6 +232,7 @@ public partial class Stage : Node3D
         RefreshRouteFlows();
         // Scenario fills areas ahead and sends waves from the stage's entries; the other modes spawn by their own rules.
         if (Mode == GameMode.Scenario && Map.Encounters is { } encounters) Director.UseEncounters(encounters);
+        if (Mode == GameMode.Scenario) Objective = Map.ScenarioStart;
         ModeRules = RulesOverride ?? ModeRules.Create(Mode);
         if (ModeRules != null)
         {
@@ -229,10 +250,20 @@ public partial class Stage : Node3D
 
         Hud = new Hud { Name = "Hud" };
         AddChild(Hud);
-        if (ModeRules == null) ShowNotice(Loc.Text("msg_stage_start"));
+        if (ModeRules == null) ShowNotice(Loc.Text(Objective == Objective.LeaveSafeRoom ? "msg_stage_start" : "msg_stage_route_start"));
+        // A stage that starts out on the route (no safe-room door to open) wakes the director at once.
+        if (ModeRules == null && Objective != Objective.LeaveSafeRoom && DirectorEnabled) Director.Begin();
+        if (arriving)
+        {
+            if (GameSession.Carry is { } carry) carry.ApplyTo(Player);
+            GameSession.Carry = null;
+            StageTransition.Reveal(this);
+        }
     }
 
-    private void BuildEnvironment()
+    private Godot.Environment _environment = null!;
+
+    private void BuildEnvironment(StageMap map)
     {
         var env = new Godot.Environment
         {
@@ -251,8 +282,7 @@ public partial class Stage : Node3D
             GlowIntensity = .65f,
             GlowBloom = .05f,
         };
-        AddChild(new WorldEnvironment { Environment = env });
-        AddChild(new DirectionalLight3D
+        var key = new DirectionalLight3D
         {
             Name = "Moon",
             RotationDegrees = new Vector3(-62, -28, 0),
@@ -261,7 +291,12 @@ public partial class Stage : Node3D
             ShadowEnabled = true,
             ShadowBlur = 2f,
             DirectionalShadowMaxDistance = 60,
-        });
+        };
+        // Stage 1 keeps the night above; an outdoor map brings its own sky, haze and key light.
+        map.Light(env, key);
+        _environment = env;
+        AddChild(new WorldEnvironment { Environment = env });
+        AddChild(key);
     }
 
     // ---------- spawning ----------
@@ -572,7 +607,7 @@ public partial class Stage : Node3D
         Elapsed += dt;
         // A client gets objectives and respawns from the host (multiplayer-sync-design.md 3장).
         if (Authoritative) UpdateObjective();
-        UpdateInteraction();
+        UpdateInteraction(dt);
         if (Authoritative) UpdateRespawns();
     }
 
@@ -611,7 +646,7 @@ public partial class Stage : Node3D
         switch (Objective)
         {
             case Objective.HoldOut:
-                Layout.Shutter.SetProgress(1 - Director.CrescendoRemaining / Director.CrescendoDuration);
+                Map.Shutter?.SetProgress(1 - Director.CrescendoRemaining / Director.CrescendoDuration);
                 if (!Director.CrescendoActive) OpenShutter();
                 break;
             case Objective.ReachSafehouse:
@@ -621,7 +656,7 @@ public partial class Stage : Node3D
                         foreach (var survivor in AlivePlayers) if (!survivor.IsDowned) survivor.ResetDowns();
                     _safehouseReached = true;
                     Objective = Objective.CloseSafehouse;
-                    Layout.SafehouseSwitch.Enabled = true;
+                    SetEnabled(Map.SafehouseSwitch, true);
                     ShowNotice(Loc.Text("msg_stage_close_to_clear"));
                 }
                 break;
@@ -629,7 +664,7 @@ public partial class Stage : Node3D
                 if (!HumansInSafehouse())
                 {
                     Objective = Objective.ReachSafehouse;
-                    Layout.SafehouseSwitch.Enabled = false;
+                    SetEnabled(Map.SafehouseSwitch, false);
                 }
                 break;
         }
@@ -642,7 +677,7 @@ public partial class Stage : Node3D
         foreach (var p in AlivePlayers)
         {
             if (p.IsBot) continue;
-            if (!Layout.InSafehouse(p.GlobalPosition)) return false;
+            if (!Map.InSafehouse(p.GlobalPosition)) return false;
             any = true;
         }
         return any;
@@ -669,8 +704,11 @@ public partial class Stage : Node3D
     {
         _alarm?.QueueFree();
         _alarm = null;
-        Sfx.PlayAt("shutter", Layout.Shutter.GlobalPosition + Vector3.Up * 1.5f);
-        Layout.Shutter.SetOpen(true, 1.2f);
+        if (Map.Shutter is { } shutter)
+        {
+            Sfx.PlayAt("shutter", shutter.GlobalPosition + Vector3.Up * 1.5f);
+            shutter.SetOpen(true, 1.2f);
+        }
         Objective = Objective.ReachSafehouse;
         ShowNotice(Loc.Text("msg_stage_shutter_open"));
     }
@@ -693,11 +731,11 @@ public partial class Stage : Node3D
                 case Objective.HoldOut: Director.Stop(); OpenShutter(); break;
                 case Objective.ReachSafehouse:
                     Objective = Objective.CloseSafehouse;
-                    Layout.SafehouseSwitch.Enabled = true;
+                    SetEnabled(Map.SafehouseSwitch, true);
                     ShowNotice(Loc.Text("msg_stage_close_to_clear"));
                     break;
                 case Objective.CloseSafehouse:
-                    if (to == Objective.ReachSafehouse) { Objective = Objective.ReachSafehouse; Layout.SafehouseSwitch.Enabled = false; }
+                    if (to == Objective.ReachSafehouse) { Objective = Objective.ReachSafehouse; SetEnabled(Map.SafehouseSwitch, false); }
                     else PresentClear();
                     break;
                 default: Objective = to; break;
@@ -718,7 +756,7 @@ public partial class Stage : Node3D
         else if (state == StageState.Dead && State == StageState.Playing) PresentWipe();
     }
 
-    private void UpdateInteraction()
+    private void UpdateInteraction(float dt)
     {
         FocusedInteractable = null;
         RevivePromptTarget = null;
@@ -735,8 +773,25 @@ public partial class Stage : Node3D
                 FocusedInteractable = item;
             }
         }
+        // Hold-to-use (the stage exit): the key stays down for HoldSeconds; letting go or walking away starts over.
+        if (FocusedInteractable is { HoldSeconds: > 0 } hold && RevivePromptTarget == null && !Player.ManualControl && Input.IsActionPressed(GameInput.Interact))
+        {
+            if (_holding != hold) HoldProgress = 0;
+            _holding = hold;
+            HoldProgress = Mathf.Min(1, HoldProgress + dt / hold.HoldSeconds);
+            if (HoldProgress >= 1)
+            {
+                HoldProgress = 0;
+                _holding = null;
+                if (Authoritative) hold.Use(Player);
+                else RequestUse?.Invoke(hold);
+            }
+            return;
+        }
+        _holding = null;
+        HoldProgress = 0;
         // E next to a downed teammate means "pick them up", never also "use the thing on the floor".
-        if (FocusedInteractable != null && RevivePromptTarget == null && !Player.ManualControl && Input.IsActionJustPressed(GameInput.Interact))
+        if (FocusedInteractable is { HoldSeconds: <= 0 } && RevivePromptTarget == null && !Player.ManualControl && Input.IsActionJustPressed(GameInput.Interact))
         {
             if (Authoritative) FocusedInteractable.Use(Player);
             else RequestUse?.Invoke(FocusedInteractable);
@@ -749,9 +804,12 @@ public partial class Stage : Node3D
     public void LeaveSafeRoom()
     {
         if (Objective != Objective.LeaveSafeRoom) return;
-        Layout.StartDoor.SetOpen(true);
-        Layout.StartDoorSwitch.Enabled = false;
-        Sfx.PlayAt("door", Layout.StartDoor.GlobalPosition + Vector3.Up);
+        if (Map.StartDoor is { } door)
+        {
+            door.SetOpen(true);
+            Sfx.PlayAt("door", door.GlobalPosition + Vector3.Up);
+        }
+        SetEnabled(Map.StartDoorSwitch, false);
         Objective = Objective.ReachShutter;
         if (DirectorEnabled) Director.Begin();
         ShowNotice(Loc.Text("msg_stage_find_shutter"));
@@ -761,10 +819,10 @@ public partial class Stage : Node3D
     {
         if (Objective != Objective.ReachShutter) return;
         Objective = Objective.HoldOut;
-        Layout.ShutterPanel.Enabled = false;
+        SetEnabled(Map.ShutterPanel, false);
         _alarm = Sfx.Bed("alarm_loop", AudioSetup.SfxBus);
         Director.Begin();
-        Director.StartCrescendo(Layout.CrescendoSeconds);
+        Director.StartCrescendo(Map.CrescendoSeconds);
         Cam.AddShake(.3f);
         ShowNotice(Loc.Text("msg_stage_alarm"));
     }
@@ -774,7 +832,7 @@ public partial class Stage : Node3D
         if (Objective != Objective.CloseSafehouse) return false;
         foreach (var e in AllEnemies)
         {
-            if (!e.IsDead && Layout.NearSafehouse(e.GlobalPosition))
+            if (!e.IsDead && Map.NearSafehouse(e.GlobalPosition))
             {
                 ShowNotice(Loc.Text("msg_stage_enemies_inside"));
                 return false;
@@ -786,15 +844,42 @@ public partial class Stage : Node3D
 
     private void PresentClear()
     {
-        Layout.SafehouseDoor.SetOpen(false);
-        Layout.SafehouseSwitch.Enabled = false;
-        Sfx.PlayAt("door", Layout.SafehouseDoor.GlobalPosition + Vector3.Up);
+        if (Map.SafehouseDoor is { } door)
+        {
+            door.SetOpen(false);
+            Sfx.PlayAt("door", door.GlobalPosition + Vector3.Up);
+        }
+        SetEnabled(Map.SafehouseSwitch, false);
         Sfx.Play("stage_clear");
+        if (NextStageEnabled && Map.NextStage > 0 && Map.StageExit is { } exit)
+        {
+            // The run goes on: the safehouse's hatch opens instead of the end panel (decisions.md L-14).
+            Objective = Objective.TakeExit;
+            exit.Enabled = true;
+            Director.Stop();
+            foreach (var p in AlivePlayers) p.Invulnerable = true;
+            ShowNotice(Loc.Text("msg_stage_exit_open"), 5);
+            return;
+        }
         Objective = Objective.Cleared;
         State = StageState.Cleared;
         Director.Stop();
         Player.Invulnerable = true;
         ShowNotice(Loc.Text("ui_end_clear"));
+    }
+
+    /// <summary>Climb down the safehouse hatch: the iris closes on the survivor and the next stage loads (L-14).</summary>
+    public void TakeStageExit()
+    {
+        if (Objective != Objective.TakeExit || StageTransition.Busy) return;
+        SetEnabled(Map.StageExit, false);
+        Sfx.PlayAt("door", Player.GlobalPosition + Vector3.Up);
+        StageTransition.Leave(this, Map.NextStage);
+    }
+
+    private static void SetEnabled(Interactable? item, bool on)
+    {
+        if (item != null) item.Enabled = on;
     }
 
     /// <summary>
@@ -1015,6 +1100,7 @@ public partial class Stage : Node3D
         Objective.HoldOut => Loc.Format("fmt_objective_hold_out", Mathf.CeilToInt(Mathf.Max(0, Director.CrescendoRemaining))),
         Objective.ReachSafehouse => Loc.Text("ui_objective_reach_safehouse"),
         Objective.CloseSafehouse => Loc.Text("ui_objective_close_safehouse"),
+        Objective.TakeExit => Loc.Text("ui_objective_take_exit"),
         Objective.ModeGoal or Objective.ModeArming when ModeRules != null => ModeRules.ObjectiveText,
         _ => Loc.Text("ui_objective_cleared"),
     };

@@ -48,6 +48,7 @@ public sealed class SupplyPoint
 public sealed class StageSupplies
 {
     public const string Stage1Path = "res://content/data/stages/stage1_supplies.json";
+    public const string Stage2Path = "res://content/data/stages/stage2_supplies.json";
     /// <summary>Every item of a point lies within this distance of the point's center.</summary>
     public const float ClusterRadius = 3f;
     /// <summary>Items closer than this would overlap on the floor.</summary>
@@ -68,7 +69,19 @@ public sealed class StageSupplies
             return _stage1;
         }
     }
-    public static void Reload() => _stage1 = null;
+    private static StageSupplies? _stage2;
+    /// <summary>Scenario Stage 2 (decisions.md L-14).</summary>
+    public static StageSupplies Stage2
+    {
+        get
+        {
+            if (_stage2 != null) return _stage2;
+            _stage2 = FromText(FileAccess.FileExists(Stage2Path) ? FileAccess.GetFileAsString(Stage2Path) : "", "stage2_supplies.json");
+            foreach (var error in _stage2.Errors) GD.PushError("[supplies] " + error);
+            return _stage2;
+        }
+    }
+    public static void Reload() { _stage1 = null; _stage2 = null; }
 
     public IEnumerable<SupplyItem> ItemsOf(params SupplyKind[] kinds) => Points.Where(p => kinds.Contains(p.Kind)).SelectMany(p => p.Items);
 

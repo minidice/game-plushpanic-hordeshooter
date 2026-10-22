@@ -1,0 +1,116 @@
+{
+  "revision": 1,
+  "contract": "plushpanic_outdoor_v1",
+  "date": "2026-10-22",
+  "units": "metres",
+  "up_axis": "+Y",
+  "status": "stage transition art; not integrated or render-reviewed",
+  "assets": [
+    {
+      "id": "floor_hatch",
+      "name": "바닥 사다리 해치",
+      "category": "전환 소품",
+      "note": "실내 출구. 상호작용과 바닥 충돌은 레벨 소유.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [
+        "Occlude_Lid"
+      ],
+      "dimensions_m": [
+        1.5,
+        1.243,
+        1.623
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 1759,
+      "file": "floor_hatch.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (미검수)"
+    },
+    {
+      "id": "bunker_hatch",
+      "name": "야외 벙커 해치",
+      "category": "전환 소품",
+      "note": "도착 랜드마크. 모래주머니와 계단은 시각용.",
+      "collision": {
+        "kind": "cylinder",
+        "radius": 1.05,
+        "height": 0.45,
+        "center": [
+          0.0,
+          0.225,
+          -0.006624
+        ]
+      },
+      "occlusion_parts": [
+        "Occlude_Lid"
+      ],
+      "dimensions_m": [
+        2.922,
+        1.751,
+        2.927
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 5380,
+      "file": "bunker_hatch.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (미검수)"
+    },
+    {
+      "id": "concrete_barrier",
+      "name": "낮은 콘크리트 방벽",
+      "category": "소품",
+      "note": "저지 단면과 하부 인양 홈. 추천 충돌은 시각 홈을 포함하지 않음.",
+      "collision": {
+        "kind": "box",
+        "size": [
+          2.0,
+          0.8,
+          0.5
+        ],
+        "center": [
+          0.0,
+          0.4,
+          0.0
+        ]
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        2.0,
+        0.8,
+        0.6
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 552,
+      "file": "concrete_barrier.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (미검수)"
+    },
+    {
+      "id": "warning_sign",
+      "name": "삼각 경고 표지",
+      "category": "소품",
+      "note": "카메라 쪽으로 읽히는 기하학 느낌표. 판은 뒤로 15도 기울임.",
+      "collision": {
+        "kind": "cylinder",
+        "radius": 0.12,
+        "height": 1.4,
+        "center": [
+          0.0,
+          0.7,
+          0.0
+        ]
+      },
+      "occlusion_parts": [
+        "Occlude_Sign"
+      ],
+      "dimensions_m": [
+        0.727,
+        1.717,
+        0.35
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 968,
+      "file": "warning_sign.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (미검수)"
+    }
+  ]
+}

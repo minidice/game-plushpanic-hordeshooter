@@ -18,20 +18,26 @@ public sealed class StageOneLayout : StageMap
 
     /// <summary>Outpost and Onslaught start in the middle of the warehouse, between its two doorways.</summary>
     public static readonly Vector3 ModeStart = new(66, 0, 1.6f);
-    public float CrescendoSeconds { get; set; } = 50f;
-    public Door StartDoor { get; private set; } = null!;
-    public Door Shutter { get; private set; } = null!;
-    public Door SafehouseDoor { get; private set; } = null!;
-    public Interactable ShutterPanel { get; private set; } = null!;
-    public Interactable StartDoorSwitch { get; private set; } = null!;
-    public Interactable SafehouseSwitch { get; private set; } = null!;
+    private Door _startDoor = null!, _shutter = null!, _safehouseDoor = null!;
+    private Interactable _shutterPanel = null!, _startDoorSwitch = null!, _safehouseSwitch = null!, _exit = null!;
+    public override Door StartDoor => _startDoor;
+    public override Door Shutter => _shutter;
+    public override Door SafehouseDoor => _safehouseDoor;
+    public override Interactable ShutterPanel => _shutterPanel;
+    public override Interactable StartDoorSwitch => _startDoorSwitch;
+    public override Interactable SafehouseSwitch => _safehouseSwitch;
+    /// <summary>The floor hatch in the safehouse: down the ladder to Stage 2 (decisions.md L-14).</summary>
+    public override Interactable StageExit => _exit;
+    public override int StageNumber => Mode == GameMode.Scenario ? 1 : 0;
+    public override int NextStage => Mode == GameMode.Scenario ? 2 : 0;
     public AlarmCar AlarmCar { get; private set; } = null!;
+    /// <summary>Where the exit hatch sits in the safehouse.</summary>
+    public static readonly Vector3 ExitHatch = new(124.2f, 0, 1.4f);
 
     private static readonly Rect2 SafehouseRect = new(116.4f, -3.8f, 9.4f, 7.6f);
-    public bool InSafehouse(Vector3 p) => SafehouseRect.HasPoint(new Vector2(p.X, p.Z));
+    public override bool InSafehouse(Vector3 p) => SafehouseRect.HasPoint(new Vector2(p.X, p.Z));
     public Vector3 SafehouseCenter => new(SafehouseRect.GetCenter().X, 0, SafehouseRect.GetCenter().Y);
-    /// <summary>Inside, or close enough to the doorway to be shoved in when the door slams.</summary>
-    public bool NearSafehouse(Vector3 p) => SafehouseRect.Grow(.6f).HasPoint(new Vector2(p.X, p.Z));
+    public override bool NearSafehouse(Vector3 p) => SafehouseRect.Grow(.6f).HasPoint(new Vector2(p.X, p.Z));
 
     public override Rect2 Area => new(-2, -12, 130, 24);
     public override string TitleKey => "ui_hud_stage";
@@ -72,6 +78,7 @@ public sealed class StageOneLayout : StageMap
         ShutterPanel.Enabled = false;
         StartDoorSwitch.Enabled = false;
         SafehouseSwitch.Enabled = false;
+        StageExit.Enabled = false;
         if (Mode == GameMode.Survival)
         {
             Weapon(new Vector3(66.5f, 0, -1.2f), "m4");
@@ -107,8 +114,8 @@ public sealed class StageOneLayout : StageMap
         Wall(-.4f, 0, -4.4f, 4.4f, 2.4f, "56604f");
         Wall(10, 10.4f, -6, -1.3f, 2.6f, "56604f");
         Wall(10, 10.4f, 1.3f, 6, 2.6f, "56604f");
-        StartDoor = Door.Create(_stage, new Vector3(10.2f, 0, 0), new Vector3(.3f, 2.4f, 2.6f), new Color("4f6b4a"), new Vector3(0, 0, 2.5f));
-        StartDoorSwitch = Use(new Vector3(9.2f, 0, 0), "ui_use_open_door", _stage.LeaveSafeRoom);
+        _startDoor = Door.Create(_stage, new Vector3(10.2f, 0, 0), new Vector3(.3f, 2.4f, 2.6f), new Color("4f6b4a"), new Vector3(0, 0, 2.5f));
+        _startDoorSwitch = Use(new Vector3(9.2f, 0, 0), "ui_use_open_door", _stage.LeaveSafeRoom);
 
         Solid(new Vector3(3, .45f, -3.2f), new Vector3(2.4f, .9f, 1f), "6b5843");
         Lamp(new Vector3(2.9f, 2.85f, -3.72f), "ffd6a0", 3.8f, 8.5f, false);
@@ -157,8 +164,8 @@ public sealed class StageOneLayout : StageMap
         Wall(52, 84, 10, 10.4f, LowWall, "5e5a50");
         Wall(84, 84.4f, -10.4f, -3, 3.8f, "5e5a50");
         Wall(84, 84.4f, 3, 10.4f, 3.8f, "5e5a50");
-        Shutter = Door.Create(_stage, new Vector3(84.2f, 0, 0), new Vector3(.4f, 3.2f, 6f), new Color("6f7468"), new Vector3(0, 3.1f, 0));
-        Shutter.OpenSeconds = 1.2f;
+        _shutter = Door.Create(_stage, new Vector3(84.2f, 0, 0), new Vector3(.4f, 3.2f, 6f), new Color("6f7468"), new Vector3(0, 3.1f, 0));
+        _shutter.OpenSeconds = 1.2f;
 
         // Survivor wants an open hall to kite the swarm in; the other modes keep the shelves.
         if (Mode != GameMode.Survivor)
@@ -185,7 +192,7 @@ public sealed class StageOneLayout : StageMap
         // The crescendo trigger.
         var panel = Solid(new Vector3(83.4f, 1.1f, -6.2f), new Vector3(.6f, 1.4f, 1.2f), "3a4148");
         Mat.Box(panel, new Vector3(-.31f, .2f, 0), new Vector3(.02f, .3f, .3f), Mat.Glow(new Color("ff3b30"), 3));
-        ShutterPanel = Use(new Vector3(82.4f, 0, -6.2f), "ui_use_shutter", _stage.StartCrescendo);
+        _shutterPanel = Use(new Vector3(82.4f, 0, -6.2f), "ui_use_shutter", _stage.StartCrescendo);
         var alarm = Lamp(new Vector3(83.72f, 3.15f, -6.2f), "ff5040", 1.8f, 8, false);
         alarm.RotationDegrees = new Vector3(0, -90, 0);
         alarm.SetMeta("alarm", true);
@@ -224,9 +231,15 @@ public sealed class StageOneLayout : StageMap
         Wall(116, 126, -4.4f, -4, TallWall, "4e5f4b");
         Wall(116, 126, 4, 4.4f, LowWall, "4e5f4b");
         Wall(126, 126.4f, -4.4f, 4.4f, 2.6f, "4e5f4b");
-        SafehouseDoor = Door.Create(_stage, new Vector3(116.2f, 0, 0), new Vector3(.3f, 2.4f, 2.6f), new Color("4f6b4a"), new Vector3(0, 0, 2.5f), open: true);
-        SafehouseSwitch = Use(new Vector3(117.4f, 0, 0), "ui_use_close_safehouse", () => _stage.TryCloseSafehouse());
-        SafehouseSwitch.Enabled = false;
+        _safehouseDoor = Door.Create(_stage, new Vector3(116.2f, 0, 0), new Vector3(.3f, 2.4f, 2.6f), new Color("4f6b4a"), new Vector3(0, 0, 2.5f), open: true);
+        _safehouseSwitch = Use(new Vector3(117.4f, 0, 0), "ui_use_close_safehouse", () => _stage.TryCloseSafehouse());
+        _safehouseSwitch.Enabled = false;
+        // Shut the safehouse and the hatch opens: hold to climb down to Stage 2 (reference clip: hold, then the iris).
+        Prop("floor_hatch", ExitHatch, solid: false);
+        _exit = Use(ExitHatch, "ui_use_next_stage", () => _stage.TakeStageExit());
+        _exit.HoldSeconds = 1.2f;
+        _exit.Radius = 1.6f;
+        _exit.Enabled = false;
         Lamp(new Vector3(121, 2.85f, -3.72f), "b5e6c3", 3.6f, 9, false);
         FloorText(new Vector3(121, 0, 2), "ui_floor_safehouse", "c8ffd0");
     }

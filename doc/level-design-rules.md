@@ -28,7 +28,7 @@
 - [ ] 탄약·회복 위치가 진행 흐름을 지나치게 역행시키지 않는지 확인 (보급 지점 데이터와 예산은 `SupplyCheck`, 전후 렌더는 `SupplyCapture`. 카메라가 −Z를 보므로 키 큰 소품의 −Z 쪽에 둔 물자는 가려짐)
 - [ ] 선택형 탐색과 전투용 후퇴 공간 확보
 
-구현: `game/scripts/World/CameraRig.cs`, `StageOneLayout.cs`. 아이템 배치 데이터: `game/content/data/stages/stage1_supplies.json`(L-12), 몬스터 배치·등장 지점: `stage1_encounters.json`(L-7). 관련 검사: `game/tests/CombatPacingCheck.tscn`. 전체 기능 현황은 [기능 체크리스트](feature-checklist.md).
+구현: `game/scripts/World/CameraRig.cs`, `StageOneLayout.cs`, Stage 2는 `StageTwoMap.cs`(아래). 아이템 배치 데이터: `game/content/data/stages/stage1_supplies.json`(L-12), 몬스터 배치·등장 지점: `stage1_encounters.json`(L-7). 관련 검사: `game/tests/CombatPacingCheck.tscn`. 전체 기능 현황은 [기능 체크리스트](feature-checklist.md).
 
 ## 맵 인터페이스 (2026-10-21 구현, L-13)
 
@@ -47,6 +47,25 @@
 - 어느 맵을 쓸지는 `StageMap.Create(mode)`가 정한다. 난전은 **들판**(`OpenFieldMap`, 2026-10-21), 나머지는 Stage 1.
 - **들판**: 걸을 수 있는 땅 88m × 88m(흐름장 92m), 가장자리 산울타리(카메라 쪽은 낮게). 나무(72%)·돌기둥(28%, 일부는 부러진 짧은 기둥)을 서로 6.5m 이상 떨어지게 최대 70개, 시작점 9m 안은 비움. 드럼통 10개, 시작점 위 조명과 20m 간격 가로등, 구급상자 4개(탄약 더미 없음). 위치만 무작위다.
 - **씨앗(`StageMap.Seed`)**: 혼자 하면 판마다 새 씨앗, 방에서는 방장이 시작할 때 정한 씨앗을 모두가 받아 같은 들판을 짓는다(`GameSession.MapSeed`, 로비 `MatchStarted`, 프로토콜 4). 방 없이 명령줄로 접속하면 1.
-- 시나리오의 진행(세이프룸 문·셔터·크레센도·세이프하우스)은 아직 Stage 1의 부품(`Stage.Layout`)을 직접 쓴다. 다른 맵에서 시나리오를 하려면 그 부분도 맵 쪽으로 옮겨야 한다(I-79).
+- **시나리오 진행 부품도 맵이 제공한다(2026-10-22, I-79 해결)**: `StageNumber`·`NextStage`·`ScenarioStart`(첫 목표), `StartDoor`·`StartDoorSwitch`, `Shutter`·`ShutterPanel`·`CrescendoSeconds`(없으면 크레센도 없음), `SafehouseDoor`·`SafehouseSwitch`·`InSafehouse`·`NearSafehouse`, `StageExit`(다음 구역 해치). 맵의 시점은 `View`(`CameraView`), 하늘·주변광·안개·주광은 `Light`. `Stage.Layout`은 Stage 1 전용 부품(경보 차 등)을 쓰는 검사용으로만 남는다.
+- 맵 블록에 키트 모델 배치가 추가됐다: `Prop(id, 위치, 회전, 배율, solid)`는 manifest의 추천 충돌(box/cylinder)로 몸·총알·흐름장을 막고(돌린 상자는 흐름장에서 축 정렬 외접 상자), `Scatter(id, 변환들)`는 충돌 없는 MultiMesh(바닥 타일·배경 숲). `Floor(..., draw: false)`는 바닥 판정만 만들고 그림은 맵이 깐다.
+
+## Stage 2 숲속 벙커길 (2026-10-22, L-14)
+
+Stage 1 세이프하우스 바닥 해치로 내려가 도착하는 야외 스테이지. 야외 키트(A-22)와 전환 소품으로 지었다. 수치는 모두 `[임시]`이며 플레이 측정 전이다.
+
+| 구역 | x | 내용 |
+|---|---|---|
+| 벙커 공터 | −2 ~ 20 (z ±9) | 도착 벙커 해치(6, −1.6)와 시작 보급, 경고 표지·콘크리트 방벽·모래주머니·컨테이너 2·드럼통·가로등. 카메라 쪽 철망 울타리, 먼 쪽·서쪽 바위 |
+| 숲길 | 20 ~ 60.3 (z ±7) | 흙길(폭 4m 타일), 바위·통나무·그루터기 엄폐, 먼 쪽 이끼 절벽 줄과 수관 나무(길 위로 수관이 오지 않게 먼 쪽만), 카메라 쪽 관목·통나무 낮은 가장자리, 가로등 2 |
+| 개울 | 60.3 ~ 67.7 | 개울(둑 윗면 = 지면, 수면 −0.38m)이 화면 밖까지 이어짐. 건널 곳은 1.5배 목재 다리 하나(폭 3m, L-9 병목) |
+| 컨테이너 야적장 | 67.7 ~ 100 (z ±10) | 아스팔트 길, 콘크리트 방벽 지그재그 검문소, 컨테이너 3+열린 컨테이너, 창고, 나무 상자, 주요 보급(창고 앞), 먼 쪽 골함석 울타리·카메라 쪽 철망 |
+| 세이프하우스 | 100 ~ 112 (z ±4) | Stage 1과 같은 구조(문·스위치), 마지막 세이프하우스 |
+
+- **진행 방향**: 주축 +X. `StageTransitionCheck`가 도착점 → 세이프하우스 흐름장 경로를 따라가며 화면 기준 각도를 재서 **우측 상단 비율 ≥ 70%**를 확인한다(2026-10-22 측정 99%). Stage 1에는 같은 자동 측정이 아직 없다(I-25).
+- **시점**: 수직 41° · 원근 시야각 38° · 수평 −30°(L-2와 같은 방향). 화면 높이에 보이는 지면 폭은 기본 19m · 확대(Tab) 11.5m로 직교와 같은 의미. 먼 지면만 흐리게 하는 거리 안개(카메라 거리 + 6m부터 + 46m까지).
+- **가림**: 카메라가 +Z(약간 −X)에서 −Z를 보므로 높은 바위·절벽·숲은 먼 쪽(−Z), 카메라 쪽은 낮은 관목·통나무와 비치는 철망. 카메라 쪽 나무는 걸을 수 있는 가장자리에서 5m 이상 떨어뜨렸다. 키트의 `Occlude_*` 옅게 하기는 아직 연결하지 않음(I-91).
+- **조우**: `content/data/stages/stage2_encounters.json`. 숲·야적장 미리 배치, 숨은 자리·절벽/울타리 위 등장, 도착 해치는 보호 구역(L-11, 8m).
+- **보급**: `content/data/stages/stage2_supplies.json`. 해치 옆 시작 보급(이월 장비 외 재도전용), 숲 선택 1·야적장 주요 1, 세이프하우스 도착 탄약.
 - 검사: `game/tests/MapCheck.tscn` — Stage 1이 그대로인지, 부품 없는 평지 검사 맵에서 난전·거점이 도는지(창 모드면 `output/map-*.png`).
 

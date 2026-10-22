@@ -201,6 +201,7 @@ void fragment() {
         _prompt.Text = player.IsRestrained ? Loc.Text(GameSession.DebugEscapeEnabled ? "restrained_cheat" : "restrained_rescue")
             : playing && stage.RevivePromptTarget is { } downed
             ? Loc.Format("fmt_use_revive", downed.DisplayLabel.Length > 0 ? downed.DisplayLabel : Loc.Text(downed.Definition.DisplayName), Mathf.RoundToInt(downed.ReviveProgress * 100))
+            : playing && stage.FocusedInteractable is { HoldSeconds: > 0 } hold ? Loc.Format("fmt_use_hold", hold.Prompt, Mathf.RoundToInt(stage.HoldProgress * 100))
             : playing && stage.FocusedInteractable is { } use ? $"[E]  {use.Prompt}" : "";
         _help.Visible = stage.Objective == Objective.LeaveSafeRoom || stage.Elapsed < 20;
 

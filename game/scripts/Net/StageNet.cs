@@ -463,7 +463,7 @@ public partial class StageNet : Node
             foreach (var e in snap.Enemies)
                 if (_enemies.TryGetValue(e.Id, out var enemy) && IsInstanceValid(enemy) && !enemy.IsDead)
                     enemy.Track!.Push(snap.Time, e.Position, e.Facing, (int)e.Flags);
-        if (_stage.Objective == Objective.HoldOut) _stage.Layout.Shutter.SetProgress(snap.Shutter);
+        if (_stage.Objective == Objective.HoldOut) _stage.Map.Shutter?.SetProgress(snap.Shutter);
         _stage.ModeRules?.ApplyNetBar(snap.Shutter);
     }
 

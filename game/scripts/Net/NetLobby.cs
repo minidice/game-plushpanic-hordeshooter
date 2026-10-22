@@ -157,6 +157,7 @@ public partial class NetLobby : Node
         GameSession.Mode = Mode;
         // One seed for the whole room: a scattered map comes out the same on every PC.
         GameSession.MapSeed = (int)(GD.Randi() % 1000000) + 1;
+        GameSession.StartCampaign();
         EnterMatch(this);
         return true;
     }
@@ -279,6 +280,7 @@ public partial class NetLobby : Node
         Mode = (GameMode)mode;
         GameSession.Mode = Mode;
         GameSession.MapSeed = seed;
+        GameSession.StartCampaign();
         Changed?.Invoke();
         EnterMatch(this);
     }

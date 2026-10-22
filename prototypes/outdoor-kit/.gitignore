@@ -1,0 +1,7 @@
+.godot/
+output/
+delivery/
+__pycache__/
+*.blend1
+*.import
+gallery/images/*.png

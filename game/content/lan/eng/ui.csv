@@ -271,3 +271,12 @@ sidekick_cadet,Goose Cadet
 sidekick_scout,Duck Scout
 sidekick_engineer,Raccoon Engineer
 sidekick_guard,Red Panda Guard
+# Scenario Stage 1 → 2 transition (decisions.md L-14)
+ui_hud_stage2,STAGE 2 · Forest Bunker Road
+ui_use_next_stage,Climb down the hatch (next area)
+fmt_use_hold,[Hold E]  {0}  {1}%
+ui_objective_take_exit,Take the safehouse hatch to the next area  [Hold E]
+msg_stage_exit_open,The safehouse floor hatch is open — on to the next area
+msg_stage_route_start,Out of the bunker — follow the forest road to the safehouse
+ui_transition_stage2,Forest Bunker Road
+ui_transition_stage_number,STAGE {0}

@@ -2,7 +2,22 @@ using Godot;
 
 namespace HordeShooter;
 
-/// <summary>55° orthographic quarter-view camera that follows the player, leans toward the aim, and shakes.</summary>
+/// <summary>
+/// How a map is seen (decisions.md L-2, L-14): angles, the default and Tab-close view heights (metres of ground across the
+/// screen height), and orthographic or perspective with its field of view.
+/// </summary>
+public readonly record struct CameraView(float Pitch, float Yaw, float WideSize, float CloseSize, bool Perspective, float Fov)
+{
+    /// <summary>Stage 1 (L-2): 55° down, −30° around, orthographic.</summary>
+    public static readonly CameraView Indoor = new(CameraRig.Pitch, CameraRig.Yaw, CameraRig.WideSize, CameraRig.CloseSize, false, 0);
+    /// <summary>
+    /// Outdoor stages (L-14, the reference clip): lower and with depth, so the near trees loom and the far ground fades into
+    /// the haze. The yaw stays −30° so the +X route still runs to the screen's upper right (L-1).
+    /// </summary>
+    public static readonly CameraView Outdoor = new(41f, CameraRig.Yaw, 19f, 11.5f, true, 38f);
+}
+
+/// <summary>Quarter-view camera that follows the player, leans toward the aim, and shakes. Ortho or perspective per map.</summary>
 public partial class CameraRig : Camera3D
 {
     public const float Pitch = 55f;
@@ -11,23 +26,62 @@ public partial class CameraRig : Camera3D
     public const float Distance = 34f;
     public const float WideSize = 17f;
     public const float CloseSize = 10f;
+    /// <summary>An orthographic view eases into a perspective one from this narrow field of view (nearly flat).</summary>
+    private const float FlatFov = 16f;
 
     public Node3D? Target { get; set; }
     public Player? Player { get; set; }
     public bool Close { get; set; }
+    /// <summary>The map's view (set before the rig enters the tree; <see cref="Arrive"/> eases into it).</summary>
+    public CameraView View { get; set; } = CameraView.Indoor;
+    /// <summary>Depth fog that follows the camera's distance, so only the far ground is hazed (outdoor maps).</summary>
+    public Godot.Environment? Haze { get; set; }
+    /// <summary>Metres from the focus to the camera now.</summary>
+    public float FocusDistance { get; private set; } = Distance;
+    /// <summary>Angles now (they ease from the last stage's view after a stage change).</summary>
+    public float CurrentPitch => _pitch;
+    public bool Arriving => _blend < 1;
 
     private Vector3 _focus;
     private float _trauma;
     private readonly RandomNumberGenerator _rng = new();
+    private float _pitch = Pitch, _yaw = Yaw, _fov = FlatFov, _size = WideSize;
+    private CameraView _from;
+    private float _blend = 1, _blendSeconds = 1;
 
     public override void _Ready()
     {
-        Projection = ProjectionType.Orthogonal;
-        Size = WideSize;
+        Projection = View.Perspective ? ProjectionType.Perspective : ProjectionType.Orthogonal;
         Far = 120;
         Current = true;
+        if (_blend >= 1) Settle(View);
         if (Target != null) _focus = Target.GlobalPosition;
         Place(_focus, Vector3.Zero);
+    }
+
+    /// <summary>
+    /// Start in <paramref name="from"/> (the stage just left) and ease into <see cref="View"/> over
+    /// <paramref name="seconds"/>: the reference clip's view change from the steep indoor shot to the lower outdoor one.
+    /// </summary>
+    public void Arrive(CameraView from, float seconds)
+    {
+        _from = from;
+        _blendSeconds = Mathf.Max(.01f, seconds);
+        _blend = 0;
+        _pitch = from.Pitch;
+        _yaw = from.Yaw;
+        _fov = from.Perspective ? from.Fov : FlatFov;
+        _size = from.CloseSize;
+        if (!View.Perspective) Size = _size;
+    }
+
+    private void Settle(CameraView view)
+    {
+        _pitch = view.Pitch;
+        _yaw = view.Yaw;
+        _fov = view.Perspective ? view.Fov : FlatFov;
+        _size = view.WideSize;
+        if (!view.Perspective) Size = view.WideSize;
     }
 
     public void AddShake(float amount) => _trauma = Mathf.Min(1, _trauma + amount);
@@ -58,7 +112,20 @@ public partial class CameraRig : Camera3D
             }
         }
         _focus = _focus.Lerp(goal, 1 - Mathf.Exp(-dt * 5f));
-        Size = Mathf.Lerp(Size, (Close ? CloseSize : WideSize) * AimZoom, 1 - Mathf.Exp(-dt * 8f));
+        float wanted = (Close ? View.CloseSize : View.WideSize) * AimZoom;
+        if (_blend < 1)
+        {
+            // Arrival: angles, field of view and zoom ease together from the last stage's view (smoothstep).
+            _blend = Mathf.Min(1, _blend + dt / _blendSeconds);
+            float t = _blend * _blend * (3 - 2 * _blend);
+            _pitch = Mathf.Lerp(_from.Pitch, View.Pitch, t);
+            _yaw = Mathf.Lerp(_from.Yaw, View.Yaw, t);
+            _fov = Mathf.Lerp(_from.Perspective ? _from.Fov : FlatFov, View.Perspective ? View.Fov : FlatFov, t);
+            _size = Mathf.Lerp(_from.CloseSize, wanted, t);
+            if (!View.Perspective) Size = _size;
+        }
+        else if (View.Perspective) _size = Mathf.Lerp(_size, wanted, 1 - Mathf.Exp(-dt * 8f));
+        else Size = Mathf.Lerp(Size, wanted, 1 - Mathf.Exp(-dt * 8f));
 
         _trauma = Mathf.Max(0, _trauma - dt * 1.6f);
         float shake = _trauma * _trauma;
@@ -71,11 +138,23 @@ public partial class CameraRig : Camera3D
 
     private void Place(Vector3 focus, Vector3 shake)
     {
-        float a = Mathf.DegToRad(Pitch);
-        float yaw = Mathf.DegToRad(Yaw);
-        Position = focus + new Vector3(Mathf.Sin(yaw)*Mathf.Cos(a), Mathf.Sin(a), Mathf.Cos(yaw)*Mathf.Cos(a))*Distance;
+        float a = Mathf.DegToRad(_pitch);
+        float yaw = Mathf.DegToRad(_yaw);
+        if (View.Perspective)
+        {
+            // The same metres of ground across the screen height as an orthographic view of that size.
+            Fov = _fov;
+            FocusDistance = _size * .5f / Mathf.Tan(Mathf.DegToRad(_fov) * .5f);
+        }
+        else FocusDistance = Distance;
+        Position = focus + new Vector3(Mathf.Sin(yaw)*Mathf.Cos(a), Mathf.Sin(a), Mathf.Cos(yaw)*Mathf.Cos(a))*FocusDistance;
         LookAt(focus, Vector3.Up);
         Position += GlobalTransform.Basis * shake;
+        if (Haze != null)
+        {
+            Haze.FogDepthBegin = FocusDistance + 6f;
+            Haze.FogDepthEnd = FocusDistance + 46f;
+        }
     }
 
     /// <summary>Screen-relative keyboard directions on the ground, independent of camera pitch.</summary>

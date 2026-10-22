@@ -1,0 +1,271 @@
+using Godot;
+using System.Collections.Generic;
+
+namespace HordeShooter;
+
+/// <summary>
+/// Scenario Stage 2 "Forest Bunker Road" (decisions.md L-14), the outdoor stage after Stage 1's safehouse hatch. Built
+/// from the outdoor kit (game/assets/outdoor-kit, prototypes/outdoor-kit/doc/integration-guide.md) and the transition
+/// props, after the user's reference clip: the survivors climb out of a sandbagged bunker hatch into a fenced clearing
+/// with rocks, pines, a leaning container, barrels and barriers, under a lower camera with depth and haze.
+/// The route runs along +X like Stage 1 (L-1):
+///   bunker clearing (x −2–20) → forest road (20–60.3) → stream bridge (60.3–67.7) → container yard (67.7–100) → safehouse (100–112).
+/// Walls are invisible boxes along the zone edges; the kit models dress them. The far side (−Z) is rock and forest, the
+/// camera side (+Z) a low edge of shrubs and wire fence, with trees kept back so they never cover the road.
+/// </summary>
+public sealed class StageTwoMap : StageMap
+{
+    public const float StreamX0 = 60.3f, StreamX1 = 67.7f;
+    /// <summary>The bunker hatch the survivors climb out of; nothing spawns near it (L-11).</summary>
+    public static readonly Vector3 ArrivalHatch = new(6, 0, -1.6f);
+
+    private Door _safehouseDoor = null!;
+    private Interactable _safehouseSwitch = null!;
+    private static readonly Rect2 SafehouseRect = new(100.4f, -3.8f, 11.4f, 7.6f);
+
+    public override Rect2 Area => new(-4, -12, 118, 24);
+    public override string TitleKey => "ui_hud_stage2";
+    public override bool HasRoute => true;
+    public override Vector3 RouteGoal => new(SafehouseRect.GetCenter().X, 0, SafehouseRect.GetCenter().Y);
+    public override EncounterSet? Encounters => SpawnDatabase.Current.Stage2;
+    public override IReadOnlyList<Door> Doors => new[] { _safehouseDoor };
+    public override int StageNumber => 2;
+    /// <summary>Climbing out of the hatch puts the survivors on the route at once.</summary>
+    public override Objective ScenarioStart => Objective.ReachSafehouse;
+    public override Door SafehouseDoor => _safehouseDoor;
+    public override Interactable SafehouseSwitch => _safehouseSwitch;
+    public override bool InSafehouse(Vector3 p) => SafehouseRect.HasPoint(new Vector2(p.X, p.Z));
+    public override bool NearSafehouse(Vector3 p) => SafehouseRect.Grow(.6f).HasPoint(new Vector2(p.X, p.Z));
+    public override CameraView View => CameraView.Outdoor;
+
+    /// <summary>Rainy dusk: grey-blue sky, warm low sun, and depth haze that only reaches the far ground.</summary>
+    public override void Light(Godot.Environment env, DirectionalLight3D key)
+    {
+        env.BackgroundColor = new Color("5d6b78");
+        env.AmbientLightColor = new Color("b9c6d2");
+        env.AmbientLightEnergy = .62f;
+        env.TonemapExposure = 1.05f;
+        env.FogEnabled = true;
+        env.FogMode = Godot.Environment.FogModeEnum.Depth;
+        env.FogLightColor = new Color("7d8b97");
+        env.FogDensity = .85f;
+        env.FogDepthCurve = 1.4f;
+        env.FogSkyAffect = 1;
+        key.Name = "Sun";
+        key.RotationDegrees = new Vector3(-36, -48, 0);
+        key.LightColor = new Color("ffd8a6");
+        key.LightEnergy = 1.05f;
+    }
+
+    protected override bool IndoorFloor(float x0) => x0 >= 100;
+
+    protected override void BuildMap()
+    {
+        PlayerStart = ArrivalHatch + new Vector3(.6f, 0, 3.1f);
+        BuildClearing();
+        BuildForest();
+        BuildStream();
+        BuildYard();
+        BuildSafehouse();
+        LayGround();
+        Backdrop();
+        if (Mode == GameMode.Scenario) PlaceSupplies(StageSupplies.Stage2);
+    }
+
+    // ---------- zones ----------
+
+    private void BuildClearing()
+    {
+        Floor(-2, 20, -9, 9, "", draw: false);
+        Wall(-2.4f, -2, -9.4f, 9.4f, 3f, "", drawWall: false);
+        Wall(-2.4f, 20, -9.4f, -9, 3.4f, "", drawWall: false);
+        Wall(-2.4f, 20, 9, 9.4f, 1f, "", drawWall: false);
+        // The step from the clearing's width to the road's.
+        Wall(20, 20.4f, -9.4f, -7, 3.4f, "", drawWall: false);
+        Wall(20, 20.4f, 7, 9.4f, 1f, "", drawWall: false);
+
+        // The arrival: the hatch, a sign and barriers around it (reference clip 14–21 s).
+        Prop("bunker_hatch", ArrivalHatch);
+        Prop("warning_sign", new Vector3(2.6f, 0, -4.2f), 12, 1.35f);
+        Prop("concrete_barrier", new Vector3(1.8f, 0, -6.6f), 8);
+        Prop("concrete_barrier", new Vector3(9.6f, 0, -6.2f), -14);
+        Prop("concrete_barrier", new Vector3(12.8f, 0, 4.4f), 78);
+        Prop("sandbags", new Vector3(10.2f, 0, -2.9f), 64);
+        Prop("container_closed", new Vector3(16.2f, 0, -6.4f), 6);
+        Prop("container_closed", new Vector3(18.4f, 0, 5.6f), 74);
+        Prop("wooden_crate", new Vector3(13.8f, 0, -3.9f), 18);
+        Prop("pallet", new Vector3(12.4f, 0, -7.9f), 4, 1, solid: false);
+        foreach (var at in new[] { new Vector3(4.6f, 0, -7.9f), new Vector3(5.4f, 0, -8.2f), new Vector3(5.1f, 0, -7.2f) })
+            Prop("barrel", at, at.X * 37);
+        Barrel(new Vector3(11.4f, 0, -7.2f));
+        // Camera-side wire fence: see-through, it frames the clearing like the clip's foreground fence.
+        for (float x = 0; x < 19; x += 3.1f) Prop("wire_fence", new Vector3(x + 1.5f, 0, 9.5f), 0, 1, solid: false);
+        Prop("streetlamp", new Vector3(10.2f, 0, -8.4f));
+        Lamp(new Vector3(10.2f, 3.7f, -7.7f), "ffcf8a", 3.4f, 12, false);
+        Lamp(new Vector3(6.4f, 4.4f, 1.4f), "ffe2b0", 2.4f, 10, false);
+    }
+
+    private void BuildForest()
+    {
+        Floor(20, StreamX0, -7, 7, "", draw: false);
+        Wall(20, StreamX0, -7.4f, -7, 3.4f, "", drawWall: false);
+        Wall(20, StreamX0, 7, 7.4f, 1f, "", drawWall: false);
+
+        // Cover along the road; the trees with crowns stand on the far side only (a crown over the road hides enemies, I-80).
+        Prop("boulder", new Vector3(27.5f, 0, -3.6f), 28);
+        Prop("rock_cluster", new Vector3(34.5f, 0, 3.9f), -20);
+        Prop("fallen_log", new Vector3(40.5f, 0, -1.9f), 22);
+        Prop("stump", new Vector3(45.5f, 0, 4.5f));
+        Prop("boulder", new Vector3(52, 0, -4.4f), -40);
+        Prop("broadleaf", new Vector3(31, 0, -5.8f), 40);
+        Prop("round_oak", new Vector3(48.5f, 0, -5.9f), 10);
+        Prop("pine_tall", new Vector3(23.5f, 0, -6.1f), 70);
+        Prop("pine_small", new Vector3(57.4f, 0, -6f), 15);
+        Barrel(new Vector3(38, 0, 5.8f));
+        Barrel(new Vector3(54.5f, 0, -5.8f));
+        Prop("streetlamp", new Vector3(36, 0, -6.6f));
+        Lamp(new Vector3(36, 3.7f, -5.9f), "ffcf8a", 3.2f, 12, false);
+        Prop("streetlamp", new Vector3(50.5f, 0, -6.6f));
+        Lamp(new Vector3(50.5f, 3.7f, -5.9f), "ffcf8a", 3f, 11, true);
+
+        // Rock wall on the far side and a low edge of shrubs and logs on the camera side.
+        for (float x = 21; x < StreamX0; x += 3.7f) Prop("cliff_segment", new Vector3(x, 0, -8.4f - (x % 2) * .3f), (x * 17) % 24 - 12, 1, solid: false);
+        for (float x = 22; x < StreamX0 - 1; x += 4.6f)
+        {
+            Prop(((int)x % 3) switch { 0 => "shrub", 1 => "fallen_log", _ => "stump" }, new Vector3(x, 0, 8.2f), x * 23, 1, solid: false);
+            Prop("grass_patch", new Vector3(x + 2.1f, 0, 7.9f), x * 41, 1, solid: false);
+        }
+    }
+
+    private void BuildStream()
+    {
+        // The stream runs across the route; its bank tops sit at ground level, so the water lies 0.38 m down.
+        // It runs past both edges of the view, so its ends are never seen.
+        for (float z = -24; z <= 24; z += 8) Prop("stream_straight", new Vector3((StreamX0 + StreamX1) / 2, -.62f, z), 0, 1, solid: false);
+        // One crossing: the bridge, scaled so its deck takes a small group abreast (L-9 bottleneck 3–4 m).
+        Prop("timber_bridge", new Vector3((StreamX0 + StreamX1) / 2, -.375f * 1.5f, 0), 90, 1.5f, solid: false);
+        Floor(StreamX0, StreamX1, -1.5f, 1.5f, "", draw: false);
+        Wall(StreamX0, StreamX1, -1.9f, -1.5f, 1f, "", drawWall: false);
+        Wall(StreamX0, StreamX1, 1.5f, 1.9f, 1f, "", drawWall: false);
+        // The banks: nobody walks or falls into the water.
+        Wall(StreamX0 - .4f, StreamX0, -7, -1.5f, 1f, "", drawWall: false);
+        Wall(StreamX0 - .4f, StreamX0, 1.5f, 7, 1f, "", drawWall: false);
+        Wall(StreamX1, StreamX1 + .4f, -10, -1.5f, 1f, "", drawWall: false);
+        Wall(StreamX1, StreamX1 + .4f, 1.5f, 10, 1f, "", drawWall: false);
+        foreach (var (x, z) in new[] { (61.2f, -4.6f), (66.6f, 4.2f), (61f, 5.8f), (66.9f, -6.2f) }) Prop("reeds", new Vector3(x, 0, z), x * 13, 1, solid: false);
+        Prop("boulder", new Vector3(60.6f, 0, -9.2f), 60, .8f, solid: false);
+    }
+
+    private void BuildYard()
+    {
+        Floor(StreamX1, 100, -10, 10, "", draw: false);
+        Wall(StreamX1, 100, -10.4f, -10, 3f, "", drawWall: false);
+        Wall(StreamX1, 100, 10, 10.4f, 1f, "", drawWall: false);
+
+        // A checkpoint: barriers make a chicane, containers and a shed line the edges.
+        Prop("concrete_barrier", new Vector3(75.5f, 0, -3.6f), 0);
+        Prop("concrete_barrier", new Vector3(77.6f, 0, -3.6f), 0);
+        Prop("concrete_barrier", new Vector3(80.5f, 0, 3.2f), 0);
+        Prop("concrete_barrier", new Vector3(82.6f, 0, 3.2f), 0);
+        Prop("warning_sign", new Vector3(73.4f, 0, -5.4f), -8, 1.35f);
+        Prop("sandbags", new Vector3(87.5f, 0, -1.8f), 90);
+        Prop("container_closed", new Vector3(74.2f, 0, -7.6f), 0);
+        Prop("container_closed", new Vector3(86.5f, 0, 7.4f), 0);
+        Prop("container_closed", new Vector3(93.6f, 0, -6.8f), 90);
+        Prop("container_open", new Vector3(96.4f, 0, 7.6f), 180, 1, solid: false);
+        Solid(new Vector3(96.4f, 1.35f, 7.6f), new Vector3(6, 2.7f, 2.4f), "", drawCargo: false);
+        Prop("utility_shed", new Vector3(83.6f, 0, -7.9f), 0, 1, solid: false);
+        Solid(new Vector3(83.6f, 1.4f, -7.9f), new Vector3(3.5f, 2.8f, 3.1f), "", drawCargo: false);
+        Prop("wooden_crate", new Vector3(89.6f, 0, 4.2f), 12);
+        Prop("wooden_crate", new Vector3(90.5f, 0, 5.2f), -20);
+        Prop("pallet", new Vector3(79.2f, 0, 8.4f), 30, 1, solid: false);
+        Prop("bench", new Vector3(75.5f, 0, 9.1f), 180);
+        Boxes(new Vector3(88.5f, 0, -5.4f), 2);
+        Barrel(new Vector3(80, 0, -8.6f));
+        Barrel(new Vector3(94, 0, 8.6f));
+        foreach (var at in new[] { new Vector3(71.6f, 0, 8.8f), new Vector3(72.4f, 0, 9.1f) }) Prop("barrel", at, at.X * 29);
+
+        for (float x = StreamX1 + 1.6f; x < 99; x += 3.1f)
+        {
+            Prop("corrugated_fence", new Vector3(x, 0, -10.6f), 0, 1, solid: false);
+            Prop("wire_fence", new Vector3(x, 0, 10.6f), 0, 1, solid: false);
+        }
+        Prop("streetlamp", new Vector3(71.5f, 0, -9.4f));
+        Lamp(new Vector3(71.5f, 3.7f, -8.7f), "ffcf8a", 3.4f, 12, false);
+        Prop("streetlamp", new Vector3(91, 0, -9.4f));
+        Lamp(new Vector3(91, 3.7f, -8.7f), "ffcf8a", 3.2f, 12, true);
+        Lamp(new Vector3(98.4f, 2.7f, -3.2f), "9dffa8", 3.1f, 9, false);
+        FloorText(new Vector3(96, 0, 0), "ui_floor_safehouse_arrow", "9dffa8");
+    }
+
+    private void BuildSafehouse()
+    {
+        Floor(100, 112, -4, 4, "3f4a3d");
+        Wall(100, 100.4f, -10.4f, -1.3f, 2.6f, "4e5f4b");
+        Wall(100, 100.4f, 1.3f, 10.4f, 2.6f, "4e5f4b");
+        Wall(100, 112, -4.4f, -4, StageOneLayout.TallWall, "4e5f4b");
+        Wall(100, 112, 4, 4.4f, StageOneLayout.LowWall, "4e5f4b");
+        Wall(112, 112.4f, -4.4f, 4.4f, 2.6f, "4e5f4b");
+        _safehouseDoor = Door.Create(_stage, new Vector3(100.2f, 0, 0), new Vector3(.3f, 2.4f, 2.6f), new Color("4f6b4a"), new Vector3(0, 0, 2.5f), open: true);
+        _safehouseSwitch = Use(new Vector3(101.4f, 0, 0), "ui_use_close_safehouse", () => _stage.TryCloseSafehouse());
+        _safehouseSwitch.Enabled = false;
+        Lamp(new Vector3(106, 2.85f, -3.72f), "b5e6c3", 3.6f, 9, false);
+        FloorText(new Vector3(106, 0, 2), "ui_floor_safehouse", "c8ffd0");
+    }
+
+    // ---------- ground and backdrop (decoration only) ----------
+
+    /// <summary>4 m kit tiles over the whole view: dirt road through the clearing and forest, asphalt in the yard.</summary>
+    private void LayGround()
+    {
+        var tiles = new Dictionary<string, List<Transform3D>> { ["ground_grass"] = new(), ["path_dirt"] = new(), ["road_asphalt"] = new() };
+        for (float x = -14; x <= 126; x += 4)
+            for (float z = -28; z <= 24; z += 4)
+            {
+                // The stream's bed and the safehouse floor stay clear.
+                if (x > StreamX0 - 1 && x < StreamX1 + 1) continue;
+                if (x > 99 && x < 114 && z > -6 && z < 6) continue;
+                string id = Mathf.Abs(z) < 1 && x > 18 && x < 100 ? (x > StreamX1 ? "road_asphalt" : "path_dirt")
+                    : x > -2 && x < 18 && new Vector2(x - ArrivalHatch.X, z - ArrivalHatch.Z).Length() < 7 ? "path_dirt"
+                    : "ground_grass";
+                // Flat tiles are 0.16 m thick: sink them so their top is the floor.
+                tiles[id].Add(new Transform3D(Basis.Identity, new Vector3(x, -.16f, z)));
+            }
+        foreach (var (id, at) in tiles) Scatter(id, at);
+        // Soil just under the tiles fills the thin seams the 4 m grid leaves at the stream banks and the safehouse.
+        var soil = Mat.Solid("56693f", .95f);
+        Mat.Box(_stage, new Vector3((-16 + StreamX0) / 2, -.13f, -2), new Vector3(StreamX0 + 16, .2f, 56), soil);
+        Mat.Box(_stage, new Vector3((StreamX1 + 128) / 2, -.13f, -2), new Vector3(128 - StreamX1, .2f, 56), soil);
+    }
+
+    /// <summary>Forest behind the rock wall, and a few pines held back on the camera side like the clip's foreground.</summary>
+    private void Backdrop()
+    {
+        var rng = new RandomNumberGenerator { Seed = 22 };
+        var tall = new List<Transform3D>();
+        var small = new List<Transform3D>();
+        for (float x = -8; x < 122; x += 3.4f)
+        {
+            if (x > StreamX0 - 2 && x < StreamX1 + 2) continue;
+            for (int row = 0; row < 2; row++)
+            {
+                var at = new Vector3(x + rng.RandfRange(-1, 1), 0, -13 - row * 4.2f + rng.RandfRange(-1.2f, 1.2f));
+                var t = new Transform3D(new Basis(Vector3.Up, rng.RandfRange(0, Mathf.Tau)).Scaled(Vector3.One * rng.RandfRange(1, 1.5f)), at);
+                (rng.Randf() < .6f ? tall : small).Add(t);
+            }
+        }
+        // Camera side: short pines at least 5 m past the walkable edge, so a crown never covers anyone on the road.
+        for (float x = -6; x < 118; x += rng.RandfRange(5, 8))
+        {
+            if (x > StreamX0 - 2 && x < StreamX1 + 2) continue;
+            float edge = x < 20 ? 9.4f : x < 100 ? 10.4f : 4.4f;
+            small.Add(new Transform3D(new Basis(Vector3.Up, rng.RandfRange(0, Mathf.Tau)).Scaled(Vector3.One * rng.RandfRange(.85f, 1.1f)),
+                new Vector3(x, 0, edge + 5.2f + rng.RandfRange(0, 2.5f))));
+        }
+        Scatter("pine_tall", tall);
+        Scatter("pine_small", small);
+        // Rock wall at the clearing's far side and its west end.
+        for (float x = -1; x < 20; x += 3.8f) Prop("cliff_segment", new Vector3(x, 0, -10.6f), (x * 29) % 30 - 15, 1.1f, solid: false);
+        for (float z = -8; z < 9; z += 3.9f) Prop("rock_cluster", new Vector3(-4, 0, z), z * 31, 1.2f, solid: false);
+    }
+}

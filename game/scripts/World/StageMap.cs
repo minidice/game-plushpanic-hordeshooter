@@ -18,8 +18,16 @@ public abstract class StageMap
     private readonly List<(Vector3 center, Vector3 size)> _floors = new();
     private readonly List<(Vector3 center, Vector3 size)> _solids = new();
 
-    /// <summary>The map for a mode: Onslaught plays its open field, the others Stage 1 (doc/mode-weapon-direction.md 10장).</summary>
-    public static StageMap Create(GameMode mode) => mode == GameMode.Survivor ? new OpenFieldMap() : new StageOneLayout();
+    /// <summary>
+    /// The map for a mode: Onslaught plays its open field, the scenario the stage it has reached (Stage 2 after the
+    /// Stage 1 exit, decisions.md L-14), the others Stage 1 (doc/mode-weapon-direction.md 10장).
+    /// </summary>
+    public static StageMap Create(GameMode mode, int scenarioStage = 1) => mode switch
+    {
+        GameMode.Survivor => new OpenFieldMap(),
+        GameMode.Scenario when scenarioStage == 2 => new StageTwoMap(),
+        _ => new StageOneLayout(),
+    };
 
     /// <summary>Random layout seed (maps that scatter things). Set before <see cref="Build"/>; every PC in a match uses the host's.</summary>
     public int Seed { get; set; } = 1;
@@ -43,6 +51,35 @@ public abstract class StageMap
     public virtual Vector3 CoreSpot => PlayerStart + Vector3.Right * 2;
     /// <summary>Outpost: groups of spots a wave walks in from (one group per doorway).</summary>
     public virtual IReadOnlyList<Vector3[]> Gates => Array.Empty<Vector3[]>();
+
+    // ---------- scenario beats (I-79): a map with a route gives its own doors, panel and safehouse ----------
+
+    /// <summary>Scenario stage number (0: not a scenario stage).</summary>
+    public virtual int StageNumber => 0;
+    /// <summary>The scenario stage its exit leads to (0: the last one, clearing it ends the run).</summary>
+    public virtual int NextStage => 0;
+    /// <summary>First scenario objective: Stage 1 starts shut in the safe room, a later stage starts out on the route.</summary>
+    public virtual Objective ScenarioStart => Objective.LeaveSafeRoom;
+    public virtual Door? StartDoor => null;
+    public virtual Interactable? StartDoorSwitch => null;
+    /// <summary>The crescendo's door and panel (none: the stage has no crescendo).</summary>
+    public virtual Door? Shutter => null;
+    public virtual Interactable? ShutterPanel => null;
+    public virtual float CrescendoSeconds { get; set; } = 50f;
+    public virtual Door? SafehouseDoor => null;
+    public virtual Interactable? SafehouseSwitch => null;
+    /// <summary>The hatch that leads to <see cref="NextStage"/>, opened once the safehouse is shut.</summary>
+    public virtual Interactable? StageExit => null;
+    public virtual bool InSafehouse(Vector3 p) => false;
+    /// <summary>Inside, or close enough to the doorway to be shoved in when the door slams.</summary>
+    public virtual bool NearSafehouse(Vector3 p) => false;
+
+    // ---------- look ----------
+
+    /// <summary>How the camera sees this map (Stage 1's indoor quarter view unless a map says otherwise, L-2 · L-14).</summary>
+    public virtual CameraView View => CameraView.Indoor;
+    /// <summary>Sky, ambient light, fog and the key light. The default is Stage 1's night.</summary>
+    public virtual void Light(Godot.Environment env, DirectionalLight3D key) { }
 
     /// <summary>Builds the map into <paramref name="stage"/> and stamps the flow field.</summary>
     public void Build(Stage stage, GameMode mode)
@@ -80,14 +117,15 @@ public abstract class StageMap
     /// <summary>Tiled indoor look or plain outdoor ground for a floor starting at <paramref name="x0"/>.</summary>
     protected virtual bool IndoorFloor(float x0) => false;
 
-    protected void Floor(float x0, float x1, float z0, float z1, string color)
+    /// <summary>A walkable floor; <paramref name="draw"/> off when the map lays its own ground models over it.</summary>
+    protected void Floor(float x0, float x1, float z0, float z1, string color, bool draw = true)
     {
         var center = new Vector3((x0 + x1) / 2, -.2f, (z0 + z1) / 2);
         var size = new Vector3(x1 - x0, .4f, z1 - z0);
         var body = new StaticBody3D { Name = "Floor", Position = center, CollisionLayer = Layers.World, CollisionMask = 0 };
         _stage.AddChild(body);
         body.AddChild(new CollisionShape3D { Shape = new BoxShape3D { Size = size } });
-        StageArt.Floor(body, size, IndoorFloor(x0));
+        if (draw) StageArt.Floor(body, size, IndoorFloor(x0));
         _floors.Add((center, size));
     }
 
@@ -116,6 +154,68 @@ public abstract class StageMap
     }
 
     protected void Barrel(Vector3 at) => ExplosiveBarrel.Create(_stage, at);
+
+    /// <summary>
+    /// A kit model (<see cref="PropLibrary"/>) turned <paramref name="yaw"/> degrees about Y. With <paramref name="solid"/>
+    /// its manifest collider (box or cylinder, as a box for the flow field) blocks bullets, survivors and the flow field;
+    /// "none" and "compound" colliders stay decoration, the map adds what it needs.
+    /// </summary>
+    protected Node3D? Prop(string id, Vector3 at, float yaw = 0, float scale = 1, bool solid = true)
+    {
+        if (PropLibrary.Instance(id) is not { } model) return null;
+        var info = PropLibrary.Find(id)!;
+        var basis = new Basis(Vector3.Up, Mathf.DegToRad(yaw));
+        var c = info.Collision;
+        Node3D holder;
+        if (solid && c.Kind is "box" or "cylinder")
+        {
+            var size = (c.Kind == "box" ? c.Size : new Vector3(c.Radius * 2, c.Height, c.Radius * 2)) * scale;
+            var center = c.Kind == "box" ? c.Center * scale : new Vector3(0, c.Height / 2 * scale, 0);
+            var body = new StaticBody3D { Name = id, Position = at, Basis = basis, CollisionLayer = Layers.World, CollisionMask = 0 };
+            _stage.AddChild(body);
+            Shape3D shape = c.Kind == "box" ? new BoxShape3D { Size = size } : new CylinderShape3D { Radius = c.Radius * scale, Height = c.Height * scale };
+            body.AddChild(new CollisionShape3D { Shape = shape, Position = center });
+            // The flow field is axis aligned: a turned box blocks its turned footprint's bounds.
+            var world = basis * center + at;
+            var foot = (basis * new Vector3(size.X, 0, 0)).Abs() + (basis * new Vector3(0, 0, size.Z)).Abs();
+            _solids.Add((world, new Vector3(foot.X, size.Y, foot.Z)));
+            holder = body;
+        }
+        else
+        {
+            holder = new Node3D { Name = id, Position = at, Basis = basis };
+            _stage.AddChild(holder);
+        }
+        model.Scale = Vector3.One * scale;
+        holder.AddChild(model);
+        KitProps.Add(holder);
+        return holder;
+    }
+
+    /// <summary>Every kit model this map placed (checks, captures).</summary>
+    public List<Node3D> KitProps { get; } = new();
+    /// <summary>How many copies of each kit model <see cref="Scatter"/> drew (checks).</summary>
+    public Dictionary<string, int> Scattered { get; } = new();
+
+    /// <summary>
+    /// Many copies of a decoration-only kit model (ground tiles, backdrop trees) drawn as one MultiMesh per mesh part:
+    /// no colliders, no per-copy nodes.
+    /// </summary>
+    protected void Scatter(string id, IReadOnlyList<Transform3D> where)
+    {
+        if (where.Count == 0 || PropLibrary.Instance(id) is not { } model) return;
+        foreach (var mesh in model.FindChildren("*", nameof(MeshInstance3D), true, false))
+        {
+            var part = (MeshInstance3D)mesh;
+            var local = Transform3D.Identity;
+            for (Node? n = part; n != null && n != model; n = n.GetParent()) if (n is Node3D n3) local = n3.Transform * local;
+            var multi = new MultiMesh { TransformFormat = MultiMesh.TransformFormatEnum.Transform3D, Mesh = part.Mesh, InstanceCount = where.Count };
+            for (int i = 0; i < where.Count; i++) multi.SetInstanceTransform(i, where[i] * local);
+            _stage.AddChild(new MultiMeshInstance3D { Name = id + "_" + part.Name, Multimesh = multi });
+        }
+        model.Free();
+        Scattered[id] = Scattered.GetValueOrDefault(id) + where.Count;
+    }
 
     protected void Weapon(Vector3 at, string id) => WeaponPickup.ForWeapon(_stage, at, ArmoryCatalog.Weapon(id));
 

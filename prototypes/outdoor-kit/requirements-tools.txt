@@ -1,0 +1,2 @@
+# Catalog images and delivery image checks. GLB validation needs only stdlib.
+Pillow==12.1.1

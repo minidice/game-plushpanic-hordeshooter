@@ -821,6 +821,7 @@ public partial class MainMenu : Control
         _starting = true;
         _sfx.Play("ui_click");
         GameSession.SelectedCharacterId = Selected.Id;
+        GameSession.StartCampaign();
         GameSettings.Save();
         await ToSignal(GetTree().CreateTimer(.09f), SceneTreeTimer.SignalName.Timeout);
         GetTree().ChangeSceneToFile("res://scenes/Stage1.tscn");

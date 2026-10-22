@@ -1,0 +1,872 @@
+{
+  "revision": 2,
+  "contract": "plushpanic_outdoor_v1",
+  "date": "2026-10-22",
+  "units": "metres",
+  "up_axis": "+Y",
+  "status": "standalone art kit; not integrated",
+  "assets": [
+    {
+      "id": "pine_tall",
+      "name": "겹잎 침엽수 · 대",
+      "category": "식생",
+      "note": "겹친 가지·잎 묶음 5층, 수관 4구역. 줄기/뿌리는 유지.",
+      "collision": {
+        "kind": "cylinder",
+        "radius": 0.32,
+        "height": 1.5
+      },
+      "occlusion_parts": [
+        "Occlude_Canopy_NE",
+        "Occlude_Canopy_NW",
+        "Occlude_Canopy_SW",
+        "Occlude_Canopy_SE"
+      ],
+      "dimensions_m": [
+        2.761,
+        3.979,
+        2.751
+      ],
+      "bounds_min_y": 0,
+      "triangles": 8692,
+      "file": "models/pine_tall.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "pine_small",
+      "name": "겹잎 침엽수 · 소",
+      "category": "식생",
+      "note": "겹친 가지·잎 묶음 5층, 수관 4구역. 줄기/뿌리는 유지.",
+      "collision": {
+        "kind": "cylinder",
+        "radius": 0.21760000000000002,
+        "height": 1.02
+      },
+      "occlusion_parts": [
+        "Occlude_Canopy_NE",
+        "Occlude_Canopy_NW",
+        "Occlude_Canopy_SW",
+        "Occlude_Canopy_SE"
+      ],
+      "dimensions_m": [
+        1.878,
+        2.706,
+        1.871
+      ],
+      "bounds_min_y": 0,
+      "triangles": 8692,
+      "file": "models/pine_small.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "broadleaf",
+      "name": "겹잎 활엽수",
+      "category": "식생",
+      "note": "둥근 잎 덩어리와 겹친 잎판. 수관 4구역 독립, 줄기/큰 가지 유지.",
+      "collision": {
+        "kind": "cylinder",
+        "radius": 0.36,
+        "height": 1.7
+      },
+      "occlusion_parts": [
+        "Occlude_Canopy_0",
+        "Occlude_Canopy_1",
+        "Occlude_Canopy_2",
+        "Occlude_Canopy_3"
+      ],
+      "dimensions_m": [
+        3.935,
+        4.022,
+        3.94
+      ],
+      "bounds_min_y": 0,
+      "triangles": 11868,
+      "file": "models/broadleaf.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "round_oak",
+      "name": "둥근 참나무 · 넓은 수관",
+      "category": "식생",
+      "note": "둥근 잎 덩어리와 겹친 잎판. 수관 4구역 독립, 줄기/큰 가지 유지.",
+      "collision": {
+        "kind": "cylinder",
+        "radius": 0.4392,
+        "height": 1.7
+      },
+      "occlusion_parts": [
+        "Occlude_Canopy_0",
+        "Occlude_Canopy_1",
+        "Occlude_Canopy_2",
+        "Occlude_Canopy_3"
+      ],
+      "dimensions_m": [
+        4.802,
+        3.987,
+        4.805
+      ],
+      "bounds_min_y": 0,
+      "triangles": 11868,
+      "file": "models/round_oak.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "round_linden",
+      "name": "둥근 피나무 · 작은 수관",
+      "category": "식생",
+      "note": "둥근 잎 덩어리와 겹친 잎판. 수관 4구역 독립, 줄기/큰 가지 유지.",
+      "collision": {
+        "kind": "cylinder",
+        "radius": 0.288,
+        "height": 1.7
+      },
+      "occlusion_parts": [
+        "Occlude_Canopy_0",
+        "Occlude_Canopy_1",
+        "Occlude_Canopy_2",
+        "Occlude_Canopy_3"
+      ],
+      "dimensions_m": [
+        3.147,
+        3.772,
+        3.154
+      ],
+      "bounds_min_y": 0,
+      "triangles": 11868,
+      "file": "models/round_linden.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "stump",
+      "name": "나무 그루터기",
+      "category": "식생",
+      "note": "낮은 장식/소형 장애물. 절단면 연륜.",
+      "collision": {
+        "kind": "cylinder",
+        "radius": 0.42,
+        "height": 0.6
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        1.217,
+        0.699,
+        1.265
+      ],
+      "bounds_min_y": 0,
+      "triangles": 996,
+      "file": "models/stump.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "fallen_log",
+      "name": "쓰러진 통나무",
+      "category": "식생",
+      "note": "양 끝 절단면과 작은 가지. 낮은 엄폐 후보.",
+      "collision": {
+        "kind": "box",
+        "size": [
+          2.6,
+          0.55,
+          0.65
+        ],
+        "center": [
+          0,
+          0.275,
+          0
+        ]
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        2.634,
+        0.834,
+        0.753
+      ],
+      "bounds_min_y": 0,
+      "triangles": 192,
+      "file": "models/fallen_log.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "shrub",
+      "name": "들판 관목",
+      "category": "식생",
+      "note": "낮은 수풀. 기본 충돌 없음. 장식 밀도 조절용.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        2.003,
+        1.04,
+        1.312
+      ],
+      "bounds_min_y": 0,
+      "triangles": 240,
+      "file": "models/shrub.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "grass_patch",
+      "name": "풀 군락",
+      "category": "식생",
+      "note": "불투명 양면 두께 메시. alpha 카드 없음. 충돌 없음.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        1.253,
+        0.4,
+        1.103
+      ],
+      "bounds_min_y": 0,
+      "triangles": 408,
+      "file": "models/grass_patch.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "reeds",
+      "name": "물가 갈대",
+      "category": "식생",
+      "note": "불투명 양면 두께 메시. alpha 카드 없음. 충돌 없음.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        1.167,
+        1.187,
+        1.075
+      ],
+      "bounds_min_y": 0,
+      "triangles": 936,
+      "file": "models/reeds.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "boulder",
+      "name": "이끼 바위 · 균열면",
+      "category": "지형",
+      "note": "비대칭 절단면·작은 파편·표면을 따르는 이끼. 낮은 바위는 원형 유지.",
+      "collision": {
+        "kind": "cylinder",
+        "radius": 1.05,
+        "height": 1.2
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        2.771,
+        1.39,
+        1.911
+      ],
+      "bounds_min_y": 0,
+      "triangles": 3775,
+      "file": "models/boulder.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "rock_cluster",
+      "name": "갈라진 바위 무리",
+      "category": "지형",
+      "note": "비대칭 절단면·작은 파편·표면을 따르는 이끼. 낮은 바위는 원형 유지.",
+      "collision": {
+        "kind": "cylinder",
+        "radius": 1.05,
+        "height": 1.2
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        2.92,
+        1.688,
+        2.014
+      ],
+      "bounds_min_y": 0,
+      "triangles": 4345,
+      "file": "models/rock_cluster.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "cliff_segment",
+      "name": "층진 절벽 경계",
+      "category": "지형",
+      "note": "비대칭 절단면·작은 파편·표면을 따르는 이끼. 상부 암석은 별도 제어.",
+      "collision": {
+        "kind": "box",
+        "size": [
+          3.5,
+          3,
+          1.5
+        ],
+        "center": [
+          0,
+          1.5,
+          0
+        ]
+      },
+      "occlusion_parts": [
+        "Occlude_UpperRock"
+      ],
+      "dimensions_m": [
+        4.018,
+        3.295,
+        2.072
+      ],
+      "bounds_min_y": 0,
+      "triangles": 5852,
+      "file": "models/cliff_segment.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "ground_grass",
+      "name": "잔디 바닥 4m",
+      "category": "지형",
+      "note": "4×4m 스냅 모듈. 바닥 충돌은 레벨이 소유. 표면 장식은 시각용.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        4.0,
+        0.2,
+        4.0
+      ],
+      "bounds_min_y": 0,
+      "triangles": 572,
+      "file": "models/ground_grass.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "path_dirt",
+      "name": "흙길 바닥 4m",
+      "category": "지형",
+      "note": "4×4m 스냅 모듈. 바닥 충돌은 레벨이 소유. 표면 장식은 시각용.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        4.0,
+        0.2,
+        4.0
+      ],
+      "bounds_min_y": 0,
+      "triangles": 572,
+      "file": "models/path_dirt.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "road_asphalt",
+      "name": "아스팔트 도로 4m",
+      "category": "지형",
+      "note": "4×4m 스냅 모듈. 바닥 충돌은 레벨이 소유. 표면 장식은 시각용.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        4.0,
+        0.172,
+        4.0
+      ],
+      "bounds_min_y": 0,
+      "triangles": 336,
+      "file": "models/road_asphalt.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "curb",
+      "name": "도로 경계석 4m",
+      "category": "지형",
+      "note": "도로 가장자리 조립용. 낮은 단차의 이동 판정은 적용 시 결정.",
+      "collision": {
+        "kind": "box",
+        "size": [
+          4,
+          0.22,
+          0.28
+        ],
+        "center": [
+          0,
+          0.11,
+          0
+        ]
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        3.985,
+        0.22,
+        0.28
+      ],
+      "bounds_min_y": 0,
+      "triangles": 432,
+      "file": "models/curb.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "container_closed",
+      "name": "닫힌 화물 컨테이너",
+      "category": "구조물",
+      "note": "지붕·앞/뒤 상부 패널 별도. 열린형은 바닥/하부/내부 유지. 문은 정적 조형.",
+      "collision": {
+        "kind": "box",
+        "size": [
+          5.8,
+          2.7,
+          2.4
+        ],
+        "center": [
+          0,
+          1.35,
+          0
+        ]
+      },
+      "occlusion_parts": [
+        "Occlude_WallFront",
+        "Occlude_WallBack",
+        "Occlude_Roof",
+        "Occlude_EndCap",
+        "Occlude_DoorUpper"
+      ],
+      "dimensions_m": [
+        5.96,
+        2.747,
+        2.502
+      ],
+      "bounds_min_y": 0,
+      "triangles": 11344,
+      "file": "models/container_closed.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "container_open",
+      "name": "열린 화물 컨테이너",
+      "category": "구조물",
+      "note": "지붕·앞/뒤 상부 패널 별도. 열린형은 바닥/하부/내부 유지. 문은 정적 조형.",
+      "collision": {
+        "kind": "compound",
+        "parts": "floor + two sides + back; door opening left clear"
+      },
+      "occlusion_parts": [
+        "Occlude_WallFront",
+        "Occlude_WallBack",
+        "Occlude_Roof",
+        "Occlude_EndCap",
+        "Occlude_OpenDoorL",
+        "Occlude_OpenDoorR"
+      ],
+      "dimensions_m": [
+        6.33,
+        2.747,
+        2.57
+      ],
+      "bounds_min_y": 0,
+      "triangles": 10908,
+      "file": "models/container_open.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "corrugated_fence",
+      "name": "골함석 울타리 3m",
+      "category": "구조물",
+      "note": "하부와 기둥은 유지, 상부 패널만 옅게 처리 가능.",
+      "collision": {
+        "kind": "box",
+        "size": [
+          3,
+          2.1,
+          0.18
+        ],
+        "center": [
+          0,
+          1.05,
+          0
+        ]
+      },
+      "occlusion_parts": [
+        "Occlude_UpperPanel"
+      ],
+      "dimensions_m": [
+        3.25,
+        2.2,
+        0.35
+      ],
+      "bounds_min_y": 0,
+      "triangles": 3672,
+      "file": "models/corrugated_fence.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "wire_fence",
+      "name": "철망 울타리 3m",
+      "category": "구조물",
+      "note": "하부와 기둥은 유지, 상부 패널만 옅게 처리 가능.",
+      "collision": {
+        "kind": "box",
+        "size": [
+          3,
+          2.1,
+          0.18
+        ],
+        "center": [
+          0,
+          1.05,
+          0
+        ]
+      },
+      "occlusion_parts": [
+        "Occlude_UpperPanel"
+      ],
+      "dimensions_m": [
+        3.25,
+        2.2,
+        0.35
+      ],
+      "bounds_min_y": 0,
+      "triangles": 960,
+      "file": "models/wire_fence.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "sandbags",
+      "name": "모래주머니 엄폐",
+      "category": "소품",
+      "note": "2단 낮은 엄폐. 봉합선으로 쌓임 방향 식별.",
+      "collision": {
+        "kind": "box",
+        "size": [
+          2.8,
+          0.85,
+          0.65
+        ],
+        "center": [
+          0,
+          0.425,
+          0
+        ]
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        2.79,
+        0.79,
+        0.652
+      ],
+      "bounds_min_y": 0,
+      "triangles": 1512,
+      "file": "models/sandbags.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "wooden_crate",
+      "name": "목재 보급 상자",
+      "category": "소품",
+      "note": "상자 자체는 시각 에셋. 아이템 기능 없음.",
+      "collision": {
+        "kind": "box",
+        "size": [
+          0.95,
+          0.95,
+          0.9
+        ],
+        "center": [
+          0,
+          0.475,
+          0
+        ]
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        0.98,
+        0.952,
+        1.04
+      ],
+      "bounds_min_y": 0,
+      "triangles": 2376,
+      "file": "models/wooden_crate.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "pallet",
+      "name": "목재 팔레트",
+      "category": "소품",
+      "note": "독립 판재와 받침. 컨테이너/상자 주변 조합.",
+      "collision": {
+        "kind": "box",
+        "size": [
+          1.2,
+          0.16,
+          1
+        ],
+        "center": [
+          0,
+          0.08,
+          0
+        ]
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        1.2,
+        0.192,
+        1.05
+      ],
+      "bounds_min_y": 0,
+      "triangles": 864,
+      "file": "models/pallet.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "barrel",
+      "name": "도색 철제 드럼통",
+      "category": "소품",
+      "note": "폭발/이동 기능 없는 정적 원본.",
+      "collision": {
+        "kind": "cylinder",
+        "radius": 0.31,
+        "height": 0.92
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        0.654,
+        0.962,
+        0.654
+      ],
+      "bounds_min_y": 0,
+      "triangles": 704,
+      "file": "models/barrel.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "streetlamp",
+      "name": "곡선 암 가로등",
+      "category": "구조물",
+      "note": "발광부 분리. 실제 Light3D는 레벨이 배치.",
+      "collision": {
+        "kind": "cylinder",
+        "radius": 0.12,
+        "height": 3.6
+      },
+      "occlusion_parts": [
+        "Occlude_LampHead"
+      ],
+      "dimensions_m": [
+        0.59,
+        3.953,
+        1.245
+      ],
+      "bounds_min_y": 0,
+      "triangles": 404,
+      "file": "models/streetlamp.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "utility_shed",
+      "name": "야외 관리 창고",
+      "category": "구조물",
+      "note": "지붕·상부 벽 분리, 내부 바닥 존재. 출입문은 열린 모델.",
+      "collision": {
+        "kind": "compound",
+        "parts": "floor + rear/side walls + front doorway; no runtime collision generated"
+      },
+      "occlusion_parts": [
+        "Occlude_FrontWall",
+        "Occlude_RearWall",
+        "Occlude_SideWallL",
+        "Occlude_SideWallR",
+        "Occlude_RoofL",
+        "Occlude_RoofR"
+      ],
+      "dimensions_m": [
+        3.591,
+        2.907,
+        3.295
+      ],
+      "bounds_min_y": 0,
+      "triangles": 1980,
+      "file": "models/utility_shed.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "timber_bridge",
+      "name": "물가 목재 다리",
+      "category": "구조물",
+      "note": "바닥과 난간 분리. 수면/양안 높이는 레벨에서 맞춤.",
+      "collision": {
+        "kind": "box",
+        "size": [
+          2,
+          0.25,
+          4.2
+        ],
+        "center": [
+          0,
+          0.125,
+          0
+        ]
+      },
+      "occlusion_parts": [
+        "Occlude_RailingL",
+        "Occlude_RailingR"
+      ],
+      "dimensions_m": [
+        2.21,
+        1.4,
+        4.2
+      ],
+      "bounds_min_y": 0,
+      "triangles": 2596,
+      "file": "models/timber_bridge.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "water_tile",
+      "name": "잔잔한 수면 4m",
+      "category": "지형",
+      "note": "불투명 수면 조형 샘플. 파도·수영·반사 시스템은 후속.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        4.0,
+        0.036,
+        4.0
+      ],
+      "bounds_min_y": 0,
+      "triangles": 156,
+      "file": "models/water_tile.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "bench",
+      "name": "야외 벤치",
+      "category": "소품",
+      "note": "정비소·쉼터 주변 소품. 좌석 상호작용 없음.",
+      "collision": {
+        "kind": "box",
+        "size": [
+          1.7,
+          0.9,
+          0.65
+        ],
+        "center": [
+          0,
+          0.45,
+          0
+        ]
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        1.7,
+        1.006,
+        0.724
+      ],
+      "bounds_min_y": 0,
+      "triangles": 1136,
+      "file": "models/bench.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "stream_straight",
+      "name": "자연 하천 · 직선 연결",
+      "category": "지형",
+      "note": "불규칙 둑·젖은 경계·얕은 물색·부분 포말. 양 끝 동일 단면 연결. 지형 프리팹.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [],
+      "waterline_m": 0.24,
+      "connectors": [
+        {
+          "node": "Connection_Start",
+          "position": [
+            0.0,
+            0.24,
+            4.0
+          ],
+          "forward": [
+            0.0,
+            0,
+            -1.0
+          ],
+          "half_width_m": 1.45,
+          "bank_height_m": 0.62
+        },
+        {
+          "node": "Connection_End",
+          "position": [
+            -0.0,
+            0.24,
+            -4.0
+          ],
+          "forward": [
+            0.0,
+            0,
+            -1.0
+          ],
+          "half_width_m": 1.45,
+          "bank_height_m": 0.62
+        }
+      ],
+      "dimensions_m": [
+        7.323,
+        0.668,
+        8.0
+      ],
+      "bounds_min_y": 0,
+      "triangles": 5417,
+      "file": "models/stream_straight.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    },
+    {
+      "id": "stream_curve",
+      "name": "자연 하천 · 90도 굽이",
+      "category": "지형",
+      "note": "불규칙 둑·젖은 경계·얕은 물색·부분 포말. 양 끝 동일 단면 연결. 지형 프리팹.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [],
+      "waterline_m": 0.24,
+      "connectors": [
+        {
+          "node": "Connection_Start",
+          "position": [
+            -2.0,
+            0.24,
+            2.0
+          ],
+          "forward": [
+            1.0,
+            0,
+            -0.0
+          ],
+          "half_width_m": 1.45,
+          "bank_height_m": 0.62
+        },
+        {
+          "node": "Connection_End",
+          "position": [
+            2.0,
+            0.24,
+            -2.0
+          ],
+          "forward": [
+            -0.0,
+            0,
+            -1.0
+          ],
+          "half_width_m": 1.45,
+          "bank_height_m": 0.62
+        }
+      ],
+      "dimensions_m": [
+        7.48,
+        0.668,
+        7.48
+      ],
+      "bounds_min_y": 0,
+      "triangles": 5417,
+      "file": "models/stream_curve.glb",
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
+    }
+  ]
+}

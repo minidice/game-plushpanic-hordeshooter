@@ -13,6 +13,17 @@ public static class GameSession
     public static GameMode Mode { get; set; } = GameMode.Scenario;
     /// <summary>The host's map seed for this match, sent with the start (0 = none: offline picks its own).</summary>
     public static int MapSeed { get; set; }
+    /// <summary>Scenario stage being played (1 from the menu; the Stage 1 exit hatch moves on to 2, decisions.md L-14).</summary>
+    public static int ScenarioStage { get; set; } = 1;
+    /// <summary>What the local survivor carries out of the last stage (null: start with the stage's own kit).</summary>
+    public static StageCarry? Carry { get; set; }
+
+    /// <summary>A new run from the menu or the room: back to Stage 1, nothing carried.</summary>
+    public static void StartCampaign()
+    {
+        ScenarioStage = 1;
+        Carry = null;
+    }
 
     /// <summary>
     /// Modes the current build can actually start; any other would be listed in the menu as "coming soon".

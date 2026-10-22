@@ -97,6 +97,7 @@ public sealed class SpawnDatabase
 {
     public const string RulesPath = "res://content/data/spawn_rules.json";
     public const string Stage1Path = "res://content/data/stages/stage1_encounters.json";
+    public const string Stage2Path = "res://content/data/stages/stage2_encounters.json";
 
     private static readonly string[] RuleKeys =
     {
@@ -107,6 +108,21 @@ public sealed class SpawnDatabase
     private readonly List<string> _errors = new();
     public SpawnRules Rules { get; private set; } = new();
     public EncounterSet Stage1 { get; private set; } = new();
+    private EncounterSet? _stage2;
+    /// <summary>Scenario Stage 2 (decisions.md L-14), read the first time it is played.</summary>
+    public EncounterSet Stage2
+    {
+        get
+        {
+            if (_stage2 != null) return _stage2;
+            int before = _errors.Count;
+            string json = Read(Stage2Path);
+            if (json.Length == 0) { _errors.Add("stage2_encounters.json: missing"); _stage2 = new EncounterSet(); }
+            else _stage2 = ReadEncounters(json, "stage2_encounters.json");
+            for (int i = before; i < _errors.Count; i++) GD.PushError("[spawn] " + _errors[i]);
+            return _stage2;
+        }
+    }
     public IReadOnlyList<string> Errors => _errors;
 
     private static SpawnDatabase? _current;

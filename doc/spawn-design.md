@@ -90,6 +90,7 @@ L4D의 차 경보기처럼, **실수로 켤 수 있는** 장치입니다.
 |---|---|
 | `content/data/spawn_rules.json` | 연쇄 깨움 반경, 경계형 시야 거리, 지나온 길 최소 거리, 차 경보 시간·웨이브 간격·크기, 출입구 보호 반경 |
 | `content/data/stages/stage1_encounters.json` | 구역(진행 방향 구간), 구역별 미리 배치 무리(반응 유형·수·범위, 특수 몬스터 자리), 등장 지점(`hidden` 숨은 자리 / `ledge` 벽 위: 높이·뛰는 방향), 보호 구역 `[x, z]` |
+| `content/data/stages/stage2_encounters.json` | 시나리오 Stage 2(L-14) — 같은 형식. 도착 벙커 해치가 보호 구역 |
 | `weapon_types.csv` | `noise_m` 열. 무기별로 다르게 하려면 `weapons.csv`에 같은 열을 넣으면 덮어씀 |
 
 큰 소리 장치의 위치는 아직 레벨 코드(`StageOneLayout`의 경보 차)에 있습니다. 장치가 늘면 데이터로 옮깁니다.

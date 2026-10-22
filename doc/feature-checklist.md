@@ -42,6 +42,10 @@
 ## 레벨과 화면
 
 - [x] Stage 1: 세이프룸 → 거리 → 창고 셔터 이벤트 → 야적장 → 세이프하우스
+- [x] 시나리오 Stage 1 → Stage 2 전환(2026-10-22, L-14): 세이프하우스를 닫으면 바닥 해치, E 길게 → 원 닫힘 → STAGE 2 카드 → 벙커 해치에서 원 열림, 실내 직교 시점 → 야외 원근 시점으로 이어 바뀜, 장비 이월(혼자 할 때만, I-90)
+- [x] Stage 2 숲속 벙커길(2026-10-22, L-14): 벙커 공터 → 숲길 → 개울 다리 → 컨테이너 야적장 → 세이프하우스, 야외 키트 모델, 거리 안개·석양 조명, 조우·보급 데이터 ([레벨 규칙](level-design-rules.md) Stage 2)
+- [x] 야외 모델 팩 32종 통합 + 전환 소품 4종(Codex 모델, 2026-10-22, A-22): manifest 기반 배치·추천 충돌, 바닥 타일·배경 숲 MultiMesh
+- [ ] 키트의 가림 부위(`Occlude_*`) 옅게 하기, 비·젖음·낮밤, Stage 2 성능 측정과 손 플레이 검증(I-91), 멀티 다음 구역(I-90)
 - [x] 화면 우측 상단을 주 진행 방향으로 사용; 기본/확대 카메라와 화면 기준 WASD
 - [x] 주 경로 70% 이상 우측 상단이라는 [레벨 디자인 규칙](level-design-rules.md)
 - [x] 타일 바닥, 벽 패널, 선반·보관함·작업대·단말기, 구역 조명
@@ -116,7 +120,7 @@
 
 실행: `game/Start-Game.cmd`. 기본 통합 검사: `game/Start-Game.ps1 -Test`.
 
-빌드·가져오기 후 Godot 테스트 장면: `CombatPacingCheck.tscn`, `EnemyAttackCheck.tscn`, `TailMeleeCheck.tscn`, `HitFlashCheck.tscn`, 생존·서바이버는 `ModeCheck.tscn`, 거점 배낭은 `InventoryCheck.tscn`, 카드 실험실은 `CardLabCheck.tscn`. 실제 화면 검사는 별도 캡처 장면과 플레이로 보완한다. 수치나 동작을 바꿀 때 해당 검사와 문서도 같이 갱신한다.
+빌드·가져오기 후 Godot 테스트 장면: 스테이지 전환·Stage 2·야외 키트는 `StageTransitionCheck.tscn`, `CombatPacingCheck.tscn`, `EnemyAttackCheck.tscn`, `TailMeleeCheck.tscn`, `HitFlashCheck.tscn`, 생존·서바이버는 `ModeCheck.tscn`, 거점 배낭은 `InventoryCheck.tscn`, 카드 실험실은 `CardLabCheck.tscn`. 실제 화면 검사는 별도 캡처 장면과 플레이로 보완한다. 수치나 동작을 바꿀 때 해당 검사와 문서도 같이 갱신한다.
 
 상세 규격: [무기](weapon-spec.md), [캐릭터](character-model-spec.md), [적·투척물](throwable-monster-spec.md), [사운드](sound-spec.md), [다국어](localization.md).
 
@@ -164,6 +168,11 @@
 
 - C# 빌드 경고·오류 0. `ModeCheck` 81개(창 모드, 화면 밖 화살표 포함)·79개(헤드리스), `MapCheck` 25, `WeaponHandlingCheck` 30, `Integration` 148, `NetSyncCheck` 28, `NetCodecCheck` 11, `LobbyCheck` 31, `MenuCheck` 39, `SquadCheck` 50, `SpawnCheck` 41, `CombatPacingCheck` 44, `ReloadPoseCheck` 279, `EnemyAttackCheck` 79, `VisionTierCheck` 23 통과.
 - 렌더: `output/map-open-field.png`·`mode-survivor-rack.png`(들판·진열대·바닥 글씨·무장 목표), `mode-survivor-arrow.png`(화면 밖 팀원 화살표, `∞` 탄약, "난전 · 들판"). 실제 손으로 하는 난이도·들판 성능은 미확인(I-26·I-80). 2인 멀티로 들판·진열대를 해 보지는 않음.
+
+### 이번 변경 확인 기록 — 2026-10-22 (야외 키트 통합 · 시나리오 Stage 1 → 2 전환, A-22 · L-14)
+
+- C# 빌드 경고 · 오류 0. 새 `StageTransitionCheck` 143(헤드리스 · 창 모드 모두), `Start-Game.ps1 -Test` → `Integration` 148, `MapCheck` 24, `VisionTierCheck` 23, `SupplyCheck` 12, `SquadCheck` 50, `ModeCheck` 123, `SpawnCheck` 41, `AudioMixCheck` 6, `CombatPacingCheck` 44, `WeaponHandlingCheck` 36, `NetSyncCheck` 32, `MenuCheck` 44, `LobbyCheck` 31 통과. 전환 소품은 Blender 스크립트 단언 통과(삼각형 · 부위 · 뚜껑 방향).
+- 렌더 `output/transition-0-stage1-street.png`(비교용 Stage 1 실내 직교) → `transition-1-safehouse-hatch`(바닥 해치 · 길게 누르기 안내) → `-2-closing`(원 닫힘) → `-3-title`(STAGE 2 · 숲속 벙커길) → `-4-opening`(벙커 해치에서 원 열림) → `-5-arrival` · `-6-arrival-close`(야외 원근 기본 · 확대) → `-7-forest` · `-bridge` · `-yard` · `-safehouse`. 참고 영상 프레임과 비교해 전환 순서 · 주변 오브젝트 · 시점 변화가 대응함을 확인. 영상의 비 · 어두운 석양 색감은 미적용(I-91). 손으로 해 본 Stage 2 플레이 · 성능 · 멀티 다음 구역은 미확인(I-26 · I-90 · I-91).
 
 ### 이번 변경 확인 기록 — 2026-10-22 (소환수 게임 적용 1차)
 

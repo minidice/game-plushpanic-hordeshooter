@@ -271,3 +271,12 @@ sidekick_cadet,거위 부사수
 sidekick_scout,오리 정찰병
 sidekick_engineer,너구리 공병
 sidekick_guard,랫서판다 경비병
+# 시나리오 Stage 1 → 2 전환 (decisions.md L-14)
+ui_hud_stage2,STAGE 2 · 숲속 벙커길
+ui_use_next_stage,해치로 내려가기 (다음 구역)
+fmt_use_hold,[E 길게]  {0}  {1}%
+ui_objective_take_exit,세이프하우스 해치로 다음 구역에 가기  [E 길게]
+msg_stage_exit_open,세이프하우스 바닥 해치가 열렸다 — 다음 구역으로
+msg_stage_route_start,벙커를 빠져나왔다 — 숲길을 따라 세이프하우스로
+ui_transition_stage2,숲속 벙커길
+ui_transition_stage_number,STAGE {0}
