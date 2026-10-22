@@ -96,7 +96,7 @@ tag_card_shotgun,나 · 샷건 전용
 name_card_billiards_sniper,관통 당구
 desc_card_billiards_sniper,저격에 맞은 적이 총알 방향으로 쭉 날아가 부딪힌 적을 줄줄이 날려 보냄
 name_card_billiards_shotgun,산탄 볼링
-desc_card_billiards_shotgun,샷건 산탄마다 적을 밀어 날리고, 날아간 적이 볼링 핀처럼 다른 적을 쓰러뜨림
+desc_card_billiards_shotgun,"샷건 산탄마다 적을 밀어 날리고, 날아간 적이 볼링 핀처럼 다른 적을 쓰러뜨림"
 fmt_card_upgrade_name,{0} Lv{1}
 fmt_card_upgrade_tag,나 · {0} 강화
 name_card_u_balloon_radius,풍선탄 폭발 범위
@@ -123,3 +123,23 @@ tag_card_mystery,? 카드 · 3~4등급 중 하나
 tag_card_mystery_special,? 카드 · 6~7등급 중 하나
 desc_card_mystery,무엇이 될지는 고르는 순간 공개됩니다. 대신 등급이 높습니다
 desc_card_mystery_special,무엇이 될지는 투표가 끝나면 공개됩니다. 대신 등급이 높습니다
+# 새 카드 1묶음 (decisions.md M-29, onslaught-cards-plan.md 16.6)
+name_card_tap_dance,탭댄스
+desc_card_tap_dance,"맞힐 때마다 걸음 +5% · 연사 +4%가 쌓임 (최대 5번, 2.5초 못 맞히면 사라짐)"
+name_card_bouncing_rounds,튕기는 탄
+desc_card_bouncing_rounds,저격 명중이 관통이 끝난 곳에서 가까운 다른 적에게 튕김 (튕길 때마다 피해 70%)
+name_card_honk_charge,꽥 충전
+desc_card_honk_charge,"명중할 때마다 3번 칸 남은 쿨타임 3% 감소 (초당 최대 1초, 한 발에 한 번)"
+name_card_destiny_gun,운명의 총
+desc_card_destiny_gun,무작위 칸의 총이 무작위 특수무기로 바뀜 · 그 칸은 쿨타임으로 쏨 (한 판에 한 번)
+name_card_double_special,특수무기 2발
+desc_card_double_special,팀 전원: 3번 칸 특수무기가 한 번 더 나감 (꽥 두 번 · 오리 두 마리 · 로켓 양옆 · 박격포 연속 · 레일건 두 줄)
+name_card_u_tap_dance_stacks,탭댄스 중첩
+desc_card_u_tap_dance_stacks,최대 중첩 +3
+name_card_u_bounce_count,튕기는 탄 횟수
+desc_card_u_bounce_count,한 번 더 튕김 (1 → 2 → 3)
+tag_card_self_move,나 · 걸음 · 연사
+tag_card_sniper_only,저격 전용
+tag_card_slot3,3번 칸
+tag_card_slot12,1번 또는 2번 칸
+fmt_card_destiny_fx,운명의 총: {0}!

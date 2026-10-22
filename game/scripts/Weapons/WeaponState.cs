@@ -25,6 +25,17 @@ public sealed class WeaponState
     public float ShotCooldown { get; set; }
     /// <summary>Seconds until a recharging weapon is ready again.</summary>
     public float CooldownLeft { get; private set; }
+    /// <summary>Shots come this many times faster (the holder's cards; 1 = as the weapon says).</summary>
+    public float RateScale { get; set; } = 1;
+
+    /// <summary>Takes <paramref name="seconds"/> off a slot-3 recharge (honk charge); a finished one refills the magazine.</summary>
+    public void ShortenCooldown(float seconds)
+    {
+        if (CooldownLeft <= 0 || seconds <= 0) return;
+        TickCooldown(0);
+        CooldownLeft = Math.Max(0, CooldownLeft - seconds);
+        if (CooldownLeft <= 0) Mag = Def.MagSize;
+    }
     public bool HasInfiniteReserve => Def.InfiniteReserve || UnlimitedReserve;
 
     private float _cooldown, _bloom, _burstTimer;
@@ -113,7 +124,7 @@ public sealed class WeaponState
         // Tube-fed shotguns may immediately use shells already inserted, without losing them.
         if (wants && Reloading && Def.ShellReloadTime > 0 && Mag > 0) CancelReload();
         if (!wants || !CanFire) return false;
-        _cooldown = Def.FireInterval;
+        _cooldown = Def.FireInterval / Math.Max(.1f, RateScale);
         Consume();
         if (Def.BurstCount > 1)
         {

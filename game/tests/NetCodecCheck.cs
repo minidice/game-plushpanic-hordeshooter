@@ -58,7 +58,7 @@ public partial class NetCodecCheck : Node
         var player = new NetPlayerState
         {
             Peer = 2, Position = new Vector3(64.37f, 0, -3.12f), Aim = new Vector3(70, 1, 0), Health = 87, Medkits = 1, BleedLeft = 12.5f,
-            Flags = NetPlayerFlags.Downed | NetPlayerFlags.HostMoves, ActiveSlot = 2,
+            Flags = NetPlayerFlags.Downed | NetPlayerFlags.HostMoves, ActiveSlot = 2, TapStacks = 7,
             Secondary = NetIds.Weapon("m1911"), SecondaryMag = 15, SecondaryReserve = 0,
             Primary = NetIds.Weapon("m4"), PrimaryMag = 37, PrimaryReserve = 250,
             Special = NetIds.Weapon("railgun"), SpecialMag = 1, SpecialReserve = 3,
@@ -83,7 +83,7 @@ public partial class NetCodecCheck : Node
             var got = NetSnapshot.Decode(bytes);
             var p = got.Players[0];
             bool players = p.Peer == 2 && Near(p.Position, player.Position) && p.Health == 87 && p.Medkits == 1 && Mathf.IsEqualApprox(p.BleedLeft, 12.5f) &&
-                           p.Flags == player.Flags && p.ActiveSlot == 2 && NetIds.WeaponAt(p.Primary) == "m4" && p.PrimaryMag == 37 && p.PrimaryReserve == 250 &&
+                           p.Flags == player.Flags && p.ActiveSlot == 2 && p.TapStacks == 7 && NetIds.WeaponAt(p.Primary) == "m4" && p.PrimaryMag == 37 && p.PrimaryReserve == 250 &&
                            NetIds.WeaponAt(p.Special) == "railgun" && p.SpecialMag == 1 && p.SpecialReserve == 3 &&
                            NetIds.WeaponAt(p.Secondary) == "m1911" && p.Throwables.Count == 2 && NetIds.ThrowableAt(p.Throwables[0].Kind) == "frag" && p.Throwables[0].Count == 2 &&
                            p.Backpack is { Count: 3 } bag && bag[0] == player.Backpack![0] && bag[1] == player.Backpack[1] && bag[2] == player.Backpack[2] &&

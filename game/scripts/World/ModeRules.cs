@@ -70,6 +70,8 @@ public abstract partial class ModeRules : Node
 
     /// <summary>Client: the host's copy of this survivor's cards and the mode's card state.</summary>
     public virtual void ApplyCardSync(byte[] data) { }
+    /// <summary>The card effects of this mode, if it has cards (weapons ask it about team cards, M-29).</summary>
+    public virtual LabCards? CardEffects => null;
     /// <summary>Client: the host's special card vote (M-29).</summary>
     public virtual void ApplyVoteSync(byte[] data) { }
     /// <summary>Host: a client rerolls card <paramref name="index"/> of its front offer (M-29 plan 16.4).</summary>

@@ -4,17 +4,20 @@ using System.Linq;
 
 namespace HordeShooter;
 
-/// <summary>The six cards of the first lab set (doc/onslaught-card-ideas.md 5장).</summary>
-public enum LabCard { Balloon, Velcro, StuffingBurst, Billiards, HonkReload, RubberDuck }
+/// <summary>
+/// The six cards of the first lab set (doc/onslaught-card-ideas.md 5장), then M-29's first new normal cards (plan
+/// 16.6): tap dance, bouncing rounds (sniper), honk charge (slot 3) and the destiny gun (once a match).
+/// </summary>
+public enum LabCard { Balloon, Velcro, StuffingBurst, Billiards, HonkReload, RubberDuck, TapDance, BouncingRounds, HonkCharge, DestinyGun }
 
 /// <summary>Three stand-in special cards for the boss-reward cheat (plan 6.3): rules for every gun, one with a price.</summary>
-public enum LabSpecial { HeliumParty, LastShot, GlassCannon }
+public enum LabSpecial { HeliumParty, LastShot, GlassCannon, DoubleSpecial }
 
 /// <summary>
 /// The upgrade cards a base card opens once taken (plan 13.2 card tree): balloon pop radius and damage, velcro clump
 /// size and burst damage.
 /// </summary>
-public enum CardUpgrade { BalloonRadius, BalloonDamage, VelcroSize, VelcroDamage }
+public enum CardUpgrade { BalloonRadius, BalloonDamage, VelcroSize, VelcroDamage, TapDanceStacks, BounceCount }
 
 /// <summary>
 /// Onslaught's card effects (decisions.md M-27, `[임시]`), first built for the card lab: cards switched on while
@@ -30,9 +33,10 @@ public enum CardUpgrade { BalloonRadius, BalloonDamage, VelcroSize, VelcroDamage
 public partial class LabCards : Node
 {
     public static readonly LabCard[] All = { LabCard.Balloon, LabCard.Velcro, LabCard.StuffingBurst, LabCard.Billiards, LabCard.HonkReload, LabCard.RubberDuck };
-    public static readonly LabSpecial[] Specials = { LabSpecial.HeliumParty, LabSpecial.LastShot, LabSpecial.GlassCannon };
+    public static readonly LabSpecial[] Specials = { LabSpecial.HeliumParty, LabSpecial.LastShot, LabSpecial.GlassCannon, LabSpecial.DoubleSpecial };
     /// <summary>The cards a level-up can offer; the honk and the rubber duck move to slot 3 as weapons (plan 13.1), lab only for now.</summary>
-    public static readonly LabCard[] LevelUpCards = { LabCard.Balloon, LabCard.Velcro, LabCard.StuffingBurst, LabCard.Billiards };
+    public static readonly LabCard[] LevelUpCards =
+        { LabCard.Balloon, LabCard.Velcro, LabCard.StuffingBurst, LabCard.Billiards, LabCard.TapDance, LabCard.BouncingRounds, LabCard.HonkCharge, LabCard.DestinyGun };
     /// <summary>Weapon kinds billiards works with (weapon_types.csv category): sniper hits are cue balls, shotgun pellets bowl (plan 13.2).</summary>
     public static bool IsSniperType(string? type) => WeaponDatabase.Current.CategoryOfType(type) == WeaponCategory.Sniper;
     public static bool IsShotgunType(string? type) => WeaponDatabase.Current.CategoryOfType(type) == WeaponCategory.Shotgun;
@@ -41,11 +45,27 @@ public partial class LabCards : Node
     {
         LabCard.Balloon => new[] { CardUpgrade.BalloonRadius, CardUpgrade.BalloonDamage },
         LabCard.Velcro => new[] { CardUpgrade.VelcroSize, CardUpgrade.VelcroDamage },
+        LabCard.TapDance => new[] { CardUpgrade.TapDanceStacks },
+        LabCard.BouncingRounds => new[] { CardUpgrade.BounceCount },
         _ => System.Array.Empty<CardUpgrade>(),
     };
-    public static LabCard BaseOf(CardUpgrade upgrade) => upgrade is CardUpgrade.BalloonRadius or CardUpgrade.BalloonDamage ? LabCard.Balloon : LabCard.Velcro;
-    /// <summary>Velcro size goes 5 → 4 → 3 monsters; the others have three levels.</summary>
-    public static int MaxLevel(CardUpgrade upgrade) => upgrade == CardUpgrade.VelcroSize ? 2 : 3;
+    public static LabCard BaseOf(CardUpgrade upgrade) => upgrade switch
+    {
+        CardUpgrade.BalloonRadius or CardUpgrade.BalloonDamage => LabCard.Balloon,
+        CardUpgrade.TapDanceStacks => LabCard.TapDance,
+        CardUpgrade.BounceCount => LabCard.BouncingRounds,
+        _ => LabCard.Velcro,
+    };
+    /// <summary>Velcro size goes 5 → 4 → 3 monsters and bounces 1 → 2 → 3; the others have three levels.</summary>
+    public static int MaxLevel(CardUpgrade upgrade) => upgrade is CardUpgrade.VelcroSize or CardUpgrade.BounceCount ? 2 : 3;
+
+    // Tap dance: each hit (once a frame) adds a step of walking speed and fire rate, up to the stack cap; a gap ends it.
+    public const int TapStacks = 5, TapStacksPerLevel = 3;
+    public const float TapSpeedPerStack = .05f, TapFirePerStack = .04f, TapHold = 2.5f;
+    // Bouncing rounds: from where the sniper round stopped to the nearest other monster, 70% each time.
+    public const float BounceShare = .7f, BounceReach = 10f;
+    // Honk charge: 3% of what is left of the slot-3 cooldown per hit (one per shot), at most a second each second.
+    public const float HonkChargeShare = .03f, HonkChargePerSecond = 1f;
 
     // Helium party: a hit sometimes floats a common at once. Last shot: the shot that empties a magazine explodes.
     private const float HeliumChance = .12f, LastShotRadius = 3.2f, LastShotPower = 150f, LastShotDamage = 60f, GlassCannonDamage = 2f, GlassCannonHealth = .5f;
@@ -82,6 +102,20 @@ public partial class LabCards : Node
     private readonly Dictionary<Enemy, Player?> _stuckBy = new(), _cueBy = new();
     // Survivors glass cannon is on right now (joiners get it too, all of it comes off with the card).
     private readonly HashSet<Player> _glassed = new();
+    // Tap dance until when, bounce chains waiting for the frame's last pierced hit, honk charge budget.
+    private readonly Dictionary<Player, float> _tapUntil = new();
+    private readonly Dictionary<Player, ulong> _tapFrame = new(), _honkFrame = new();
+    private readonly Dictionary<Player, (Vector3 At, Enemy From, HitInfo Hit)> _bounceFrom = new();
+    private readonly Dictionary<Player, float> _honkBudget = new();
+    private readonly RandomNumberGenerator _rng = new();
+    private bool _bouncing;
+
+    /// <summary>Special weapon ids the destiny gun draws from (the mode's slot-3 pool).</summary>
+    public IReadOnlyList<string> DestinyPool { get; set; } = System.Array.Empty<string>();
+    /// <summary>Honk charge is only offered when slot 3 recharges at least this long (survivor.cooldown_card_min_s).</summary>
+    public float HonkChargeMinCooldown { get; set; } = 20;
+    /// <summary>Checks: what the destiny gun gave each survivor (slot, weapon id).</summary>
+    public Dictionary<Player, (int Slot, string Weapon)> DestinyGiven { get; } = new();
     private readonly Dictionary<Enemy, float> _billiardsReady = new();
     private readonly Dictionary<Enemy, float> _cueUntil = new();
     private readonly Dictionary<Enemy, ulong> _inflatedFrame = new();
@@ -101,6 +135,7 @@ public partial class LabCards : Node
     public int Honks { get; private set; }
     public int Ducks { get; private set; }
     public int LastShots { get; private set; }
+    public int Bounces { get; private set; }
 
     /// <summary>How many monsters are in <paramref name="enemy"/>'s velcro clump this frame (0 = none).</summary>
     public int ClumpSize(Enemy enemy) => _clumpOf.TryGetValue(enemy, out int clump) ? _clumpOf.Count(c => c.Value == clump) : 0;
@@ -183,6 +218,7 @@ public partial class LabCards : Node
     {
         LabSpecial.HeliumParty => "helium_party",
         LabSpecial.LastShot => "last_shot",
+        LabSpecial.DoubleSpecial => "double_special",
         _ => "glass_cannon",
     };
 
@@ -194,6 +230,10 @@ public partial class LabCards : Node
         LabCard.StuffingBurst => "stuffing_burst",
         LabCard.Billiards => "billiards",
         LabCard.HonkReload => "honk_reload",
+        LabCard.TapDance => "tap_dance",
+        LabCard.BouncingRounds => "bouncing_rounds",
+        LabCard.HonkCharge => "honk_charge",
+        LabCard.DestinyGun => "destiny_gun",
         _ => "rubber_duck",
     };
 
@@ -203,6 +243,8 @@ public partial class LabCards : Node
         CardUpgrade.BalloonRadius => "balloon_radius",
         CardUpgrade.BalloonDamage => "balloon_damage",
         CardUpgrade.VelcroSize => "velcro_size",
+        CardUpgrade.TapDanceStacks => "tap_dance_stacks",
+        CardUpgrade.BounceCount => "bounce_count",
         _ => "velcro_damage",
     };
 
@@ -211,6 +253,7 @@ public partial class LabCards : Node
     {
         if (on) _owned.Add((who, card));
         else _owned.RemoveWhere(o => o.Card == card && (who == null || o.Owner == who));
+        if (on && card == LabCard.DestinyGun && who != null) GiveDestinyGun(who);
     }
     public void Toggle(LabCard card) => Set(card, !IsOn(card));
 
@@ -232,6 +275,9 @@ public partial class LabCards : Node
         if (!Stage.Authoritative || Stage.State != StageState.Playing) return;
         float dt = (float)delta;
         _clock += dt;
+        TapDanceEnds();
+        if (_bounceFrom.Count > 0) BounceAll();
+        foreach (var p in _honkBudget.Keys.ToList()) _honkBudget[p] = Mathf.Min(HonkChargePerSecond, _honkBudget[p] + dt * HonkChargePerSecond);
         _stuffingThisFrame = 0;
         if (IsOn(LabCard.Velcro)) Clumps();
         if (_cueUntil.Count > 0) Billiards();
@@ -259,8 +305,21 @@ public partial class LabCards : Node
         else if (helium && !enemy.IsDead && GD.Randf() < HeliumChance && enemy.AddInflate(1, FloatSeconds)) StartFloating(enemy);
         if (Has(LabCard.Billiards, shooter) && !enemy.IsDead && (IsSniperType(hit.WeaponType) || IsShotgunType(hit.WeaponType)))
             Cue(enemy, hit);
+        if (shooter != null && IsInstanceValid(shooter) && !_bouncing && IsGunHit(shooter, hit))
+        {
+            ulong frame = Engine.GetPhysicsFrames();
+            if (Has(LabCard.TapDance, shooter) && _tapFrame.GetValueOrDefault(shooter) != frame)
+            {
+                _tapFrame[shooter] = frame;
+                shooter.TapStacks = Mathf.Min(TapMax(shooter), shooter.TapStacks + 1);
+                _tapUntil[shooter] = _clock + TapHold;
+            }
+            // The round's last pierced monster wins: the bounce starts where the shot stopped (plan 16.6).
+            if (Has(LabCard.BouncingRounds, shooter) && IsSniperType(hit.WeaponType)) _bounceFrom[shooter] = (enemy.GlobalPosition, enemy, hit);
+            if (Has(LabCard.HonkCharge, shooter) && _honkFrame.GetValueOrDefault(shooter) != frame) HonkCharge(shooter, frame);
+        }
         // The shooter's own magazine, and only a hit of the gun in their hands (not a rocket landing later or a pet's bite).
-        if (IsOn(LabSpecial.LastShot) && shooter != null && IsInstanceValid(shooter) && shooter.Gun is { Mag: 0, IsMelee: false } gun
+        if (IsOn(LabSpecial.LastShot) && !_bouncing && shooter != null && IsInstanceValid(shooter) && shooter.Gun is { Mag: 0, IsMelee: false } gun
             && gun.Def.TypeId == hit.WeaponType && _lastShotFrame.GetValueOrDefault(shooter) != Engine.GetPhysicsFrames())
         {
             _lastShotFrame[shooter] = Engine.GetPhysicsFrames();
@@ -461,6 +520,79 @@ public partial class LabCards : Node
         var side = new Vector3(GD.Randf() - .5f, 0, GD.Randf() - .5f).Normalized() * 1.2f;
         ThrownItem.Throw(Stage, ArmoryCatalog.Throwables[RubberDuckId], ground + Vector3.Up * 1.2f, ground + side, by != null && IsInstanceValid(by) ? by : null);
         Stage.Effects.FloatingText(at + Vector3.Up * 1.6f, Loc.Text("fx_card_duck"), new Color("ffd23f"));
+    }
+
+    // ---------- tap dance · bouncing rounds · honk charge · destiny gun (M-29 plan 16.6) ----------
+
+    /// <summary>A hit of the gun in the shooter's hands (not a rocket landing later, a pet's bite or a card's blast).</summary>
+    private static bool IsGunHit(Player shooter, HitInfo hit) => shooter.Gun is { IsMelee: false } gun && gun.Def.TypeId == hit.WeaponType;
+
+    /// <summary>How many tap dance steps <paramref name="who"/> can stack (5, +3 a level).</summary>
+    public int TapMax(Player who) => TapStacks + TapStacksPerLevel * Level(CardUpgrade.TapDanceStacks, who);
+
+    private void TapDanceEnds()
+    {
+        foreach (var (who, until) in _tapUntil.ToList())
+        {
+            if (IsInstanceValid(who) && until > _clock) continue;
+            if (IsInstanceValid(who)) who.TapStacks = 0;
+            _tapUntil.Remove(who);
+        }
+    }
+
+    /// <summary>Each waiting chain bounces from where its round stopped: 1 + level times, 70% each, to the nearest other monster.</summary>
+    private void BounceAll()
+    {
+        foreach (var (shooter, (at, from, hit)) in _bounceFrom.ToList())
+        {
+            _bounceFrom.Remove(shooter);
+            if (!IsInstanceValid(shooter)) continue;
+            var visited = new HashSet<Enemy> { from };
+            var pos = at;
+            float damage = hit.Damage;
+            int times = 1 + Level(CardUpgrade.BounceCount, shooter);
+            for (int i = 0; i < times; i++)
+            {
+                var next = Stage.Enemies.Where(e => IsInstanceValid(e) && !e.IsDead && !visited.Contains(e) && Flat(e.GlobalPosition - pos).Length() <= BounceReach)
+                    .OrderBy(e => Flat(e.GlobalPosition - pos).LengthSquared()).FirstOrDefault();
+                if (next == null) break;
+                visited.Add(next);
+                damage *= BounceShare;
+                var to = next.GlobalPosition + Vector3.Up;
+                var dir = Flat(to - pos).Normalized();
+                WeaponShotEffect.Play(Stage.Effects, shooter.Gun.Def, pos + Vector3.Up, pos + Vector3.Up, to, false, muzzleFlash: false);
+                Bounces++;
+                _bouncing = true;
+                next.TakeHit(new HitInfo(damage, dir, to, false, hit.Power * .5f, shooter, hit.WeaponType));
+                _bouncing = false;
+                pos = next.GlobalPosition;
+            }
+        }
+    }
+
+    /// <summary>A hit takes 3% off what is left of the shooter's slot-3 cooldown (once a shot, at most a second a second).</summary>
+    private void HonkCharge(Player shooter, ulong frame)
+    {
+        _honkFrame[shooter] = frame;
+        if (shooter.Loadout.Special is not { CooldownLeft: > 0 } special) return;
+        float budget = _honkBudget.TryGetValue(shooter, out float b) ? b : HonkChargePerSecond;
+        float cut = Mathf.Min(special.CooldownLeft * HonkChargeShare, budget);
+        _honkBudget[shooter] = budget - cut;
+        special.ShortenCooldown(cut);
+    }
+
+    /// <summary>The destiny gun: slot 1 or 2 (whichever has a gun, at random) becomes a random special weapon other than slot 3's.</summary>
+    private void GiveDestinyGun(Player who)
+    {
+        var pool = DestinyPool.Where(id => id != who.Loadout.Special?.Def.Id && ArmoryCatalog.Weapons.ContainsKey(id)).ToList();
+        if (pool.Count == 0) return;
+        var slots = who.Loadout.Primary != null ? new[] { 1, 2 } : new[] { 1 };
+        _rng.Randomize();
+        int slot = slots[_rng.RandiRange(0, slots.Length - 1)];
+        var def = ArmoryCatalog.Weapon(pool[_rng.RandiRange(0, pool.Count - 1)]);
+        who.Weapons.PlaceInSlot(slot, def);
+        DestinyGiven[who] = (slot, def.Id);
+        Stage.Effects.FloatingText(who.GlobalPosition + Vector3.Up * 2.6f, Loc.Format("fmt_card_destiny_fx", def.DisplayName), new Color("c08bff"));
     }
 
     // ---------- specials ----------

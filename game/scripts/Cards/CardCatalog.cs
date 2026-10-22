@@ -44,16 +44,40 @@ public static class CardCatalog
     public static CardChoice Lab(LabCard card, LabCards? effects, string kind = "")
     {
         string id = LabCards.Key("", card) + (kind == "" ? "" : "_" + kind);
-        string tag = kind == "" ? Loc.Text("tag_card_common") : Loc.Text("tag_card_" + kind);
+        // What a card works on, when it is not every gun (plan 16.6).
+        string tag = kind != "" ? Loc.Text("tag_card_" + kind) : Loc.Text(card switch
+        {
+            LabCard.TapDance => "tag_card_self_move",
+            LabCard.BouncingRounds => "tag_card_sniper_only",
+            LabCard.HonkCharge => "tag_card_slot3",
+            LabCard.DestinyGun => "tag_card_slot12",
+            _ => "tag_card_common",
+        });
+        var target = card switch { LabCard.TapDance => CardTarget.Self, LabCard.HonkCharge => CardTarget.Slot3, _ => CardTarget.Common };
+        // Grades (plan 16.2): tap dance is a plain number 2, the gun changers 3, honk charge and the destiny gun 4.
+        int grade = card switch { LabCard.TapDance => 2, LabCard.HonkCharge or LabCard.DestinyGun => 4, _ => 3 };
         return new(card.ToString(), Loc.Text("name_card_" + id), tag, Loc.Text("desc_card_" + id),
-            CardTarget.Common, null, who => effects?.Set(card, true, who), "c|" + card + (kind == "" ? "" : "|" + kind), 3);
+            target, Icon(LabCards.Key("", card)), who => effects?.Set(card, true, who), "c|" + card + (kind == "" ? "" : "|" + kind), grade);
     }
+
+    /// <summary>A card's picture (assets/icons/cards/card_&lt;name&gt;.png, Codex), or null when it has none yet.</summary>
+    public static Texture2D? Icon(string name)
+    {
+        string path = $"res://assets/icons/cards/card_{name}.png";
+        return ResourceLoader.Exists(path) ? GD.Load<Texture2D>(path) : null;
+    }
+
+    /// <summary>Cards that never share a window (both sniper cards, plan 16.6), though one survivor can have both.</summary>
+    private static readonly (string A, string B)[] Clashes = { ("c|Billiards|sniper", "c|BouncingRounds") };
+    private static bool ClashesWith(string key, IReadOnlyCollection<string> shown) =>
+        Clashes.Any(c => (c.A == key && shown.Contains(c.B)) || (c.B == key && shown.Contains(c.A)));
 
     /// <summary>The next level of a taken card's upgrade (<paramref name="level"/> is the level it brings).</summary>
     public static CardChoice Upgrade(CardUpgrade upgrade, int level, LabCards? effects) =>
         new(upgrade.ToString(), Loc.Format("fmt_card_upgrade_name", Loc.Text(LabCards.Key("name_card_", upgrade)), level),
             Loc.Format("fmt_card_upgrade_tag", Loc.Text(LabCards.Key("name_card_", LabCards.BaseOf(upgrade)))), Loc.Text(LabCards.Key("desc_card_", upgrade)),
-            CardTarget.Common, null, who => effects?.Upgrade(upgrade, who), $"u|{upgrade}|{level}", level >= LabCards.MaxLevel(upgrade) ? 4 : 2);
+            CardTarget.Common, Icon(LabCards.Key("", LabCards.BaseOf(upgrade))), who => effects?.Upgrade(upgrade, who), $"u|{upgrade}|{level}",
+            level >= LabCards.MaxLevel(upgrade) ? 4 : 2);
 
     /// <summary>The weapon kind a survivor's slot 1 or 2 gun gives billiards ("sniper", "shotgun"), or "" when neither.</summary>
     public static string BilliardsKind(Player? who)
@@ -65,7 +89,7 @@ public static class CardCatalog
 
     public static CardChoice Special(LabSpecial card, LabCards? effects) =>
         new(card.ToString(), Loc.Text(LabCards.Key("name_card_", card)), Loc.Text("tag_card_special"), Loc.Text(LabCards.Key("desc_card_", card)),
-            CardTarget.Common, null, who => effects?.Set(card, true, who), "s|" + card, card == LabSpecial.GlassCannon ? 6 : 5);
+            CardTarget.Common, Icon(LabCards.Key("", card)), who => effects?.Set(card, true, who), "s|" + card, card == LabSpecial.GlassCannon ? 6 : 5);
 
     /// <summary>
     /// A "?" card: what it turns into (<paramref name="inner"/>) is decided when it is drawn, shown only when picked
@@ -75,13 +99,13 @@ public static class CardCatalog
     {
         bool special = inner.Grade >= SpecialLow;
         return new CardChoice("?", "?", Loc.Text(special ? "tag_card_mystery_special" : "tag_card_mystery"),
-            Loc.Text(special ? "desc_card_mystery_special" : "desc_card_mystery"), inner.Target, null, who => inner.Apply(who),
+            Loc.Text(special ? "desc_card_mystery_special" : "desc_card_mystery"), inner.Target, Icon("mystery"), who => inner.Apply(who),
             "q|" + inner.Key, special ? SpecialHigh : NormalHigh, inner);
     }
 
     /// <summary>A card that can be taken again and again: it only changes the survivor who picks it.</summary>
     public static CardChoice Repeat(string id) => new(id, Loc.Text("name_card_r_" + id), Loc.Text("tag_card_self"), Loc.Text("desc_card_r_" + id),
-        CardTarget.Self, null, who =>
+        CardTarget.Self, Icon("r_" + id), who =>
         {
             switch (id)
             {
@@ -122,8 +146,19 @@ public static class CardCatalog
     public static List<CardChoice> NormalPool(LabCards effects, Player who)
     {
         string billiards = BilliardsKind(who);
+        bool sniper = new[] { who.Loadout.Primary?.Def.TypeId, who.Loadout.Secondary.Def.TypeId }.Any(LabCards.IsSniperType);
+        bool slow3 = who.Loadout.Special?.ShotCooldown >= effects.HonkChargeMinCooldown;
+        bool destiny = effects.DestinyPool.Any(id => id != who.Loadout.Special?.Def.Id);
         var fresh = LabCards.LevelUpCards
-            .Where(c => !effects.Owns(who, c) && (c != LabCard.Billiards || billiards != ""))
+            .Where(c => !effects.Owns(who, c) && c switch
+            {
+                LabCard.Billiards => billiards != "",
+                LabCard.BouncingRounds => sniper,
+                // Only for slot-3 kinds that recharge long (rocket, mortar, railgun), not the honk or the duck.
+                LabCard.HonkCharge => slow3,
+                LabCard.DestinyGun => destiny,
+                _ => true,
+            })
             .Select(c => Lab(c, effects, c == LabCard.Billiards ? billiards : ""));
         var upgrades = LabCards.LevelUpCards.Where(c => effects.Owns(who, c)).SelectMany(LabCards.UpgradesOf)
             .Where(u => effects.LevelOf(who, u) < LabCards.MaxLevel(u))
@@ -204,15 +239,16 @@ public static class CardCatalog
                 if (card == null)
                 {
                     // It hides a card no other card in the window is.
-                    var inner = pool.Where(c => c.Grade >= mysteryLow && c.Grade <= high && !taken.Contains(c.Key)).OrderBy(_ => rng.Randf()).FirstOrDefault();
+                    var inner = pool.Where(c => c.Grade >= mysteryLow && c.Grade <= high && !taken.Contains(c.Key) && !ClashesWith(c.Key, taken))
+                        .OrderBy(_ => rng.Randf()).FirstOrDefault();
                     if (inner == null) continue;
                     picked.Add(Mystery(inner));
                     taken.Add(inner.Key);
                     taken.Add("?");
                     continue;
                 }
-                // A card the "?" took is not shown as well.
-                if (taken.Contains(card.Key)) continue;
+                // A card the "?" took is not shown as well, nor one that clashes with a card already shown.
+                if (taken.Contains(card.Key) || ClashesWith(card.Key, taken)) continue;
                 picked.Add(card);
                 taken.Add(card.Key);
             }

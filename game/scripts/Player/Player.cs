@@ -95,6 +95,10 @@ public partial class Player : CharacterBody3D
     internal bool NetApplying { get; set; }
     /// <summary>Scales this survivor's weapon damage (AI squadmates hit softer, decisions.md M-12).</summary>
     public float DamageMultiplier { get; set; } = 1f;
+    /// <summary>Tap dance steps (M-29): each one walks and fires a little faster. Set by the host's cards, sent to clients.</summary>
+    public int TapStacks { get; set; }
+    /// <summary>Fire rate from cards (1 = as the weapon says).</summary>
+    public float FireRateScale => 1 + TapStacks * LabCards.TapFirePerStack;
     /// <summary>Look to wear instead of the saved one for this species (AI squadmates use the default look).</summary>
     public AppearanceProfile? Appearance { get; set; }
     /// <summary>Name shown in the teammate list (empty = species name).</summary>
@@ -286,7 +290,7 @@ public partial class Player : CharacterBody3D
         if (_reloadPressed && !busy && !Weapons.AimingThrow && Gun.StartReload()) PlayOwn("reload_start");
 
         var move = stunned || IsRestrained || Reviving != null || Weapons.Planted ? Vector3.Zero : new Vector3(_move.X, 0, _move.Y).LimitLength(1);
-        float speed = Definition.MoveSpeed * (IsHealing ? .35f : 1f) * (Gun.Reloading ? .85f : 1f) * HandlingSpeedScale;
+        float speed = Definition.MoveSpeed * (IsHealing ? .35f : 1f) * (Gun.Reloading ? .85f : 1f) * HandlingSpeedScale * (1 + TapStacks * LabCards.TapSpeedPerStack);
         bool grounded = IsOnFloor() && Velocity.Y <= 0;
         _push = _push.MoveToward(Vector3.Zero, dt * (grounded ? 10f : 1.2f));
         var horizontal = IsRestrained ? RestraintVelocity() : IsRolling ? _rollDirection * RollSpeed : move * speed + _push;

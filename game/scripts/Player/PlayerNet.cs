@@ -111,7 +111,7 @@ public partial class Player
         return new NetPlayerState
         {
             Peer = PeerId, Position = GlobalPosition, Aim = AimPoint, Health = Health, Medkits = Medkits, BleedLeft = BleedLeft, Flags = flags,
-            ActiveSlot = l.ActiveSlot,
+            ActiveSlot = l.ActiveSlot, TapStacks = TapStacks,
             Secondary = NetIds.Weapon(l.Secondary.Def.Id), SecondaryMag = l.Secondary.Mag, SecondaryReserve = l.Secondary.Reserve,
             Primary = l.Primary == null ? -1 : NetIds.Weapon(l.Primary.Def.Id), PrimaryMag = l.Primary?.Mag ?? 0, PrimaryReserve = l.Primary?.Reserve ?? 0,
             Special = l.Special == null ? -1 : NetIds.Weapon(l.Special.Def.Id), SpecialMag = l.Special?.Mag ?? 0, SpecialReserve = l.Special?.Reserve ?? 0,
@@ -140,6 +140,7 @@ public partial class Player
             Health = s.Health;
             if (IsDowned) BleedLeft = s.BleedLeft;
             Medkits = s.Medkits;
+            TapStacks = s.TapStacks;
             NetRestrained = s.Flags.HasFlag(NetPlayerFlags.Restrained);
             // Stunned on the host (bull, flashbang): no shooting or switching here either (I-73).
             if (s.Flags.HasFlag(NetPlayerFlags.Stunned)) StunTime = Mathf.Max(StunTime, .12f);

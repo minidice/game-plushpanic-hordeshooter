@@ -585,6 +585,108 @@ public partial class CardLabCheck : Node
         Cards.Set(LabSpecial.GlassCannon, false);
         await Reset();
 
+        // ---------- new cards, batch 1 (M-29 plan 16.6) ----------
+        await Reset();
+        player.Loadout.SetSlot(1, ArmoryCatalog.Weapon("m4"));
+        player.Loadout.SetSlot(2, ArmoryCatalog.Weapon("r870"));
+        player.Loadout.SelectSlot(1);
+        await Frames(2);
+        // Tap dance: a gun hit a frame adds a step of speed and fire rate, up to 5; a gap clears them.
+        Cards.Set(LabCard.TapDance, true, player);
+        var dancer = await Common(OpenSpot(10));
+        dancer.ScaleHealth(100);
+        for (int i = 0; i < 7; i++) { Shoot(dancer, player, player.Gun.Def.TypeId); Shoot(dancer, player, player.Gun.Def.TypeId); await Frames(1); }
+        Check(player.TapStacks == LabCards.TapStacks && player.FireRateScale > 1.15f, $"tap dance stacks to {LabCards.TapStacks} (one a frame, {player.TapStacks}), fire rate ×{player.FireRateScale:0.00}");
+        Shoot(dancer, player, "companion");
+        Cards.Upgrade(CardUpgrade.TapDanceStacks, player);
+        Check(Cards.TapMax(player) == LabCards.TapStacks + LabCards.TapStacksPerLevel, "its upgrade lets it stack 3 more");
+        await Frames(Mathf.CeilToInt((LabCards.TapHold + .3f) * Engine.PhysicsTicksPerSecond));
+        Check(player.TapStacks == 0 && Mathf.IsEqualApprox(player.FireRateScale, 1), "a gap without hits clears the steps");
+        await Reset();
+        // Bouncing rounds: from where the sniper round stopped to the nearest other monster, 70%; one more a level.
+        Cards.Set(LabCard.BouncingRounds, true, player);
+        player.Loadout.SetSlot(1, ArmoryCatalog.Weapon("awm"));
+        await Frames(1);
+        string sniperType = player.Gun.Def.TypeId;
+        spot = OpenSpot(10);
+        var pierced = await Common(spot);
+        var bounced = await Common(spot + new Vector3(2.5f, 0, 0));
+        var twice = await Common(spot + new Vector3(5f, 0, 0));
+        foreach (var e in new[] { pierced, bounced, twice }) e.ScaleHealth(100);
+        float bouncedBefore = bounced.Health, twiceBefore = twice.Health;
+        Shoot(pierced, player, sniperType, 40);
+        await Frames(2);
+        Check(LabCards.IsSniperType(sniperType) && Cards.Bounces == 1 && bounced.Health < bouncedBefore && Mathf.IsEqualApprox(bouncedBefore - bounced.Health, 40 * LabCards.BounceShare) &&
+              bounced.LastHitBy == player && twice.Health == twiceBefore, "a sniper hit bounces once to the nearest monster for 70%, counted for the shooter");
+        player.Loadout.SetSlot(1, ArmoryCatalog.Weapon("m4"));
+        await Frames(1);
+        Shoot(pierced, player, player.Gun.Def.TypeId, 40);
+        await Frames(2);
+        Check(Cards.Bounces == 1, "a rifle hit does not bounce (sniper only)");
+        player.Loadout.SetSlot(1, ArmoryCatalog.Weapon("awm"));
+        await Frames(1);
+        Cards.Upgrade(CardUpgrade.BounceCount, player);
+        Shoot(pierced, player, sniperType, 40);
+        await Frames(2);
+        Check(Cards.Bounces == 3 && twice.Health < twiceBefore, "level 1 bounces twice");
+        player.Loadout.SetSlot(2, ArmoryCatalog.Weapon("awm"));
+        var sniperDraws = Enumerable.Range(0, 120).Select(_ => CardCatalog.LevelUp(Cards, rng, player, new float[] { 0, 0, 1, 0 }).Choices.Select(c => c.Inner?.Key ?? c.Key).ToList()).ToList();
+        Cards.Set(LabCard.BouncingRounds, false);
+        sniperDraws.AddRange(Enumerable.Range(0, 120).Select(_ => CardCatalog.LevelUp(Cards, rng, player, new float[] { 0, 0, 1, 0 }).Choices.Select(c => c.Inner?.Key ?? c.Key).ToList()));
+        Check(sniperDraws.Any(w => w.Contains("c|BouncingRounds")) && sniperDraws.Any(w => w.Contains("c|Billiards|sniper")) &&
+              !sniperDraws.Any(w => w.Contains("c|BouncingRounds") && w.Contains("c|Billiards|sniper")),
+            "with a sniper both sniper cards are offered, never in the same window");
+        player.Loadout.SetSlot(2, ArmoryCatalog.Weapon("r870"));
+        player.Loadout.SetSlot(1, ArmoryCatalog.Weapon("m4"));
+        await Reset();
+        // Honk charge: only with a long slot-3 recharge; each shot's hit takes 3% off what is left, at most a second a second.
+        player.Loadout.Equip(3, new WeaponState(ArmoryCatalog.Weapon("alabong")));
+        await Frames(2);
+        var rocket = player.Loadout.Special!;
+        Check(rocket.ShotCooldown >= Cards.HonkChargeMinCooldown && Enumerable.Range(0, 60).Any(_ => CardCatalog.NormalPool(Cards, player).Any(c => c.Key == "c|HonkCharge")),
+            $"honk charge is offered with a {rocket.ShotCooldown:0}s slot-3 recharge");
+        Check(rocket.Trigger(true, true) && rocket.CooldownLeft > 20, "the rocket goes off and starts its recharge");
+        Cards.Set(LabCard.HonkCharge, true, player);
+        float leftBefore = rocket.CooldownLeft;
+        var charger = await Common(OpenSpot(10));
+        charger.ScaleHealth(100);
+        Shoot(charger, player, player.Gun.Def.TypeId);
+        Shoot(charger, player, player.Gun.Def.TypeId);
+        Check(rocket.CooldownLeft < leftBefore - leftBefore * LabCards.HonkChargeShare * .9f && rocket.CooldownLeft > leftBefore - leftBefore * LabCards.HonkChargeShare * 1.5f,
+            $"a hit takes 3% off the recharge, once a shot ({leftBefore:0.0} → {rocket.CooldownLeft:0.0})");
+        for (int i = 0; i < 30; i++) { Shoot(charger, player, player.Gun.Def.TypeId); await Frames(1); }
+        Check(leftBefore - rocket.CooldownLeft < 1.6f + 30f / Engine.PhysicsTicksPerSecond, $"at most about a second a second ({leftBefore - rocket.CooldownLeft:0.00} s off in half a second)");
+        player.Loadout.Equip(3, new WeaponState(ArmoryCatalog.Weapon("honk")));
+        await Frames(2);
+        Check(!Enumerable.Range(0, 60).Any(_ => CardCatalog.NormalPool(Cards, player).Any(c => c.Key == "c|HonkCharge")) || Cards.Owns(player, LabCard.HonkCharge),
+            "and not with a short one (the honk)");
+        await Reset();
+        // The destiny gun: slot 1 or 2 becomes a random special weapon other than slot 3's, firing on a recharge; once a match.
+        Check(Cards.DestinyPool.Count >= 3 && CardCatalog.NormalPool(Cards, player).Any(c => c.Key == "c|DestinyGun"), "the destiny gun is in the pool");
+        Cards.Set(LabCard.DestinyGun, true, player);
+        await Frames(2);
+        var (slot, weapon) = Cards.DestinyGiven[player];
+        var changed = slot == 1 ? player.Loadout.Secondary : player.Loadout.Primary!;
+        Check(changed.Def.Id == weapon && changed.Def.Slot == WeaponSlot.Special && weapon != player.Loadout.Special?.Def.Id && changed.ShotCooldown > 0,
+            $"slot {slot} became the {weapon} and fires on a recharge");
+        Check(!CardCatalog.NormalPool(Cards, player).Any(c => c.Key == "c|DestinyGun"), "it is not offered again");
+        await Reset();
+        // Special weapon twice (team): slot 3 goes off once more.
+        Cards.Set(LabSpecial.DoubleSpecial, true);
+        player.Loadout.Equip(3, new WeaponState(ArmoryCatalog.Weapon("alabong")));
+        player.Loadout.SelectSlot(3);
+        await Frames(2);
+        int rocketsBefore = _stage.Effects.GetChildren().OfType<Rocket>().Count();
+        player.SetControls(Vector2.Zero, player.GlobalPosition + new Vector3(8, 1, 0), true);
+        await Frames(2);
+        player.SetControls(Vector2.Zero, player.GlobalPosition + new Vector3(8, 1, 0), false);
+        await Frames(3);
+        Check(player.Weapons.Echoes == 1 && _stage.Effects.GetChildren().OfType<Rocket>().Count() >= rocketsBefore + 2,
+            "with the team card a rocket goes off twice, side by side");
+        Cards.Set(LabSpecial.DoubleSpecial, false);
+        player.Loadout.SelectSlot(1);
+        await Reset();
+
         // ---------- the training log ----------
         var logAt = OpenSpot(5);
         player.SetControls(Vector2.Zero, logAt + Vector3.Up, false);

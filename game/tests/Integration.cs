@@ -219,6 +219,24 @@ public partial class Integration : Node
             "special behaviour numbers come from monster_traits JSON");
         Check(ArmoryCatalog.Weapon("r870").HitPower >= 80 && ArmoryCatalog.Weapon("m4").HitPower <= 20, "only shotguns (and explosions) really push");
 
+        // A language row whose text has a comma must be quoted, or the text is cut at the comma (I-97).
+        var cut = new List<string>();
+        foreach (var lang in DirAccess.GetDirectoriesAt("res://content/lan"))
+            foreach (var file in DirAccess.GetFilesAt($"res://content/lan/{lang}").Where(f => f.EndsWith(".csv")))
+            {
+                bool quoted = false;
+                foreach (var line in FileAccess.GetFileAsString($"res://content/lan/{lang}/{file}").Split('\n'))
+                {
+                    if (quoted) { if (line.Count(c => c == '"') % 2 == 1) quoted = false; continue; }
+                    int comma = line.IndexOf(',');
+                    if (line.StartsWith('#') || comma < 0) continue;
+                    var text = line[(comma + 1)..];
+                    if (text.StartsWith('"')) { quoted = text.Count(c => c == '"') % 2 == 1; continue; }
+                    if (text.Contains(',')) cut.Add($"{lang}/{file} {line[..comma]}");
+                }
+            }
+        Check(cut.Count == 0, "language rows whose text has a comma are quoted" + (cut.Count > 0 ? ": " + string.Join(", ", cut) : ""));
+
         var kor = Loc.Table("kor");
         var eng = Loc.Table("eng");
         var missing = kor.Keys.Where(k => !eng.ContainsKey(k)).ToList();

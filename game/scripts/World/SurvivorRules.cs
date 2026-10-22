@@ -86,7 +86,11 @@ public partial class SurvivorRules : ModeRules
     public override void _Ready()
     {
         base._Ready();
-        Cards = new LabCards { Name = "CardEffects", Stage = Stage };
+        Cards = new LabCards
+        {
+            Name = "CardEffects", Stage = Stage, HonkChargeMinCooldown = Rules.CooldownCardMin,
+            DestinyPool = Rules.WeaponPool.Where(id => ArmoryCatalog.Weapon(id).Slot == WeaponSlot.Special).ToList(),
+        };
         AddChild(Cards);
         Window = new CardWindow { Name = "CardWindow", Stage = Stage, Queue = LocalQueue };
         if (!Stage.Authoritative) Window.PickHandler = index =>
@@ -284,6 +288,8 @@ public partial class SurvivorRules : ModeRules
         if (queue.Front?.Serial != serial || !queue.Reroll(index)) return;
         _rerollsUsed[who] = _rerollsUsed.GetValueOrDefault(who) + 1;
     }
+
+    public override LabCards? CardEffects => Cards;
 
     public override void ApplyVoteSync(byte[] data) => Vote.Apply(data);
 

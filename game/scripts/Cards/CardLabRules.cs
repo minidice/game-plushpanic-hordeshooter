@@ -13,6 +13,7 @@ public partial class CardLabRules : ModeRules
     public override GameMode Mode => GameMode.Survivor;
     public override string ObjectiveText => Loc.Text("ui_cardlab_objective");
     public LabCards Cards { get; private set; } = null!;
+    public override LabCards? CardEffects => Cards;
     /// <summary>The local survivor's waiting card offers (arming after a cheat reset, test level-ups).</summary>
     public CardQueue Queue { get; } = new();
     /// <summary>A group of commons every few seconds around the survivor.</summary>
@@ -32,7 +33,11 @@ public partial class CardLabRules : ModeRules
     public override void _Ready()
     {
         base._Ready();
-        Cards = new LabCards { Name = "LabCards", Stage = Stage };
+        Cards = new LabCards
+        {
+            Name = "LabCards", Stage = Stage, HonkChargeMinCooldown = Tuning.Survivor.CooldownCardMin,
+            DestinyPool = Tuning.Survivor.WeaponPool.Where(id => ArmoryCatalog.Weapon(id).Slot == WeaponSlot.Special).ToList(),
+        };
         AddChild(Cards);
         Companions = new CompanionSquad { Name = "Companions", Stage = Stage };
         AddChild(Companions);
@@ -99,7 +104,8 @@ public partial class CardLabRules : ModeRules
     /// <summary>A boss-reward cheat: the stand-in special cards that are still off, as a special (gold) offer.</summary>
     public void TestSpecial()
     {
-        var off = LabCards.Specials.Where(s => !Cards.IsOn(s)).ToList();
+        // Three of those not on yet, glass cannon (the one with a price) first while it is off.
+        var off = LabCards.Specials.Where(s => !Cards.IsOn(s)).OrderBy(s => s == LabSpecial.GlassCannon ? 0 : 1).Take(3).ToList();
         if (off.Count == 0) return;
         Queue.Add(new CardOffer { Kind = CardKind.Special, TitleKey = "ui_card_special_title", Choices = off.Select(s => CardCatalog.Special(s, Cards)).ToList() });
     }

@@ -238,9 +238,21 @@ public partial class WeaponController : Node
         return true;
     }
 
+    /// <summary>Second shots of slot-3 weapons from the team's "special weapon twice" card (checks).</summary>
+    public int Echoes { get; private set; }
+    private WeaponDefinition? _echoDef;
+    private float _echoLeft;
+    private bool _echoing;
+
     public void Tick(float dt, bool moving, bool pressed, bool held, bool blocked)
     {
         Loadout.TickIdle(dt);
+        if (_echoDef != null && (_echoLeft -= dt) <= 0)
+        {
+            var def = _echoDef;
+            _echoDef = null;
+            Echo(def);
+        }
         TickActions(dt,moving,pressed,held,blocked);
         // Sample AFTER auto reload, shell insertion and trigger cancellation. Never advance a second timer.
         _player.Rig.SetReloadPose(dt,blocked||AimingThrow||_player.IsDead||_player.IsStunned ? null : Current);
@@ -306,7 +318,54 @@ public partial class WeaponController : Node
             }
             return;
         }
+        state.RateScale = _player.FireRateScale;
         if (_swingState == null && !Planted && state.Trigger(pressed, held)) Fire(state);
+    }
+
+    /// <summary>The second shot of the "special weapon twice" card: beside the first, or just after it.</summary>
+    private void Echo(WeaponDefinition def)
+    {
+        if (_player.IsDead || _player.IsDowned) return;
+        Echoes++;
+        _echoing = true;
+        var dir = AimDirection();
+        var side = dir.Cross(Vector3.Up).Normalized() * .7f;
+        Stage.Sfx.PlayAt(def.ShotSound, MuzzlePosition);
+        switch (def.Mode)
+        {
+            case FireMode.Projectile:
+                var from = MuzzlePosition + side;
+                Rocket.Launch(Stage, from, dir, def, _player.GetRid(), _player);
+                WeaponShotEffect.Flash(Stage.Effects, def, from, dir);
+                Stage.Net?.OnShot(_player, def, from, new[] { from + dir }, _player.AimPoint);
+                break;
+            case FireMode.Lob:
+                var target = LobTarget(def) + side * 2.5f;
+                MortarShell.Fire(Stage, MuzzlePosition, target, def, _player);
+                Stage.Net?.OnShot(_player, def, MuzzlePosition, new[] { target }, _player.AimPoint);
+                break;
+            case FireMode.Shout:
+                Shout(def);
+                Stage.Net?.OnShot(_player, def, MuzzlePosition, System.Array.Empty<Vector3>(), _player.AimPoint);
+                break;
+            case FireMode.Throw:
+                if (ArmoryCatalog.Throwables.TryGetValue(def.ThrowableId, out var throwable))
+                {
+                    var hand = _player.GlobalPosition + Vector3.Up * 1.2f;
+                    ThrownItem.Throw(Stage, throwable, hand, _player.AimPoint + side * 2f, _player);
+                    Stage.Net?.OnThrow(_player, throwable, hand, _player.AimPoint + side * 2f);
+                }
+                break;
+            case FireMode.Melee:
+                break;
+            default:
+                var origin = _player.GlobalPosition + Vector3.Up * Player.AimHeight + side;
+                var end = Hitscan(def, origin, dir, def.Damage * _player.DamageMultiplier, def.HitPower, RangeScale(def), out bool crit);
+                WeaponShotEffect.Play(Stage.Effects, def, origin, origin, end, crit, muzzleFlash: false);
+                Stage.Net?.OnShot(_player, def, origin, new[] { end }, _player.AimPoint);
+                break;
+        }
+        _echoing = false;
     }
 
     // ---------- mortar set-up and railgun charge (decisions.md C-25) ----------
@@ -409,6 +468,13 @@ public partial class WeaponController : Node
         _player.Rig.SetLocomotionPose(0,0,true);
         var def = state.Def;
         ShotsFired++;
+        // The team's "special weapon twice" card (M-29 plan 16.6): every slot-3 kind goes off once more.
+        if (!_echoing && def.Slot == WeaponSlot.Special && Stage.ModeRules?.CardEffects?.IsOn(LabSpecial.DoubleSpecial) == true)
+        {
+            _echoDef = def;
+            // Rockets and rails side by side at once; a honk, a duck and a mortar round a moment later.
+            _echoLeft = def.Mode is FireMode.Shout or FireMode.Throw or FireMode.Lob ? .3f : .02f;
+        }
         Kick = state.IsMelee ? 0 : def.Category == WeaponCategory.Heavy ? 1 : def.Category == WeaponCategory.Pistol ? .6f : 1;
         var dir = AimDirection();
         Stage.Sfx.PlayAt(def.ShotSound, MuzzlePosition);

@@ -74,6 +74,7 @@
     "special_cooldown_s": 25,
     "special_vote_s": 60,
     "rerolls": 5,
+    "cooldown_card_min_s": 20,
     "normal_grade_weights": [
       [55, 30, 15, 0],
       [35, 35, 22, 8],

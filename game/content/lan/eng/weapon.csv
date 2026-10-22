@@ -30,7 +30,7 @@ name_weapon_mortar,Mortar
 name_weapon_honk,Honk
 name_weapon_rubber_duck,Rubber Duck
 desc_weapon_honk,HONK! Shoves everything around you away (cooldown)
-desc_weapon_rubber_duck,Throws a rubber duck at the aim point: it squeaks commons together, then pops (cooldown)
+desc_weapon_rubber_duck,"Throws a rubber duck at the aim point: it squeaks commons together, then pops (cooldown)"
 ui_card_weapon_cooldown,Cooldown
 fmt_weapon_dual,Dual {0}
 name_weapontype_railgun,Railgun

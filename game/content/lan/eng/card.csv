@@ -47,7 +47,7 @@ name_card_last_shot,Last shot
 name_card_glass_cannon,Glass cannon
 desc_card_helium_party,Any bullet sometimes floats a common at once. Shoot a floating one to pop it (named and bosses stay down)
 desc_card_last_shot,Whole team: the last round of your own magazine explodes where it hits
-desc_card_glass_cannon,Whole team: all damage ×2 · Price: everyone's max health halved (none in the lab, you cannot be hurt there)
+desc_card_glass_cannon,"Whole team: all damage ×2 · Price: everyone's max health halved (none in the lab, you cannot be hurt there)"
 ui_card_special_title,Boss reward — special card
 tag_card_special,Special card · rule
 fmt_cardlab_specials,Special cards: {0}
@@ -123,3 +123,23 @@ tag_card_mystery,? card · one of grade 3-4
 tag_card_mystery_special,? card · one of grade 6-7
 desc_card_mystery,What it becomes shows the moment you pick it. Its grade is higher for it
 desc_card_mystery_special,What it becomes shows when the vote ends. Its grade is higher for it
+# New cards, batch 1 (decisions.md M-29, onslaught-cards-plan.md 16.6)
+name_card_tap_dance,Tap dance
+desc_card_tap_dance,Every hit stacks +5% walking and +4% fire rate (up to 5; gone after 2.5 s without a hit)
+name_card_bouncing_rounds,Bouncing rounds
+desc_card_bouncing_rounds,A sniper hit bounces from where it stopped to the nearest other monster (70% damage each bounce)
+name_card_honk_charge,Honk charge
+desc_card_honk_charge,"Every hit takes 3% off what is left of slot 3's cooldown (at most 1 s a second, once a shot)"
+name_card_destiny_gun,Gun of destiny
+desc_card_destiny_gun,A random slot's gun turns into a random special weapon · it fires on a cooldown (once a match)
+name_card_double_special,Special weapon twice
+desc_card_double_special,Whole team: slot 3 goes off once more (two honks · two ducks · rockets side by side · two mortar rounds · two rails)
+name_card_u_tap_dance_stacks,Tap dance stacks
+desc_card_u_tap_dance_stacks,Up to 3 more stacks
+name_card_u_bounce_count,Bounce count
+desc_card_u_bounce_count,One more bounce (1 → 2 → 3)
+tag_card_self_move,Me · walk · fire rate
+tag_card_sniper_only,Sniper only
+tag_card_slot3,Slot 3
+tag_card_slot12,Slot 1 or 2
+fmt_card_destiny_fx,Gun of destiny: {0}!
