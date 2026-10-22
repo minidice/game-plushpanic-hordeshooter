@@ -37,6 +37,9 @@ public partial class StageNet : Node
 
     private readonly Dictionary<int, Enemy> _enemies = new();
     private readonly Dictionary<int, NetTrack> _playerTracks = new();
+    /// <summary>Each survivor's place in the room: the host 0, friends 1–5 (the lowest free one), from the host's roster.</summary>
+    private readonly Dictionary<int, int> _slots = new();
+    private bool _placed;
     private readonly HashSet<int> _readyPeers = new();
     private readonly List<Enemy> _newEnemies = new();
     private readonly Dictionary<int, (double Time, bool Critical)> _lastHitEvent = new();
@@ -61,6 +64,7 @@ public partial class StageNet : Node
         {
             Multiplayer.PeerDisconnected += OnPeerLeft;
             Peers[HostPeer] = _stage.Player;
+            _slots[HostPeer] = 0;
             _stage.Player.PeerId = HostPeer;
             // Tell the host what to give a friend: this PC (127.0.0.1) or its address on the router.
             var lan = NetLaunch.LanAddresses();
@@ -126,9 +130,14 @@ public partial class StageNet : Node
         }
         if (!Peers.ContainsKey(peer))
         {
+            int slot = Enumerable.Range(1, NetLaunch.MaxClients).First(s => !_slots.ContainsValue(s));
+            _slots[peer] = slot;
             var def = CharacterCatalog.Player(characterId);
-            var survivor = _stage.AddRemoteSurvivor(def, ClientStart(_stage), peer);
+            var survivor = _stage.AddRemoteSurvivor(def, ClientStart(_stage, slot), peer);
             Peers[peer] = survivor;
+            Relabel();
+            // Everyone already here meets the newcomer (it gets the roster in its welcome below).
+            _batch.Begin(NetEvent.Roster); WriteRoster(_batch.W);
         }
         _readyPeers.Add(peer);
         GD.Print($"[net] peer {peer} joined as {characterId}");
@@ -138,11 +147,48 @@ public partial class StageNet : Node
         foreach (var e in _stage.AllEnemies.Where(e => !e.IsDead)) { welcome.Begin(NetEvent.EnemySpawn); WriteSpawn(welcome.W, e); }
         foreach (var p in _stage.Interactables.OfType<WeaponPickup>().Where(p => p.State != null)) { welcome.Begin(NetEvent.PickupSpawn); WritePickup(welcome.W, p); }
         foreach (var l in _stage.Interactables.OfType<LootPickup>()) { welcome.Begin(NetEvent.LootSpawn); WriteLoot(welcome.W, l); }
+        welcome.Begin(NetEvent.Roster); WriteRoster(welcome.W);
         SendEvents(peer, welcome.Take());
     }
 
-    /// <summary>Where a client's survivor starts: beside the host's.</summary>
-    public static Vector3 ClientStart(Stage stage) => stage.Map.PlayerStart + new Vector3(1.2f, 0, 1.2f);
+    /// <summary>
+    /// Where friend <paramref name="slot"/> (1–5) starts: its own corner of a pentagon around the host's start, turned a
+    /// little or moved out (then in) when a wall is there, so no two friends share a spot.
+    /// </summary>
+    public static Vector3 ClientStart(Stage stage, int slot)
+    {
+        var start = stage.Map.PlayerStart;
+        float angle = (slot - 1) * Mathf.Tau / NetLaunch.MaxClients;
+        foreach (float radius in new[] { 1.6f, 2.6f, 1.1f })
+            foreach (float turn in new[] { 0f, .3f, -.3f })
+            {
+                var at = start + new Vector3(radius, 0, 0).Rotated(Vector3.Up, angle + turn);
+                if (stage.Flow == null || !stage.Flow.IsBlocked(at)) return at;
+            }
+        return start + new Vector3(1.6f, 0, 0).Rotated(Vector3.Up, angle);
+    }
+
+    /// <summary>Who is in the match: peer, place, character and where each survivor is now.</summary>
+    private void WriteRoster(NetWriter w)
+    {
+        var list = Peers.Where(p => IsInstanceValid(p.Value)).OrderBy(p => _slots.GetValueOrDefault(p.Key)).ToList();
+        w.U8(list.Count);
+        foreach (var (peer, survivor) in list)
+        {
+            w.I32(peer); w.U8(_slots.GetValueOrDefault(peer)); w.Str(survivor.Definition.Id); w.Pos(survivor.GlobalPosition);
+        }
+    }
+
+    /// <summary>Two or more on the same character get a number after its name, in room order, on every PC alike.</summary>
+    private void Relabel()
+    {
+        foreach (var same in Peers.Values.Where(IsInstanceValid).GroupBy(p => p.Definition.Id))
+        {
+            var list = same.OrderBy(p => _slots.GetValueOrDefault(p.PeerId)).ToList();
+            for (int i = 0; i < list.Count; i++)
+                list[i].DisplayLabel = list.Count > 1 ? $"{Loc.Text(list[i].Definition.DisplayName)} {i + 1}" : "";
+        }
+    }
 
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, TransferMode = MultiplayerPeer.TransferModeEnum.UnreliableOrdered, TransferChannel = 1)]
     private void ClientInput(byte[] data)
@@ -169,9 +215,12 @@ public partial class StageNet : Node
         int peer = (int)id;
         _readyPeers.Remove(peer);
         if (peer == HostPeer || !Peers.Remove(peer, out var survivor)) return;
+        _slots.Remove(peer);
         _stage.Players.Remove(survivor);
         survivor.QueueFree();
         GD.Print($"[net] peer {peer} left");
+        Relabel();
+        _batch.Begin(NetEvent.Roster); WriteRoster(_batch.W);
         _stage.CheckWipe();
     }
 
@@ -465,8 +514,10 @@ public partial class StageNet : Node
 
     private void ClientFrame(float dt)
     {
-        // Own input every physics frame (presses since the last one ride along).
+        // Own input every physics frame (presses since the last one ride along), once the roster has put us in our
+        // place: before that our position is only a guess and the host would walk us there.
         var local = _stage.Player;
+        if (!_placed) return;
         var w = new NetWriter();
         local.TakeNetInput(++_inputSeq).Write(w);
         var bytes = w.ToArray();
@@ -656,6 +707,9 @@ public partial class StageNet : Node
                 ThrownItem.Throw(_stage, def, from, target, thrower);
                 break;
             }
+            case NetEvent.Roster:
+                ApplyRoster(r);
+                break;
             case NetEvent.EnemyWeak:
             {
                 int id = r.U16();
@@ -707,6 +761,46 @@ public partial class StageNet : Node
                 break;
             }
         }
+    }
+
+    /// <summary>Client: meet survivors that came in, drop those that left, and stand in our own place (M-30).</summary>
+    private void ApplyRoster(NetReader r)
+    {
+        int count = r.U8();
+        var here = new HashSet<int>();
+        for (int i = 0; i < count; i++)
+        {
+            int peer = r.I32();
+            int slot = r.U8();
+            string character = r.Str();
+            var at = r.Pos();
+            here.Add(peer);
+            _slots[peer] = slot;
+            if (peer == Multiplayer.GetUniqueId())
+            {
+                if (_placed) continue;
+                // Our own place from our slot (the same map on every PC), where the host put our survivor too.
+                _placed = true;
+                var mine = ClientStart(_stage, slot);
+                _stage.Player.GlobalPosition = mine;
+                _stage.Cam.SnapTo(mine);
+                continue;
+            }
+            if (Peers.ContainsKey(peer)) continue;
+            Peers[peer] = _stage.AddRemoteSurvivor(CharacterCatalog.Player(character), at, peer);
+            GD.Print($"[net] {character} (peer {peer}) is in the match");
+        }
+        foreach (var gone in Peers.Keys.Where(p => !here.Contains(p) && p != HostPeer && Peers[p] != _stage.Player).ToList())
+        {
+            var survivor = Peers[gone];
+            Peers.Remove(gone);
+            _slots.Remove(gone);
+            _playerTracks.Remove(gone);
+            _stage.Players.Remove(survivor);
+            if (IsInstanceValid(survivor)) survivor.QueueFree();
+            GD.Print($"[net] peer {gone} left the match");
+        }
+        Relabel();
     }
 
     private void ApplyWorld(NetReader r)

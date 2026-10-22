@@ -165,7 +165,7 @@ void fragment() {
         _notice.Text = stage.NoticeTime > 0 ? stage.Notice : "";
         _notice.Modulate = new Color(1, 1, 1, Mathf.Clamp(stage.NoticeTime, 0, 1));
 
-        _hp.Text = player.IsHealing ? Loc.Format("fmt_hud_healing", (int)(player.HealProgress * 100)) : Loc.Text(player.Definition.DisplayName);
+        _hp.Text = player.IsHealing ? Loc.Format("fmt_hud_healing", (int)(player.HealProgress * 100)) : player.DisplayLabel.Length > 0 ? player.DisplayLabel : Loc.Text(player.Definition.DisplayName);
         _medkit.UpdateSlot(Loc.Text("hud_medkit"), player.IsHealing ? $"{(int)(player.HealProgress * 100)}%" : $"×{player.Medkits}", "", "medkit", player.IsHealing, player.Medkits > 0);
         _ammo.Text = gun.IsMelee ? Loc.Text("hud_melee")
             : gun.CooldownLeft > 0 ? Loc.Format("fmt_hud_cooldown", Mathf.CeilToInt(gun.CooldownLeft))

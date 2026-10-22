@@ -33,6 +33,8 @@ public partial class Hud
                 : survivor.IsDowned ? Loc.Format("fmt_hud_squad_down", Mathf.CeilToInt(Mathf.Max(0, survivor.BleedLeft)))
                 : survivor.IsRestrained ? Loc.Text("hud_squad_held")
                 : "";
+            // Numbers for the same character can change as people come and go (M-30).
+            row.Name.Text = survivor.DisplayLabel.Length > 0 ? survivor.DisplayLabel : Loc.Text(survivor.Definition.DisplayName);
             row.Name.Modulate = survivor.IsDead ? new Color(1, 1, 1, .45f) : Colors.White;
         }
     }

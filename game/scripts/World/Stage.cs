@@ -254,7 +254,8 @@ public partial class Stage : Node3D
             Objective = ModeRules.InitialObjective;
             AddChild(ModeRules);
         }
-        if (Role == NetRole.Client) Player.Position = StageNet.ClientStart(this);
+        // A client starts in the first friend's place; the host's roster moves it to its own one (M-30).
+        if (Role == NetRole.Client) Player.Position = StageNet.ClientStart(this, 1);
         Trail.Add(Player.GlobalPosition);
         // The menu's squad size applies to the real game scene; tests ask for squadmates explicitly.
         // No AI squadmates in a network match (M-11).

@@ -14,8 +14,8 @@ namespace HordeShooter;
 public static class NetLaunch
 {
     public const int Port = 24680;
-    /// <summary>Two-player MVP: the host takes one client.</summary>
-    public const int MaxClients = 1;
+    /// <summary>Up to six in a room (decisions.md D-2, M-30): the host and five friends.</summary>
+    public const int MaxClients = 5;
     public static int MaxPlayers => MaxClients + 1;
     public static NetRole Pending { get; private set; } = NetRole.Offline;
     /// <summary>The open room on this PC (null when playing offline).</summary>
