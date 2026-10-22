@@ -215,24 +215,30 @@ public sealed class StageTwoMap : StageMap
 
     // ---------- ground and backdrop (decoration only) ----------
 
-    /// <summary>4 m kit tiles over the whole view: dirt road through the clearing and forest, asphalt in the yard.</summary>
+    /// <summary>
+    /// Painted ground (A-24): a dirt patch round the arrival hatch and a dirt road through the forest, an asphalt road with a
+    /// gravel shoulder through the yard, all fraying into the grass; tufts and pebbles break the edges. Holes are left for
+    /// the stream bed and the safehouse floor.
+    /// </summary>
     private void LayGround()
     {
-        var tiles = new Dictionary<string, List<Transform3D>> { ["ground_grass"] = new(), ["path_dirt"] = new(), ["road_asphalt"] = new() };
-        for (float x = -14; x <= 126; x += 4)
-            for (float z = -28; z <= 24; z += 4)
-            {
-                // The stream's bed and the safehouse floor stay clear.
-                if (x > StreamX0 - 1 && x < StreamX1 + 1) continue;
-                if (x > 99 && x < 114 && z > -6 && z < 6) continue;
-                string id = Mathf.Abs(z) < 1 && x > 18 && x < 100 ? (x > StreamX1 ? "road_asphalt" : "path_dirt")
-                    : x > -2 && x < 18 && new Vector2(x - ArrivalHatch.X, z - ArrivalHatch.Z).Length() < 7 ? "path_dirt"
-                    : "ground_grass";
-                // Flat tiles are 0.16 m thick: sink them so their top is the floor.
-                tiles[id].Add(new Transform3D(Basis.Identity, new Vector3(x, -.16f, z)));
-            }
-        foreach (var (id, at) in tiles) Scatter(id, at);
-        // Soil just under the tiles fills the thin seams the 4 m grid leaves at the stream banks and the safehouse.
+        var painter = new GroundPainter(new Rect2(-14, -28, 140, 52), 22);
+        var hatch = new Vector2(ArrivalHatch.X, ArrivalHatch.Z);
+        painter.Disc(GroundKind.Dirt, hatch, 7.5f);
+        painter.Strip(GroundKind.Dirt, hatch, new Vector2(20, 0), 2.4f);
+        painter.Strip(GroundKind.Dirt, new Vector2(18, 0), new Vector2(StreamX0 + .4f, 0), 2f);
+        painter.Road(new Vector2(StreamX1 - .3f, 0), new Vector2(100.4f, 0), 2f);
+        var room = SafehouseRect.Grow(.6f);
+        PaintGround(painter, new[]
+        {
+            new Rect2(-14, -28, StreamX0 + 14, 52),
+            new Rect2(StreamX1, -28, room.Position.X - StreamX1, 52),
+            new Rect2(room.Position.X, -28, room.Size.X, room.Position.Y + 28),
+            new Rect2(room.Position.X, room.End.Y, room.Size.X, 24 - room.End.Y),
+            new Rect2(room.End.X, -28, 126 - room.End.X, 52),
+        });
+        GroundDressing(painter, Area.Grow(1), p => p.X > StreamX0 - .4f && p.X < StreamX1 + .4f || room.HasPoint(p));
+        // Soil just under the ground fills the thin seams at the stream banks and the safehouse.
         var soil = Mat.Solid("56693f", .95f);
         Mat.Box(_stage, new Vector3((-16 + StreamX0) / 2, -.13f, -2), new Vector3(StreamX0 + 16, .2f, 56), soil);
         Mat.Box(_stage, new Vector3((StreamX1 + 128) / 2, -.13f, -2), new Vector3(128 - StreamX1, .2f, 56), soil);

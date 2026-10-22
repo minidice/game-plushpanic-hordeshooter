@@ -1,0 +1,100 @@
+{
+  "revision": 1,
+  "contract": "plushpanic_outdoor_v1",
+  "date": "2026-10-22",
+  "units": "metres",
+  "up_axis": "+Y",
+  "status": "ground-border art; not integrated or render-reviewed",
+  "assets": [
+    {
+      "id": "bit_grass_tuft",
+      "name": "작은 풀 다발",
+      "category": "길 경계",
+      "note": "바깥으로 벌어진 풀잎 9개와 작은 이끼 밑동.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        0.575,
+        0.28,
+        0.495
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 78,
+      "file": "bit_grass_tuft.glb"
+    },
+    {
+      "id": "bit_grass_clump",
+      "name": "큰 풀 덩어리",
+      "category": "길 경계",
+      "note": "7잎 다발 3개, 마른 잎 끝 3개.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        0.899,
+        0.4,
+        0.815
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 182,
+      "file": "bit_grass_clump.glb"
+    },
+    {
+      "id": "bit_pebbles",
+      "name": "흙길 돌 조각",
+      "category": "길 경계",
+      "note": "판 없이 넓게 흩어진 납작한 돌 3개.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        0.676,
+        0.08,
+        0.558
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 44,
+      "file": "bit_pebbles.glb"
+    },
+    {
+      "id": "bit_gravel",
+      "name": "갓길 자갈 조각",
+      "category": "길 경계",
+      "note": "판 없이 길쭉하게 흩어진 작은 자갈 9개.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        1.179,
+        0.05,
+        0.44
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 118,
+      "file": "bit_gravel.glb"
+    },
+    {
+      "id": "bit_stone",
+      "name": "작은 돌 하나",
+      "category": "길 경계",
+      "note": "풀밭과 흙에 흩뿌리는 납작하고 둥근 돌 하나.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        0.24,
+        0.09,
+        0.19
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 15,
+      "file": "bit_stone.glb"
+    }
+  ]
+}

@@ -56,7 +56,7 @@ public partial class StageTransitionCheck : Node
     private void KitLibrary()
     {
         Check(PropLibrary.Errors.Count == 0, "both prop manifests read without errors: " + string.Join("; ", PropLibrary.Errors));
-        Check(PropLibrary.All.Count == 42, $"32 outdoor kit models + 4 transition props + 6 edge-kit pieces are listed ({PropLibrary.All.Count})");
+        Check(PropLibrary.All.Count == 47, $"32 outdoor kit models + 4 transition props + 6 edge-kit pieces + 5 ground bits are listed ({PropLibrary.All.Count})");
         var edge = PropLibrary.All.Values.Where(p => p.Id.StartsWith("edge_")).ToList();
         Check(edge.Count == 6 && edge.All(p => p.Collision.Kind == "none" && p.OcclusionParts.Length == 0 && p.File.Contains("/edge-kit/")),
             "the edge kit has no colliders and no fading parts (A-23)");
@@ -191,8 +191,27 @@ public partial class StageTransitionCheck : Node
         }
 
         // The ground: tiles, kit pieces, colliders.
-        Check(map.Scattered.GetValueOrDefault("ground_grass") > 150 && map.Scattered.GetValueOrDefault("path_dirt") > 8 && map.Scattered.GetValueOrDefault("road_asphalt") > 4,
-            "kit ground tiles cover the stage");
+        // Painted ground (A-24): dirt and asphalt fray into the grass instead of 4 m tiles cut square.
+        var ground = map.Ground!;
+        var hatch = new Vector2(StageTwoMap.ArrivalHatch.X, StageTwoMap.ArrivalHatch.Z);
+        Check(ground != null && _stage.GetChildren().Any(n => n.Name.ToString().StartsWith("PaintedGround")) && !map.Scattered.ContainsKey("ground_grass"),
+            "the stage lays painted ground, not kit tiles");
+        Check(ground!.Weight(GroundKind.Dirt, hatch) > .95f && ground.Weight(GroundKind.Asphalt, new Vector2(85, 0)) > .95f &&
+              ground.Weight(GroundKind.Gravel, new Vector2(85, 2.4f)) > .5f && ground.Weight(GroundKind.Dirt, new Vector2(40, -6)) < .05f &&
+              ground.Lane.W > 0, "dirt round the hatch, asphalt with a gravel shoulder and a centre line in the yard, grass elsewhere");
+        var edgeWeights = Enumerable.Range(0, 40).Select(i => ground.Weight(GroundKind.Dirt, new Vector2(24 + i, 2.1f))).ToList();
+        Check(edgeWeights.Max() - edgeWeights.Min() > .3f, "the dirt road's edge wanders instead of running straight");
+        var bits = map.GroundBits;
+        int grass = bits.GetValueOrDefault("bit_grass_tuft") + bits.GetValueOrDefault("bit_grass_clump");
+        int stones = bits.GetValueOrDefault("bit_stone") + bits.GetValueOrDefault("bit_pebbles");
+        Check(grass > 150 && stones > 20 && grass > stones * 3 && bits.GetValueOrDefault("bit_gravel") > 10,
+            "grass tufts lead, loose stones stay few, gravel on the shoulders: " + string.Join(", ", bits.Select(kv => $"{kv.Key} {kv.Value}")));
+        var bitSpots = map.GroundBitSpots;
+        Check(bitSpots.Count == bits.Values.Sum() && bitSpots.All(p => ground.Artificial(p) <= .3f), "no grass or stone lies on asphalt (artificial ground)");
+        Check(bitSpots.Count(p => ground.Weight(GroundKind.Dirt, p) < .01f && ground.Weight(GroundKind.Gravel, p) < .01f && Mathf.Abs(p.Y) > 4) > 100,
+            $"bits are scattered over the open grass, not only along the paths ({bitSpots.Count(p => ground.Weight(GroundKind.Dirt, p) < .01f && ground.Weight(GroundKind.Gravel, p) < .01f && Mathf.Abs(p.Y) > 4)} of {bitSpots.Count})");
+        Check(_stage.GetChildren().OfType<MultiMeshInstance3D>().Where(m => m.Name.ToString().StartsWith("bit_"))
+            .All(m => m.CastShadow == GeometryInstance3D.ShadowCastingSetting.Off), "ground bits cast no shadows");
         var placed = map.KitProps.Select(p => p.Name.ToString()).Distinct().ToList();
         foreach (var id in new[] { "bunker_hatch", "warning_sign", "concrete_barrier", "container_closed", "wire_fence", "cliff_segment", "boulder",
                      "stream_straight", "timber_bridge", "corrugated_fence", "streetlamp", "utility_shed", "sandbags", "barrel" })

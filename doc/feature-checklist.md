@@ -24,6 +24,7 @@
 - [x] 꽥 경적 · 고무오리 전용 모델 · 아이콘(2026-10-21, A-17 · I-87): Codex Blender 스크립트(`gadget-models.py`) + Claude 수정(축 · 색 · 부리 · 크기), 던진 오리도 같은 모델, 아이콘은 `render-weapon-icons.py --only`
 - [x] 소환수 게임 적용 1차(2026-10-22, M-28): 난전 무장 네 번째 소환수 카드 · 실험실 C, 따라가기 · 기본 공격 · 12 m 벗어나면 복귀(시전은 끝내고), 펫 · 드론 무적 · 몸 없음, 부사수 쓰러짐 → 8초 뒤 부활, 게임 중 Esc 메뉴에서 소환수 모델 품질 전환, 멀티 목록 동기화 ([규격](companion-model-spec.md))
 - [x] 갈 수 없는 곳 채우기 1차(2026-10-22, A-23): 외곽 전용 모델 6종(Codex, 충돌 · 뒷면 · 가림 부위 없음), 인스턴싱 줄 배치(덤불 띠/바위벽 → 숲 → 실루엣), 가장자리 줄만 그림자, 카메라 쪽 · 서쪽 끝은 낮게, 먼 바닥 판, 카메라 경계 — Stage 2 적용
+- [x] 길 경계 섞기 1차(2026-10-22, A-24): 바닥 타일 대신 섞임 지도 + 셰이더(흙 · 아스팔트 · 자갈 갓길이 노이즈로 풀밭에 섞임, 가운데 점선), 바닥 조각 5종(Codex: 풀 다발 · 큰 풀 다발 · 돌 3개 · 돌 하나 · 자갈, 판 없음)을 자연 바닥 전체에 풀 위주로 인스턴싱, 자연 · 인공 바닥 분리 — Stage 2 적용 ([지시문](model-briefs/ground-border-bits.md))
 - [ ] 난전 개편(M-27) 나머지: 소환수 카드(기본 공격 강화 · 새 능력) · 각성, 총 분류별 카드 풀, 버프 줄 ([계획](onslaught-cards-plan.md))
 - [x] 사족 펫 모델 라이브러리(A-20): 거북이·강아지·토끼 기본형, 공용 등 무기 2종 교체/해제, 시각용 걷기. 세 종 형태 개선·고품질/저품질 6개 GLB·설정 저장/전환 포함. 거북이·토끼는 귀여움 기준으로 큰 머리/볼·짧은 몸/발 재조정, 게임 크기 전후 비교 확인. 모델 185개·메뉴 44개 검사와 6마리 렌더 확인. 모델 단계이며 추종·소환 카드·공격은 후속 ([규격](pet-model-spec.md)).
 - [x] 드론·부사수 모델 라이브러리(A-21): 드론4종×고/저, 공용 하부장비4종 교체, 기존 캐릭터60% 프리셋4종·기존 걷기/무기 잡기. 소환수 공용 품질 설정, 부사수는 자동LOD 조절. 모델253·펫185·메뉴44 검사 및 실제 렌더 확인. 추종·공격·소환카드는 후속 ([규격](companion-model-spec.md)).
@@ -174,6 +175,11 @@
 
 - C# 빌드 경고 · 오류 0. 새 `StageTransitionCheck` 143(헤드리스 · 창 모드 모두), `Start-Game.ps1 -Test` → `Integration` 148, `MapCheck` 24, `VisionTierCheck` 23, `SupplyCheck` 12, `SquadCheck` 50, `ModeCheck` 123, `SpawnCheck` 41, `AudioMixCheck` 6, `CombatPacingCheck` 44, `WeaponHandlingCheck` 36, `NetSyncCheck` 32, `MenuCheck` 44, `LobbyCheck` 31 통과. 전환 소품은 Blender 스크립트 단언 통과(삼각형 · 부위 · 뚜껑 방향).
 - 렌더 `output/transition-0-stage1-street.png`(비교용 Stage 1 실내 직교) → `transition-1-safehouse-hatch`(바닥 해치 · 길게 누르기 안내) → `-2-closing`(원 닫힘) → `-3-title`(STAGE 2 · 숲속 벙커길) → `-4-opening`(벙커 해치에서 원 열림) → `-5-arrival` · `-6-arrival-close`(야외 원근 기본 · 확대) → `-7-forest` · `-bridge` · `-yard` · `-safehouse`. 참고 영상 프레임과 비교해 전환 순서 · 주변 오브젝트 · 시점 변화가 대응함을 확인. 영상의 비 · 어두운 석양 색감은 미적용(I-91). 손으로 해 본 Stage 2 플레이 · 성능 · 멀티 다음 구역은 미확인(I-26 · I-90 · I-91).
+
+### 이번 변경 확인 기록 — 2026-10-22 (길 경계 섞기 1차)
+
+- C# 빌드 경고 · 오류 0. Blender `ground_bits.py` 단언 통과(2차 5종 15~182 삼각형). `StageTransitionCheck` 164(헤드리스 · 창 모드: 키트 47종 목록, 그린 바닥 · 키트 바닥 타일 없음, 해치 흙 · 야적장 아스팔트 · 자갈 갓길 · 점선 위치, 흙길 경계 흔들림, 바닥 조각 풀 다발 271 · 큰 풀 다발 35 · 돌 하나 64 · 돌 3개 9 · 자갈 17, 풀 > 돌 3배, 아스팔트 위 조각 없음, 풀밭 한가운데에도 있음 266/396, 그림자 없음. 헤드리스에서는 MultiMesh가 인스턴스 위치를 보관하지 않아 처음엔 이 검사가 헤드리스에서만 실패 → 맵이 놓은 자리(`GroundBitSpots`)를 따로 기록해 검사), `MapCheck` 24, `ModeCheck` 123, `SpawnCheck` 41, `SupplyCheck` 12, `NetSyncCheck` 32, `MenuCheck` 44, `LobbyCheck` 31, `CardLabCheck` 85, `CompanionCheck` 39, `SquadCheck` 50, `Integration` 148 통과.
+- 렌더 `output/transition-5-arrival.png` · `transition-7-forest/bridge/yard/safehouse.png`(전후 비교, 이전은 로컬 `output/before-ground/`): 흙 공터 · 흙길 경계가 풀밭으로 들쭉날쭉 섞이고 풀 다발 · 돌이 선을 끊음, 아스팔트는 단단한 경계 + 흔들리는 자갈 갓길 + 점선. 첫 렌더의 네모 색 얼룩 · 풀밭에 놓인 자갈 조각은 고친 뒤 다시 확인. 사용자 피드백 2차(판 없는 돌, 풀밭 전체 흩뿌림) 뒤 다시 렌더해 돌 판 테두리가 없어지고 풀이 길 주변에만 몰리지 않는 것을 확인. 성능 · 섞임 지도 굽는 시간은 측정 전(I-93).
 
 ### 이번 변경 확인 기록 — 2026-10-22 (갈 수 없는 곳 채우기 1차)
 
