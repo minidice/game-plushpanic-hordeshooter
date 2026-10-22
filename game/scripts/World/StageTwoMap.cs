@@ -43,7 +43,7 @@ public sealed class StageTwoMap : StageMap
     {
         env.BackgroundColor = new Color("5d6b78");
         env.AmbientLightColor = new Color("b9c6d2");
-        env.AmbientLightEnergy = .62f;
+        env.AmbientLightEnergy = .42f;
         env.TonemapExposure = 1.05f;
         env.FogEnabled = true;
         env.FogMode = Godot.Environment.FogModeEnum.Depth;
@@ -53,8 +53,8 @@ public sealed class StageTwoMap : StageMap
         env.FogSkyAffect = 1;
         key.Name = "Sun";
         key.RotationDegrees = new Vector3(-36, -48, 0);
-        key.LightColor = new Color("ffd8a6");
-        key.LightEnergy = 1.05f;
+        key.LightColor = new Color("e5e8d5");
+        key.LightEnergy = 1.2f;
     }
 
     protected override bool IndoorFloor(float x0) => x0 >= 100;
@@ -129,7 +129,9 @@ public sealed class StageTwoMap : StageMap
         Lamp(new Vector3(50.5f, 3.7f, -5.9f), "ffcf8a", 3f, 11, true);
 
         // Rock wall on the far side and a low edge of shrubs and logs on the camera side.
-        for (float x = 21; x < StreamX0; x += 3.7f) Prop("cliff_segment", new Vector3(x, 0, -8.4f - (x % 2) * .3f), (x * 17) % 24 - 12, 1, solid: false);
+        OutdoorEdgeArt.Bank(_stage,20,StreamX0,-7.6f,-1,seed:41);
+        OutdoorEdgeArt.Grove(_stage,20,StreamX0,-7.6f,43);
+        OutdoorEdgeArt.Bank(_stage,20,StreamX0,7.7f,1,low:true,seed:42);
         for (float x = 22; x < StreamX0 - 1; x += 4.6f)
         {
             Prop(((int)x % 3) switch { 0 => "shrub", 1 => "fallen_log", _ => "stump" }, new Vector3(x, 0, 8.2f), x * 23, 1, solid: false);
@@ -154,6 +156,8 @@ public sealed class StageTwoMap : StageMap
         Wall(StreamX1, StreamX1 + .4f, 1.5f, 10, 1f, "", drawWall: false);
         foreach (var (x, z) in new[] { (61.2f, -4.6f), (66.6f, 4.2f), (61f, 5.8f), (66.9f, -6.2f) }) Prop("reeds", new Vector3(x, 0, z), x * 13, 1, solid: false);
         Prop("boulder", new Vector3(60.6f, 0, -9.2f), 60, .8f, solid: false);
+        OutdoorEdgeArt.Bank(_stage,55,StreamX0-.4f,-9,-1,seed:56);
+        OutdoorEdgeArt.Bank(_stage,StreamX1+.4f,74,10,1,low:true,seed:57);
     }
 
     private void BuildYard()
@@ -211,7 +215,12 @@ public sealed class StageTwoMap : StageMap
         _safehouseSwitch.Enabled = false;
         Lamp(new Vector3(106, 2.85f, -3.72f), "b5e6c3", 3.6f, 9, false);
         FloorText(new Vector3(106, 0, 2), "ui_floor_safehouse", "c8ffd0");
+        ArchitectureArt.Portal(_stage,100.2f,2.6f,2.65f);
+        ArchitectureArt.FloorApron(_stage,100.2f,2.6f,false);
+        ArchitectureArt.Services(_stage,new Vector3(108,0,-3.96f));
     }
+
+    protected override void DrawWall(Node3D body,Vector3 size) => ArchitectureArt.Wall(body,size,WallFinish.Shelter);
 
     // ---------- ground and backdrop (decoration only) ----------
 
@@ -251,7 +260,14 @@ public sealed class StageTwoMap : StageMap
     /// </summary>
     private void Backdrop()
     {
-        FarGround("5f7349");
+        // The old -0.22m plane covered the -0.38m water across the entire stream.
+        FarGround("465c48",height:-1.1f);
+        OutdoorEdgeArt.Bank(_stage,-1,19,-9.6f,-1,seed:60);
+        OutdoorEdgeArt.Grove(_stage,-1,19,-9.6f,63);
+        OutdoorEdgeArt.Bank(_stage,68,99,-11.5f,-1,seed:61);
+        OutdoorEdgeArt.Grove(_stage,68,99,-11.5f,64);
+        OutdoorEdgeArt.Bank(_stage,100,113,-5.1f,-1,seed:62);
+        ArchitectureArt.FloorApron(_stage,ArrivalHatch.X,2.6f,false);
         const float far = -64, near = 30;
         // Far side (−Z), each zone from just past its own walkable edge.
         DressEdge(new Rect2(-2.4f, far, 22.4f, -9.6f - far), EdgeSide.Far, rocky: true);

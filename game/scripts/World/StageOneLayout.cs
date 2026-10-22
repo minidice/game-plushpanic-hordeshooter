@@ -11,7 +11,7 @@ namespace HordeShooter;
 /// (content/data/stages/stage1_encounters.json, read by <see cref="HordeDirector"/>).
 /// Outpost and Onslaught reuse it from the warehouse hall (doc/menu-multiplayer-plan.md 3.1).
 /// </summary>
-public sealed class StageOneLayout : StageMap
+public sealed partial class StageOneLayout : StageMap
 {
     public const float TallWall = 3.4f;
     public const float LowWall = 1.1f;
@@ -59,6 +59,7 @@ public sealed class StageOneLayout : StageMap
         BuildWarehouse();
         BuildYard();
         BuildSafehouse();
+        DressArchitecture();
         if (Mode == GameMode.Scenario) PlaceSupplies(StageSupplies.Stage1);
         else PrepareModeArena();
     }

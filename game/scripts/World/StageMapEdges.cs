@@ -46,7 +46,7 @@ public abstract partial class StageMap
         foreach (var (d, id, spacing) in Rows(depth, near, rocky))
         {
             // The first row hugs the edge; the rows behind it wander in depth and angle so they never read as stripes.
-            float wander = row++ == 0 ? .3f : 1.3f;
+            float wander = row++ == 0 ? .3f : near ? 1.3f : 2.2f;
             for (float t = runFrom + _edgeRng.RandfRange(0, spacing); t < runTo + spacing * .5f; t += spacing * _edgeRng.RandfRange(.75f, 1.05f))
             {
                 string model = id switch
@@ -55,12 +55,16 @@ public abstract partial class StageMap
                     "low" => _edgeRng.Randf() < .55f ? "edge_shrub_band" : "edge_forest_low",
                     _ => id,
                 };
-                float off = edge + away * Mathf.Max(.6f, d + _edgeRng.RandfRange(-wander, wander));
+                // Slow changes in depth/height make larger groups instead of evenly shuffled parallel rows.
+                float cluster = Mathf.Sin(t*.27f + row*1.7f);
+                float off = edge + away * Mathf.Max(.6f, d + _edgeRng.RandfRange(-wander, wander) + (!near && row > 1 ? cluster*1.3f : 0));
                 float run = Mathf.Clamp(t + _edgeRng.RandfRange(-.8f, .8f), runFrom, runTo);
                 var at = alongX ? new Vector3(run, 0, off) : new Vector3(off, 0, run);
                 // Front faces the camera (+Z) whatever the side; turn and size jitter hide the repeats.
                 float turn = row == 1 ? 10 : 25;
-                var basis = new Basis(Vector3.Up, Mathf.DegToRad(_edgeRng.RandfRange(-turn, turn))).Scaled(Vector3.One * _edgeRng.RandfRange(.85f, 1.2f));
+                float scale = _edgeRng.RandfRange(.85f, 1.2f);
+                float height = near ? 1f : .65f + .16f*cluster;
+                var basis = new Basis(Vector3.Up, Mathf.DegToRad(_edgeRng.RandfRange(-turn, turn))).Scaled(new Vector3(scale,scale*height,scale));
                 var into = d < EdgeShadowDepth ? lit : unlit;
                 if (!into.TryGetValue(model, out var list)) into[model] = list = new List<Transform3D>();
                 list.Add(new Transform3D(basis, at));
@@ -85,13 +89,13 @@ public abstract partial class StageMap
             yield break;
         }
         yield return (1.2f, rocky ? "edge_rock_wall" : "edge_shrub_band", rocky ? 5.4f : 4.4f);
-        yield return (3.8f, "mix", 5.4f);
-        yield return (7.6f, "edge_forest_pine", 6.4f);
-        for (float d = 11.5f; d < depth; d += 4.2f) yield return (d, "edge_backdrop", 10.5f);
+        yield return (8.2f, "mix", 6.1f);
+        yield return (13.2f, "edge_forest_pine", 7.1f);
+        for (float d = 17.5f; d < depth; d += 4.2f) yield return (d, "edge_backdrop", 10.5f);
     }
 
     /// <summary>A plain ground far past the dressed edges, so the end of the floor is never in view (A-23).</summary>
-    protected void FarGround(string color, float size = 420f)
+    protected void FarGround(string color, float size = 420f, float height = -.22f)
     {
         var plane = new MeshInstance3D
         {
@@ -99,7 +103,7 @@ public abstract partial class StageMap
             Mesh = new PlaneMesh { Size = new Vector2(size, size) },
             MaterialOverride = Mat.Solid(color, .97f),
             CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
-            Position = new Vector3(Area.GetCenter().X, -.22f, Area.GetCenter().Y),
+            Position = new Vector3(Area.GetCenter().X, height, Area.GetCenter().Y),
         };
         _stage.AddChild(plane);
     }

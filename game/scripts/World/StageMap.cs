@@ -135,7 +135,7 @@ public abstract partial class StageMap
     {
         var wallSize = new Vector3(x1 - x0, height, z1 - z0);
         var body = Solid(new Vector3((x0 + x1) / 2, height / 2, (z0 + z1) / 2), wallSize, color, false);
-        if (drawWall) StageArt.Wall(body, wallSize);
+        if (drawWall) DrawWall(body, wallSize);
         // Low camera-side fences get an invisible tall collider so nobody gets launched out of the map.
         if (height < 2f)
         {
@@ -144,6 +144,9 @@ public abstract partial class StageMap
         }
         return body;
     }
+
+    /// <summary>Art may vary by map; collision and flow stamping remain owned by Wall.</summary>
+    protected virtual void DrawWall(Node3D body, Vector3 size) => StageArt.Wall(body, size);
 
     protected StaticBody3D Solid(Vector3 center, Vector3 size, string color, bool drawCargo = true)
     {

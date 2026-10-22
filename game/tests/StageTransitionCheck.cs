@@ -213,9 +213,11 @@ public partial class StageTransitionCheck : Node
         Check(_stage.GetChildren().OfType<MultiMeshInstance3D>().Where(m => m.Name.ToString().StartsWith("bit_"))
             .All(m => m.CastShadow == GeometryInstance3D.ShadowCastingSetting.Off), "ground bits cast no shadows");
         var placed = map.KitProps.Select(p => p.Name.ToString()).Distinct().ToList();
-        foreach (var id in new[] { "bunker_hatch", "warning_sign", "concrete_barrier", "container_closed", "wire_fence", "cliff_segment", "boulder",
+        foreach (var id in new[] { "bunker_hatch", "warning_sign", "concrete_barrier", "container_closed", "wire_fence", "boulder",
                      "stream_straight", "timber_bridge", "corrugated_fence", "streetlamp", "utility_shed", "sandbags", "barrel" })
             Check(placed.Contains(id), $"Stage 2 places {id}");
+        Check(_stage.GetChildren().OfType<MultiMeshInstance3D>().Any(m => m.Name.ToString().StartsWith("CloseRockBank")),
+            "close rock outcrops replace the repeated cliff-segment wall");
         // Ground nobody can reach is packed with the edge kit (A-23).
         var edges = map.EdgeCounts;
         Check(edges.GetValueOrDefault("edge_forest_pine") + edges.GetValueOrDefault("edge_forest_round") > 40 && edges.GetValueOrDefault("edge_backdrop") > 60 &&
