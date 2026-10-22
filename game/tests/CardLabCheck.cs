@@ -671,8 +671,11 @@ public partial class CardLabCheck : Node
             $"slot {slot} became the {weapon} and fires on a recharge");
         Check(!CardCatalog.NormalPool(Cards, player).Any(c => c.Key == "c|DestinyGun"), "it is not offered again");
         await Reset();
-        // Special weapon twice (team): slot 3 goes off once more.
+        // Special weapon twice (team): slot 3 goes off once more, a beat later (0.6 s, boom … boom).
         Cards.Set(LabSpecial.DoubleSpecial, true);
+        Check(Cards.SpecialShots == 2 && CardCatalog.SpecialPool(Cards).Any(c => c.Key == "s|DoubleSpecial|3") &&
+              CardCatalog.FromKey("s|DoubleSpecial|3", null) is { Grade: 5 } three && three.Name == Loc.Format("fmt_card_special_shots_name", 3),
+            "once it is on, the special pool offers \"special weapon 3 shots\" as its upgrade");
         player.Loadout.Equip(3, new WeaponState(ArmoryCatalog.Weapon("alabong")));
         player.Loadout.SelectSlot(3);
         await Frames(2);
@@ -680,11 +683,116 @@ public partial class CardLabCheck : Node
         player.SetControls(Vector2.Zero, player.GlobalPosition + new Vector3(8, 1, 0), true);
         await Frames(2);
         player.SetControls(Vector2.Zero, player.GlobalPosition + new Vector3(8, 1, 0), false);
-        await Frames(3);
-        Check(player.Weapons.Echoes == 1 && _stage.Effects.GetChildren().OfType<Rocket>().Count() >= rocketsBefore + 2,
-            "with the team card a rocket goes off twice, side by side");
+        await Frames(2);
+        var firstRocket = _stage.Effects.GetChildren().OfType<Rocket>().LastOrDefault();
+        Check(player.Weapons.Echoes == 0 && firstRocket != null, "the first rocket goes alone");
+        await Frames(Mathf.CeilToInt(WeaponController.EchoGap * Engine.PhysicsTicksPerSecond) + 2);
+        var rockets = _stage.Effects.GetChildren().OfType<Rocket>().ToList();
+        var second = rockets.LastOrDefault(r => r != firstRocket);
+        // Aimed along +X: in line means the same Z, the second one behind.
+        Check(player.Weapons.Echoes == 1 && rockets.Count >= rocketsBefore + 2 && second != null && firstRocket != null && IsInstanceValid(firstRocket) &&
+              Mathf.Abs(firstRocket.GlobalPosition.Z - second.GlobalPosition.Z) < .3f && firstRocket.GlobalPosition.X > second.GlobalPosition.X + .5f,
+            $"with the team card a second rocket follows the first down the same line, a beat later ({firstRocket!.GlobalPosition.X - second!.GlobalPosition.X:0.0} m behind)");
+        // The price (user 2026-10-22): slot 3 recharges ×1.5 with two shots.
+        float baseCooldown = ModeTuning.Current.Survivor.SpecialCooldowns.TryGetValue("alabong", out float own) ? own : ModeTuning.Current.Survivor.SpecialCooldown;
+        Check(Mathf.IsEqualApprox(player.Loadout.Special!.ShotCooldown, baseCooldown * 1.5f),
+            $"its price: slot 3 recharges ×1.5 ({baseCooldown:0} → {player.Loadout.Special.ShotCooldown:0.0} s)");
+        await Shot("double-special");
+        // The upgrade: three shots, each a beat after the last; four is the end of it.
+        CardCatalog.FromKey("s|DoubleSpecial|3", Cards)!.Apply(player);
+        await Frames(2);
+        Check(Cards.SpecialShots == 3 && CardCatalog.SpecialPool(Cards).Any(c => c.Key == "s|DoubleSpecial|4") &&
+              !CardCatalog.SpecialPool(Cards).Any(c => c.Key == "s|DoubleSpecial|3") && Mathf.IsEqualApprox(player.Loadout.Special!.ShotCooldown, baseCooldown * 2),
+            "taken, it shoots 3 at a ×2 recharge and offers 4 next");
+        player.Loadout.Equip(3, new WeaponState(ArmoryCatalog.Weapon("alabong")));
+        player.Loadout.SelectSlot(3);
+        await Frames(2);
+        int echoesBefore = player.Weapons.Echoes;
+        player.SetControls(Vector2.Zero, player.GlobalPosition + new Vector3(8, 1, 0), true);
+        await Frames(2);
+        player.SetControls(Vector2.Zero, player.GlobalPosition + new Vector3(8, 1, 0), false);
+        await Frames(Mathf.CeilToInt(WeaponController.EchoGap * Engine.PhysicsTicksPerSecond) + 2);
+        Check(player.Weapons.Echoes == echoesBefore + 1, "the second round a beat after the first");
+        await Frames(Mathf.CeilToInt(WeaponController.EchoGap * Engine.PhysicsTicksPerSecond) + 2);
+        Check(player.Weapons.Echoes == echoesBefore + 2, "and the third a beat after that");
+        CardCatalog.FromKey("s|DoubleSpecial|4", Cards)!.Apply(player);
+        Check(Cards.SpecialShots == LabCards.MaxSpecialShots && !CardCatalog.SpecialPool(Cards).Any(c => c.Key.StartsWith("s|DoubleSpecial")) &&
+              CardCatalog.FromKey("s|DoubleSpecial|5", null) == null, "four shots is the last upgrade");
         Cards.Set(LabSpecial.DoubleSpecial, false);
+        await Frames(2);
+        Check(Cards.SpecialShots == 1 && Mathf.IsEqualApprox(player.Loadout.Special!.ShotCooldown, baseCooldown),
+            "switched off, slot 3 shoots once again on its own recharge");
         player.Loadout.SelectSlot(1);
+        await Reset();
+
+        // ---------- new cards, batch 2 (M-29 plan 16.6) ----------
+        // Button missile: every 6th rapid-fire hit sends a button at another monster nearby, as the shooter's hit.
+        Cards.Set(LabCard.ButtonMissile, true, player);
+        // The destiny gun above left a special weapon in slot 1 or 2: rifles back.
+        player.Loadout.SetSlot(1, ArmoryCatalog.Weapon("m4"));
+        player.Loadout.SetSlot(2, ArmoryCatalog.Weapon("r870"));
+        player.Loadout.SelectSlot(1);
+        await Frames(1);
+        spot = OpenSpot(10);
+        var buttoned = await Common(spot);
+        var nextDoor = await Common(spot + new Vector3(3, 0, 0));
+        buttoned.ScaleHealth(100);
+        nextDoor.ScaleHealth(100);
+        float nextBefore = nextDoor.Health;
+        for (int i = 0; i < 5; i++) { Shoot(buttoned, player, player.Gun.Def.TypeId); await Frames(1); }
+        Check(Cards.Buttons == 0, "five hits send nothing yet");
+        Shoot(buttoned, player, player.Gun.Def.TypeId);
+        Check(Cards.Buttons == 1 && _stage.Effects.GetChildren().OfType<ButtonMissile>().Any(), "the sixth hit sends a button");
+        await Frames(Mathf.CeilToInt(ButtonMissile.FlightSeconds * Engine.PhysicsTicksPerSecond) + 3);
+        Check(nextDoor.Health < nextBefore && nextDoor.LastHitBy == player, "it flies to the monster next door and hits it as the shooter's");
+        for (int i = 0; i < 8; i++) { Shoot(buttoned, player, "shotgun"); await Frames(1); }
+        Check(Cards.Buttons == 1, "a shotgun sends none (pistols, SMGs, rifles and LMGs only)");
+        Cards.Upgrade(CardUpgrade.ButtonEvery, player);
+        Cards.Upgrade(CardUpgrade.ButtonCount, player);
+        var third = await Common(spot + new Vector3(-3, 0, 0));
+        third.ScaleHealth(100);
+        for (int i = 0; i < 5; i++) { Shoot(buttoned, player, player.Gun.Def.TypeId); await Frames(1); }
+        Check(Cards.ButtonEvery(player) == 5 && Cards.Buttons == 3, "upgraded: a button every 5th hit, two at a time");
+        await Reset();
+
+        // Toy train and jack-in-the-box: someone goes down (a teammate here; the lab survivor cannot be hurt).
+        Cards.Set(LabSpecial.ToyTrain, true);
+        Cards.Set(LabSpecial.JackBox, true);
+        _stage.SetReviveForTest(true);
+        var faller = Teammate(992, new Vector3(0, 0, 4));
+        await Frames(2);
+        var fallAt = faller.GlobalPosition;
+        // The hit pushes +X, so its attacker stands on the −X side: the train runs that way.
+        var onTrack = await Common(fallAt + new Vector3(-6, 0, 0));
+        var farOnTrack = await Common(fallAt + new Vector3(-11, 0, 0));
+        var nearBox = await Common(fallAt + new Vector3(0, 0, 3.5f));
+        foreach (var e in new[] { onTrack, farOnTrack, nearBox }) e.ScaleHealth(100);
+        faller.TakeDamage(9999, Vector3.Right);
+        await Frames(2);
+        Check(faller.IsDowned && Cards.Trains == 1 && Cards.Boxes == 1 && Cards.LastTrain != null && Cards.LastBox != null,
+            "a teammate going down sends the toy train and sets a jack-in-the-box");
+        float boxFrom = nearBox.GlobalPosition.DistanceTo(fallAt);
+        await Frames(Mathf.CeilToInt(.45f * Engine.PhysicsTicksPerSecond));
+        await Shot("toy-train");
+        await Frames(Mathf.CeilToInt(.5f * Engine.PhysicsTicksPerSecond));
+        Check(nearBox.GlobalPosition.DistanceTo(fallAt) < boxFrom - .3f, $"the box pulls the commons nearby in ({boxFrom:0.0} → {nearBox.GlobalPosition.DistanceTo(fallAt):0.0} m)");
+        await Frames(Mathf.CeilToInt(.8f * Engine.PhysicsTicksPerSecond));
+        Check(Cards.LastBox!.Popped && Cards.LastBox.Scared > 0 && nearBox.FleeTime > 0, "after 1.5 s it pops, knocks them back and scares the commons off");
+        // By now the train has run its whole 16 m.
+        // (The near one may have been bitten by the lab survivor's pets since; the far one is out of their reach.)
+        Check(Cards.LastTrain is { Knocked: >= 2 } && farOnTrack.LastHitBy == faller,
+            "the train runs back up the line of the hit and bowls over the monsters on it, counted for whoever went down");
+        float fleeFrom = nearBox.GlobalPosition.DistanceTo(fallAt);
+        await Frames(20);
+        Check(nearBox.GlobalPosition.DistanceTo(fallAt) > fleeFrom, "scared ones run away from the box");
+        await Shot("jack-box");
+        faller.Revive();
+        await Frames(2);
+        Check(Cards.Trains == 2, "back on their feet, the train passes once more the other way");
+        Dismiss(faller);
+        _stage.SetReviveForTest(false);
+        Cards.Set(LabSpecial.ToyTrain, false);
+        Cards.Set(LabSpecial.JackBox, false);
         await Reset();
 
         // ---------- the training log ----------

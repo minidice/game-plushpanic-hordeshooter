@@ -107,6 +107,8 @@ public partial class Player : CharacterBody3D
     public event Action? Died;
     /// <summary>Accepted damage with a direction (from the source toward this survivor). Drives the HUD hit arc.</summary>
     public event Action<Vector3>? HitFrom;
+    /// <summary>Which way the last hit pushed (from the attacker toward this survivor); the toy train runs back up it.</summary>
+    public Vector3 LastHitDirection { get; private set; } = Vector3.Back;
 
     private CollisionShape3D _shape = null!;
     private readonly RandomNumberGenerator _rng = new();
@@ -473,6 +475,7 @@ public partial class Player : CharacterBody3D
             _push += direction.Normalized() * push;
             Rig.Jolt(direction.Normalized() * 3);
             HitFrom?.Invoke(direction.Normalized());
+            LastHitDirection = direction.Normalized();
         }
         Stage.Director.ReportDamage(damage);
         if (direction.LengthSquared() > .0001f) Stage.Net?.OnPlayerHit(this, direction.Normalized());

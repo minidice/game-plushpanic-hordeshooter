@@ -172,6 +172,13 @@ public partial class Enemy : CharacterBody3D
             CancelMelee();
             desired = Vector3.Zero;
         }
+        else if (FleeTime > 0)
+        {
+            CancelMelee();
+            FleeTime -= dt;
+            var away = new Vector3(GlobalPosition.X - FleeFrom.X, 0, GlobalPosition.Z - FleeFrom.Z);
+            desired = (away.LengthSquared() > .01f ? away.Normalized() : Vector3.Forward) * Speed * 1.2f;
+        }
         else if (Lurable && Stage.Lure is { } lure && LureDirection(lure, dt) is { } toLure)
         {
             CancelMelee();

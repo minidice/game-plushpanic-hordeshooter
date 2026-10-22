@@ -1,4 +1,4 @@
-"""Build 16 flat card icons with Pillow and the Python standard library.
+"""Build 19 flat card icons with Pillow and the Python standard library.
 
 Reviewer command: python prototypes/ui-icons/tools/card_icons.py
 Contract: doc/model-briefs/card-icons.md. Importing does not render or write.
@@ -260,8 +260,13 @@ def card_glass_cannon(c):
 
 
 def card_double_special(c):
-    rocket(c, 34, 34, 80, 190)
-    rocket(c, 142, 34, 80, 190)
+    # One shared flight axis: a larger leader, then a smaller trailing rocket.
+    layer = Canvas()
+    rocket(layer, 90, 8, 76, 126)
+    rocket(layer, 96, 151, 64, 98)
+    # Rotate together at 4x resolution; keep both short flames and the gap.
+    c.image.alpha_composite(layer.image.rotate(
+        -45, resample=Image.Resampling.BICUBIC))
 
 
 def card_mystery(c):
@@ -329,6 +334,61 @@ def card_r_medkit(c):
     cross(c, 96, 126, 64, RED)
 
 
+def card_button_missile(c):
+    # Two four-hole clothing buttons flying diagonally up and right.
+    for a, b in (((27, 171), (60, 138)), ((35, 202), (63, 174)),
+                 ((69, 226), (94, 201))):
+        c.line([a, b], INK, 10)
+        c.line([a, b], WHITE, 4)
+    for x, y, r in ((99, 151, 42), (179, 73, 47)):
+        c.ellipse((x-r, y-r, x+r, y+r), RED)
+        c.ellipse((x-r+11, y-r+11, x+r-11, y+r-11), None, INK, 4)
+        for dx, dy in ((0, -13), (13, 0), (0, 13), (-13, 0)):
+            c.ellipse((x+dx-5, y+dy-5, x+dx+5, y+dy+5), INK, None)
+        c.curve([(x-r+10, y-13), (x-r+14, y-25),
+                 (x-r+23, y-32), (x-r+32, y-34)], WHITE, 4)
+
+
+def card_toy_train(c):
+    # Rounded wooden blocks, viewed from the side; the front faces right.
+    c.ellipse((149, 63, 179, 93), WHITE)
+    c.ellipse((177, 25, 217, 65), WHITE)
+    c.rect((156, 100, 180, 144), INK, radius=4)
+    c.rect((149, 95, 187, 108), INK, radius=5)
+    c.rect((42, 104, 111, 183), RED, radius=10)
+    c.rect((33, 94, 119, 111), YELLOW, radius=7)
+    c.rect((58, 118, 95, 151), WHITE, radius=6)
+    c.rect((105, 137, 213, 185), RED, radius=15)
+    c.line([(123, 148), (184, 148)], WHITE, 4)
+    c.polygon([(208, 168), (233, 196), (206, 196)], RED)
+    c.rect((29, 178, 220, 197), YELLOW, radius=6)
+    for x, r in ((67, 28), (135, 23), (192, 23)):
+        c.ellipse((x-r, 202-r, x+r, 202+r), YELLOW)
+        c.ellipse((x-6, 196, x+6, 208), RED, width=4)
+
+
+def card_jack_box(c):
+    # The raised lid sits behind the spring and the goose's long neck.
+    c.polygon([(49, 179), (24, 122), (79, 104), (103, 158)], RED)
+    c.polygon([(51, 163), (36, 128), (73, 116), (89, 151)], YELLOW, width=4)
+    spring = [(132, 181), (111, 166), (150, 153),
+              (113, 139), (148, 125), (130, 115)]
+    c.line(spring, INK, 13)
+    c.line(spring, WHITE, 5)
+    c.rect((116, 83, 143, 122), WHITE, radius=11)
+    c.ellipse((98, 51, 162, 103), WHITE)
+    c.polygon([(153, 77), (188, 84), (189, 94), (154, 96)], ORANGE)
+    c.ellipse((178, 76, 201, 99), RED, width=4)
+    c.ellipse((141, 70, 150, 79), INK, None)
+    c.polygon([(104, 58), (123, 23), (151, 58)], YELLOW)
+    c.line([(105, 59), (151, 59)], INK, 5)
+    c.rect((55, 176, 211, 230), RED, radius=10)
+    c.rect((117, 178, 146, 228), YELLOW, radius=3)
+    c.polygon([(55, 176), (72, 159), (194, 159), (211, 176)], YELLOW)
+    c.line([(77, 170), (188, 170)], INK, 4)
+    c.line([(69, 189), (69, 213)], WHITE, 4)
+
+
 BUILDERS = (
     ("card_balloon", card_balloon),
     ("card_velcro", card_velcro),
@@ -346,12 +406,15 @@ BUILDERS = (
     ("card_r_damage", card_r_damage),
     ("card_r_heal", card_r_heal),
     ("card_r_medkit", card_r_medkit),
+    ("card_button_missile", card_button_missile),
+    ("card_toy_train", card_toy_train),
+    ("card_jack_box", card_jack_box),
 )
 
 
 def main():
-    assert len(BUILDERS) == 16, "expected exactly 16 card icons"
-    assert len({name for name, _ in BUILDERS}) == 16, "duplicate filenames"
+    assert len(BUILDERS) == 19, "expected exactly 19 card icons"
+    assert len({name for name, _ in BUILDERS}) == 19, "duplicate filenames"
     assets = []
     hashes = set()
     # Validate the complete set before creating the output directory or PNGs.
@@ -369,14 +432,14 @@ def main():
         assert digest not in hashes, f"{name}: duplicate pixel hash"
         hashes.add(digest)
         assets.append((name, image))
-    assert len(hashes) == 16, "expected 16 distinct pixel hashes"
+    assert len(hashes) == 19, "expected 19 distinct pixel hashes"
 
     OUTPUT.mkdir(parents=True, exist_ok=True)
     for name, image in assets:
         path = OUTPUT / f"{name}.png"
         image.save(path, format="PNG")
         print(f"CARD_ICON_READY {path.relative_to(ROOT).as_posix()}")
-    print("CARD_ICONS_BUILT 16")
+    print("CARD_ICONS_BUILT 19")
 
 
 if __name__ == "__main__":

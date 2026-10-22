@@ -49,7 +49,7 @@ public sealed class Loadout
     public Loadout(WeaponDefinition startSecondary) => Secondary = new WeaponState(startSecondary);
 
     private bool _unlimited;
-    private float _specialCooldown;
+    private float _specialCooldown, _cooldownScale = 1;
     private IReadOnlyDictionary<string, float>? _cooldowns;
 
     /// <summary>
@@ -57,10 +57,12 @@ public sealed class Loadout
     /// <paramref name="specialCooldown"/> seconds after a shot, or their own time in <paramref name="cooldowns"/> (by weapon
     /// id, mode_rules.json special_cooldowns). Applied to what is carried now and to everything picked up later.
     /// </summary>
-    public void UseOnslaughtAmmo(float specialCooldown, IReadOnlyDictionary<string, float>? cooldowns = null)
+    /// <param name="cooldownScale">Cards' price on the recharge (special weapon N shots, M-29): 1 = as the data says.</param>
+    public void UseOnslaughtAmmo(float specialCooldown, IReadOnlyDictionary<string, float>? cooldowns = null, float cooldownScale = 1)
     {
         _unlimited = true;
         _specialCooldown = specialCooldown;
+        _cooldownScale = cooldownScale;
         _cooldowns = cooldowns;
         foreach (var state in new[] { Secondary, Primary, Special }) AdoptMaybe(state);
     }
@@ -76,7 +78,7 @@ public sealed class Loadout
         if (state == null || !_unlimited) return state;
         state.UnlimitedReserve = true;
         state.ShotCooldown = state.Def.Slot != WeaponSlot.Special ? 0
-            : _cooldowns != null && _cooldowns.TryGetValue(state.Def.Id, out float own) ? own : _specialCooldown;
+            : (_cooldowns != null && _cooldowns.TryGetValue(state.Def.Id, out float own) ? own : _specialCooldown) * _cooldownScale;
         return state;
     }
 

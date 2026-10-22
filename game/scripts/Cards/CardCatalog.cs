@@ -51,6 +51,7 @@ public static class CardCatalog
             LabCard.BouncingRounds => "tag_card_sniper_only",
             LabCard.HonkCharge => "tag_card_slot3",
             LabCard.DestinyGun => "tag_card_slot12",
+            LabCard.ButtonMissile => "tag_card_rapid",
             _ => "tag_card_common",
         });
         var target = card switch { LabCard.TapDance => CardTarget.Self, LabCard.HonkCharge => CardTarget.Slot3, _ => CardTarget.Common };
@@ -89,7 +90,8 @@ public static class CardCatalog
 
     public static CardChoice Special(LabSpecial card, LabCards? effects) =>
         new(card.ToString(), Loc.Text(LabCards.Key("name_card_", card)), Loc.Text("tag_card_special"), Loc.Text(LabCards.Key("desc_card_", card)),
-            CardTarget.Common, Icon(LabCards.Key("", card)), who => effects?.Set(card, true, who), "s|" + card, card == LabSpecial.GlassCannon ? 6 : 5);
+            CardTarget.Common, Icon(LabCards.Key("", card)), who => effects?.Set(card, true, who), "s|" + card,
+            card is LabSpecial.GlassCannon or LabSpecial.JackBox ? 6 : 5);
 
     /// <summary>
     /// A "?" card: what it turns into (<paramref name="inner"/>) is decided when it is drawn, shown only when picked
@@ -130,6 +132,9 @@ public static class CardCatalog
                 return Upgrade(upgrade, level, effects);
             case "s" when parts.Length == 2 && Enum.TryParse<LabSpecial>(parts[1], out var special):
                 return Special(special, effects);
+            case "s" when parts.Length == 3 && parts[1] == nameof(LabSpecial.DoubleSpecial) && int.TryParse(parts[2], out int shots) &&
+                          shots is > 2 and <= LabCards.MaxSpecialShots:
+                return SpecialShots(shots, effects);
             case "r" when parts.Length == 2 && Repeatables.Contains(parts[1]):
                 return Repeat(parts[1]);
             case "f" when parts.Length == 2 && CompanionSpec.Parse(parts[1]) != null:
@@ -149,6 +154,7 @@ public static class CardCatalog
         bool sniper = new[] { who.Loadout.Primary?.Def.TypeId, who.Loadout.Secondary.Def.TypeId }.Any(LabCards.IsSniperType);
         bool slow3 = who.Loadout.Special?.ShotCooldown >= effects.HonkChargeMinCooldown;
         bool destiny = effects.DestinyPool.Any(id => id != who.Loadout.Special?.Def.Id);
+        bool rapid = new[] { who.Loadout.Primary?.Def.TypeId, who.Loadout.Secondary.Def.TypeId }.Any(LabCards.IsButtonGun);
         var fresh = LabCards.LevelUpCards
             .Where(c => !effects.Owns(who, c) && c switch
             {
@@ -157,6 +163,7 @@ public static class CardCatalog
                 // Only for slot-3 kinds that recharge long (rocket, mortar, railgun), not the honk or the duck.
                 LabCard.HonkCharge => slow3,
                 LabCard.DestinyGun => destiny,
+                LabCard.ButtonMissile => rapid,
                 _ => true,
             })
             .Select(c => Lab(c, effects, c == LabCard.Billiards ? billiards : ""));
@@ -167,8 +174,19 @@ public static class CardCatalog
     }
 
     /// <summary>The special cards nobody has yet; repeatables (shown as grade 5) only fill a window that runs short.</summary>
-    public static List<CardChoice> SpecialPool(LabCards effects) =>
-        LabCards.Specials.Where(s => !effects.IsOn(s)).Select(s => Special(s, effects)).ToList();
+    public static List<CardChoice> SpecialPool(LabCards effects)
+    {
+        var pool = LabCards.Specials.Where(s => !effects.IsOn(s)).Select(s => Special(s, effects)).ToList();
+        // Once "special weapon twice" is on, it comes back as an upgrade: 3 shots, then 4 (user 2026-10-22).
+        if (effects.IsOn(LabSpecial.DoubleSpecial) && effects.SpecialShots < LabCards.MaxSpecialShots) pool.Add(SpecialShots(effects.SpecialShots + 1, effects));
+        return pool;
+    }
+
+    /// <summary>"Special weapon N shots": the upgrade of "special weapon twice" (grade 5, the team's).</summary>
+    public static CardChoice SpecialShots(int shots, LabCards? effects) =>
+        new(nameof(LabSpecial.DoubleSpecial), Loc.Format("fmt_card_special_shots_name", shots), Loc.Text("tag_card_special_upgrade"),
+            Loc.Format("fmt_card_special_shots_desc", shots), CardTarget.Common, Icon("double_special"), who => effects?.SetSpecialShots(shots),
+            $"s|{nameof(LabSpecial.DoubleSpecial)}|{shots}", 5);
 
     /// <summary>
     /// <paramref name="who"/>'s level-up: a window of one grade drawn by <paramref name="weights"/> (grades 1–4, the

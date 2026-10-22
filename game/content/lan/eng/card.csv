@@ -133,7 +133,7 @@ desc_card_honk_charge,"Every hit takes 3% off what is left of slot 3's cooldown 
 name_card_destiny_gun,Gun of destiny
 desc_card_destiny_gun,A random slot's gun turns into a random special weapon · it fires on a cooldown (once a match)
 name_card_double_special,Special weapon twice
-desc_card_double_special,Whole team: slot 3 goes off once more (two honks · two ducks · rockets side by side · two mortar rounds · two rails)
+desc_card_double_special,Whole team: slot 3 goes off once more down the same line 0.6 s later · Price: slot 3 recharges ×1.5
 name_card_u_tap_dance_stacks,Tap dance stacks
 desc_card_u_tap_dance_stacks,Up to 3 more stacks
 name_card_u_bounce_count,Bounce count
@@ -143,3 +143,19 @@ tag_card_sniper_only,Sniper only
 tag_card_slot3,Slot 3
 tag_card_slot12,Slot 1 or 2
 fmt_card_destiny_fx,Gun of destiny: {0}!
+# New cards, batch 2 (decisions.md M-29, onslaught-cards-plan.md 16.6)
+name_card_button_missile,Button missile
+desc_card_button_missile,Every 6th hit sends a button at another monster nearby (your bullet cards ride along)
+name_card_u_button_every,Button rate
+desc_card_u_button_every,A button one hit sooner (6 → 5 → 4)
+name_card_u_button_count,Button count
+desc_card_u_button_count,One more button (1 → 2 → 3)
+name_card_toy_train,Toy train
+desc_card_toy_train,"Whole team: when someone goes down a toy train charges toward whoever did it, bowling over the monsters on its way · back on their feet, it passes again the other way"
+name_card_jack_box,Jack-in-the-box
+desc_card_jack_box,"Whole team: when someone (a sidekick too) goes down a jack-in-the-box appears there · it gathers monsters for 1.5 s, springs out knocking them back, and nearby ones run for a bit"
+tag_card_rapid,Pistol · SMG · rifle · LMG
+fx_card_jack_box,Boing!
+fmt_card_special_shots_name,Special weapon {0} shots
+fmt_card_special_shots_desc,Whole team: slot 3 goes off {0} times 0.6 s apart · Price: a longer recharge
+tag_card_special_upgrade,Special card · upgrade

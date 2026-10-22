@@ -242,6 +242,7 @@ public partial class WeaponController : Node
     public int Echoes { get; private set; }
     private WeaponDefinition? _echoDef;
     private float _echoLeft;
+    private int _echoesLeft, _echoIndex;
     private bool _echoing;
 
     public void Tick(float dt, bool moving, bool pressed, bool held, bool blocked)
@@ -250,8 +251,10 @@ public partial class WeaponController : Node
         if (_echoDef != null && (_echoLeft -= dt) <= 0)
         {
             var def = _echoDef;
-            _echoDef = null;
-            Echo(def);
+            Echo(def, ++_echoIndex);
+            // The next one on the same beat, or done.
+            if (--_echoesLeft > 0) _echoLeft = EchoGap;
+            else _echoDef = null;
         }
         TickActions(dt,moving,pressed,held,blocked);
         // Sample AFTER auto reload, shell insertion and trigger cancellation. Never advance a second timer.
@@ -322,25 +325,29 @@ public partial class WeaponController : Node
         if (_swingState == null && !Planted && state.Trigger(pressed, held)) Fire(state);
     }
 
-    /// <summary>The second shot of the "special weapon twice" card: beside the first, or just after it.</summary>
-    private void Echo(WeaponDefinition def)
+    /// <summary>Seconds between one round of the "special weapon N shots" card and the next: boom … boom (user 2026-10-22).</summary>
+    public const float EchoGap = .6f;
+
+    /// <summary>Round <paramref name="n"/> after the first of the "special weapon N shots" card: down the same line, a beat later.</summary>
+    private void Echo(WeaponDefinition def, int n)
     {
         if (_player.IsDead || _player.IsDowned) return;
         Echoes++;
         _echoing = true;
         var dir = AimDirection();
-        var side = dir.Cross(Vector3.Up).Normalized() * .7f;
+        var flat = new Vector3(dir.X, 0, dir.Z).Normalized();
         Stage.Sfx.PlayAt(def.ShotSound, MuzzlePosition);
         switch (def.Mode)
         {
             case FireMode.Projectile:
-                var from = MuzzlePosition + side;
+                var from = MuzzlePosition;
                 Rocket.Launch(Stage, from, dir, def, _player.GetRid(), _player);
                 WeaponShotEffect.Flash(Stage.Effects, def, from, dir);
                 Stage.Net?.OnShot(_player, def, from, new[] { from + dir }, _player.AimPoint);
                 break;
             case FireMode.Lob:
-                var target = LobTarget(def) + side * 2.5f;
+                // A little further along the same aim line.
+                var target = LobTarget(def) + flat * 2.2f * n;
                 MortarShell.Fire(Stage, MuzzlePosition, target, def, _player);
                 Stage.Net?.OnShot(_player, def, MuzzlePosition, new[] { target }, _player.AimPoint);
                 break;
@@ -352,14 +359,14 @@ public partial class WeaponController : Node
                 if (ArmoryCatalog.Throwables.TryGetValue(def.ThrowableId, out var throwable))
                 {
                     var hand = _player.GlobalPosition + Vector3.Up * 1.2f;
-                    ThrownItem.Throw(Stage, throwable, hand, _player.AimPoint + side * 2f, _player);
-                    Stage.Net?.OnThrow(_player, throwable, hand, _player.AimPoint + side * 2f);
+                    ThrownItem.Throw(Stage, throwable, hand, _player.AimPoint + flat * 1.6f * n, _player);
+                    Stage.Net?.OnThrow(_player, throwable, hand, _player.AimPoint + flat * 1.6f * n);
                 }
                 break;
             case FireMode.Melee:
                 break;
             default:
-                var origin = _player.GlobalPosition + Vector3.Up * Player.AimHeight + side;
+                var origin = _player.GlobalPosition + Vector3.Up * Player.AimHeight;
                 var end = Hitscan(def, origin, dir, def.Damage * _player.DamageMultiplier, def.HitPower, RangeScale(def), out bool crit);
                 WeaponShotEffect.Play(Stage.Effects, def, origin, origin, end, crit, muzzleFlash: false);
                 Stage.Net?.OnShot(_player, def, origin, new[] { end }, _player.AimPoint);
@@ -469,11 +476,14 @@ public partial class WeaponController : Node
         var def = state.Def;
         ShotsFired++;
         // The team's "special weapon twice" card (M-29 plan 16.6): every slot-3 kind goes off once more.
-        if (!_echoing && def.Slot == WeaponSlot.Special && Stage.ModeRules?.CardEffects?.IsOn(LabSpecial.DoubleSpecial) == true)
+        if (!_echoing && def.Slot == WeaponSlot.Special && Stage.ModeRules?.CardEffects is { } cards && cards.SpecialShots > 1)
         {
+            // In line, not side by side, and a beat apart (user, 2026-10-22): every kind goes again down the same
+            // line EchoGap later, as many more times as the card says.
             _echoDef = def;
-            // Rockets and rails side by side at once; a honk, a duck and a mortar round a moment later.
-            _echoLeft = def.Mode is FireMode.Shout or FireMode.Throw or FireMode.Lob ? .3f : .02f;
+            _echoLeft = EchoGap;
+            _echoesLeft = cards.SpecialShots - 1;
+            _echoIndex = 0;
         }
         Kick = state.IsMelee ? 0 : def.Category == WeaponCategory.Heavy ? 1 : def.Category == WeaponCategory.Pistol ? .6f : 1;
         var dir = AimDirection();

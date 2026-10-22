@@ -8,16 +8,16 @@ namespace HordeShooter;
 /// The six cards of the first lab set (doc/onslaught-card-ideas.md 5장), then M-29's first new normal cards (plan
 /// 16.6): tap dance, bouncing rounds (sniper), honk charge (slot 3) and the destiny gun (once a match).
 /// </summary>
-public enum LabCard { Balloon, Velcro, StuffingBurst, Billiards, HonkReload, RubberDuck, TapDance, BouncingRounds, HonkCharge, DestinyGun }
+public enum LabCard { Balloon, Velcro, StuffingBurst, Billiards, HonkReload, RubberDuck, TapDance, BouncingRounds, HonkCharge, DestinyGun, ButtonMissile }
 
 /// <summary>Three stand-in special cards for the boss-reward cheat (plan 6.3): rules for every gun, one with a price.</summary>
-public enum LabSpecial { HeliumParty, LastShot, GlassCannon, DoubleSpecial }
+public enum LabSpecial { HeliumParty, LastShot, GlassCannon, DoubleSpecial, ToyTrain, JackBox }
 
 /// <summary>
 /// The upgrade cards a base card opens once taken (plan 13.2 card tree): balloon pop radius and damage, velcro clump
 /// size and burst damage.
 /// </summary>
-public enum CardUpgrade { BalloonRadius, BalloonDamage, VelcroSize, VelcroDamage, TapDanceStacks, BounceCount }
+public enum CardUpgrade { BalloonRadius, BalloonDamage, VelcroSize, VelcroDamage, TapDanceStacks, BounceCount, ButtonEvery, ButtonCount }
 
 /// <summary>
 /// Onslaught's card effects (decisions.md M-27, `[임시]`), first built for the card lab: cards switched on while
@@ -33,10 +33,12 @@ public enum CardUpgrade { BalloonRadius, BalloonDamage, VelcroSize, VelcroDamage
 public partial class LabCards : Node
 {
     public static readonly LabCard[] All = { LabCard.Balloon, LabCard.Velcro, LabCard.StuffingBurst, LabCard.Billiards, LabCard.HonkReload, LabCard.RubberDuck };
-    public static readonly LabSpecial[] Specials = { LabSpecial.HeliumParty, LabSpecial.LastShot, LabSpecial.GlassCannon, LabSpecial.DoubleSpecial };
+    public static readonly LabSpecial[] Specials =
+        { LabSpecial.HeliumParty, LabSpecial.LastShot, LabSpecial.GlassCannon, LabSpecial.DoubleSpecial, LabSpecial.ToyTrain, LabSpecial.JackBox };
     /// <summary>The cards a level-up can offer; the honk and the rubber duck move to slot 3 as weapons (plan 13.1), lab only for now.</summary>
     public static readonly LabCard[] LevelUpCards =
-        { LabCard.Balloon, LabCard.Velcro, LabCard.StuffingBurst, LabCard.Billiards, LabCard.TapDance, LabCard.BouncingRounds, LabCard.HonkCharge, LabCard.DestinyGun };
+        { LabCard.Balloon, LabCard.Velcro, LabCard.StuffingBurst, LabCard.Billiards, LabCard.TapDance, LabCard.BouncingRounds, LabCard.HonkCharge, LabCard.DestinyGun,
+          LabCard.ButtonMissile };
     /// <summary>Weapon kinds billiards works with (weapon_types.csv category): sniper hits are cue balls, shotgun pellets bowl (plan 13.2).</summary>
     public static bool IsSniperType(string? type) => WeaponDatabase.Current.CategoryOfType(type) == WeaponCategory.Sniper;
     public static bool IsShotgunType(string? type) => WeaponDatabase.Current.CategoryOfType(type) == WeaponCategory.Shotgun;
@@ -47,6 +49,7 @@ public partial class LabCards : Node
         LabCard.Velcro => new[] { CardUpgrade.VelcroSize, CardUpgrade.VelcroDamage },
         LabCard.TapDance => new[] { CardUpgrade.TapDanceStacks },
         LabCard.BouncingRounds => new[] { CardUpgrade.BounceCount },
+        LabCard.ButtonMissile => new[] { CardUpgrade.ButtonEvery, CardUpgrade.ButtonCount },
         _ => System.Array.Empty<CardUpgrade>(),
     };
     public static LabCard BaseOf(CardUpgrade upgrade) => upgrade switch
@@ -54,10 +57,11 @@ public partial class LabCards : Node
         CardUpgrade.BalloonRadius or CardUpgrade.BalloonDamage => LabCard.Balloon,
         CardUpgrade.TapDanceStacks => LabCard.TapDance,
         CardUpgrade.BounceCount => LabCard.BouncingRounds,
+        CardUpgrade.ButtonEvery or CardUpgrade.ButtonCount => LabCard.ButtonMissile,
         _ => LabCard.Velcro,
     };
     /// <summary>Velcro size goes 5 → 4 → 3 monsters and bounces 1 → 2 → 3; the others have three levels.</summary>
-    public static int MaxLevel(CardUpgrade upgrade) => upgrade is CardUpgrade.VelcroSize or CardUpgrade.BounceCount ? 2 : 3;
+    public static int MaxLevel(CardUpgrade upgrade) => upgrade is CardUpgrade.VelcroSize or CardUpgrade.BounceCount or CardUpgrade.ButtonEvery or CardUpgrade.ButtonCount ? 2 : 3;
 
     // Tap dance: each hit (once a frame) adds a step of walking speed and fire rate, up to the stack cap; a gap ends it.
     public const int TapStacks = 5, TapStacksPerLevel = 3;
@@ -66,6 +70,11 @@ public partial class LabCards : Node
     public const float BounceShare = .7f, BounceReach = 10f;
     // Honk charge: 3% of what is left of the slot-3 cooldown per hit (one per shot), at most a second each second.
     public const float HonkChargeShare = .03f, HonkChargePerSecond = 1f;
+    // Button missile: every 6th hit (5, 4 with its upgrade) of a pistol, SMG, rifle or LMG sends a button (2, 3 with the other).
+    public const int ButtonEveryHits = 6;
+    public const float ButtonDamage = 8f, ButtonReach = 8f;
+    /// <summary>The weapon type a button's hit carries: the bullet cards act on it, the gun cards (tap dance, last shot) do not.</summary>
+    public const string ButtonWeaponType = "button";
 
     // Helium party: a hit sometimes floats a common at once. Last shot: the shot that empties a magazine explodes.
     private const float HeliumChance = .12f, LastShotRadius = 3.2f, LastShotPower = 150f, LastShotDamage = 60f, GlassCannonDamage = 2f, GlassCannonHealth = .5f;
@@ -109,6 +118,15 @@ public partial class LabCards : Node
     private readonly Dictionary<Player, float> _honkBudget = new();
     private readonly RandomNumberGenerator _rng = new();
     private bool _bouncing;
+    private readonly Dictionary<Player, int> _buttonHits = new();
+    private readonly Dictionary<Player, ulong> _buttonFrame = new();
+
+    /// <summary>Checks: buttons sent, trains run and boxes set.</summary>
+    public int Buttons { get; private set; }
+    public int Trains { get; private set; }
+    public int Boxes { get; private set; }
+    public ToyTrain? LastTrain { get; private set; }
+    public JackBox? LastBox { get; private set; }
 
     /// <summary>Special weapon ids the destiny gun draws from (the mode's slot-3 pool).</summary>
     public IReadOnlyList<string> DestinyPool { get; set; } = System.Array.Empty<string>();
@@ -181,7 +199,28 @@ public partial class LabCards : Node
     public void Set(LabSpecial card, bool on, Player? who = null)
     {
         if (on) _specials.Add(card); else _specials.Remove(card);
+        if (card == LabSpecial.DoubleSpecial) SpecialShots = on ? Mathf.Max(SpecialShots, 2) : 1;
         KeepGlassCannon();
+    }
+
+    /// <summary>
+    /// How many times slot 3 goes off per shot (1 without the card; "special weapon twice" makes it 2, and taken again
+    /// as an upgrade 3 and then 4, user 2026-10-22).
+    /// </summary>
+    public int SpecialShots { get; private set; } = 1;
+    public const int MaxSpecialShots = 4;
+    /// <summary>The price of the extra shots (user 2026-10-22: not free): slot 3 recharges ×1.5 per extra shot step (2 → ×1.5, 3 → ×2, 4 → ×2.5).</summary>
+    public const float CooldownPerExtraShot = .5f;
+    public float SpecialCooldownScale => 1 + CooldownPerExtraShot * (SpecialShots - 1);
+
+    /// <summary>Client: the host's shot count, so slot 3's recharge (and its HUD) matches.</summary>
+    public void SetShotsFromHost(int shots) => SpecialShots = Mathf.Clamp(shots, 1, MaxSpecialShots);
+
+    /// <summary>The "special weapon N shots" upgrade: slot 3 goes off <paramref name="shots"/> times (2–4).</summary>
+    public void SetSpecialShots(int shots)
+    {
+        _specials.Add(LabSpecial.DoubleSpecial);
+        SpecialShots = Mathf.Clamp(Mathf.Max(SpecialShots, shots), 2, MaxSpecialShots);
     }
 
     /// <summary>The team's specials as bits (bit n = <see cref="Specials"/>[n]), for the client card sync.</summary>
@@ -219,6 +258,8 @@ public partial class LabCards : Node
         LabSpecial.HeliumParty => "helium_party",
         LabSpecial.LastShot => "last_shot",
         LabSpecial.DoubleSpecial => "double_special",
+        LabSpecial.ToyTrain => "toy_train",
+        LabSpecial.JackBox => "jack_box",
         _ => "glass_cannon",
     };
 
@@ -234,6 +275,7 @@ public partial class LabCards : Node
         LabCard.BouncingRounds => "bouncing_rounds",
         LabCard.HonkCharge => "honk_charge",
         LabCard.DestinyGun => "destiny_gun",
+        LabCard.ButtonMissile => "button_missile",
         _ => "rubber_duck",
     };
 
@@ -245,6 +287,8 @@ public partial class LabCards : Node
         CardUpgrade.VelcroSize => "velcro_size",
         CardUpgrade.TapDanceStacks => "tap_dance_stacks",
         CardUpgrade.BounceCount => "bounce_count",
+        CardUpgrade.ButtonEvery => "button_every",
+        CardUpgrade.ButtonCount => "button_count",
         _ => "velcro_damage",
     };
 
@@ -261,12 +305,18 @@ public partial class LabCards : Node
     {
         Stage.EnemyHit += OnHit;
         Stage.EnemyKilled += OnKilled;
+        Stage.SurvivorDowned += OnDowned;
+        Stage.SurvivorRevived += OnRevived;
+        Stage.CompanionDowned += OnCompanionDowned;
     }
 
     public override void _ExitTree()
     {
         Stage.EnemyHit -= OnHit;
         Stage.EnemyKilled -= OnKilled;
+        Stage.SurvivorDowned -= OnDowned;
+        Stage.SurvivorRevived -= OnRevived;
+        Stage.CompanionDowned -= OnCompanionDowned;
     }
 
     public override void _PhysicsProcess(double delta)
@@ -317,6 +367,12 @@ public partial class LabCards : Node
             // The round's last pierced monster wins: the bounce starts where the shot stopped (plan 16.6).
             if (Has(LabCard.BouncingRounds, shooter) && IsSniperType(hit.WeaponType)) _bounceFrom[shooter] = (enemy.GlobalPosition, enemy, hit);
             if (Has(LabCard.HonkCharge, shooter) && _honkFrame.GetValueOrDefault(shooter) != frame) HonkCharge(shooter, frame);
+            if (Has(LabCard.ButtonMissile, shooter) && IsButtonGun(hit.WeaponType) && _buttonFrame.GetValueOrDefault(shooter) != frame)
+            {
+                _buttonFrame[shooter] = frame;
+                _buttonHits[shooter] = _buttonHits.GetValueOrDefault(shooter) + 1;
+                if (_buttonHits[shooter] >= ButtonEvery(shooter)) SendButtons(shooter, enemy);
+            }
         }
         // The shooter's own magazine, and only a hit of the gun in their hands (not a rocket landing later or a pet's bite).
         if (IsOn(LabSpecial.LastShot) && !_bouncing && shooter != null && IsInstanceValid(shooter) && shooter.Gun is { Mag: 0, IsMelee: false } gun
@@ -593,6 +649,64 @@ public partial class LabCards : Node
         who.Weapons.PlaceInSlot(slot, def);
         DestinyGiven[who] = (slot, def.Id);
         Stage.Effects.FloatingText(who.GlobalPosition + Vector3.Up * 2.6f, Loc.Format("fmt_card_destiny_fx", def.DisplayName), new Color("c08bff"));
+    }
+
+    // ---------- button missile · toy train · jack-in-the-box (M-29 plan 16.6, batch 2) ----------
+
+    /// <summary>The guns that send buttons: pistols, SMGs, rifles and LMGs (rapid fire).</summary>
+    public static bool IsButtonGun(string? type) =>
+        WeaponDatabase.Current.CategoryOfType(type) is WeaponCategory.Pistol or WeaponCategory.Smg or WeaponCategory.Rifle or WeaponCategory.Lmg;
+
+    /// <summary>Hits between buttons for <paramref name="who"/> (6, then 5 and 4).</summary>
+    public int ButtonEvery(Player who) => ButtonEveryHits - Level(CardUpgrade.ButtonEvery, who);
+
+    /// <summary>Buttons fly to the nearest other monsters within reach (one, then two and three).</summary>
+    private void SendButtons(Player shooter, Enemy from)
+    {
+        _buttonHits[shooter] = 0;
+        int count = 1 + Level(CardUpgrade.ButtonCount, shooter);
+        var targets = Stage.Enemies.Where(e => IsInstanceValid(e) && !e.IsDead && e != from && Flat(e.GlobalPosition - from.GlobalPosition).Length() <= ButtonReach)
+            .OrderBy(e => Flat(e.GlobalPosition - from.GlobalPosition).LengthSquared()).Take(count).ToList();
+        foreach (var target in targets)
+        {
+            Buttons++;
+            CardProps.Spawn(Stage, CardPropKind.Button, from.GlobalPosition + Vector3.Up * 1.2f, target.GlobalPosition + Vector3.Up, shooter, target,
+                ButtonDamage * shooter.DamageMultiplier);
+        }
+    }
+
+    private void OnDowned(Player who)
+    {
+        if (!Stage.Authoritative || !IsInstanceValid(who)) return;
+        // The train runs back up the line the downing hit came along.
+        if (IsOn(LabSpecial.ToyTrain)) RunTrain(who, -who.LastHitDirection, 2f);
+        if (IsOn(LabSpecial.JackBox)) SetBox(who.GlobalPosition, who);
+    }
+
+    private void OnRevived(Player who)
+    {
+        if (!Stage.Authoritative || !IsInstanceValid(who) || !IsOn(LabSpecial.ToyTrain)) return;
+        // Once more the other way: from out by the attackers, back past them.
+        RunTrain(who, who.LastHitDirection, ToyTrain.Length - 2f);
+    }
+
+    private void OnCompanionDowned(Companion who)
+    {
+        if (Stage.Authoritative && IsOn(LabSpecial.JackBox) && IsInstanceValid(who.Survivor)) SetBox(who.GlobalPosition, who.Survivor);
+    }
+
+    private void RunTrain(Player who, Vector3 direction, float startBack)
+    {
+        Trains++;
+        var dir = Flat(direction).LengthSquared() > .001f ? Flat(direction).Normalized() : Vector3.Forward;
+        var start = new Vector3(who.GlobalPosition.X, 0, who.GlobalPosition.Z) - dir * startBack;
+        LastTrain = (ToyTrain)CardProps.Spawn(Stage, CardPropKind.Train, start, dir, who);
+    }
+
+    private void SetBox(Vector3 at, Player owner)
+    {
+        Boxes++;
+        LastBox = (JackBox)CardProps.Spawn(Stage, CardPropKind.JackBox, new Vector3(at.X, 0, at.Z), Vector3.Zero, owner);
     }
 
     // ---------- specials ----------

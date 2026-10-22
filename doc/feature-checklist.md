@@ -29,7 +29,8 @@
 - [x] 난전 카드 규칙 3차(M-29) 2단계(2026-10-22): 중간 보스 처치 = 모두 멈춤(온라인도) → 특별 카드 무기명 투표(같은 도장 · 투표 수 · 60초 게이지 · 조기 확정 · 동률 룰렛) → 이긴 카드 팀 전체 → 3 · 2 · 1 재개, 도장 · 테두리 그림 Codex ([계획](onslaught-cards-plan.md) 16.5, [지시문](model-briefs/vote-stamp.md))
 - [x] 난전 카드 규칙 3차(M-29) 3단계(2026-10-22): 카드 등급 1~7(테두리 색, 창마다 한 등급을 구간별 가중치로), "?" 카드(숨은 카드 · 슬롯머신 공개, 투표에서도), 각자 리롤 5회(한 장씩, 무장 카드 포함, 특별 카드 제외, 방장이 셈) ([계획](onslaught-cards-plan.md) 16.2~16.4)
 - [x] 난전 새 카드 1묶음(2026-10-22, M-29 4단계): 탭댄스 · 튕기는 탄(저격) · 꽥 충전(3번 칸) · 운명의 총 · 특별 "특수무기 2발", 카드 아이콘 16종(Codex) ([계획](onslaught-cards-plan.md) 16.6, [지시문](model-briefs/card-icons.md))
-- [ ] 난전 새 카드 2 · 3묶음(M-29 4단계): 단추 미사일 · 장난감 기차 · 깜짝 상자 · 모여라! · 꽥 광선 · 정전기 솜 · 미친 과학자 거위(선행: 불붙음 상태 · 도망 동작, 모델 · 이펙트는 Codex)
+- [x] 난전 새 카드 2묶음(2026-10-22, M-29 4단계): 단추 미사일(연사 계열) · 특별 "장난감 기차" · "깜짝 상자"(몹 도망 동작 새로), 모델 3종 · 아이콘 3장(Codex) ([계획](onslaught-cards-plan.md) 16.6, [지시문](model-briefs/card-props.md))
+- [ ] 난전 새 카드 3묶음(M-29 4단계): 모여라! · 꽥 광선 · 정전기 솜 · 미친 과학자 거위(선행: 불붙음 상태, 모델 · 이펙트는 Codex)
 - [ ] 난전 개편(M-27) 나머지: 소환수 카드(기본 공격 강화 · 새 능력) · 각성, 총 분류별 카드 풀, 버프 줄 ([계획](onslaught-cards-plan.md))
 - [x] 사족 펫 모델 라이브러리(A-20): 거북이·강아지·토끼 기본형, 공용 등 무기 2종 교체/해제, 시각용 걷기. 세 종 형태 개선·고품질/저품질 6개 GLB·설정 저장/전환 포함. 거북이·토끼는 귀여움 기준으로 큰 머리/볼·짧은 몸/발 재조정, 게임 크기 전후 비교 확인. 모델 185개·메뉴 44개 검사와 6마리 렌더 확인. 모델 단계이며 추종·소환 카드·공격은 후속 ([규격](pet-model-spec.md)).
 - [x] 드론·부사수 모델 라이브러리(A-21): 드론4종×고/저, 공용 하부장비4종 교체, 기존 캐릭터60% 프리셋4종·기존 걷기/무기 잡기. 소환수 공용 품질 설정, 부사수는 자동LOD 조절. 모델253·펫185·메뉴44 검사 및 실제 렌더 확인. 추종·공격·소환카드는 후속 ([규격](companion-model-spec.md)).
@@ -180,6 +181,18 @@
 
 - C# 빌드 경고 · 오류 0. 새 `StageTransitionCheck` 143(헤드리스 · 창 모드 모두), `Start-Game.ps1 -Test` → `Integration` 148, `MapCheck` 24, `VisionTierCheck` 23, `SupplyCheck` 12, `SquadCheck` 50, `ModeCheck` 123, `SpawnCheck` 41, `AudioMixCheck` 6, `CombatPacingCheck` 44, `WeaponHandlingCheck` 36, `NetSyncCheck` 32, `MenuCheck` 44, `LobbyCheck` 31 통과. 전환 소품은 Blender 스크립트 단언 통과(삼각형 · 부위 · 뚜껑 방향).
 - 렌더 `output/transition-0-stage1-street.png`(비교용 Stage 1 실내 직교) → `transition-1-safehouse-hatch`(바닥 해치 · 길게 누르기 안내) → `-2-closing`(원 닫힘) → `-3-title`(STAGE 2 · 숲속 벙커길) → `-4-opening`(벙커 해치에서 원 열림) → `-5-arrival` · `-6-arrival-close`(야외 원근 기본 · 확대) → `-7-forest` · `-bridge` · `-yard` · `-safehouse`. 참고 영상 프레임과 비교해 전환 순서 · 주변 오브젝트 · 시점 변화가 대응함을 확인. 영상의 비 · 어두운 석양 색감은 미적용(I-91). 손으로 해 본 Stage 2 플레이 · 성능 · 멀티 다음 구역은 미확인(I-26 · I-90 · I-91).
+
+### 이번 변경 확인 기록 — 2026-10-22 (특수무기 N발: 0.6초 간격 · 강화 3 · 4발 · 쿨타임 대가)
+
+- C# 빌드 경고 · 오류 0. `CardLabCheck` 128 → 135(헤드리스) · 136(창 모드): 켜지면 특별 풀에 "특수무기 3발"(등급 5), 첫 로켓은 혼자 · 두 번째는 같은 줄로 0.6초 뒤(17.3 m 뒤), 대가로 3번 칸 쿨타임 25 → 37.5초(×1.5), 3발 강화 뒤 0.6초마다 두 번 더 · 쿨타임 ×2 · 다음은 4발, 4발이 마지막(5발 키는 없음), 끄면 한 발 · 원래 쿨타임.
+- 헤드리스 통과: `ModeCheck` 147, `OnslaughtNetCheck` 29, `NetCodecCheck` 12, `NetSyncCheck` 32, `CompanionCheck` 39, `SquadCheck` 51, `MenuCheck` 44, `LobbyCheck` 31, `Integration` 149. 실패 0, 종료 경고(I-17)만. 카드 동기화에 발 수 1바이트(프로토콜 12) — 파티원 쪽 쿨타임 배율은 실제 2인 화면으로는 보지 않음.
+
+### 이번 변경 확인 기록 — 2026-10-22 (새 카드 2묶음 · 특수무기 2발 일렬, M-29 4단계)
+
+- C# 빌드 경고 · 오류 0. Codex `card_props.py` Blender 단언 통과(단추 142 · 기차 1394 · 상자 1168 삼각형), `card_icons.py` 19장(3장 추가 + 특수무기 2발 그림을 일렬로, 나머지 18장은 그대로).
+- `CardLabCheck` 116 → 128(헤드리스) · 129(창 모드): 단추 미사일(다섯 번까지 없음 · 여섯 번째에 단추 · 옆 몹을 쏜 사람 몫으로 · 샷건은 안 셈 · 강화 5번마다 2개), 장난감 기차 · 깜짝 상자(팀원이 쓰러지면 둘 다 나옴 · 상자가 끌어모음 · 기차가 공격 방향으로 몹을 쓰러뜨림 · 1.5초 뒤 터져 넉백 · 도망 · 일어나면 기차 한 번 더), 특수무기 2발이 **같은 줄**로 0.15초 뒤(뒤 로켓 5.2 m 뒤, 옆으로 어긋나지 않음).
+- 헤드리스 전부 통과: `NetCodecCheck` 12, `ModeCheck` 147, `OnslaughtNetCheck` 29, `NetSyncCheck` 32, `CompanionCheck` 39, `SquadCheck` 51, `SpawnCheck` 41, `SupplyCheck` 12, `MenuCheck` 44, `LobbyCheck` 31, `StageTransitionCheck` 164, `EnemyExpansion` 60, `CorpseTierCheck` 36, `Integration` 149. 실패 0, 종료 경고(I-17)만. (특수무기 2발 일렬 수정 뒤에는 `CardLabCheck`만 다시 돌림 — 바뀐 곳이 무기 컨트롤러의 두 번째 발뿐.)
+- 렌더 `output/cardlab-toy-train.png`(기관차 · 화물칸 · 연기) · `cardlab-jack-box.png`(열린 상자 · 거위 광대 · "깜짝이야!") · `cardlab-double-special.png`(로켓 두 발이 같은 연기 줄). 처음에는 단추 검사가 앞 검사의 운명의 총이 남긴 특수무기를 든 채라 실패, 실험실은 쓰러짐이 꺼져 있어 기차 · 상자 검사가 실패(검사용 `Stage.SetReviveForTest`), 창 모드에서 기차 검사가 실험실 펫의 공격과 겹쳐 실패 → 펫이 닿지 않는 먼 몹과 기차가 쓰러뜨린 수로 확인.
 
 ### 이번 변경 확인 기록 — 2026-10-22 (새 카드 1묶음, M-29 4단계)
 

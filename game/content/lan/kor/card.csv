@@ -133,7 +133,7 @@ desc_card_honk_charge,"명중할 때마다 3번 칸 남은 쿨타임 3% 감소 (
 name_card_destiny_gun,운명의 총
 desc_card_destiny_gun,무작위 칸의 총이 무작위 특수무기로 바뀜 · 그 칸은 쿨타임으로 쏨 (한 판에 한 번)
 name_card_double_special,특수무기 2발
-desc_card_double_special,팀 전원: 3번 칸 특수무기가 한 번 더 나감 (꽥 두 번 · 오리 두 마리 · 로켓 양옆 · 박격포 연속 · 레일건 두 줄)
+desc_card_double_special,팀 전원: 3번 칸 특수무기가 같은 줄로 0.6초 뒤 한 번 더 나감 · 대가: 3번 칸 쿨타임 1.5배
 name_card_u_tap_dance_stacks,탭댄스 중첩
 desc_card_u_tap_dance_stacks,최대 중첩 +3
 name_card_u_bounce_count,튕기는 탄 횟수
@@ -143,3 +143,19 @@ tag_card_sniper_only,저격 전용
 tag_card_slot3,3번 칸
 tag_card_slot12,1번 또는 2번 칸
 fmt_card_destiny_fx,운명의 총: {0}!
+# 새 카드 2묶음 (decisions.md M-29, onslaught-cards-plan.md 16.6)
+name_card_button_missile,단추 미사일
+desc_card_button_missile,여섯 번째 명중마다 단추가 날아가 근처 다른 적을 맞힘 (내 탄 카드 효과도 실림)
+name_card_u_button_every,단추 간격
+desc_card_u_button_every,한 번 덜 맞혀도 단추 (6 → 5 → 4)
+name_card_u_button_count,단추 개수
+desc_card_u_button_count,단추 하나 더 (1 → 2 → 3)
+name_card_toy_train,장난감 기차
+desc_card_toy_train,"팀 전원: 누가 쓰러지면 공격이 온 쪽으로 기차가 돌진, 지나간 적은 데굴 · 일어나면 반대로 한 번 더"
+name_card_jack_box,깜짝 상자
+desc_card_jack_box,"팀 전원: 누가(부사수 포함) 쓰러지면 그 자리에 깜짝 상자 · 1.5초 적을 모았다가 튀어나와 넉백, 주변 적은 잠깐 도망"
+tag_card_rapid,권총 · 기관단총 · 소총 · 경기관총
+fx_card_jack_box,깜짝이야!
+fmt_card_special_shots_name,특수무기 {0}발
+fmt_card_special_shots_desc,팀 전원: 3번 칸 특수무기가 0.6초 간격으로 {0}발씩 나감 · 대가: 쿨타임이 더 길어짐
+tag_card_special_upgrade,특별 카드 · 강화

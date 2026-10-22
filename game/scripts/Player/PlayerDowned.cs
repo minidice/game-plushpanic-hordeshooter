@@ -97,6 +97,7 @@ public partial class Player
         Rig.ResetPose();
         Stage.Sfx.PlayAt("heal", GlobalPosition + Vector3.Up);
         Stage.Effects.FloatingText(GlobalPosition + Vector3.Up * 2.6f, Loc.Text("msg_revived"), new Color("7dff9a"));
+        Stage.OnSurvivorRevived(this);
     }
 
     /// <summary>Medkit or safehouse: the next fall is a down again, not death.</summary>

@@ -161,7 +161,7 @@ public partial class SurvivorRules : ModeRules
     {
         // Every survivor here keeps unlimited reserves; slot-3 kinds recharge on a cooldown (M-26).
         foreach (var p in Stage.Players)
-            if (IsInstanceValid(p)) p.Loadout.UseOnslaughtAmmo(Rules.SpecialCooldown, Rules.SpecialCooldowns);
+            if (IsInstanceValid(p)) p.Loadout.UseOnslaughtAmmo(Rules.SpecialCooldown, Rules.SpecialCooldowns, Cards.SpecialCooldownScale);
         if (_wasArming && !Arming)
         {
             // The clock starts when everyone has armed (a client sees it through the shared objective).
@@ -250,7 +250,7 @@ public partial class SurvivorRules : ModeRules
         foreach (var p in Humans.Where(p => p != Stage.Player))
         {
             var queue = QueueOf(p);
-            var now = (queue.Version, Level, Segment, BossArrived, Companions.Version, Cards.SpecialMask, RerollsLeft(p));
+            var now = (queue.Version, Level, Segment, BossArrived, Companions.Version, Cards.SpecialMask * 8 + Cards.SpecialShots, RerollsLeft(p));
             if (!periodic && _sent.TryGetValue(p, out var last) && last == now) continue;
             if (net.SendCards(p, EncodeFor(p))) _sent[p] = now;
         }
@@ -268,6 +268,7 @@ public partial class SurvivorRules : ModeRules
         Companions.Write(w);
         w.U8(Cards.SpecialMask);
         w.U8(RerollsLeft(who));
+        w.U8(Cards.SpecialShots);
         return w.ToArray();
     }
 
@@ -311,6 +312,7 @@ public partial class SurvivorRules : ModeRules
         Companions.Read(r);
         Cards.SetSpecialsFromHost(r.U8());
         _netRerolls = r.U8();
+        Cards.SetShotsFromHost(r.U8());
     }
 
     // ---------- named and swarm ----------

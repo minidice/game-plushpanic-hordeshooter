@@ -489,6 +489,9 @@ public partial class Stage : Node3D
     /// <summary>Checks only: moves the stage clock forward (the mode schedules follow it).</summary>
     public void AdvanceClockForTest(float seconds) => Elapsed += seconds;
 
+    /// <summary>Checks: lets survivors go down here (the card lab normally has no downs).</summary>
+    public void SetReviveForTest(bool on) => ReviveEnabled = on;
+
     private void UpdateRespawns()
     {
         if (_respawnQueue.Count == 0) return;
@@ -919,8 +922,16 @@ public partial class Stage : Node3D
     public void OnSurvivorDowned(Player who)
     {
         if (who == Player) ShowNotice(Loc.Text("msg_you_are_down"), 3);
+        SurvivorDowned?.Invoke(who);
         CheckWipe();
     }
+
+    public void OnSurvivorRevived(Player who) => SurvivorRevived?.Invoke(who);
+
+    /// <summary>Someone went down / got up again, or a sidekick fell (cards like the toy train and the jack-in-the-box, M-29).</summary>
+    public event System.Action<Player>? SurvivorDowned, SurvivorRevived;
+    public event System.Action<Companion>? CompanionDowned;
+    internal void RaiseCompanionDowned(Companion who) => CompanionDowned?.Invoke(who);
 
     private void OnPlayerDied() => PresentWipe();
 

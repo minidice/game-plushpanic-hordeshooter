@@ -318,6 +318,7 @@ public partial class Companion : Node3D
     private void Fall()
     {
         SetDown(true);
+        Stage.RaiseCompanionDowned(this);
         _downLeft = SidekickRevive;
     }
 

@@ -245,6 +245,13 @@ public partial class StageNet : Node
         _batch.Begin(NetEvent.Throw); _batch.W.I32(thrower.PeerId); _batch.W.U8(NetIds.Throwable(def.Id)); _batch.W.Pos(from); _batch.W.Pos(target);
     }
 
+    /// <summary>Host: a card put a prop on the field (a button, the toy train, a jack-in-the-box); clients show a harmless copy.</summary>
+    public void OnCardProp(CardPropKind kind, Vector3 a, Vector3 b)
+    {
+        if (Role != NetRole.Host || !Started) return;
+        _batch.Begin(NetEvent.CardProp); _batch.W.U8((int)kind); _batch.W.Pos(a); _batch.W.Pos(b);
+    }
+
     public void OnBarrelExplode(ExplosiveBarrel barrel)
     {
         if (Role != NetRole.Host) return;
@@ -633,6 +640,14 @@ public partial class StageNet : Node
                 var target = r.Pos();
                 if (thrower == null || thrower == _stage.Player) break;
                 ThrownItem.Throw(_stage, def, from, target, thrower);
+                break;
+            }
+            case NetEvent.CardProp:
+            {
+                var kind = (CardPropKind)r.U8();
+                var a = r.Pos();
+                var b = r.Pos();
+                CardProps.Spawn(_stage, kind, a, b);
                 break;
             }
             case NetEvent.BarrelExplode:

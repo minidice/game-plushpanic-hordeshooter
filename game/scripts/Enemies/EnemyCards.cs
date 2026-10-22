@@ -19,6 +19,19 @@ public partial class Enemy
     /// <summary>Seconds left sticky (찍찍이): sticky monsters near each other clump together.</summary>
     public float StickyTime { get; set; }
     public bool Sticky => StickyTime > 0;
+    /// <summary>Running away from <see cref="FleeFrom"/> for this long (the jack-in-the-box, M-29).</summary>
+    public float FleeTime { get; private set; }
+    public Vector3 FleeFrom { get; private set; }
+
+    /// <summary>Scared off: runs away from <paramref name="from"/> for <paramref name="seconds"/> (a common only).</summary>
+    public void Scare(Vector3 from, float seconds)
+    {
+        if (IsDead || IsPuppet || IsSpecial) return;
+        CancelMelee();
+        Wake();
+        FleeFrom = from;
+        FleeTime = Mathf.Max(FleeTime, seconds);
+    }
     /// <summary>Push speed right now (m/s); above a few m/s it is flying from a hit.</summary>
     public float KnockSpeed => new Vector3(Knock.X, 0, Knock.Z).Length();
     public Vector3 KnockDirection => KnockSpeed > .001f ? new Vector3(Knock.X, 0, Knock.Z) / KnockSpeed : Vector3.Zero;
