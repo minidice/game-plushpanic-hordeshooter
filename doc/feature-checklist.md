@@ -23,6 +23,7 @@
 - [x] 난전 3번 칸 꽥 · 고무오리 1차(2026-10-21, M-27 계획 13.1): 발사 방식 `shout`(주변 밀쳐내기) · `throw`(투척물 던지기), 3번 칸 무장 카드 후보 5종, 난전 전용 무기별 쿨타임 `special_cooldowns`, 실험실 오리 카드도 같은 오리
 - [x] 꽥 경적 · 고무오리 전용 모델 · 아이콘(2026-10-21, A-17 · I-87): Codex Blender 스크립트(`gadget-models.py`) + Claude 수정(축 · 색 · 부리 · 크기), 던진 오리도 같은 모델, 아이콘은 `render-weapon-icons.py --only`
 - [x] 소환수 게임 적용 1차(2026-10-22, M-28): 난전 무장 네 번째 소환수 카드 · 실험실 C, 따라가기 · 기본 공격 · 12 m 벗어나면 복귀(시전은 끝내고), 펫 · 드론 무적 · 몸 없음, 부사수 쓰러짐 → 8초 뒤 부활, 게임 중 Esc 메뉴에서 소환수 모델 품질 전환, 멀티 목록 동기화 ([규격](companion-model-spec.md))
+- [x] 갈 수 없는 곳 채우기 1차(2026-10-22, A-23): 외곽 전용 모델 6종(Codex, 충돌 · 뒷면 · 가림 부위 없음), 인스턴싱 줄 배치(덤불 띠/바위벽 → 숲 → 실루엣), 가장자리 줄만 그림자, 카메라 쪽 · 서쪽 끝은 낮게, 먼 바닥 판, 카메라 경계 — Stage 2 적용
 - [ ] 난전 개편(M-27) 나머지: 소환수 카드(기본 공격 강화 · 새 능력) · 각성, 총 분류별 카드 풀, 버프 줄 ([계획](onslaught-cards-plan.md))
 - [x] 사족 펫 모델 라이브러리(A-20): 거북이·강아지·토끼 기본형, 공용 등 무기 2종 교체/해제, 시각용 걷기. 세 종 형태 개선·고품질/저품질 6개 GLB·설정 저장/전환 포함. 거북이·토끼는 귀여움 기준으로 큰 머리/볼·짧은 몸/발 재조정, 게임 크기 전후 비교 확인. 모델 185개·메뉴 44개 검사와 6마리 렌더 확인. 모델 단계이며 추종·소환 카드·공격은 후속 ([규격](pet-model-spec.md)).
 - [x] 드론·부사수 모델 라이브러리(A-21): 드론4종×고/저, 공용 하부장비4종 교체, 기존 캐릭터60% 프리셋4종·기존 걷기/무기 잡기. 소환수 공용 품질 설정, 부사수는 자동LOD 조절. 모델253·펫185·메뉴44 검사 및 실제 렌더 확인. 추종·공격·소환카드는 후속 ([규격](companion-model-spec.md)).
@@ -173,6 +174,11 @@
 
 - C# 빌드 경고 · 오류 0. 새 `StageTransitionCheck` 143(헤드리스 · 창 모드 모두), `Start-Game.ps1 -Test` → `Integration` 148, `MapCheck` 24, `VisionTierCheck` 23, `SupplyCheck` 12, `SquadCheck` 50, `ModeCheck` 123, `SpawnCheck` 41, `AudioMixCheck` 6, `CombatPacingCheck` 44, `WeaponHandlingCheck` 36, `NetSyncCheck` 32, `MenuCheck` 44, `LobbyCheck` 31 통과. 전환 소품은 Blender 스크립트 단언 통과(삼각형 · 부위 · 뚜껑 방향).
 - 렌더 `output/transition-0-stage1-street.png`(비교용 Stage 1 실내 직교) → `transition-1-safehouse-hatch`(바닥 해치 · 길게 누르기 안내) → `-2-closing`(원 닫힘) → `-3-title`(STAGE 2 · 숲속 벙커길) → `-4-opening`(벙커 해치에서 원 열림) → `-5-arrival` · `-6-arrival-close`(야외 원근 기본 · 확대) → `-7-forest` · `-bridge` · `-yard` · `-safehouse`. 참고 영상 프레임과 비교해 전환 순서 · 주변 오브젝트 · 시점 변화가 대응함을 확인. 영상의 비 · 어두운 석양 색감은 미적용(I-91). 손으로 해 본 Stage 2 플레이 · 성능 · 멀티 다음 구역은 미확인(I-26 · I-90 · I-91).
+
+### 이번 변경 확인 기록 — 2026-10-22 (갈 수 없는 곳 채우기 1차)
+
+- C# 빌드 경고 · 오류 0. Blender `edge_kit.py` 단언 통과(6종 274~998 삼각형). `StageTransitionCheck` 153(헤드리스 · 창 모드: 키트 42종 목록, 외곽 모델 충돌 · 가림 부위 없음, 외곽 개수 · 그림자 줄 · 물리 없음 · 먼 바닥 · 카메라 경계), `MapCheck` 24, `ModeCheck` 123, `SpawnCheck` 41, `SupplyCheck` 12, `NetSyncCheck` 32, `MenuCheck` 44, `LobbyCheck` 31, `CardLabCheck` 85, `CompanionCheck` 39, `SquadCheck` 50, `Integration` 148 통과.
+- 렌더 `output/transition-5-arrival.png` · `transition-7-forest/bridge/yard/safehouse.png`(전후 비교, 이전은 로컬 `output/before-edge/`): 먼 쪽 빈틈 · 바닥 끝 사라짐, 개울 끝이 숲에 묻힘. 성능 측정 · 저사양은 미확인(I-92).
 
 ### 이번 변경 확인 기록 — 2026-10-22 (소환수 게임 적용 1차)
 

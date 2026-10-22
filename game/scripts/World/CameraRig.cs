@@ -36,6 +36,8 @@ public partial class CameraRig : Camera3D
     public CameraView View { get; set; } = CameraView.Indoor;
     /// <summary>Depth fog that follows the camera's distance, so only the far ground is hazed (outdoor maps).</summary>
     public Godot.Environment? Haze { get; set; }
+    /// <summary>The map's camera bounds (x, z): the focus stays inside, so the view never runs off the dressed ground.</summary>
+    public Rect2? Bounds { get; set; }
     /// <summary>Metres from the focus to the camera now.</summary>
     public float FocusDistance { get; private set; } = Distance;
     /// <summary>Angles now (they ease from the last stage's view after a stage change).</summary>
@@ -111,6 +113,7 @@ public partial class CameraRig : Camera3D
                 goal += lead.LimitLength((14f + 12f * lean) * Mathf.Max(1, aim)) * (.22f + .26f * lean);
             }
         }
+        if (Bounds is { } b) goal = new Vector3(Mathf.Clamp(goal.X, b.Position.X, b.End.X), goal.Y, Mathf.Clamp(goal.Z, b.Position.Y, b.End.Y));
         _focus = _focus.Lerp(goal, 1 - Mathf.Exp(-dt * 5f));
         float wanted = (Close ? View.CloseSize : View.WideSize) * AimZoom;
         if (_blend < 1)

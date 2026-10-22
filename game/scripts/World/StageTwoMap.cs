@@ -238,34 +238,32 @@ public sealed class StageTwoMap : StageMap
         Mat.Box(_stage, new Vector3((StreamX1 + 128) / 2, -.13f, -2), new Vector3(128 - StreamX1, .2f, 56), soil);
     }
 
-    /// <summary>Forest behind the rock wall, and a few pines held back on the camera side like the clip's foreground.</summary>
+    /// <summary>
+    /// Everything outside the walkable ground (A-23): packed with the edge kit by <see cref="StageMap.DressEdge"/> — a rock
+    /// band and forest into the haze on the far side, low shrubs and low clumps on the camera side, forest past both
+    /// ends — over a far ground plane, so neither gaps between trees nor the end of the floor are ever in view.
+    /// </summary>
     private void Backdrop()
     {
-        var rng = new RandomNumberGenerator { Seed = 22 };
-        var tall = new List<Transform3D>();
-        var small = new List<Transform3D>();
-        for (float x = -8; x < 122; x += 3.4f)
-        {
-            if (x > StreamX0 - 2 && x < StreamX1 + 2) continue;
-            for (int row = 0; row < 2; row++)
-            {
-                var at = new Vector3(x + rng.RandfRange(-1, 1), 0, -13 - row * 4.2f + rng.RandfRange(-1.2f, 1.2f));
-                var t = new Transform3D(new Basis(Vector3.Up, rng.RandfRange(0, Mathf.Tau)).Scaled(Vector3.One * rng.RandfRange(1, 1.5f)), at);
-                (rng.Randf() < .6f ? tall : small).Add(t);
-            }
-        }
-        // Camera side: short pines at least 5 m past the walkable edge, so a crown never covers anyone on the road.
-        for (float x = -6; x < 118; x += rng.RandfRange(5, 8))
-        {
-            if (x > StreamX0 - 2 && x < StreamX1 + 2) continue;
-            float edge = x < 20 ? 9.4f : x < 100 ? 10.4f : 4.4f;
-            small.Add(new Transform3D(new Basis(Vector3.Up, rng.RandfRange(0, Mathf.Tau)).Scaled(Vector3.One * rng.RandfRange(.85f, 1.1f)),
-                new Vector3(x, 0, edge + 5.2f + rng.RandfRange(0, 2.5f))));
-        }
-        Scatter("pine_tall", tall);
-        Scatter("pine_small", small);
-        // Rock wall at the clearing's far side and its west end.
-        for (float x = -1; x < 20; x += 3.8f) Prop("cliff_segment", new Vector3(x, 0, -10.6f), (x * 29) % 30 - 15, 1.1f, solid: false);
-        for (float z = -8; z < 9; z += 3.9f) Prop("rock_cluster", new Vector3(-4, 0, z), z * 31, 1.2f, solid: false);
+        FarGround("5f7349");
+        const float far = -64, near = 30;
+        // Far side (−Z), each zone from just past its own walkable edge.
+        DressEdge(new Rect2(-2.4f, far, 22.4f, -9.6f - far), EdgeSide.Far, rocky: true);
+        DressEdge(new Rect2(20, far, StreamX0 - 20, -9.6f - far), EdgeSide.Far);
+        DressEdge(new Rect2(StreamX0, far, StreamX1 - StreamX0, -14 - far), EdgeSide.Far);
+        DressEdge(new Rect2(StreamX1, far, 100 - StreamX1, -10.6f - far), EdgeSide.Far, rocky: true);
+        DressEdge(new Rect2(100, far, 14, -4.6f - far), EdgeSide.Far);
+        // Camera side (+Z): low only.
+        DressEdge(new Rect2(-2.4f, 9.6f, 22.4f, near - 9.6f), EdgeSide.Near);
+        DressEdge(new Rect2(20, 9.2f, StreamX0 - 20, near - 9.2f), EdgeSide.Near);
+        DressEdge(new Rect2(StreamX0, 12, StreamX1 - StreamX0, near - 12), EdgeSide.Near);
+        DressEdge(new Rect2(StreamX1, 10.6f, 100 - StreamX1, near - 10.6f), EdgeSide.Near);
+        DressEdge(new Rect2(100, 4.6f, 14, near - 4.6f), EdgeSide.Near);
+        // Past both ends of the route.
+        DressEdge(new Rect2(-40, far, 37.6f, near - far), EdgeSide.West);
+        DressEdge(new Rect2(114, far, 36, near - far), EdgeSide.East);
     }
+
+    /// <summary>The camera never follows past the route's ends and sides (A-23).</summary>
+    public override Rect2? CameraBounds => new Rect2(-3, -9, 116, 18);
 }

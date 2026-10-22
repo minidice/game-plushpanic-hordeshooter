@@ -11,7 +11,7 @@ namespace HordeShooter;
 /// base and doorways are. A map builds itself from the shared blocks below (floors, walls, crates, lamps, pickups).
 /// Stage 1 is <see cref="StageOneLayout"/>; a wide open field or a generated map is another subclass.
 /// </summary>
-public abstract class StageMap
+public abstract partial class StageMap
 {
     protected Stage _stage = null!;
     protected readonly RandomNumberGenerator _rng = new();
@@ -78,6 +78,8 @@ public abstract class StageMap
 
     /// <summary>How the camera sees this map (Stage 1's indoor quarter view unless a map says otherwise, L-2 · L-14).</summary>
     public virtual CameraView View => CameraView.Indoor;
+    /// <summary>Where the camera may look (x, z): it stops following past it, so the view never runs off the dressed ground (A-23). Null = anywhere.</summary>
+    public virtual Rect2? CameraBounds => null;
     /// <summary>Sky, ambient light, fog and the key light. The default is Stage 1's night.</summary>
     public virtual void Light(Godot.Environment env, DirectionalLight3D key) { }
 
@@ -201,7 +203,7 @@ public abstract class StageMap
     /// Many copies of a decoration-only kit model (ground tiles, backdrop trees) drawn as one MultiMesh per mesh part:
     /// no colliders, no per-copy nodes.
     /// </summary>
-    protected void Scatter(string id, IReadOnlyList<Transform3D> where)
+    protected void Scatter(string id, IReadOnlyList<Transform3D> where, bool shadows = true)
     {
         if (where.Count == 0 || PropLibrary.Instance(id) is not { } model) return;
         foreach (var mesh in model.FindChildren("*", nameof(MeshInstance3D), true, false))
@@ -211,7 +213,12 @@ public abstract class StageMap
             for (Node? n = part; n != null && n != model; n = n.GetParent()) if (n is Node3D n3) local = n3.Transform * local;
             var multi = new MultiMesh { TransformFormat = MultiMesh.TransformFormatEnum.Transform3D, Mesh = part.Mesh, InstanceCount = where.Count };
             for (int i = 0; i < where.Count; i++) multi.SetInstanceTransform(i, where[i] * local);
-            _stage.AddChild(new MultiMeshInstance3D { Name = id + "_" + part.Name, Multimesh = multi });
+            _stage.AddChild(new MultiMeshInstance3D
+            {
+                Name = id + "_" + part.Name,
+                Multimesh = multi,
+                CastShadow = shadows ? GeometryInstance3D.ShadowCastingSetting.On : GeometryInstance3D.ShadowCastingSetting.Off,
+            });
         }
         model.Free();
         Scattered[id] = Scattered.GetValueOrDefault(id) + where.Count;

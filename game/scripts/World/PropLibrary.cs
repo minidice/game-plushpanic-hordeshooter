@@ -12,12 +12,13 @@ public sealed record PropInfo(string Id, string File, Vector3 Dimensions, PropCo
 /// <summary>
 /// Static set-dressing models with the outdoor kit contract (<c>plushpanic_outdoor_v1</c>, prototypes/outdoor-kit/doc/
 /// integration-guide.md): metres, +Y up, the lowest point at y = 0, <c>Keep</c> parts and <c>Occlude_*</c> parts that may
-/// later fade when they hide someone. Two folders follow it: the outdoor kit and the stage transition props (L-14).
+/// later fade when they hide someone. Three folders follow it: the outdoor kit, the stage transition props (L-14) and
+/// the edge kit for ground nobody can reach (A-23: no collider, no back faces, no fading parts).
 /// Each manifest gives a model's size and a recommended collider; models carry no physics of their own.
 /// </summary>
 public static class PropLibrary
 {
-    public static readonly string[] Folders = { "res://assets/outdoor-kit", "res://assets/stage-props" };
+    public static readonly string[] Folders = { "res://assets/outdoor-kit", "res://assets/stage-props", "res://assets/edge-kit" };
 
     private static Dictionary<string, PropInfo>? _props;
     private static readonly Dictionary<string, PackedScene> _scenes = new();

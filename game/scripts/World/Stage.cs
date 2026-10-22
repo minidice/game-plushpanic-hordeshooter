@@ -217,7 +217,7 @@ public partial class Stage : Node3D
         ThemeId = StageTheme.Normalize(ThemeOverride ?? GameSession.SelectedTheme);
         CommonDefinition = MonsterDatabase.Get(StageTheme.Commons(ThemeId)[0]);
 
-        Cam = new CameraRig { Name = "Camera", Target = Player, Player = Player, View = Map.View };
+        Cam = new CameraRig { Name = "Camera", Target = Player, Player = Player, View = Map.View, Bounds = Map.CameraBounds };
         if (_environment.FogEnabled && _environment.FogMode == Godot.Environment.FogModeEnum.Depth) Cam.Haze = _environment;
         // Coming down the last stage's hatch: the view eases from that stage's look into this one (L-14).
         bool arriving = (ArrivalOverride ?? running) && StageTransition.Arriving;
