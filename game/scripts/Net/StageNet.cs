@@ -285,6 +285,16 @@ public partial class StageNet : Node
         _stage.ModeRules?.CastVote(who, serial, index);
     }
 
+    /// <summary>Client: draw card <paramref name="index"/> of our front offer again; the host counts our rerolls.</summary>
+    public void RequestReroll(int serial, int index) => Send(MethodName.ClientReroll, serial, index);
+
+    [Rpc(MultiplayerApi.RpcMode.AnyPeer, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
+    private void ClientReroll(int serial, int index)
+    {
+        if (Role != NetRole.Host || !Peers.TryGetValue(Multiplayer.GetRemoteSenderId(), out var who)) return;
+        _stage.ModeRules?.Reroll(who, serial, index);
+    }
+
     /// <summary>Client: which card we picked; the host applies it to our survivor.</summary>
     public void RequestCardPick(int serial, int index) => Send(MethodName.ClientPickCard, serial, index);
 

@@ -1,5 +1,6 @@
 using Godot;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace HordeShooter;
 
@@ -17,6 +18,10 @@ public partial class CardWindow : CanvasLayer
     public bool IsOpen { get; private set; }
     /// <summary>Set on a client: a pick is sent to the host instead of applied here.</summary>
     public System.Action<int>? PickHandler { get; set; }
+    /// <summary>Rerolls this survivor has left (M-29 plan 16.4); null = no rerolls here (the lab).</summary>
+    public System.Func<int>? RerollsLeft { get; set; }
+    /// <summary>Draws card n of the front offer again (the host's count; a client asks the host).</summary>
+    public System.Action<int>? RerollHandler { get; set; }
 
     private Control _root = null!, _dim = null!;
     private VBoxContainer _panel = null!;
@@ -25,6 +30,8 @@ public partial class CardWindow : CanvasLayer
     private PanelContainer _plus = null!;
     private readonly List<CardButton> _cards = new();
     private CardOffer? _shown;
+    private string _shownKeys = "";
+    private MysteryReveal _reveal = null!;
 
     public override void _Ready()
     {
@@ -53,7 +60,7 @@ public partial class CardWindow : CanvasLayer
         head.AddChild(_close);
         for (int i = 0; i < 3; i++)
         {
-            var card = new CardButton(Pick, i) { Name = "Card" + (i + 1) };
+            var card = new CardButton(Pick, i, Reroll) { Name = "Card" + (i + 1) };
             _cards.Add(card);
             _panel.AddChild(card);
         }
@@ -78,6 +85,9 @@ public partial class CardWindow : CanvasLayer
         _plusCount = Hud.HudLabel("", 20, Hud.HudWhite);
         plusRow.AddChild(_plusCount);
         plusRow.AddChild(Hud.HudLabel(Loc.Text("ui_card_plus_key"), 13, Hud.HudMuted));
+
+        _reveal = new MysteryReveal { Name = "MysteryReveal" };
+        _root.AddChild(_reveal);
 
         Queue.Changed += OnQueueChanged;
         OnQueueChanged();
@@ -111,8 +121,33 @@ public partial class CardWindow : CanvasLayer
     public void Pick(int index)
     {
         if (!IsOpen || Queue.Front is not { } offer || index < 0 || index >= offer.Choices.Count) return;
+        // A "?" card shows what it was (plan 16.3); the card itself is already decided and applies at once.
+        if (offer.Choices[index].Inner is { } inner) _reveal.Play(inner);
         if (PickHandler != null) PickHandler(index);
         else Queue.Choose(Stage.Player, index);
+    }
+
+    /// <summary>Draws card <paramref name="index"/> again, when the offer allows it and a reroll is left.</summary>
+    public void Reroll(int index)
+    {
+        if (!IsOpen || Queue.Front is not { CanReroll: true } offer || index < 0 || index >= offer.Choices.Count) return;
+        if (RerollsLeft == null || RerollsLeft() <= 0 || RerollHandler == null) return;
+        RerollHandler(index);
+    }
+
+    public override void _Process(double delta)
+    {
+        // The count left changes on the host's word, not only with the queue.
+        if (IsOpen && Queue.Front is { } offer) RefreshRerolls(offer);
+    }
+
+    private void RefreshRerolls(CardOffer offer)
+    {
+        int left = RerollsLeft?.Invoke() ?? 0;
+        bool can = RerollsLeft != null && offer.CanReroll;
+        foreach (var card in _cards) card.SetReroll(can, left > 0);
+        string baseHint = Loc.Text(offer.CanClose ? "ui_card_hint_closable" : "ui_card_hint_arming");
+        _hint.Text = can ? baseHint + "  ·  " + Loc.Format("fmt_card_rerolls", left) : baseHint;
     }
 
     private void SetOpen(bool open)
@@ -132,9 +167,13 @@ public partial class CardWindow : CanvasLayer
         if (offer == null || !IsOpen) return;
         _close.Visible = offer.CanClose;
         _title.Text = offer.Title;
-        _hint.Text = Loc.Text(offer.CanClose ? "ui_card_hint_closable" : "ui_card_hint_arming");
-        if (_shown == offer) return;
+        _title.AddThemeColorOverride("font_color", offer.Grade > 0 ? CardCatalog.GradeColor(offer.Grade) : Hud.HudWarm);
+        RefreshRerolls(offer);
+        // A reroll changes the cards of the same offer.
+        string keys = string.Join(",", offer.Choices.Select(c => c.Key));
+        if (_shown == offer && _shownKeys == keys) return;
         _shown = offer;
+        _shownKeys = keys;
         for (int i = 0; i < _cards.Count; i++)
             _cards[i].Show(i < offer.Choices.Count ? offer.Choices[i] : null, offer.Kind);
     }
@@ -147,6 +186,9 @@ public partial class CardWindow : CanvasLayer
             case Key.F:
                 if (IsOpen) Close();
                 else Open();
+                break;
+            case Key.Key1 or Key.Key2 or Key.Key3 when IsOpen && key.ShiftPressed:
+                Reroll((int)(key.Keycode - Key.Key1));
                 break;
             case Key.Key1 or Key.Key2 or Key.Key3 when IsOpen:
                 Pick((int)(key.Keycode - Key.Key1));
@@ -173,12 +215,14 @@ public partial class CardButton : PanelContainer
 {
     private readonly System.Action<int> _pick;
     private readonly int _index;
+    private readonly Button _reroll;
     private readonly Label _number, _name, _tag, _desc, _glyph;
     private readonly TextureRect _icon;
     private StyleBoxFlat _normal = null!, _hover = null!;
 
     /// <param name="pick">What clicking it does (the card window's pick, or the vote's stamp).</param>
-    public CardButton(System.Action<int> pick, int index)
+    /// <param name="reroll">What its ↻ button does (null = none: the vote).</param>
+    public CardButton(System.Action<int> pick, int index, System.Action<int>? reroll = null)
     {
         _pick = pick;
         _index = index;
@@ -209,6 +253,10 @@ public partial class CardButton : PanelContainer
         _desc.AutowrapMode = TextServer.AutowrapMode.WordSmart;
         _desc.CustomMinimumSize = new Vector2(440, 0);
         foreach (var l in new[] { _name, _tag, _desc }) { l.MouseFilter = MouseFilterEnum.Ignore; text.AddChild(l); }
+        _reroll = new Button { Name = "Reroll", Text = "↻", TooltipText = Loc.Text("ui_card_reroll"), CustomMinimumSize = new Vector2(44, 44),
+            FocusMode = FocusModeEnum.None, Visible = false, SizeFlagsVertical = SizeFlags.ShrinkCenter };
+        _reroll.Pressed += () => reroll?.Invoke(_index);
+        row.AddChild(_reroll);
         MouseEntered += () => AddThemeStyleboxOverride("panel", _hover);
         MouseExited += () => AddThemeStyleboxOverride("panel", _normal);
     }
@@ -218,14 +266,16 @@ public partial class CardButton : PanelContainer
         Visible = choice != null;
         if (choice == null) return;
         var color = CardWindow.TargetColor(choice.Target);
-        var border = kind == CardKind.Special ? new Color("ffcf5a") : color;
+        // The grade shows in the border (M-29 plan 16.2); arming and companion cards keep their target's colour.
+        var border = choice.Grade > 0 ? CardCatalog.GradeColor(choice.Grade) : kind == CardKind.Special ? new Color("ffcf5a") : color;
         _normal = Hud.HudPlate(new Color(.07f, .08f, .12f, .96f), new Color(border, .7f), 14, 14);
         _hover = Hud.HudPlate(new Color(.13f, .14f, .2f, .98f), border, 14, 14);
         _hover.SetBorderWidthAll(3);
         AddThemeStyleboxOverride("panel", _normal);
         _name.Text = choice.Name;
         _name.AddThemeColorOverride("font_color", color);
-        _tag.Text = choice.Tag;
+        _tag.Text = choice.Grade > 0 ? Loc.Format("fmt_card_grade", choice.Grade) + " · " + choice.Tag : choice.Tag;
+        _tag.AddThemeColorOverride("font_color", choice.Grade > 0 ? CardCatalog.GradeColor(choice.Grade) : Hud.HudWarm);
         _desc.Text = choice.Description;
         _icon.Texture = choice.Icon;
         _glyph.Text = choice.Icon != null ? "" : choice.Target switch
@@ -237,7 +287,15 @@ public partial class CardButton : PanelContainer
             CardTarget.Summon => "◆",
             _ => "✦",
         };
+        if (choice.Inner != null) _glyph.Text = "?";
         _glyph.AddThemeColorOverride("font_color", color);
+    }
+
+    /// <summary>Shows the ↻ button when this offer can be rerolled, greyed out when none are left.</summary>
+    public void SetReroll(bool shown, bool enabled)
+    {
+        _reroll.Visible = shown;
+        _reroll.Disabled = !enabled;
     }
 
     public override void _GuiInput(InputEvent e)
@@ -247,5 +305,78 @@ public partial class CardButton : PanelContainer
             AcceptEvent();
             _pick(_index);
         }
+    }
+}
+
+/// <summary>
+/// A "?" card turning into its card (M-29 plan 16.3): names of its grade band flick past like a slot machine for
+/// about 1.3 seconds and stop on the card that was decided when it was drawn, which stays big for a moment. Only a
+/// show: the card applies at once. Used by the card window and the vote.
+/// </summary>
+public partial class MysteryReveal : PanelContainer
+{
+    public const float SpinSeconds = 1.3f, HoldSeconds = 1.1f;
+    private Label _name = null!, _desc = null!;
+    private CardChoice? _inner;
+    private List<string> _names = new();
+    private float _time = -1;
+
+    /// <summary>Whether it is on screen (checks).</summary>
+    public bool Playing => _time >= 0;
+    public string Shown => _name.Text;
+
+    public override void _Ready()
+    {
+        ProcessMode = ProcessModeEnum.Always;
+        Visible = false;
+        MouseFilter = MouseFilterEnum.Ignore;
+        CustomMinimumSize = new Vector2(560, 160);
+        // Centred on the screen whatever the parent is (a preset alone left it in the corner).
+        AnchorLeft = AnchorRight = AnchorTop = AnchorBottom = .5f;
+        OffsetLeft = -280;
+        OffsetRight = 280;
+        OffsetTop = -80;
+        OffsetBottom = 80;
+        GrowHorizontal = GrowVertical = GrowDirection.Both;
+        var box = new VBoxContainer { MouseFilter = MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
+        AddChild(box);
+        _name = Hud.HudLabel("", 40, Hud.HudWhite);
+        _name.HorizontalAlignment = HorizontalAlignment.Center;
+        _desc = Hud.HudLabel("", 16, Hud.HudMuted);
+        _desc.HorizontalAlignment = HorizontalAlignment.Center;
+        _desc.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        box.AddChild(_name);
+        box.AddChild(_desc);
+    }
+
+    public void Play(CardChoice inner)
+    {
+        _inner = inner;
+        _names = CardCatalog.RevealNames(inner.Grade >= CardCatalog.SpecialLow).Where(n => n != inner.Name).ToList();
+        if (_names.Count == 0) _names.Add("?");
+        _time = 0;
+        Visible = true;
+        AddThemeStyleboxOverride("panel", Hud.HudPlate(new Color(.06f, .07f, .1f, .97f), CardCatalog.GradeColor(inner.Grade), 18, 16));
+    }
+
+    public override void _Process(double delta)
+    {
+        if (_time < 0 || _inner == null) return;
+        _time += (float)delta;
+        if (_time < SpinSeconds)
+        {
+            // Fast at first, slowing down before it stops.
+            int step = Mathf.FloorToInt(_time * 16f - _time * _time * 5f);
+            _name.Text = _names[((step % _names.Count) + _names.Count) % _names.Count];
+            _name.AddThemeColorOverride("font_color", Hud.HudMuted);
+            _desc.Text = "";
+            return;
+        }
+        _name.Text = _inner.Name;
+        _name.AddThemeColorOverride("font_color", CardCatalog.GradeColor(_inner.Grade));
+        _desc.Text = _inner.Description;
+        if (_time < SpinSeconds + HoldSeconds) return;
+        _time = -1;
+        Visible = false;
     }
 }

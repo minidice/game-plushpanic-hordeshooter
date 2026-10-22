@@ -60,7 +60,26 @@ public partial class CompanionSquad : Node3D
             new CompanionSpec(CompanionKind.Drone, Pick(DroneModel.BodyIds), Pick(CompanionSpec.DroneGear)).Key,
             new CompanionSpec(CompanionKind.Sidekick, Pick(SidekickModel.PresetIds), "").Key,
         };
-        return new CardOffer { Kind = CardKind.Arming, TitleKey = "ui_card_companion_title", Choices = keys.Select(k => Card(k, this)).ToList() };
+        return new CardOffer
+        {
+            Kind = CardKind.Arming, TitleKey = "ui_card_companion_title", Choices = keys.Select(k => Card(k, this)).ToList(),
+            // A reroll draws the same kind of companion again with another look or gear.
+            Redraw = avoid =>
+            {
+                for (int tries = 0; tries < 30; tries++)
+                {
+                    var kind = (CompanionKind)rng.RandiRange(0, 2);
+                    var spec = kind switch
+                    {
+                        CompanionKind.Pet => new CompanionSpec(kind, Pick(CompanionSpec.PetSpecies), Pick(CompanionSpec.PetGear)),
+                        CompanionKind.Drone => new CompanionSpec(kind, Pick(DroneModel.BodyIds), Pick(CompanionSpec.DroneGear)),
+                        _ => new CompanionSpec(kind, Pick(SidekickModel.PresetIds), ""),
+                    };
+                    if (!avoid.Contains("f|" + spec.Key)) return Card(spec.Key, this);
+                }
+                return null;
+            },
+        };
     }
 
     /// <summary>A companion as a card; picked, it joins the picker (<paramref name="squad"/> null = a client's copy, display only).</summary>

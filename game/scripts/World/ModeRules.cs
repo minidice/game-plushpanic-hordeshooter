@@ -72,6 +72,8 @@ public abstract partial class ModeRules : Node
     public virtual void ApplyCardSync(byte[] data) { }
     /// <summary>Client: the host's special card vote (M-29).</summary>
     public virtual void ApplyVoteSync(byte[] data) { }
+    /// <summary>Host: a client rerolls card <paramref name="index"/> of its front offer (M-29 plan 16.4).</summary>
+    public virtual void Reroll(Player who, int serial, int index) { }
     /// <summary>Host: a client's stamp on the special card vote.</summary>
     public virtual void CastVote(Player who, int serial, int index) { }
 

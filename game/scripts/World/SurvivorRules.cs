@@ -74,7 +74,10 @@ public partial class SurvivorRules : ModeRules
     private readonly Dictionary<Player, CardQueue> _queues = new();
     private readonly HashSet<Player> _armed = new();
     private readonly HashSet<int> _pendingPicks = new();
-    private readonly Dictionary<Player, (int Version, int Level, int Segment, bool Boss, int Squad, int Specials)> _sent = new();
+    private readonly Dictionary<Player, (int Version, int Level, int Segment, bool Boss, int Squad, int Specials, int Rerolls)> _sent = new();
+    // Rerolls each person has used (the host counts them; plan 16.4), and a client's own count from the host.
+    private readonly Dictionary<Player, int> _rerollsUsed = new();
+    private int _netRerolls = -1;
     private readonly HashSet<string> _bossesMet = new();
 
     /// <summary>Everyone starts by arming (on every PC, so a client's clock starts when the host's does).</summary>
@@ -93,6 +96,13 @@ public partial class SurvivorRules : ModeRules
             _pendingPicks.Add(offer.Serial);
             Stage.Net?.RequestCardPick(offer.Serial, index);
             LocalQueue.DropFront();
+        };
+        Window.RerollsLeft = () => LocalRerollsLeft;
+        Window.RerollHandler = index =>
+        {
+            if (LocalQueue.Front is not { } offer) return;
+            if (Stage.Authoritative) Reroll(Stage.Player, offer.Serial, index);
+            else Stage.Net?.RequestReroll(offer.Serial, index);
         };
         AddChild(Window);
         Vote = new SpecialVote { Name = "SpecialVote", Stage = Stage, Limit = Rules.SpecialVote, Won = choice => choice.Apply(Stage.Player) };
@@ -213,7 +223,7 @@ public partial class SurvivorRules : ModeRules
         {
             Xp -= XpNeeded;
             Level++;
-            foreach (var p in Humans) QueueOf(p).Add(CardCatalog.LevelUp(Cards, Rng, p));
+            foreach (var p in Humans) QueueOf(p).Add(CardCatalog.LevelUp(Cards, Rng, p, SurvivorTuning.Row(Rules.NormalGradeWeights, Segment)));
             Stage.ShowNotice(Loc.Format("fmt_level_up", Level), 2);
             Stage.Sfx.Play("pickup", 0, 1.4f);
         }
@@ -236,7 +246,7 @@ public partial class SurvivorRules : ModeRules
         foreach (var p in Humans.Where(p => p != Stage.Player))
         {
             var queue = QueueOf(p);
-            var now = (queue.Version, Level, Segment, BossArrived, Companions.Version, Cards.SpecialMask);
+            var now = (queue.Version, Level, Segment, BossArrived, Companions.Version, Cards.SpecialMask, RerollsLeft(p));
             if (!periodic && _sent.TryGetValue(p, out var last) && last == now) continue;
             if (net.SendCards(p, EncodeFor(p))) _sent[p] = now;
         }
@@ -253,7 +263,26 @@ public partial class SurvivorRules : ModeRules
         CardCatalog.Write(w, QueueOf(who).Offers);
         Companions.Write(w);
         w.U8(Cards.SpecialMask);
+        w.U8(RerollsLeft(who));
         return w.ToArray();
+    }
+
+    /// <summary>Rerolls <paramref name="who"/> has left this match (host's count).</summary>
+    public int RerollsLeft(Player who) => Mathf.Max(0, Rules.Rerolls - _rerollsUsed.GetValueOrDefault(who));
+
+    /// <summary>This PC's survivor's rerolls left (a client's is the host's word).</summary>
+    public int LocalRerollsLeft => Stage.Authoritative ? RerollsLeft(Stage.Player) : Mathf.Max(0, _netRerolls);
+
+    /// <summary>
+    /// Host: <paramref name="who"/> rerolls card <paramref name="index"/> of their front offer <paramref name="serial"/>
+    /// (plan 16.4): arming and normal cards, never special ones; one reroll used only when a new card came.
+    /// </summary>
+    public override void Reroll(Player who, int serial, int index)
+    {
+        if (!Stage.Authoritative || RerollsLeft(who) <= 0) return;
+        var queue = QueueOf(who);
+        if (queue.Front?.Serial != serial || !queue.Reroll(index)) return;
+        _rerollsUsed[who] = _rerollsUsed.GetValueOrDefault(who) + 1;
     }
 
     public override void ApplyVoteSync(byte[] data) => Vote.Apply(data);
@@ -275,6 +304,7 @@ public partial class SurvivorRules : ModeRules
         LocalQueue.Replace(offers.Where(o => !_pendingPicks.Contains(o.Serial)));
         Companions.Read(r);
         Cards.SetSpecialsFromHost(r.U8());
+        _netRerolls = r.U8();
     }
 
     // ---------- named and swarm ----------
@@ -386,7 +416,8 @@ public partial class SurvivorRules : ModeRules
         BossArrived = false;
         Boss = null;
         // Everyone who is still in the match votes, downed or not; AI squadmates do not (M-29).
-        Vote.Begin(CardCatalog.BossReward(Cards, Rng), Stage.Players.Where(p => IsInstanceValid(p) && !p.IsBot && !p.IsDead));
+        Vote.Begin(CardCatalog.BossReward(Cards, Rng, SurvivorTuning.Row(Rules.SpecialGradeWeights, Segment)),
+            Stage.Players.Where(p => IsInstanceValid(p) && !p.IsBot && !p.IsDead));
         Segment++;
         _segmentStart = MatchTime;
         NextBoss = DrawBoss();

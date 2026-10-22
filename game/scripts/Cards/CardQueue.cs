@@ -13,10 +13,12 @@ public enum CardTarget { Slot1, Slot2, Slot3, Self, Summon, Common }
 
 /// <summary>
 /// One of the three cards on offer. <paramref name="Key"/> names the card for the network (<see cref="CardCatalog.FromKey"/>
-/// rebuilds the same card on any PC); <paramref name="Apply"/> only runs on the deciding PC.
+/// rebuilds the same card on any PC); <paramref name="Apply"/> only runs on the deciding PC. <paramref name="Grade"/> is
+/// its strength (M-29: normal 1–4, special 5–7; 0 for arming and companion cards). A "?" card hides
+/// <paramref name="Inner"/>, the card it turns into when picked (decided when it was drawn).
 /// </summary>
 public sealed record CardChoice(string Id, string Name, string Tag, string Description, CardTarget Target, Texture2D? Icon, Action<Player> Apply,
-    string Key = "");
+    string Key = "", int Grade = 0, CardChoice? Inner = null);
 
 /// <summary>Three cards to pick one from. The cards are drawn when the offer is made and never change (plan 3장).</summary>
 public sealed class CardOffer
@@ -28,9 +30,17 @@ public sealed class CardOffer
     public string TitleKey { get; init; } = "";
     public int TitleArg { get; init; } = -1;
     public string Title => TitleArg >= 0 ? Loc.Format(TitleKey, TitleArg) : Loc.Text(TitleKey);
-    public IReadOnlyList<CardChoice> Choices { get; init; } = Array.Empty<CardChoice>();
+    public IReadOnlyList<CardChoice> Choices { get; set; } = Array.Empty<CardChoice>();
     /// <summary>Arming cards must be picked; level-up and boss cards can be put off with X.</summary>
     public bool CanClose => Kind != CardKind.Arming;
+    /// <summary>The grade the window was drawn at (M-29 plan 16.2: the three cards share it when the pool allows; 0 = none).</summary>
+    public int Grade { get; init; }
+    /// <summary>Host: draws a replacement card that is none of the given keys (null = nothing left). Special cards have none (plan 16.4).</summary>
+    public Func<IReadOnlyCollection<string>, CardChoice?>? Redraw { get; init; }
+    /// <summary>Keys rerolled away from this offer: a new card is never one of them.</summary>
+    public HashSet<string> Discarded { get; } = new();
+    /// <summary>Rerolls work on arming and normal cards, never on special ones.</summary>
+    public bool CanReroll => Kind != CardKind.Special;
 }
 
 /// <summary>
@@ -68,6 +78,27 @@ public sealed class CardQueue
         choice.Apply(who);
         Touch();
         return choice;
+    }
+
+    /// <summary>
+    /// Host: card <paramref name="index"/> of the front offer is drawn again (plan 16.4): never one of the other two or
+    /// one rerolled away before. False when it cannot be (no front, a special offer, nothing left to draw).
+    /// </summary>
+    public bool Reroll(int index)
+    {
+        if (Front is not { CanReroll: true, Redraw: { } redraw } offer || index < 0 || index >= offer.Choices.Count) return false;
+        var old = offer.Choices[index];
+        var avoid = new HashSet<string>(offer.Discarded) { old.Key };
+        foreach (var c in offer.Choices) avoid.Add(c.Key);
+        // A "?" card's hidden card counts as taken too.
+        foreach (var c in offer.Choices) if (c.Inner != null) avoid.Add(c.Inner.Key);
+        if (redraw(avoid) is not { } fresh) return false;
+        offer.Discarded.Add(old.Key);
+        var list = offer.Choices.ToList();
+        list[index] = fresh;
+        offer.Choices = list;
+        Touch();
+        return true;
     }
 
     /// <summary>A client's pick on its way to the host: the front offer goes away here at once, the host applies it.</summary>
@@ -111,17 +142,27 @@ public static class ArmingCards
         var defs = pool.Select(ArmoryCatalog.Weapon).ToList();
         var guns = defs.Where(d => d.Slot != WeaponSlot.Special && d.Mode != FireMode.Melee).OrderBy(_ => rng.Randf()).ToList();
         var specials = defs.Where(d => d.Slot == WeaponSlot.Special).OrderBy(_ => rng.Randf()).ToList();
-        yield return Offer(1, guns.Take(perOffer));
-        yield return Offer(2, guns.Skip(perOffer).Take(perOffer));
-        if (specials.Count > 0) yield return Offer(3, specials.Take(perOffer));
+        // A reroll never brings a gun the other gun offer shows, so slot 2 still cannot repeat slot 1.
+        var shown = new HashSet<string>(guns.Take(perOffer * 2).Select(d => d.Id));
+        yield return Offer(1, guns.Take(perOffer), guns, shown, rng);
+        yield return Offer(2, guns.Skip(perOffer).Take(perOffer), guns, shown, rng);
+        if (specials.Count > 0) yield return Offer(3, specials.Take(perOffer), specials, new HashSet<string>(specials.Take(perOffer).Select(d => d.Id)), rng);
     }
 
-    private static CardOffer Offer(int slot, IEnumerable<WeaponDefinition> defs) => new()
+    private static CardOffer Offer(int slot, IEnumerable<WeaponDefinition> defs, IReadOnlyList<WeaponDefinition> pool, HashSet<string> shown,
+        RandomNumberGenerator rng) => new()
     {
         Kind = CardKind.Arming,
         TitleKey = "fmt_card_arming_title",
         TitleArg = slot,
         Choices = defs.Select(d => WeaponCard(slot, d)).ToList(),
+        Redraw = avoid =>
+        {
+            var next = pool.Where(d => !shown.Contains(d.Id) && !avoid.Contains($"w|{d.Id}|{slot}")).OrderBy(_ => rng.Randf()).FirstOrDefault();
+            if (next == null) return null;
+            shown.Add(next.Id);
+            return WeaponCard(slot, next);
+        },
     };
 
     /// <summary>A weapon as a card: what it is, its round and the numbers that tell guns apart.</summary>

@@ -21,11 +21,18 @@ public sealed record SurvivalTuning(float CoreHp, float Prep, float Break, int M
 /// <param name="FinalBosses">Boss monster ids the last stretch draws from.</param>
 /// <param name="SpecialCooldowns">Slot-3 weapons with their own recharge (seconds, by weapon id); others use <paramref name="SpecialCooldown"/>.</param>
 /// <param name="SpecialVote">Seconds the team has to vote on a middle boss's special card (M-29).</param>
+/// <param name="Rerolls">Card rerolls each person has in a match, arming cards included (M-29 plan 16.4).</param>
+/// <param name="NormalGradeWeights">Chance of each normal card grade 1–4 for a level-up window, one row per stretch (M-29 plan 16.2).</param>
+/// <param name="SpecialGradeWeights">Chance of each special card grade 5–7 for a vote, one row per middle boss.</param>
 public sealed record SurvivorTuning(IReadOnlyList<float> Segments, IReadOnlyList<float> SegmentBossHp, float SpawnEvery, int GroupStart, int GroupEnd,
     float BossGroupScale, float SpawnMin, float SpawnMax, float RestAfterNamed, IReadOnlyList<string> WeaponPool, float SpecialCooldown,
     float XpCommon, float XpNamed, float XpBoss, float XpFirst, float XpGrowth, IReadOnlyList<string> MidBosses, IReadOnlyList<string> FinalBosses,
-    IReadOnlyDictionary<string, float> SpecialCooldowns, float SpecialVote)
+    IReadOnlyDictionary<string, float> SpecialCooldowns, float SpecialVote, int Rerolls, IReadOnlyList<IReadOnlyList<float>> NormalGradeWeights,
+    IReadOnlyList<IReadOnlyList<float>> SpecialGradeWeights)
 {
+    /// <summary>The weight row for stretch or vote <paramref name="index"/> (the last row once past the end).</summary>
+    public static IReadOnlyList<float> Row(IReadOnlyList<IReadOnlyList<float>> rows, int index) => rows[Mathf.Clamp(index, 0, rows.Count - 1)];
+
     /// <summary>All stretches end to end (the run without boss fights).</summary>
     public float Total => Segments.Sum();
 }
@@ -45,7 +52,9 @@ public sealed class ModeTuning
     private static readonly string[] SurvivorKeys =
         { "segments_s", "segment_boss_hp", "spawn_every_s", "group_start", "group_end", "boss_group_scale", "spawn_min_m", "spawn_max_m",
           "rest_after_named_s", "weapon_pool", "special_cooldown_s", "xp_common", "xp_named", "xp_boss", "xp_first", "xp_growth",
-          "mid_bosses", "final_bosses", "special_cooldowns", "special_vote_s" };
+          "mid_bosses", "final_bosses", "special_cooldowns", "special_vote_s", "rerolls", "normal_grade_weights", "special_grade_weights" };
+    private static readonly float[][] DefaultNormalGrades = { new[] { 55f, 30, 15, 0 }, new[] { 35f, 35, 22, 8 }, new[] { 20f, 30, 32, 18 }, new[] { 10f, 25, 35, 30 } };
+    private static readonly float[][] DefaultSpecialGrades = { new[] { 60f, 30, 10 }, new[] { 40f, 40, 20 }, new[] { 25f, 45, 30 } };
     private static readonly string[] DefaultBosses = { "boss" };
     private static readonly float[] DefaultSegments = { 180, 240, 300, 360 };
     private static readonly float[] DefaultSegmentHp = { .35f, .5f, .7f, 1 };
@@ -56,7 +65,7 @@ public sealed class ModeTuning
     public SurvivalTuning Survival { get; private set; } = new(900, 8, 10, 60, new[] { DefaultWave }, 3, 5, DefaultLootWeapons);
     public SurvivorTuning Survivor { get; private set; } =
         new(DefaultSegments, DefaultSegmentHp, 1.3f, 3, 8, .5f, 14, 22, 12, DefaultPool, 25, 1, 10, 40, 12, 1.15f, DefaultBosses, DefaultBosses,
-            new Dictionary<string, float>(), 60);
+            new Dictionary<string, float>(), 60, 5, DefaultNormalGrades, DefaultSpecialGrades);
 
     private readonly List<string> _errors = new();
     public IReadOnlyList<string> Errors => _errors;
@@ -154,6 +163,21 @@ public sealed class ModeTuning
         return list.EnumerateArray().Select(x => (float)x.GetDouble()).ToList();
     }
 
+    /// <summary>Rows of grade weights, <paramref name="width"/> non-negative numbers each with at least one above zero.</summary>
+    private IReadOnlyList<IReadOnlyList<float>> Weights(JsonElement s, string where, string key, IReadOnlyList<IReadOnlyList<float>> fallback, int width)
+    {
+        if (!s.TryGetProperty(key, out var rows)) return fallback;
+        bool ok = rows.ValueKind == JsonValueKind.Array && rows.GetArrayLength() > 0 && rows.EnumerateArray().All(row =>
+            row.ValueKind == JsonValueKind.Array && row.GetArrayLength() == width &&
+            row.EnumerateArray().All(x => x.ValueKind == JsonValueKind.Number && x.GetDouble() >= 0) && row.EnumerateArray().Any(x => x.GetDouble() > 0));
+        if (!ok)
+        {
+            _errors.Add($"{where}: {key} must be a list of rows of {width} non-negative numbers (at least one above zero)");
+            return fallback;
+        }
+        return rows.EnumerateArray().Select(row => (IReadOnlyList<float>)row.EnumerateArray().Select(x => (float)x.GetDouble()).ToList()).ToList();
+    }
+
     /// <summary>A list of boss monster ids: each must be a monsters.csv row with behavior boss (its phases in bosses/&lt;id&gt;.json).</summary>
     private IReadOnlyList<string> ReadBosses(JsonElement s, string where, string key, IReadOnlyList<string> fallback)
     {
@@ -201,7 +225,9 @@ public sealed class ModeTuning
             ReadPool(s, where, d.WeaponPool), f.Float("special_cooldown_s", d.SpecialCooldown),
             f.Float("xp_common", d.XpCommon), f.Float("xp_named", d.XpNamed), f.Float("xp_boss", d.XpBoss), f.Float("xp_first", d.XpFirst), f.Float("xp_growth", d.XpGrowth),
             ReadBosses(s, where, "mid_bosses", d.MidBosses), ReadBosses(s, where, "final_bosses", d.FinalBosses), ReadCooldowns(s, where, d.SpecialCooldowns),
-            f.Float("special_vote_s", d.SpecialVote));
+            f.Float("special_vote_s", d.SpecialVote), f.Int("rerolls", d.Rerolls),
+            Weights(s, where, "normal_grade_weights", d.NormalGradeWeights, 4), Weights(s, where, "special_grade_weights", d.SpecialGradeWeights, 3));
+        if (Survivor.Rerolls < 0) _errors.Add($"{where}: rerolls must not be negative");
         if (Survivor.SpecialVote <= 0) _errors.Add($"{where}: special_vote_s must be positive");
         if (Survivor.SpecialCooldown <= 0) _errors.Add($"{where}: special_cooldown_s must be positive");
         if (Survivor.Segments.Any(x => x <= 0) || Survivor.SegmentBossHp.Any(x => x <= 0)) _errors.Add($"{where}: segments_s and segment_boss_hp must be positive");

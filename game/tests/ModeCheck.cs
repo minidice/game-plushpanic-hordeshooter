@@ -258,6 +258,16 @@ public partial class ModeCheck : Node
         Check(queue.Offers[3].Choices.Select(c => CompanionSpec.Parse(c.Id)?.Kind).Distinct().Count() == 3 && queue.Offers[3].Choices.All(c => c.Target == CardTarget.Summon),
             "the last offer is a companion: a pet, a drone and a sidekick");
         await Shot("survivor-arming");
+        // Rerolls (M-29 plan 16.4): one card at a time, on arming cards too, never the other two or one thrown away.
+        Check(r.Rerolls == 5 && rules.LocalRerollsLeft == 5 && rules.Window.RerollsLeft != null, "everyone has 5 rerolls a match (survivor.rerolls)");
+        var armingKeys = queue.Front!.Choices.Select(c => c.Key).ToList();
+        var slot2Ids = queue.Offers[1].Choices.Select(c => c.Id).ToList();
+        rules.Window.Reroll(0);
+        var rerolled = queue.Front!.Choices[0];
+        Check(rerolled.Key != armingKeys[0] && !armingKeys.Contains(rerolled.Key) && !slot2Ids.Contains(rerolled.Id) &&
+              queue.Front.Choices[1].Key == armingKeys[1] && queue.Front.Choices[2].Key == armingKeys[2] && rules.LocalRerollsLeft == 4,
+            $"rerolling the first arming card draws another gun ({armingKeys[0]} → {rerolled.Key}, not in the slot 2 offer), the others stay, 4 left");
+        await Shot("survivor-arming-reroll");
         string first = queue.Front!.Choices[0].Id;
         rules.Window.Pick(0);
         await Frames(2);
@@ -289,10 +299,55 @@ public partial class ModeCheck : Node
         Check(rules.Level == 2 && queue.Count == 1 && queue.Front!.Kind == CardKind.Normal && queue.Front.Choices.Count == 3 && rules.Window.IsOpen,
             "a full bar levels up and opens a level-up card");
         await Shot("survivor-levelup");
+        Check(queue.Front.Grade is >= CardCatalog.NormalLow and <= CardCatalog.NormalHigh && queue.Front.Choices.All(c => c.Grade is >= 1 and <= 4),
+            $"a level-up window has a grade 1–4 and so do its cards (grade {queue.Front.Grade}: {string.Join(", ", queue.Front.Choices.Select(c => $"{c.Key}={c.Grade}"))})");
+        // Rerolls run out (four left after the arming one); a reroll with nothing left to draw changes nothing and costs nothing.
+        for (int i = 0; i < 12 && rules.LocalRerollsLeft > 0; i++) rules.Window.Reroll(i % 3);
+        var spent = queue.Front.Choices.Select(c => c.Key).ToList();
+        int leftNow = rules.LocalRerollsLeft;
+        rules.Window.Reroll(0);
+        Check(queue.Front.Choices.Select(c => c.Key).SequenceEqual(spent) && rules.LocalRerollsLeft == leftNow && queue.Front.Discarded.Count >= 3,
+            $"out of rerolls (or of cards to draw) the cards stay as they are ({leftNow} left, {queue.Front.Discarded.Count} thrown away)");
         var levelCard = queue.Front.Choices[0];
+        var applied = levelCard.Inner ?? levelCard;
         rules.Window.Pick(0);
-        Check(queue.Count == 0 && (levelCard.Key.StartsWith("c|") ? rules.Cards.IsOn(Enum.Parse<LabCard>(levelCard.Id)) : levelCard.Key.StartsWith("r|")),
+        Check(queue.Count == 0 && (applied.Key.StartsWith("c|") ? rules.Cards.IsOn(Enum.Parse<LabCard>(applied.Id)) : applied.Key[0] is 'r' or 'u'),
             $"picking it applies the card ({levelCard.Key})");
+
+        // Grades (M-29 plan 16.2): repeatable 1, upgrade 2 (last level 4), effect card 3, "?" 4 / 7, specials 5–6.
+        Check(CardCatalog.FromKey("r|damage", null)!.Grade == 1 && CardCatalog.FromKey("u|BalloonRadius|1", null)!.Grade == 2 &&
+              CardCatalog.FromKey($"u|BalloonRadius|{LabCards.MaxLevel(CardUpgrade.BalloonRadius)}", null)!.Grade == 4 &&
+              CardCatalog.FromKey("c|Velcro", null)!.Grade == 3 && CardCatalog.FromKey("s|HeliumParty", null)!.Grade == 5 &&
+              CardCatalog.FromKey("s|GlassCannon", null)!.Grade == 6 && CardCatalog.FromKey("q|c|Velcro", null) is { Grade: 4, Inner.Key: "c|Velcro", Name: "?" } &&
+              CardCatalog.FromKey("q|s|GlassCannon", null) is { Grade: 7, Inner.Key: "s|GlassCannon" },
+            "every card key carries its grade, a \"?\" key its hidden card");
+        var gradeRng = new RandomNumberGenerator { Seed = 11 };
+        var fresh = stage.AddRemoteSurvivor(CharacterCatalog.Player("duck"), stage.Player.GlobalPosition + new Vector3(2, 0, 0), 995);
+        var ones = CardCatalog.LevelUp(rules.Cards, gradeRng, fresh, new float[] { 1, 0, 0, 0 });
+        var threes = CardCatalog.LevelUp(rules.Cards, gradeRng, fresh, new float[] { 0, 0, 1, 0 });
+        var fours = CardCatalog.LevelUp(rules.Cards, gradeRng, fresh, new float[] { 0, 0, 0, 1 });
+        var mystery = fours.Choices.FirstOrDefault(c => c.Inner != null);
+        Check(ones.Choices.Count == 3 && ones.Choices.All(c => c.Grade == 1) && threes.Choices.Count == 3 && threes.Choices.All(c => c.Grade == 3),
+            "a window draws one grade and all three cards share it when there are enough");
+        Check(fours.Grade == 4 && mystery != null && mystery.Inner!.Grade is 3 or 4 && fours.Choices.Count == 3 &&
+              fours.Choices.Where(c => c != mystery).All(c => c.Key != mystery.Inner.Key && c.Grade is 3 or 4),
+            "a grade 4 window with no grade 4 card yet: a \"?\" hiding a 3–4 and the nearest grade fills the rest, the hidden card not shown twice");
+        var specials = CardCatalog.BossReward(rules.Cards, gradeRng, new float[] { 0, 0, 1 });
+        Check(specials.Grade == 7 && specials.Choices.Any(c => c.Inner?.Key == "s|GlassCannon" || c.Inner?.Grade >= 6 || rules.Cards.IsOn(LabSpecial.GlassCannon)) &&
+              specials.Choices.All(c => c.Grade >= 5 || c.Key.StartsWith("r|")) && !specials.CanReroll,
+            "a special window has grades 5–7 (a special \"?\" hides a 6–7) and cannot be rerolled");
+        stage.Players.Remove(fresh);
+        fresh.QueueFree();
+        // A "?" card picked: the slot machine shows what it was, and that card applies.
+        queue.Add(new CardOffer { Kind = CardKind.Normal, TitleKey = "ui_card_levelup_title", Grade = 4,
+            Choices = new[] { CardCatalog.Mystery(CardCatalog.Lab(LabCard.StuffingBurst, rules.Cards)), CardCatalog.Repeat("heal"), CardCatalog.Repeat("medkit") } });
+        await Frames(2);
+        rules.Window.Pick(0);
+        var reveal = rules.Window.GetNode<MysteryReveal>("CardRoot/MysteryReveal");
+        Check(reveal.Playing && rules.Cards.Owns(stage.Player, LabCard.StuffingBurst), "picking a \"?\" card starts its reveal and applies the card it hid");
+        await Seconds(MysteryReveal.SpinSeconds + .2f);
+        await Shot("survivor-mystery-reveal");
+        Check(reveal.Shown == CardCatalog.Lab(LabCard.StuffingBurst, null).Name, $"the reveal stops on that card ({reveal.Shown})");
 
         await Until(() => rules.SpawnedThisMatch > 0, "the swarm starts once armed");
         var start = stage.Player.GlobalPosition;

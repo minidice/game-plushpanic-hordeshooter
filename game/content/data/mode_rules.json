@@ -73,6 +73,18 @@
     ],
     "special_cooldown_s": 25,
     "special_vote_s": 60,
+    "rerolls": 5,
+    "normal_grade_weights": [
+      [55, 30, 15, 0],
+      [35, 35, 22, 8],
+      [20, 30, 32, 18],
+      [10, 25, 35, 30]
+    ],
+    "special_grade_weights": [
+      [60, 30, 10],
+      [40, 40, 20],
+      [25, 45, 30]
+    ],
     "special_cooldowns": {
       "honk": 8,
       "rubber_duck": 14

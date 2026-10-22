@@ -115,3 +115,11 @@ fmt_vote_waiting,Stamped — waiting for the others · {0}s
 ui_vote_spectate,You watch this vote (you vote from the next one)
 ui_vote_tie,Tie! Drawing one at random…
 fmt_vote_result,Team card: {0}
+# Card grades · rerolls · ? cards (decisions.md M-29, onslaught-cards-plan.md 16.2-16.4)
+fmt_card_grade,Grade {0}
+fmt_card_rerolls,{0} rerolls left (↻ · Shift+1-3)
+ui_card_reroll,Draw this card again
+tag_card_mystery,? card · one of grade 3-4
+tag_card_mystery_special,? card · one of grade 6-7
+desc_card_mystery,What it becomes shows the moment you pick it. Its grade is higher for it
+desc_card_mystery_special,What it becomes shows when the vote ends. Its grade is higher for it

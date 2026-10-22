@@ -81,6 +81,14 @@ public partial class OnslaughtNetCheck : Node
         Check(clientRules.LocalQueue.Offers.Select(o => o.Choices.Select(c => c.Key)).SequenceEqual(hostCopy.Offers.Select(o => o.Choices.Select(c => c.Key)), new KeysEqual()) &&
               clientRules.Window.IsOpen && clientRules.LocalQueue.Front!.Title == Loc.Format("fmt_card_arming_title", 1),
             "the same cards as the host drew for it, in the card window");
+        // A client's reroll: the host draws the card again, counts it, and sends the new card and the count back (plan 16.4).
+        var before = clientRules.LocalQueue.Front!.Choices.Select(c => c.Key).ToList();
+        clientRules.Window.Reroll(2);
+        await Until(() => clientRules.LocalQueue.Front!.Choices[2].Key != before[2] && clientRules.LocalRerollsLeft == 4 && hostRules.RerollsLeft(remote) == 4 &&
+                          hostRules.LocalRerollsLeft == 5,
+            "the client's reroll is drawn by the host, counted for the client only, and reaches it");
+        Check(clientRules.LocalQueue.Front!.Choices.Take(2).Select(c => c.Key).SequenceEqual(before.Take(2)) && !before.Contains(clientRules.LocalQueue.Front.Choices[2].Key),
+            "only the rerolled card changed, to one that was not there");
         var picks = new string[3];
         for (int slot = 0; slot < 3; slot++)
         {

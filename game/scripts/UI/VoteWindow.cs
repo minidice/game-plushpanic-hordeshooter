@@ -25,7 +25,8 @@ public partial class VoteWindow : CanvasLayer
     private readonly List<HBoxContainer> _stampRows = new();
     private readonly List<Control> _frames = new();
     private Texture2D? _stamp;
-    private int _shownSerial = -1;
+    private int _shownSerial = -1, _revealedSerial = -1;
+    private MysteryReveal _reveal = null!;
 
     public override void _Ready()
     {
@@ -105,6 +106,8 @@ public partial class VoteWindow : CanvasLayer
         _countdown.HorizontalAlignment = HorizontalAlignment.Center;
         _countdown.Visible = false;
         _root.AddChild(_countdown);
+        _reveal = new MysteryReveal { Name = "MysteryReveal" };
+        AddChild(_reveal);
     }
 
     public override void _Process(double delta)
@@ -118,6 +121,13 @@ public partial class VoteWindow : CanvasLayer
         {
             _shownSerial = Vote.Serial;
             for (int i = 0; i < _cards.Count; i++) _cards[i].Show(i < offer.Choices.Count ? offer.Choices[i] : null, CardKind.Special);
+        }
+        // A special "?" that won turns into its card once the vote is settled (plan 16.3).
+        if (Vote.Phase == VotePhase.Result && _revealedSerial != Vote.Serial && Vote.Winner >= 0 && Vote.Winner < offer.Choices.Count &&
+            offer.Choices[Vote.Winner].Inner is { } inner)
+        {
+            _revealedSerial = Vote.Serial;
+            _reveal.Play(inner);
         }
         bool counting = Vote.Phase == VotePhase.Countdown;
         _countdown.Visible = counting;
@@ -138,7 +148,8 @@ public partial class VoteWindow : CanvasLayer
             VotePhase.Voting when Vote.Mine >= 0 => Loc.Format("fmt_vote_waiting", Mathf.CeilToInt(Vote.Left)),
             VotePhase.Voting => Loc.Format("fmt_vote_hint", Mathf.CeilToInt(Vote.Left)),
             VotePhase.Spinning when Vote.Tied.Count > 1 => Loc.Text("ui_vote_tie"),
-            _ when Vote.Winner >= 0 && Vote.Winner < offer.Choices.Count => Loc.Format("fmt_vote_result", offer.Choices[Vote.Winner].Name),
+            _ when Vote.Winner >= 0 && Vote.Winner < offer.Choices.Count && Vote.Phase != VotePhase.Spinning =>
+                Loc.Format("fmt_vote_result", offer.Choices[Vote.Winner].Inner?.Name ?? offer.Choices[Vote.Winner].Name),
             _ => "",
         };
     }
