@@ -135,6 +135,41 @@ public partial class Stage : Node3D
     public List<SquadBrain> Squad { get; } = new();
     /// <summary>Bumped whenever walls or doors change, so copies of the flow layout know to refresh.</summary>
     public int FlowVersion { get; private set; }
+    /// <summary>
+    /// People for the party table (decisions.md M-5, M-31). Null = counted when this is the running game scene; test scenes
+    /// keep the data's own numbers (the 4-person row) unless they set one.
+    /// </summary>
+    public int? PartyOverride { get; set; }
+    /// <summary>
+    /// How many people play: humans only, AI squadmates do not count. A host counts everyone in its room too, so friends
+    /// still loading at the start already count for the first fill.
+    /// </summary>
+    public int PartySize
+    {
+        get
+        {
+            if (PartyOverride is { } forced) return forced;
+            int humans = Players.Count(p => IsInstanceValid(p) && !p.IsBot);
+            return Role == NetRole.Host && NetLaunch.Lobby is { } lobby ? System.Math.Max(humans, lobby.Members.Count) : humans;
+        }
+    }
+    /// <summary>The party table's row in effect now (the 4-person row, i.e. the data as written, in test scenes).</summary>
+    public PartyScale Party => PartyOverride != null || GetTree().CurrentScene == this ? PartyScaling.For(PartySize) : PartyScale.Baseline;
+    private float _commonCarry;
+
+    /// <summary>
+    /// <paramref name="count"/> commons scaled for the party. The fraction carries to the next call, so small waves still
+    /// add up to the table's share over a stage.
+    /// </summary>
+    public int ScaleCommons(int count)
+    {
+        if (count <= 0) return 0;
+        _commonCarry += count * Party.CommonCount;
+        int n = Mathf.FloorToInt(_commonCarry + .0001f);
+        _commonCarry -= n;
+        return n;
+    }
+
     /// <summary>Game option "revive". Null = the saved setting when this is the running game scene, off in test scenes.</summary>
     public bool? ReviveOverride { get; set; }
     public bool ReviveEnabled { get; private set; }
@@ -325,6 +360,13 @@ public partial class Stage : Node3D
     {
         var enemy = new T();
         enemy.Setup(this, monster, LookFor(monster), awake);
+        // Health and damage for the party, fixed at birth so a join or a leave never changes a monster already out.
+        if (Authoritative)
+        {
+            var party = Party;
+            if (!Mathf.IsEqualApprox(party.Hp(monster.Tier), 1)) enemy.ScaleHealth(party.Hp(monster.Tier));
+            if (!Mathf.IsEqualApprox(party.Damage(monster.Tier), 1)) enemy.ScaleDamage(party.Damage(monster.Tier));
+        }
         // Ledge entries start on a wall top; everything else stands on the floor.
         enemy.Position = new Vector3(at.X, Mathf.Max(at.Y, .05f), at.Z);
         _enemyRoot.AddChild(enemy);

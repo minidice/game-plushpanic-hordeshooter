@@ -134,7 +134,7 @@ stateDiagram-v2
 
 ### 4.2 표
 
-`content/data/party_scaling.csv` (제안)
+`content/data/party_scaling.csv` (**2026-10-22 구현**, decisions.md M-31: 표 그대로, 사람만 셈 — AI 분대원 제외)
 
 ```csv
 players,common_count_pct,common_hp_pct,common_damage_pct,named_hp_pct,named_damage_pct
@@ -156,6 +156,7 @@ players,common_count_pct,common_hp_pct,common_damage_pct,named_hp_pct,named_dama
   - 맵에 미리 깔린 일반 몬스터: 스테이지 시작 때 % 만큼 줄이거나 늘림
   - 호드 디렉터가 부르는 웨이브: 부를 때마다 그 순간의 인원으로 계산
 - 네임드는 맵 배치 수와 디렉터의 등장 간격 모두 인원과 관계없이 그대로입니다.
+- (구현 2026-10-22) 생존 · 서바이버의 일반 무리와 풍선이 부르는 무리도 등장 수를 보정합니다. 소수점은 다음 번으로 넘깁니다. 보스가 소환하는 무리 수는 그대로입니다. 방장은 방 인원으로 세고, 결정하는 PC(싱글 · 방장)만 적용합니다. 검사 장면은 인원을 정하지 않으면 4인 줄입니다.
 
 ---
 

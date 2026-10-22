@@ -149,7 +149,7 @@ public partial class BullEnemy : Enemy
             {
                 _bowled.Add(player);
                 HitPlayerThisCharge = true;
-                player.TakeDamage(Charge.PlayerDamage, _chargeDir, 0);
+                player.TakeDamage(Charge.PlayerDamage * DamageScale, _chargeDir, 0);
                 player.Launch(_chargeDir * 10f + Vector3.Up * 7f, 1.5f);
                 Stage.Effects.FloatingText(player.GlobalPosition + Vector3.Up * 2.8f, "BONK!", new Color("ffb36b"));
                 Stage.Sfx.PlayAt("bull_bonk", player.GlobalPosition + Vector3.Up);

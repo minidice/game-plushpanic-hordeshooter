@@ -122,7 +122,8 @@
 - [ ] 개발자 조정 패널(F9 등, 슬라이더로 탄속·준비 시간·음량·디렉터 수치를 실시간 조절하고 JSON 저장) — 사용자 요청으로 나중에
 - [x] 붙잡힘과 동료 구조 전제; 싱글 테스트용 F8 탈출 치트
 - [x] 멀티 2인 동기화 MVP: 방장 권한, 내 이동은 내 PC, 꼭두각시 적, 줍기·문·목표·피해·쓰러짐/부활 공유(남은 한계 I-72), 메뉴의 방 만들기·주소로 참가 / 명령줄 실행 ([설계·결과](multiplayer-sync-design.md))
-- [ ] 멀티 다음 단계: 다른 집 접속 확인·포트를 못 여는 집 대책(③), 인원 보정(⑤), 중간 합류(⑥), Steam(⑧)
+- [x] 인원 보정 1차(2026-10-22, M-31): `party_scaling.csv`(지금 값 = 4인), 사람만 셈, 일반은 등장 수 · 체력 · 공격력, 네임드 · 보스는 체력 · 공격력, 생길 때 정함 (한계 I-103)
+- [ ] 멀티 다음 단계: 다른 집 접속 확인·포트를 못 여는 집 대책(③), 중간 합류(⑥), Steam(⑧)
 - [ ] 동료 구조가 준비된 뒤 테스트 치트를 기본 비활성화
 - [ ] 세 테마에 대응하는 별도 완성 스테이지
 
@@ -367,3 +368,10 @@
 - 그 밖의 검사 모두 통과: `NetSyncCheck` 32, `OnslaughtNetCheck` 29, `LobbyCheck` 31, `NetCodecCheck` 12, `MenuCheck` 44, `SquadCheck` 51, `CompanionCheck` 39, `Start-Game.ps1 -Test`(Integration) 149.
 - 렌더 `output/party-six.png`(창 모드, 오리 2의 화면): 세이프룸에 6명, 팀원 목록 "거위 1 · 오리 1 · 라쿤 · 랫서판다 · 거위 2", 내 이름 "오리 2". 처음 렌더에서 내 이름이 "오리"로만 나와 HUD 이름을 `DisplayLabel`로 바꾸고 다시 확인.
 - 종료 경고: `PartyNetCheck` 헤드리스 1회에서 ObjectDB 7개 잔존(I-17), 다른 1회 · 창 모드는 없음. 실제 PC 6대 · 로비 6줄 화면은 미확인(I-102).
+
+### 이번 변경 확인 기록 — 2026-10-22 (인원 보정 1차, M-31)
+
+- C# 빌드 경고·오류 0. 새 `PartyScaleCheck` 24개 통과. 처음 실행은 두 곳에서 실패해 검사를 고침: 실제 장면 바꾸기는 Godot가 막음 → 인원 지정으로 같은 계산 확인, 시작 직후 웨이브 입구가 없어 0마리 → 입구를 지정.
+- 확인한 수치: 혼자 6마리 웨이브 4번 = 12마리, 6인 5마리 × 4 = 28마리, 시작 구역 채우기 1인 3 / 4인 7 / 6인 9마리, 혼자 일반 몹 체력 24 → 19.2, 황소 260 → 130, 6인 보스 막대 160%.
+- 기존 검사 모두 통과: `SpawnCheck` 41, `ModeCheck` 147, `CombatPacingCheck` 44, `EnemyExpansion` 60, `EnemyAttackCheck` 79, `CardLabCheck` 172, `SquadCheck` 51, `StageTransitionCheck` 164, `NetSyncCheck` 32, `OnslaughtNetCheck` 29, `CorpseTierCheck` 36, `SupplyCheck` 12, `Start-Game.ps1 -Test`(Integration) 149. 검사 장면은 인원을 정하지 않으면 4인 줄이라 기존 수치 검사는 그대로.
+- 종료 경고(I-17): `SpawnCheck` · `CardLabCheck` · `StageTransitionCheck` · `CorpseTierCheck` · `SupplyCheck`에서 ObjectDB 잔존 한 줄씩. 화면 모양은 바뀌지 않아 렌더는 하지 않음. 실제 싱글 플레이의 난이도 변화는 미확인(I-103).

@@ -147,7 +147,7 @@ public partial class SurvivalRules : ModeRules
     public int SpawnGroup(SurvivalWave wave, int index)
     {
         int alive = Stage.AllEnemies.Count(e => !e.IsDead);
-        int count = Mathf.Min(wave.Group, Rules.MaxAlive - alive);
+        int count = Mathf.Min(Stage.ScaleCommons(wave.Group), Rules.MaxAlive - alive);
         if (count <= 0) return 0;
         if (PickSpot(Gate()) is not { } at) return 0;
         int spawned = 0;

@@ -161,19 +161,23 @@ public partial class HordeDirector : Node
         if (options.Count == 0) options = cells.Where(p => !Stage.Vision.CanSee(p) && !IsProtected(p)).Take(12).ToList();
         if (options.Count == 0) options = Stage.Flow.OpenCellsNear(center, 7, 14).Where(p => !IsProtected(p)).ToList();
         if (options.Count == 0) return SpawnMob(count);
+        // Scaled for the party once here, then placed as is.
+        count = Stage.ScaleCommons(count);
         int spawned = 0;
         for (int i = 0; i < 3 && spawned < count; i++)
         {
             var at = options[_rng.RandiRange(0, options.Count - 1)];
-            spawned += SpawnWave(new SpawnEntry { Kind = EntryKind.Hidden, At = at }, (count - spawned + 2 - i) / (3 - i));
+            spawned += Place(new SpawnEntry { Kind = EntryKind.Hidden, At = at }, (count - spawned + 2 - i) / (3 - i));
         }
         return spawned;
     }
 
-    /// <summary>Sends <paramref name="count"/> hunters in from <paramref name="entry"/> (ledges jump down).</summary>
-    public int SpawnWave(SpawnEntry entry, int count)
+    /// <summary>Sends <paramref name="count"/> hunters (scaled for the party, M-5) in from <paramref name="entry"/>.</summary>
+    public int SpawnWave(SpawnEntry entry, int count) => Stage.Authoritative ? Place(entry, Stage.ScaleCommons(count)) : 0;
+
+    /// <summary>Exactly <paramref name="count"/> hunters (up to the swarm cap) from <paramref name="entry"/> (ledges jump down).</summary>
+    private int Place(SpawnEntry entry, int count)
     {
-        if (!Stage.Authoritative) return 0;
         int room = MaxCommons - AliveCommons;
         count = Mathf.Min(count, room);
         // A ledge drop spreads along the wall top; the others bunch around the spot.
@@ -306,9 +310,11 @@ public partial class HordeDirector : Node
     /// <summary>Random spots in the group's rectangle; off screen first, then anywhere open.</summary>
     private void Scatter(EncounterGroup group)
     {
+        // Waiting commons scale with the party too (named ones in Fill do not, M-5).
+        int want = Stage.ScaleCommons(group.Count);
         int placed = 0;
-        for (int pass = 0; pass < 2 && placed < group.Count; pass++)
-            for (int attempt = 0; attempt < group.Count * 20 && placed < group.Count; attempt++)
+        for (int pass = 0; pass < 2 && placed < want; pass++)
+            for (int attempt = 0; attempt < want * 20 && placed < want; attempt++)
             {
                 var r = group.Rect;
                 var p = new Vector3(_placeRng.RandfRange(r.Position.X, r.End.X), 0, _placeRng.RandfRange(r.Position.Y, r.End.Y));

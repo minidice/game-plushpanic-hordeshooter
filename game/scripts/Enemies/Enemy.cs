@@ -451,10 +451,14 @@ public partial class Enemy : CharacterBody3D
     }
 
     /// <summary>Weaker (or tougher) than the data says, set right after spawning (Survivor's weak masses).</summary>
-    public void ScaleHealth(float factor) => Health *= factor;
+    public void ScaleHealth(float factor) { Health *= factor; HealthScale *= factor; }
+    /// <summary>Every <see cref="ScaleHealth"/> so far (the party table, a mode row): a boss's full bar includes it.</summary>
+    public float HealthScale { get; private set; } = 1;
 
     /// <summary>Hits harder (or softer) than the data says, set right after spawning (mode tables' damage_scale).</summary>
-    public void ScaleDamage(float factor) => AttackDamage *= factor;
+    public void ScaleDamage(float factor) { AttackDamage *= factor; DamageScale *= factor; }
+    /// <summary>Every <see cref="ScaleDamage"/> so far, for hits that do not use the melee damage (a charge, a slam).</summary>
+    public float DamageScale { get; private set; } = 1;
 
     /// <summary>
     /// The survivor whose damage last landed — a gun, a rocket, a card blast, a pet's bite (its owner) — so a kill and

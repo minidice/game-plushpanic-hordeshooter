@@ -356,7 +356,7 @@ public partial class SurvivorRules : ModeRules
     /// <summary>A group of commons on a ring around a random person, off screen where possible.</summary>
     public int SpawnGroup()
     {
-        int count = Mathf.Min(GroupSize, HordeDirector.MaxCommons - Stage.Director.AliveCommons);
+        int count = Mathf.Min(Stage.ScaleCommons(GroupSize), HordeDirector.MaxCommons - Stage.Director.AliveCommons);
         if (count <= 0) return 0;
         var survivors = Humans.ToList();
         if (survivors.Count == 0) return 0;

@@ -15,7 +15,7 @@ public partial class BossEnemy : BullEnemy
     public const string MonsterId = "boss";
 
     public BossDefinition Data { get; private set; } = null!;
-    public float MaxHealth => Monster.Hp * _healthScale;
+    public float MaxHealth => Monster.Hp * _healthScale * HealthScale;
     private float _healthScale = 1;
 
     /// <summary>A lighter middle boss (Onslaught's stretches, mode_rules.json segment_boss_hp): full health at that share.</summary>
@@ -278,7 +278,7 @@ public partial class BossEnemy : BullEnemy
             var away = Flat(player.GlobalPosition - _castAt);
             if (away.Length() > r) continue;
             var dir = away.LengthSquared() > .01f ? away.Normalized() : Vector3.Right;
-            player.TakeDamage(skill.Damage, dir, 0);
+            player.TakeDamage(skill.Damage * DamageScale, dir, 0);
             player.Launch(dir * 9f + Vector3.Up * 6f, 1f);
             Stage.Effects.FloatingText(player.GlobalPosition + Vector3.Up * 2.8f, "SLAM!", new Color("ff9a6b"));
         }
