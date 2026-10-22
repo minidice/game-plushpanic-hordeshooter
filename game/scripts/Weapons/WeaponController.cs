@@ -95,14 +95,14 @@ public partial class WeaponController : Node
                 if (ends.Count > 0)
                 {
                     var direction = (ends[0] - from).Normalized();
-                    Rocket.Launch(Stage, from, direction, def, _player.GetRid());
+                    Rocket.Launch(Stage, from, direction, def, _player.GetRid(), _player);
                     WeaponShotEffect.Flash(Stage.Effects, def, from, direction);
                 }
                 return;
             case FireMode.Lob:
                 if (ends.Count > 0)
                 {
-                    MortarShell.Fire(Stage, from, ends[0], def);
+                    MortarShell.Fire(Stage, from, ends[0], def, _player);
                     WeaponShotEffect.Flash(Stage.Effects, def, from, Vector3.Up);
                 }
                 return;
@@ -423,13 +423,13 @@ public partial class WeaponController : Node
                 return;
             case FireMode.Projectile:
                 var rocketDir = Spread(dir, state.Spread);
-                Rocket.Launch(Stage, MuzzlePosition, rocketDir, def, _player.GetRid());
+                Rocket.Launch(Stage, MuzzlePosition, rocketDir, def, _player.GetRid(), _player);
                 WeaponShotEffect.Flash(Stage.Effects, def, MuzzlePosition, rocketDir);
                 Stage.Net?.OnShot(_player, def, MuzzlePosition, new[] { MuzzlePosition + rocketDir }, _player.AimPoint);
                 break;
             case FireMode.Lob:
                 var target = LobTarget(def);
-                MortarShell.Fire(Stage, MuzzlePosition, target, def);
+                MortarShell.Fire(Stage, MuzzlePosition, target, def, _player);
                 WeaponShotEffect.Flash(Stage.Effects, def, MuzzlePosition, Vector3.Up);
                 Stage.Net?.OnShot(_player, def, MuzzlePosition, new[] { target }, _player.AimPoint);
                 break;
@@ -535,7 +535,7 @@ public partial class WeaponController : Node
                     Stage.Effects.Impact(end, -dir);
                     break;
                 case ExplosiveBarrel barrel:
-                    barrel.Ignite();
+                    barrel.Ignite(by: _player);
                     break;
                 case RigidBody3D body:
                     body.ApplyImpulse(dir * Knockback.Hit(power) * .3f, end - body.GlobalPosition);
@@ -547,7 +547,8 @@ public partial class WeaponController : Node
             }
             break;
         }
-        if (def.Explodes) Blast.Explode(Stage, end, def.ExplosionRadius, def.ExplosionDamage, new Color("ff8a3c"), selfShare: def.ExplosionSelfShare, knockbackPower: def.ExplosionKnockback);
+        if (def.Explodes) Blast.Explode(Stage, end, def.ExplosionRadius, def.ExplosionDamage, new Color("ff8a3c"), selfShare: def.ExplosionSelfShare,
+            knockbackPower: def.ExplosionKnockback, by: _player);
         return end;
     }
 

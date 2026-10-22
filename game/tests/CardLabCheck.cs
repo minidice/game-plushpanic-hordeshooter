@@ -89,6 +89,21 @@ public partial class CardLabCheck : Node
         GetViewport().PushInput(new InputEventKey { Keycode = key, PhysicalKeycode = key, Pressed = false });
     }
 
+    /// <summary>A teammate standing beside the survivor: another person's survivor, no input (multiplayer as the host sees it).</summary>
+    private Player Teammate(int peer, Vector3 offset)
+    {
+        var mate = _stage.AddRemoteSurvivor(CharacterCatalog.Player("duck"), _stage.Player.GlobalPosition + offset, peer);
+        mate.Loadout.SetSlot(2, ArmoryCatalog.Weapon("m4"));
+        mate.Loadout.SelectSlot(2);
+        return mate;
+    }
+
+    private void Dismiss(Player mate)
+    {
+        _stage.Players.Remove(mate);
+        mate.QueueFree();
+    }
+
     private static void Tap(Enemy e, float damage = 1) =>
         e.TakeHit(new HitInfo(damage, Vector3.Right, e.GlobalPosition + Vector3.Up));
 
@@ -455,8 +470,22 @@ public partial class CardLabCheck : Node
         int glass = queue.Front.Choices.ToList().FindIndex(c => c.Id == nameof(LabSpecial.GlassCannon));
         // Level-up picks above may have been "damage +10%" cards, so compare with the multiplier before.
         float multiplier = player.DamageMultiplier;
+        var glassMate = Teammate(990, new Vector3(3, 0, 0));
+        await Frames(2);
+        float mateMultiplier = glassMate.DamageMultiplier;
         window.Pick(glass);
-        Check(Cards.IsOn(LabSpecial.GlassCannon) && Mathf.IsEqualApprox(player.DamageMultiplier, multiplier * 2), "glass cannon doubles the survivor's damage");
+        Check(Cards.IsOn(LabSpecial.GlassCannon) && Mathf.IsEqualApprox(player.DamageMultiplier, multiplier * 2) &&
+              Mathf.IsEqualApprox(glassMate.DamageMultiplier, mateMultiplier * 2), "glass cannon doubles every survivor's damage, not only the picker's (M-29)");
+        Check(player.MaxHealth == player.Definition.MaxHealth / 2 && glassMate.MaxHealth == glassMate.Definition.MaxHealth / 2 &&
+              glassMate.Health <= glassMate.MaxHealth, "and halves everyone's max health, trimming health down to it (the price)");
+        var joiner = Teammate(991, new Vector3(-3, 0, 0));
+        await Frames(2);
+        Check(Mathf.IsEqualApprox(joiner.DamageMultiplier, 2) && joiner.MaxHealth == joiner.Definition.MaxHealth / 2, "a survivor who joins later gets it too");
+        Check((Cards.SpecialMask & 1 << System.Array.IndexOf(LabCards.Specials, LabSpecial.GlassCannon)) != 0, "the client card sync carries the team's specials");
+        Cards.Set(LabSpecial.GlassCannon, false);
+        Check(Mathf.IsEqualApprox(player.DamageMultiplier, multiplier) && Mathf.IsEqualApprox(glassMate.DamageMultiplier, mateMultiplier) &&
+              joiner.MaxHealth == joiner.Definition.MaxHealth && player.MaxHealth == player.Definition.MaxHealth, "switched off, everyone gets it all back");
+        Dismiss(joiner);
         await Reset();
         Cards.Set(LabSpecial.LastShot, true);
         spot = OpenSpot(10);
@@ -465,7 +494,84 @@ public partial class CardLabCheck : Node
         player.Loadout.SelectSlot(2);
         player.Gun.SetAmmo(0, player.Gun.Reserve);
         Tap(lastTarget);
-        Check(Cards.LastShots == 1 && lastNeighbour.KnockSpeed > 3, "with an empty magazine the hit explodes (last shot)");
+        Check(Cards.LastShots == 0, "a hit nobody fired is no one's last shot");
+        Shoot(lastTarget, player, "companion");
+        Check(Cards.LastShots == 0, "nor is a pet's bite while its owner's magazine is empty");
+        Shoot(lastTarget, player, player.Gun.Def.TypeId);
+        Check(Cards.LastShots == 1 && lastNeighbour.KnockSpeed > 3 && lastNeighbour.LastHitBy == player,
+            "with an empty magazine the shooter's hit explodes, and the blast is theirs (last shot)");
+        // The teammate's own magazine counts, whatever the host's says (I-85: it used to read the host's gun only).
+        player.Gun.SetAmmo(player.Gun.Def.MagSize, player.Gun.Reserve);
+        glassMate.Gun.SetAmmo(0, glassMate.Gun.Reserve);
+        await Frames(1);
+        var mateTarget = await Common(OpenSpot(10));
+        mateTarget.ScaleHealth(50);
+        Shoot(mateTarget, glassMate, glassMate.Gun.Def.TypeId);
+        Check(Cards.LastShots == 2, "a teammate's last round explodes on their own empty magazine");
+        glassMate.Gun.SetAmmo(glassMate.Gun.Def.MagSize, glassMate.Gun.Reserve);
+        await Frames(1);
+        Shoot(mateTarget, glassMate, glassMate.Gun.Def.TypeId);
+        Check(Cards.LastShots == 2, "with rounds left in their magazine nothing explodes");
+        await Reset();
+
+        // ---------- damage source (M-29): every blast and chain counts for whoever started it ----------
+        var bitten = await Common(OpenSpot(10));
+        Shoot(bitten, glassMate, "companion", 1);
+        Check(bitten.LastHitBy == glassMate, "a pet's bite counts for its owner");
+        float mateDamage = glassMate.DamageMultiplier;
+        glassMate.DamageMultiplier = 2;
+        var blastAt = OpenSpot(10);
+        var sourceBlasted = await Common(blastAt + new Vector3(1, 0, 0));
+        float before = sourceBlasted.Health;
+        Blast.Explode(_stage, blastAt, 3f, 4f, Colors.Orange, selfShare: 0, knockbackPower: 40f, by: glassMate);
+        float scaledLoss = before - sourceBlasted.Health;
+        var sourceBlastedBy = sourceBlasted.LastHitBy;
+        var plainBlasted = await Common(blastAt + new Vector3(0, 0, 6));
+        before = plainBlasted.Health;
+        Blast.Explode(_stage, blastAt + new Vector3(-1, 0, 6), 3f, 4f, Colors.Orange, selfShare: 0, knockbackPower: 40f);
+        Check(sourceBlastedBy == glassMate && plainBlasted.LastHitBy == null && scaledLoss > (before - plainBlasted.Health) * 1.9f,
+            "a weapon's blast counts for its owner and takes their damage multiplier; one nobody set off does neither");
+        glassMate.DamageMultiplier = mateDamage;
+        await Reset();
+        Cards.Set(LabCard.Balloon, true, glassMate);
+        spot = OpenSpot(10);
+        var sourceBalloon = await Common(spot);
+        var nearPop = await Common(spot + new Vector3(1.2f, 0, 0));
+        nearPop.ScaleHealth(50);
+        for (int i = 0; i < LabCards.BalloonHits; i++) { Shoot(sourceBalloon, glassMate, "assault_rifle"); await Frames(1); }
+        Check(sourceBalloon.IsDead && nearPop.LastHitBy == glassMate, "a balloon pop pushes its neighbours for the survivor who popped it");
+        await Reset();
+        Cards.Set(LabCard.StuffingBurst, true, glassMate);
+        spot = OpenSpot(10);
+        var notMine = await Common(spot);
+        var notMineNeighbour = await Common(spot + new Vector3(1.2f, 0, 0));
+        int burstsBefore = Cards.StuffingBursts;
+        Shoot(notMine, player, "assault_rifle", 9999);
+        await Frames(2);
+        Check(Cards.StuffingBursts == burstsBefore, "a stuffing burst is the killer's card: someone else's kill does not burst (I-85)");
+        var mine = await Common(OpenSpot(10));
+        var mineNeighbour = await Common(mine.GlobalPosition + new Vector3(1.2f, 0, 0));
+        mineNeighbour.ScaleHealth(50);
+        Shoot(mine, glassMate, "assault_rifle", 9999);
+        await Frames(2);
+        Check(Cards.StuffingBursts == burstsBefore + 1 && mineNeighbour.LastHitBy == glassMate, "their own kill bursts, and the burst is theirs");
+        await Reset();
+        Cards.Set(LabCard.Billiards, true, glassMate);
+        spot = OpenSpot(10);
+        var cueBall = await Common(spot);
+        var objectBall = await Common(spot + new Vector3(1.3f, 0, 0));
+        objectBall.ScaleHealth(50);
+        Shoot(cueBall, glassMate, "bolt_sniper");
+        await Frames(20);
+        Check(Cards.BilliardHits > 0 && objectBall.LastHitBy == glassMate, "a cue ball's knock counts for whoever made the cue");
+        await Reset();
+        Cards.Set(LabCard.Velcro, true, glassMate);
+        Cards.Upgrade(CardUpgrade.VelcroSize, glassMate);
+        Cards.Upgrade(CardUpgrade.VelcroSize, player);
+        Cards.Upgrade(CardUpgrade.VelcroSize, player);
+        Check(Cards.ClumpSizeFor(glassMate) == LabCards.ClumpBurstSize - 1 && Cards.ClumpSizeToBurst == LabCards.ClumpBurstSize - 2,
+            "a clump bursts at its owner's level, not the best anyone has (I-85)");
+        Dismiss(glassMate);
         await Reset();
         Cards.Set(LabSpecial.HeliumParty, true);
         spot = OpenSpot(10);

@@ -11,12 +11,14 @@ public partial class MortarShell : Node3D
     private Stage _stage = null!;
     private Vector3 _from, _target;
     private float _time, _flight, _apex, _radius, _damage, _selfShare, _knockback;
+    private Player? _by;
     private MeshInstance3D _marker = null!;
     private StandardMaterial3D _markerMat = null!;
 
     public Vector3 Target => _target;
 
-    public static MortarShell Fire(Stage stage, Vector3 from, Vector3 target, WeaponDefinition def)
+    /// <param name="by">Who fired it (the blast counts for them, see <see cref="Blast.Explode"/>).</param>
+    public static MortarShell Fire(Stage stage, Vector3 from, Vector3 target, WeaponDefinition def, Player? by = null)
     {
         target.Y = 0;
         var shell = new MortarShell
@@ -31,6 +33,7 @@ public partial class MortarShell : Node3D
             _damage = def.ExplosionDamage,
             _selfShare = def.ExplosionSelfShare,
             _knockback = def.ExplosionKnockback,
+            _by = by,
         };
         stage.Effects.AddChild(shell);
         shell.GlobalPosition = from;
@@ -54,7 +57,8 @@ public partial class MortarShell : Node3D
         _markerMat.AlbedoColor = new Color(1, .3f, .25f, .25f + .5f * t * Mathf.Abs(Mathf.Sin(_time * 14)));
         if (t < 1) return;
         _marker.QueueFree();
-        Blast.Explode(_stage, _target, _radius, _damage, new Color("ffa040"), selfShare: _selfShare, knockbackPower: _knockback);
+        Blast.Explode(_stage, _target, _radius, _damage, new Color("ffa040"), selfShare: _selfShare, knockbackPower: _knockback,
+            by: _by != null && IsInstanceValid(_by) ? _by : null);
         QueueFree();
     }
 

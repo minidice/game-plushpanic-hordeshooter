@@ -46,8 +46,8 @@ name_card_helium_party,Helium party
 name_card_last_shot,Last shot
 name_card_glass_cannon,Glass cannon
 desc_card_helium_party,Any bullet sometimes floats a common at once. Shoot a floating one to pop it (named and bosses stay down)
-desc_card_last_shot,The last round of a magazine explodes where it hits
-desc_card_glass_cannon,All damage ×2 · Price: half your max health (none in the lab, you cannot be hurt there)
+desc_card_last_shot,Whole team: the last round of your own magazine explodes where it hits
+desc_card_glass_cannon,Whole team: all damage ×2 · Price: everyone's max health halved (none in the lab, you cannot be hurt there)
 ui_card_special_title,Boss reward — special card
 tag_card_special,Special card · rule
 fmt_cardlab_specials,Special cards: {0}

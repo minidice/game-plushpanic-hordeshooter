@@ -70,7 +70,7 @@ public partial class BalloonEnemy : Enemy
         {
             if (other == this || other.IsDead) continue;
             var away = other.GlobalPosition - at;
-            if (away.Length() < pop.Radius * .8f) other.Shove(away, pop.KnockbackPower, 0);
+            if (away.Length() < pop.Radius * .8f) other.Shove(away, pop.KnockbackPower, 0, LastHitBy);
         }
 
         bool summoned = false;

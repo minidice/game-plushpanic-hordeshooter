@@ -54,7 +54,8 @@ public partial class SquadBrain : Node
         _rng.Randomize();
         _thinkTimer = _rng.Randf() * .2f;
         _strafeSign = _rng.Randf() < .5f ? -1 : 1;
-        Bot.DamageMultiplier = Role.DamageMultiplier;
+        // Times, not set: a team card (glass cannon) may already be on this survivor.
+        Bot.DamageMultiplier *= Role.DamageMultiplier;
         Bot.DisplayLabel = $"{Loc.Text(Bot.Definition.DisplayName)} · {Loc.Text(Role.NameKey)}";
         // Starting weapons come from the role's pool; the frying pan stays as nothing better is in slot 1.
         Bot.Weapons.Pickup(ArmoryCatalog.Weapon(Role.Secondary), null);

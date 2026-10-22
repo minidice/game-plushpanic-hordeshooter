@@ -10,6 +10,8 @@ namespace HordeShooter;
 public partial class ThrownItem : RigidBody3D
 {
     private Player? _thrower;
+    /// <summary>Who threw it, if they are still around: its blast and fire count for them.</summary>
+    private Player? Thrower => _thrower != null && IsInstanceValid(_thrower) ? _thrower : null;
     public ThrowableDefinition Def { get; private set; } = null!;
     public bool Landed { get; private set; }
     public bool Done { get; private set; }
@@ -175,10 +177,10 @@ public partial class ThrownItem : RigidBody3D
             {
                 case ExplodeEffect e:
                     Blast.Explode(_stage, at, e.RadiusM, e.Damage, Def.Kind == ThrowableKind.Lure ? new Color("ff7ab8") : new Color("ffb347"),
-                        knockbackPower: e.KnockbackPower, selfShare: e.SelfDamageShare);
+                        knockbackPower: e.KnockbackPower, selfShare: e.SelfDamageShare, by: Thrower);
                     break;
                 case BurnPoolEffect b:
-                    FireZone.Create(_stage, ground, b);
+                    FireZone.Create(_stage, ground, b, Thrower);
                     _stage.Sfx.PlayAt("glass_break", at);
                     _stage.Effects.Stuffing(at, Vector3.Up, new Color("b8e0b0"), 14);
                     break;

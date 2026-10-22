@@ -189,3 +189,9 @@
 - 직접 명중이 체력을 0 이하로 깎으면 카드 명중 콜백 **전에** `CriticalDeath`를 저장한다. 이후 기존 특수 적의 `Die` 오버라이드와 풍선 Pop·시체 경로가 그 색을 공유한다. 수신은 `DieFromHit(direction, force, critical)`를 사용한다. 주변 카드 연쇄 피해까지 치명타로 바꾸지 않는다.
 - 일반 피해·밀기·화상·직접 사망은 흰색이다. 원격 화상/밀기에서 원래 생략하던 피격 이벤트를 새로 추가하지 않는다. 기존 시야 숨김과 시체 공개 정책도 유지한다.
 - 검사: `NetSyncCheck`의 실제 ENet 송수신에서 치명타 노란색, 다음 일반 피격의 흰색 복귀, 치명 처치 노란색 원을 확인한다. `NetCodecCheck`, `LobbyCheck`도 함께 실행한다. 실제 다른 PC·손실/지연 환경은 별도 검증 대상이다.
+
+### 난전 카드 동기화의 팀 특별 카드 (2026-10-22, M-29 1단계)
+
+- 방장이 파티원마다 보내는 난전 카드 동기화(`SurvivorRules.EncodeFor` → `StageNet.HostCards` → `ApplyCardSync`) 끝에 **팀 특별 카드 비트 U8**(`LabCards.SpecialMask`, 비트 n = `LabCards.Specials[n]`)을 더했다. 파티원은 `LabCards.SetSpecialsFromHost`로 받아 유리 대포의 최대 체력 절반을 자기 화면의 모든 생존자에 걸어 HUD 체력 막대가 방장과 같게 보인다(피해 계산은 그대로 방장). 특별 카드가 바뀌면 주기를 기다리지 않고 다시 보낸다.
+- `NetLobby.Protocol`을 6에서 **7**로 올려 이전 빌드와 섞이지 않게 했다.
+- 검사: `CardLabCheck`(특별 카드 비트), `OnslaughtNetCheck` · `NetSyncCheck` · `NetCodecCheck`(실제 송수신).

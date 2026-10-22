@@ -46,7 +46,7 @@ public static class CardCatalog
 
     public static CardChoice Special(LabSpecial card, LabCards? effects) =>
         new(card.ToString(), Loc.Text(LabCards.Key("name_card_", card)), Loc.Text("tag_card_special"), Loc.Text(LabCards.Key("desc_card_", card)),
-            card == LabSpecial.GlassCannon ? CardTarget.Self : CardTarget.Common, null, who => effects?.Set(card, true, who), "s|" + card);
+            CardTarget.Common, null, who => effects?.Set(card, true, who), "s|" + card);
 
     /// <summary>A card that can be taken again and again: it only changes the survivor who picks it.</summary>
     public static CardChoice Repeat(string id) => new(id, Loc.Text("name_card_r_" + id), Loc.Text("tag_card_self"), Loc.Text("desc_card_r_" + id),

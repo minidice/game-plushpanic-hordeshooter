@@ -9,9 +9,11 @@ public static class Blast
     public const float PlayerShare = .2f;
 
     /// <param name="knockbackPower">Push at the center (divided by each monster's mass, falls off to a small shove at the edge).</param>
+    /// <param name="by">The survivor whose weapon this was: the damage takes their damage multiplier (cards, glass cannon) and counts for them.</param>
     public static void Explode(Stage stage, Vector3 at, float radius, float damage, Color color, Node? source = null, float selfShare = PlayerShare,
-        float knockbackPower = 150f)
+        float knockbackPower = 150f, Player? by = null)
     {
+        float scale = by != null && GodotObject.IsInstanceValid(by) ? by.DamageMultiplier : 1f;
         stage.Effects.Explosion(at, radius, color);
         stage.Sfx.PlayAt("explosion", at + Vector3.Up, radius > 5 ? 2 : 0);
         stage.Effects.PaintSplat(at, 2f);
@@ -26,7 +28,7 @@ public static class Blast
             float d = away.Length();
             if (d > radius) continue;
             float falloff = 1 - d / radius;
-            enemy.Shove(away, 40f + (knockbackPower - 40f) * falloff, damage * falloff + 15f);
+            enemy.Shove(away, 40f + (knockbackPower - 40f) * falloff, (damage * falloff + 15f) * scale, by);
         }
 
         // Include corpses created by the damage above, even before the next physics broadphase.
@@ -50,7 +52,7 @@ public static class Blast
             var away = prop.GlobalPosition - at;
             float d = away.Length();
             if (d > radius * 1.4f) continue;
-            if (prop is ExplosiveBarrel barrel) barrel.Ignite(.18f + d * .03f);
+            if (prop is ExplosiveBarrel barrel) barrel.Ignite(.18f + d * .03f, by);
             else prop.ApplyCentralImpulse(away.Normalized() * 6f + Vector3.Up * 4f);
         }
     }

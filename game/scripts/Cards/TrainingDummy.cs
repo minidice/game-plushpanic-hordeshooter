@@ -82,7 +82,7 @@ public partial class TrainingDummy : Enemy
         Health = Monster.Hp;
     }
 
-    public override void Shove(Vector3 direction, float power, float damage)
+    public override void Shove(Vector3 direction, float power, float damage, Player? by = null)
     {
         if (damage > 0) Record(damage, false);
         _wobble = 1;

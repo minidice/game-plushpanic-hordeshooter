@@ -71,7 +71,7 @@ public partial class SurvivorRules : ModeRules
     private readonly Dictionary<Player, CardQueue> _queues = new();
     private readonly HashSet<Player> _armed = new();
     private readonly HashSet<int> _pendingPicks = new();
-    private readonly Dictionary<Player, (int Version, int Level, int Segment, bool Boss, int Squad)> _sent = new();
+    private readonly Dictionary<Player, (int Version, int Level, int Segment, bool Boss, int Squad, int Specials)> _sent = new();
     private readonly HashSet<string> _bossesMet = new();
 
     /// <summary>Everyone starts by arming (on every PC, so a client's clock starts when the host's does).</summary>
@@ -228,7 +228,7 @@ public partial class SurvivorRules : ModeRules
         foreach (var p in Humans.Where(p => p != Stage.Player))
         {
             var queue = QueueOf(p);
-            var now = (queue.Version, Level, Segment, BossArrived, Companions.Version);
+            var now = (queue.Version, Level, Segment, BossArrived, Companions.Version, Cards.SpecialMask);
             if (!periodic && _sent.TryGetValue(p, out var last) && last == now) continue;
             if (net.SendCards(p, EncodeFor(p))) _sent[p] = now;
         }
@@ -244,6 +244,7 @@ public partial class SurvivorRules : ModeRules
         w.U8(BossArrived ? 1 : 0);
         CardCatalog.Write(w, QueueOf(who).Offers);
         Companions.Write(w);
+        w.U8(Cards.SpecialMask);
         return w.ToArray();
     }
 
@@ -261,6 +262,7 @@ public partial class SurvivorRules : ModeRules
         _pendingPicks.RemoveWhere(serial => offers.All(o => o.Serial != serial));
         LocalQueue.Replace(offers.Where(o => !_pendingPicks.Contains(o.Serial)));
         Companions.Read(r);
+        Cards.SetSpecialsFromHost(r.U8());
     }
 
     // ---------- named and swarm ----------

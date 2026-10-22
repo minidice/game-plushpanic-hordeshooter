@@ -10,12 +10,14 @@ public partial class FireZone : Node3D
     private float _radius, _dps, _playerDps, _life;
     private readonly System.Collections.Generic.Dictionary<Player, float> _playerDebts = new();
     private readonly Dictionary<Enemy, float> _ticks = new();
+    private Player? _by;
 
     public float Radius => _radius;
 
-    public static FireZone Create(Stage stage, Vector3 at, BurnPoolEffect burn)
+    /// <param name="by">Who threw the molotov: the burning counts for them.</param>
+    public static FireZone Create(Stage stage, Vector3 at, BurnPoolEffect burn, Player? by = null)
     {
-        var zone = new FireZone { Name = "Fire", _stage = stage, _radius = burn.RadiusM, _dps = burn.EnemyDps, _playerDps = burn.PlayerDps, _life = burn.Duration, Position = at };
+        var zone = new FireZone { Name = "Fire", _stage = stage, _radius = burn.RadiusM, _dps = burn.EnemyDps, _playerDps = burn.PlayerDps, _life = burn.Duration, Position = at, _by = by };
         stage.Effects.AddChild(zone);
         zone.AddToGroup(SquadGroups.Hazard);
         zone.SetMeta("radius", burn.RadiusM);
@@ -72,7 +74,7 @@ public partial class FireZone : Node3D
             var d = enemy.GlobalPosition - GlobalPosition;
             d.Y = 0;
             if (d.LengthSquared() > r2) continue;
-            enemy.Burn(_dps * dt);
+            enemy.Burn(_dps * dt, _by != null && IsInstanceValid(_by) ? _by : null);
             // Occasional sparks so burning zombies read as burning.
             float t = _ticks.GetValueOrDefault(enemy) - dt;
             if (t <= 0)

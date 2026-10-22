@@ -11,6 +11,7 @@ public partial class ExplosiveBarrel : RigidBody3D
 
     private Stage _stage = null!;
     private float _fuse;
+    private Player? _litBy;
 
     public static ExplosiveBarrel Create(Stage stage, Vector3 at)
     {
@@ -36,11 +37,13 @@ public partial class ExplosiveBarrel : RigidBody3D
     /// <summary>Same on every PC (build order), so the host can say which barrel blew up.</summary>
     public int NetId { get; private set; }
 
-    public void Ignite(float fuse = .12f)
+    /// <param name="by">Who set it off (a shot, or the blast of a barrel they set off): the explosion counts for them.</param>
+    public void Ignite(float fuse = .12f, Player? by = null)
     {
         // On a client the host's explosion arrives as an event and calls Explode directly.
         if (Ignited || Exploded || !_stage.Authoritative) return;
         Ignited = true;
+        _litBy = by;
         _fuse = fuse;
     }
 
@@ -56,7 +59,7 @@ public partial class ExplosiveBarrel : RigidBody3D
         if (Exploded) return;
         Exploded = true;
         _stage.Net?.OnBarrelExplode(this);
-        Blast.Explode(_stage, GlobalPosition, Radius, 125f, new Color("ff9a3c"), this, knockbackPower: 140f);
+        Blast.Explode(_stage, GlobalPosition, Radius, 125f, new Color("ff9a3c"), this, knockbackPower: 140f, by: _litBy != null && IsInstanceValid(_litBy) ? _litBy : null);
         _stage.Props.Remove(this);
         QueueFree();
     }

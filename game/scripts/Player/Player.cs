@@ -29,7 +29,20 @@ public partial class Player : CharacterBody3D
     public WeaponState Gun => Weapons.Current;
     public int ShotsFired => Weapons.ShotsFired;
     public int Health { get; private set; }
-    public int MaxHealth => Definition.MaxHealth;
+    /// <summary>Max health after cards (glass cannon halves it, M-29); never below 1.</summary>
+    public int MaxHealth => Mathf.Max(1, Mathf.RoundToInt(Definition.MaxHealth * MaxHealthScale));
+
+    /// <summary>Cards' share of the definition's max health (1 = none). Lowering it trims health down to the new top.</summary>
+    public float MaxHealthScale
+    {
+        get => _maxHealthScale;
+        set
+        {
+            _maxHealthScale = value;
+            if (Health > MaxHealth) Health = MaxHealth;
+        }
+    }
+    private float _maxHealthScale = 1f;
     /// <summary>Dead for good. A downed survivor has 0 health but is not dead (see PlayerDowned).</summary>
     public bool IsDead => Health <= 0 && !IsDowned;
     public int Medkits { get; set; }
@@ -116,7 +129,7 @@ public partial class Player : CharacterBody3D
         CollisionLayer = Layers.Player;
         CollisionMask = Layers.World | Layers.Enemy | Layers.Props;
         FloorSnapLength = .3f;
-        Health = Definition.MaxHealth;
+        Health = MaxHealth;
 
         _shape = new CollisionShape3D
         {
@@ -418,7 +431,7 @@ public partial class Player : CharacterBody3D
             // Shove them aside, not ahead: the roll opens a path through the crowd.
             var lateral = to - _rollDirection * to.Dot(_rollDirection);
             if (lateral.LengthSquared() < .01f) lateral = _rollDirection.Cross(Vector3.Up) * (_rng.Randf() < .5f ? 1 : -1);
-            enemy.Shove(lateral, 50f, 0);
+            enemy.Shove(lateral, 50f, 0, this);
         }
         if (_rollTime > 0) return;
         _rollTime = 0;

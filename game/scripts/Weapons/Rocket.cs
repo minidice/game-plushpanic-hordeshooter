@@ -10,8 +10,10 @@ public partial class Rocket : Node3D
     private WeaponDefinition _def = null!;
     private float _life;
     private Rid _shooter;
+    private Player? _by;
 
-    public static Rocket Launch(Stage stage, Vector3 from, Vector3 direction, WeaponDefinition def, Rid shooter)
+    /// <param name="by">Who fired it: the hit and the warhead count for them and take their damage multiplier.</param>
+    public static Rocket Launch(Stage stage, Vector3 from, Vector3 direction, WeaponDefinition def, Rid shooter, Player? by = null)
     {
         var rocket = new Rocket
         {
@@ -21,6 +23,7 @@ public partial class Rocket : Node3D
             _def = def,
             _life = def.ProjectileLifetime,
             _shooter = shooter,
+            _by = by,
         };
         stage.Effects.AddChild(rocket);
         rocket.GlobalPosition = from;
@@ -54,7 +57,8 @@ public partial class Rocket : Node3D
             var at = hit.Position;
             // Direct hit: the target takes the rocket's own damage, then everyone takes the warhead.
             if (hit.Collider is Enemy enemy && !enemy.IsDead)
-                enemy.TakeHit(new HitInfo(_def.Damage, _velocity.Normalized(), at, false, _def.HitPower));
+                enemy.TakeHit(new HitInfo(_def.Damage * (_by != null && IsInstanceValid(_by) ? _by.DamageMultiplier : 1f), _velocity.Normalized(), at, false,
+                    _def.HitPower, _by != null && IsInstanceValid(_by) ? _by : null, _def.TypeId));
             Detonate(at);
             return;
         }
@@ -64,7 +68,8 @@ public partial class Rocket : Node3D
 
     private void Detonate(Vector3 at)
     {
-        if (_def.Explodes) Blast.Explode(_stage, at, _def.ExplosionRadius, _def.ExplosionDamage, new Color("ff8a3c"), selfShare: _def.ExplosionSelfShare, knockbackPower: _def.ExplosionKnockback);
+        if (_def.Explodes) Blast.Explode(_stage, at, _def.ExplosionRadius, _def.ExplosionDamage, new Color("ff8a3c"), selfShare: _def.ExplosionSelfShare,
+            knockbackPower: _def.ExplosionKnockback, by: _by != null && IsInstanceValid(_by) ? _by : null);
         else _stage.Effects.Impact(at, -_velocity.Normalized());
         QueueFree();
     }

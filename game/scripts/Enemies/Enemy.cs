@@ -330,10 +330,12 @@ public partial class Enemy : CharacterBody3D
     protected virtual void OnStunned() { }
 
     /// <summary>Damage over time (fire). No knockback, no stuffing spam.</summary>
-    public void Burn(float damage)
+    /// <param name="by">Who lit the fire (the molotov's thrower), if anyone.</param>
+    public void Burn(float damage, Player? by = null)
     {
         if (IsDead || damage <= 0) return;
         if (IsPuppet) { Rig.FlashHit(); return; }
+        if (by != null) LastHitBy = by;
         Health -= damage;
         Rig.FlashHit();
         Wake();
@@ -438,10 +440,18 @@ public partial class Enemy : CharacterBody3D
     /// <summary>Hits harder (or softer) than the data says, set right after spawning (mode tables' damage_scale).</summary>
     public void ScaleDamage(float factor) => AttackDamage *= factor;
 
+    /// <summary>
+    /// The survivor whose damage last landed — a gun, a rocket, a card blast, a pet's bite (its owner) — so a kill and
+    /// the card chains it starts count for them (M-29 damage source). Damage nobody dealt (a bull's charge, a barrel
+    /// nobody set off) leaves it as it was.
+    /// </summary>
+    public Player? LastHitBy { get; private set; }
+
     public virtual void TakeHit(HitInfo hit)
     {
         if (IsDead) return;
         if (IsPuppet) { PuppetHit(hit.Point, hit.Direction, hit.Crit); return; }
+        if (hit.Shooter != null) LastHitBy = hit.Shooter;
         Stage.Net?.OnEnemyHit(this, hit.Point, hit.Direction, hit.Crit);
         Health -= hit.Damage;
         if (hit.Damage > 0) Rig.FlashHit(hit.Crit);
@@ -471,12 +481,14 @@ public partial class Enemy : CharacterBody3D
     }
 
     /// <summary>Shove from explosions, charges, rolls and balloon pops. Lethal shoves turn into bowling-pin deaths.</summary>
-    public virtual void Shove(Vector3 direction, float power, float damage)
+    /// <param name="by">The survivor the shove counts for (<see cref="LastHitBy"/>); null for a monster's charge or a stray barrel.</param>
+    public virtual void Shove(Vector3 direction, float power, float damage, Player? by = null)
     {
         if (IsDead) return;
         direction.Y = 0;
         direction = direction.LengthSquared() > .0001f ? direction.Normalized() : Vector3.Forward;
         if (IsPuppet) { if (damage > 0) Rig.FlashHit(); Hurt = 1; return; }
+        if (by != null) LastHitBy = by;
         Wake();
         Health -= damage;
         if (damage > 0) Rig.FlashHit();

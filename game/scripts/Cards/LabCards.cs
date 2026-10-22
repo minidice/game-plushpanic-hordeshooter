@@ -21,8 +21,11 @@ public enum CardUpgrade { BalloonRadius, BalloonDamage, VelcroSize, VelcroDamage
 /// playing, chaining through the shared states of <see cref="Enemy"/> (inflate · float · sticky · flying): a velcro
 /// clump pops together, a pop throws monsters into others (billiards), a stuffing burst does the same. A card belongs
 /// to the survivor who took it and acts on that survivor's hits (<see cref="HitInfo.Shooter"/>); a lab switch has no
-/// owner and acts on every hit, and so does a hit nobody fired. Taken cards open upgrade levels (plan 13.2). Only the
-/// deciding PC runs it. Numbers are guesses in this file, not data yet.
+/// owner and acts on every hit, and so does a hit nobody fired. A chain counts for whoever started it (M-29 damage
+/// source): a pop, a clump burst, a cue ball, a stuffing burst carries its survivor on to every shove it makes, so
+/// kills and later cards credit them. Specials are the team's (M-29). Taken cards open upgrade levels (plan 13.2).
+/// Only the deciding PC runs it, except that every PC keeps glass cannon's health price for the HUD. Numbers are
+/// guesses in this file, not data yet.
 /// </summary>
 public partial class LabCards : Node
 {
@@ -45,7 +48,7 @@ public partial class LabCards : Node
     public static int MaxLevel(CardUpgrade upgrade) => upgrade == CardUpgrade.VelcroSize ? 2 : 3;
 
     // Helium party: a hit sometimes floats a common at once. Last shot: the shot that empties a magazine explodes.
-    private const float HeliumChance = .12f, LastShotRadius = 3.2f, LastShotPower = 150f, LastShotDamage = 60f, GlassCannonDamage = 2f;
+    private const float HeliumChance = .12f, LastShotRadius = 3.2f, LastShotPower = 150f, LastShotDamage = 60f, GlassCannonDamage = 2f, GlassCannonHealth = .5f;
 
     // Balloon rounds: each hit (one per frame, so a shotgun blast counts once) inflates; the fourth pops it. Named
     // monsters and bosses do not inflate but take the pop. Helium party still floats commons (FloatSeconds).
@@ -74,7 +77,11 @@ public partial class LabCards : Node
     private readonly HashSet<(Player? Owner, LabCard Card)> _owned = new();
     private readonly Dictionary<(Player? Owner, CardUpgrade Upgrade), int> _levels = new();
     private readonly HashSet<LabSpecial> _specials = new();
-    private ulong _lastShotFrame;
+    private readonly Dictionary<Player, ulong> _lastShotFrame = new();
+    // Who started each chain: the velcro that stuck a monster, the hit that made it a cue ball.
+    private readonly Dictionary<Enemy, Player?> _stuckBy = new(), _cueBy = new();
+    // Survivors glass cannon is on right now (joiners get it too, all of it comes off with the card).
+    private readonly HashSet<Player> _glassed = new();
     private readonly Dictionary<Enemy, float> _billiardsReady = new();
     private readonly Dictionary<Enemy, float> _cueUntil = new();
     private readonly Dictionary<Enemy, ulong> _inflatedFrame = new();
@@ -127,22 +134,50 @@ public partial class LabCards : Node
     /// <summary>The balloon pop around a monster popped by <paramref name="shooter"/>'s hit.</summary>
     public float PopRadiusFor(Player? shooter) => PopRadius + PopRadiusPerLevel * Level(CardUpgrade.BalloonRadius, shooter);
     public float PopDamageFor(Player? shooter) => PopDamage * (1 + PopDamagePerLevel * Level(CardUpgrade.BalloonDamage, shooter));
-    /// <summary>How many monsters make a velcro clump burst (5, 4 at level 1, 3 at level 2).</summary>
-    public int ClumpSizeToBurst => ClumpBurstSize - Level(CardUpgrade.VelcroSize);
+    /// <summary>How many monsters make a velcro clump burst (5, 4 at level 1, 3 at level 2); by default the best anyone has.</summary>
+    public int ClumpSizeToBurst => ClumpSizeFor(null);
+    /// <summary>The burst size of a clump <paramref name="owner"/> stuck together (null = the best level anyone has).</summary>
+    public int ClumpSizeFor(Player? owner) => ClumpBurstSize - Level(CardUpgrade.VelcroSize, owner);
 
-    /// <summary>Switches a special on or off; glass cannon doubles <paramref name="who"/>'s damage (the local survivor by default).</summary>
+    /// <summary>
+    /// Switches a special on or off for the whole team (M-29; <paramref name="who"/>, the picker, no longer matters).
+    /// Glass cannon doubles every survivor's damage and halves their max health at once.
+    /// </summary>
     public void Set(LabSpecial card, bool on, Player? who = null)
     {
-        bool was = _specials.Contains(card);
         if (on) _specials.Add(card); else _specials.Remove(card);
-        if (card != LabSpecial.GlassCannon || was == on) return;
-        if (on) _glassOwner = who ?? Stage.Player;
-        if (_glassOwner != null && IsInstanceValid(_glassOwner))
-            _glassOwner.DamageMultiplier = on ? _glassOwner.DamageMultiplier * GlassCannonDamage : _glassOwner.DamageMultiplier / GlassCannonDamage;
-        if (!on) _glassOwner = null;
+        KeepGlassCannon();
     }
 
-    private Player? _glassOwner;
+    /// <summary>The team's specials as bits (bit n = <see cref="Specials"/>[n]), for the client card sync.</summary>
+    public int SpecialMask => Specials.Select((s, i) => _specials.Contains(s) ? 1 << i : 0).Sum();
+
+    /// <summary>Client: the host's specials, so glass cannon's health price shows here too.</summary>
+    public void SetSpecialsFromHost(int mask)
+    {
+        for (int i = 0; i < Specials.Length; i++)
+            if ((mask & 1 << i) != 0) _specials.Add(Specials[i]); else _specials.Remove(Specials[i]);
+        KeepGlassCannon();
+    }
+
+    /// <summary>Glass cannon on every survivor while it is on (a survivor who joins later gets it too), off for all when it goes.</summary>
+    private void KeepGlassCannon()
+    {
+        if (IsOn(LabSpecial.GlassCannon))
+        {
+            foreach (var p in Stage.Players)
+                if (IsInstanceValid(p) && _glassed.Add(p)) Glass(p, true);
+            return;
+        }
+        foreach (var p in _glassed.Where(IsInstanceValid)) Glass(p, false);
+        _glassed.Clear();
+    }
+
+    private static void Glass(Player p, bool on)
+    {
+        p.DamageMultiplier = on ? p.DamageMultiplier * GlassCannonDamage : p.DamageMultiplier / GlassCannonDamage;
+        p.MaxHealthScale = on ? p.MaxHealthScale * GlassCannonHealth : p.MaxHealthScale / GlassCannonHealth;
+    }
 
     public static string Key(string prefix, LabSpecial card) => prefix + card switch
     {
@@ -193,6 +228,7 @@ public partial class LabCards : Node
 
     public override void _PhysicsProcess(double delta)
     {
+        if (_glassed.Count > 0 || IsOn(LabSpecial.GlassCannon)) KeepGlassCannon();
         if (!Stage.Authoritative || Stage.State != StageState.Playing) return;
         float dt = (float)delta;
         _clock += dt;
@@ -223,24 +259,34 @@ public partial class LabCards : Node
         else if (helium && !enemy.IsDead && GD.Randf() < HeliumChance && enemy.AddInflate(1, FloatSeconds)) StartFloating(enemy);
         if (Has(LabCard.Billiards, shooter) && !enemy.IsDead && (IsSniperType(hit.WeaponType) || IsShotgunType(hit.WeaponType)))
             Cue(enemy, hit);
-        if (IsOn(LabSpecial.LastShot) && Stage.Player.Gun is { Mag: 0, IsMelee: false } && Engine.GetPhysicsFrames() != _lastShotFrame)
+        // The shooter's own magazine, and only a hit of the gun in their hands (not a rocket landing later or a pet's bite).
+        if (IsOn(LabSpecial.LastShot) && shooter != null && IsInstanceValid(shooter) && shooter.Gun is { Mag: 0, IsMelee: false } gun
+            && gun.Def.TypeId == hit.WeaponType && _lastShotFrame.GetValueOrDefault(shooter) != Engine.GetPhysicsFrames())
         {
-            _lastShotFrame = Engine.GetPhysicsFrames();
-            LastShot(hit.Point);
+            _lastShotFrame[shooter] = Engine.GetPhysicsFrames();
+            LastShot(hit.Point, shooter);
         }
-        if (Has(LabCard.Velcro, shooter) && !enemy.IsDead) enemy.StickyTime = StickySeconds;
-        if (IsOn(LabCard.RubberDuck) && ++_hitsSinceDuck >= DuckEveryHits && Stage.Lure == null) DropDuck(hit.Point);
+        if (Has(LabCard.Velcro, shooter) && !enemy.IsDead)
+        {
+            enemy.StickyTime = StickySeconds;
+            _stuckBy[enemy] = shooter;
+        }
+        if (IsOn(LabCard.RubberDuck) && ++_hitsSinceDuck >= DuckEveryHits && Stage.Lure == null) DropDuck(hit.Point, shooter);
     }
 
     private void OnKilled(Enemy enemy, Vector3 direction, float force)
     {
-        if (!IsOn(LabCard.StuffingBurst) || _stuffingThisFrame >= StuffingPerFrame) return;
+        _stuckBy.Remove(enemy);
+        _cueBy.Remove(enemy);
+        // The killer's card (anyone's when nobody dealt the kill), and the burst counts for them.
+        var killer = enemy.LastHitBy != null && IsInstanceValid(enemy.LastHitBy) ? enemy.LastHitBy : null;
+        if (!Has(LabCard.StuffingBurst, killer) || _stuffingThisFrame >= StuffingPerFrame) return;
         _stuffingThisFrame++;
         StuffingBursts++;
         var at = enemy.GlobalPosition + Vector3.Up * .7f;
         Stage.Effects.Stuffing(at, Vector3.Up, enemy.Definition.StuffingColor, 40);
         Stage.Effects.Puff(at, StuffingRadius, enemy.Definition.StuffingColor);
-        ShoveAround(enemy.GlobalPosition, StuffingRadius, StuffingPower, StuffingDamage, enemy);
+        ShoveAround(enemy.GlobalPosition, StuffingRadius, StuffingPower, StuffingDamage, enemy, killer);
     }
 
     // ---------- balloon ----------
@@ -271,10 +317,10 @@ public partial class LabCards : Node
         var mates = _clumpOf.TryGetValue(enemy, out int clump)
             ? _clumpOf.Where(c => c.Value == clump && c.Key != enemy && IsInstanceValid(c.Key) && !c.Key.IsSpecial).Select(c => c.Key).ToList()
             : new List<Enemy>();
-        enemy.Shove(direction, 60, enemy.Health + 1);
+        enemy.Shove(direction, 60, enemy.Health + 1, shooter);
         // Clump-mates go first, so the push below does not kill them before they get to pop.
         foreach (var mate in mates) Pop(mate, mate.GlobalPosition - enemy.GlobalPosition, shooter);
-        ShoveAround(enemy.GlobalPosition, radius, PopPower, PopDamageFor(shooter), enemy);
+        ShoveAround(enemy.GlobalPosition, radius, PopPower, PopDamageFor(shooter), enemy, shooter);
         _popping.Remove(enemy);
     }
 
@@ -299,9 +345,10 @@ public partial class LabCards : Node
             var members = group.Select(i => sticky[i]).ToList();
             LargestClump = Mathf.Max(LargestClump, members.Count);
             var center = members.Aggregate(Vector3.Zero, (sum, e) => sum + e.GlobalPosition) / members.Count;
-            if (members.Count >= ClumpSizeToBurst)
+            var owner = ClumpOwner(members);
+            if (members.Count >= ClumpSizeFor(owner))
             {
-                ClumpBurst(members, center);
+                ClumpBurst(members, center, owner);
                 continue;
             }
             // Stuck together: a hit on one moves the whole clump.
@@ -316,14 +363,19 @@ public partial class LabCards : Node
         }
     }
 
-    private void ClumpBurst(List<Enemy> members, Vector3 center)
+    /// <summary>Whose clump it is: the survivor who stuck most of it (null when none of it was anyone's).</summary>
+    private Player? ClumpOwner(List<Enemy> members) => members
+        .Select(e => _stuckBy.GetValueOrDefault(e)).Where(p => p != null && IsInstanceValid(p))
+        .GroupBy(p => p).OrderByDescending(g => g.Count()).Select(g => g.Key).FirstOrDefault();
+
+    private void ClumpBurst(List<Enemy> members, Vector3 center, Player? owner)
     {
         ClumpBursts++;
         Stage.Effects.Explosion(center, ClumpBurstRadius, new Color("c6ff3d"));
         Stage.Sfx.PlayAt("balloon_pop", center + Vector3.Up, 3, .7f);
         Stage.Effects.FloatingText(center + Vector3.Up * 2.6f, Loc.Text("fx_card_velcro_burst"), new Color("c6ff3d"));
         foreach (var e in members) e.StickyTime = 0;
-        ShoveAround(center, ClumpBurstRadius, ClumpBurstPower, ClumpBurstDamage * (1 + ClumpDamagePerLevel * Level(CardUpgrade.VelcroDamage)), null);
+        ShoveAround(center, ClumpBurstRadius, ClumpBurstPower, ClumpBurstDamage * (1 + ClumpDamagePerLevel * Level(CardUpgrade.VelcroDamage, owner)), null, owner);
     }
 
     // ---------- billiards ----------
@@ -335,8 +387,9 @@ public partial class LabCards : Node
     private void Cue(Enemy enemy, HitInfo hit)
     {
         bool sniper = IsSniperType(hit.WeaponType);
-        enemy.Shove(hit.Direction, sniper ? SniperCuePower : ShotgunCuePower, 0);
+        enemy.Shove(hit.Direction, sniper ? SniperCuePower : ShotgunCuePower, 0, hit.Shooter);
         _cueUntil[enemy] = _clock + CueSeconds;
+        _cueBy[enemy] = hit.Shooter;
     }
 
     /// <summary>A cue ball flying from a hit knocks into others: they fly on with most of its push and become cue balls.</summary>
@@ -359,8 +412,12 @@ public partial class LabCards : Node
                 BilliardHits++;
                 Stage.Sfx.PlayAt("bull_bonk", other.GlobalPosition + Vector3.Up, -4, 1.5f);
                 if (BilliardHits % 3 == 1) Stage.Effects.FloatingText(other.GlobalPosition + Vector3.Up * 2.2f, Loc.Text("fx_card_billiards"), new Color("ffe066"));
-                other.Shove(dir, power, 6 + power * .05f);
+                // The ball it hits plays on for whoever made the first cue.
+                var by = _cueBy.GetValueOrDefault(flier);
+                if (by != null && !IsInstanceValid(by)) by = null;
+                other.Shove(dir, power, 6 + power * .05f, by);
                 _cueUntil[other] = _clock + CueSeconds;
+                _cueBy[other] = by;
                 flier.DampKnock(BilliardsKeep);
                 if (flier.KnockSpeed < FlyingSpeed) break;
             }
@@ -368,6 +425,7 @@ public partial class LabCards : Node
         foreach (var gone in _billiardsReady.Keys.Where(e => !IsInstanceValid(e)).ToList()) _billiardsReady.Remove(gone);
         foreach (var done in _cueUntil.Where(c => !IsInstanceValid(c.Key) || c.Value < _clock).Select(c => c.Key).ToList()) _cueUntil.Remove(done);
         foreach (var gone in _inflatedFrame.Keys.Where(e => !IsInstanceValid(e)).ToList()) _inflatedFrame.Remove(gone);
+        foreach (var gone in _cueBy.Keys.Where(e => !IsInstanceValid(e)).ToList()) _cueBy.Remove(gone);
     }
 
     // ---------- honk ----------
@@ -389,37 +447,37 @@ public partial class LabCards : Node
         Stage.Sfx.PlayAt("honk", at + Vector3.Up, 6, .8f);
         Stage.Effects.Puff(at + Vector3.Up * .6f, HonkRadius, new Color("f3f4f1"));
         Stage.Effects.FloatingText(at + Vector3.Up * 2.8f, Loc.Text("fx_card_honk"), new Color("f3f4f1"));
-        ShoveAround(at, HonkRadius, HonkPower, HonkDamage, null);
+        ShoveAround(at, HonkRadius, HonkPower, HonkDamage, null, who);
     }
 
     // ---------- rubber duck ----------
 
-    private void DropDuck(Vector3 at)
+    private void DropDuck(Vector3 at, Player? by)
     {
         _hitsSinceDuck = 0;
         Ducks++;
         // The same duck the slot-3 rubber duck throws (throwables.csv rubber_duck).
         var ground = new Vector3(at.X, 0, at.Z);
         var side = new Vector3(GD.Randf() - .5f, 0, GD.Randf() - .5f).Normalized() * 1.2f;
-        ThrownItem.Throw(Stage, ArmoryCatalog.Throwables[RubberDuckId], ground + Vector3.Up * 1.2f, ground + side);
+        ThrownItem.Throw(Stage, ArmoryCatalog.Throwables[RubberDuckId], ground + Vector3.Up * 1.2f, ground + side, by != null && IsInstanceValid(by) ? by : null);
         Stage.Effects.FloatingText(at + Vector3.Up * 1.6f, Loc.Text("fx_card_duck"), new Color("ffd23f"));
     }
 
     // ---------- specials ----------
 
-    /// <summary>The magazine's last round goes off where it hits.</summary>
-    private void LastShot(Vector3 at)
+    /// <summary>The magazine's last round goes off where it hits, for whoever fired it.</summary>
+    private void LastShot(Vector3 at, Player shooter)
     {
         LastShots++;
         Stage.Effects.Explosion(at, LastShotRadius, new Color("ffb347"));
         Stage.Sfx.PlayAt("explosion", at + Vector3.Up);
         Stage.Effects.FloatingText(at + Vector3.Up * 2f, Loc.Text("fx_card_last_shot"), new Color("ffb347"));
-        ShoveAround(at, LastShotRadius, LastShotPower, LastShotDamage, null);
+        ShoveAround(at, LastShotRadius, LastShotPower, LastShotDamage, null, shooter);
     }
 
     // ---------- shared ----------
 
-    private void ShoveAround(Vector3 center, float radius, float power, float damage, Enemy? except)
+    private void ShoveAround(Vector3 center, float radius, float power, float damage, Enemy? except, Player? by)
     {
         foreach (var e in Stage.Enemies.ToList())
         {
@@ -428,7 +486,7 @@ public partial class LabCards : Node
             float d = away.Length();
             if (d > radius) continue;
             float falloff = 1 - d / radius * .6f;
-            e.Shove(d > .01f ? away : Vector3.Forward, power * falloff, damage * falloff);
+            e.Shove(d > .01f ? away : Vector3.Forward, power * falloff, damage * falloff, by);
         }
     }
 
