@@ -159,3 +159,20 @@ fx_card_jack_box,Boing!
 fmt_card_special_shots_name,Special weapon {0} shots
 fmt_card_special_shots_desc,Whole team: slot 3 goes off {0} times 0.6 s apart · Price: a longer recharge
 tag_card_special_upgrade,Special card · upgrade
+# New cards, batch 3 (decisions.md M-29, onslaught-cards-plan.md 16.6)
+name_card_gather,Gather!
+desc_card_gather,"Whole team: the anchor changes every 30 s · +10% for each person in the 6 m ring around them (damage → crit damage → fire rounds, in turn every 30 s)"
+name_card_mad_scientist,Mad scientist goose
+desc_card_mad_scientist,"Whole team: each at random turns big (more health and damage, slower, easier to hit) or small (faster, rolls further, less health) · again every stretch and revive"
+fmt_card_special_level_name,{0} Lv{1}
+fmt_card_gather_up,Ring {0} m · +{1}% per person
+fmt_card_mad_up,Big and small go ×{0} further (the downsides too)
+fmt_card_honk_beam_up,The beam every {0} s
+fmt_card_static_fluff_up,Same-pole chains reach {0} monsters · they hit harder
+fx_card_mad_big,Big!
+fx_card_mad_small,Small!
+ui_gather_damage,damage
+ui_gather_crit,crit damage
+ui_gather_fire,fire rounds
+fmt_gather_hud,Gather! {0} +{1}% · {2}/{3} in the ring
+fmt_gather_out,Gather! outside the ring — go to {0} ({1})

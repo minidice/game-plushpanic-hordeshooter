@@ -215,3 +215,27 @@ public partial class JackBox : Node3D
         }
     }
 }
+
+/// <summary>Small card effects made of Codex sprites (assets/effects/cards): a flame that rises and fades.</summary>
+public static class CardFx
+{
+    private static Texture2D? _flame;
+    private static bool _looked;
+
+    public static void Flame(Stage stage, Vector3 at)
+    {
+        if (!_looked) { _flame = TeamCardView.Fx("fx_flame"); _looked = true; }
+        if (_flame == null) return;
+        var sprite = new Sprite3D
+        {
+            Texture = _flame, Billboard = BaseMaterial3D.BillboardModeEnum.Enabled, PixelSize = .004f, Modulate = new Color("ff9b4a"),
+            Shaded = false, Transparent = true,
+        };
+        stage.Effects.AddChild(sprite);
+        sprite.GlobalPosition = at;
+        var tween = sprite.CreateTween().SetParallel();
+        tween.TweenProperty(sprite, "position", sprite.Position + Vector3.Up * .7f, .45f);
+        tween.TweenProperty(sprite, "modulate", new Color(1, .35f, .1f, 0), .45f);
+        tween.Chain().TweenCallback(Callable.From(sprite.QueueFree));
+    }
+}

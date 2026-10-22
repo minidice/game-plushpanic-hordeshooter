@@ -1,11 +1,12 @@
-"""Build 19 flat card icons with Pillow and the Python standard library.
+"""Build 23 card icons with Pillow and the Python standard library.
 
 Reviewer command: python prototypes/ui-icons/tools/card_icons.py
 Contract: doc/model-briefs/card-icons.md. Importing does not render or write.
+Team card additions: doc/model-briefs/card-fx.md, section 3.
 """
 
 from hashlib import sha256
-from math import hypot
+from math import cos, hypot, radians, sin
 from pathlib import Path
 
 from PIL import Image, ImageDraw
@@ -389,6 +390,99 @@ def card_jack_box(c):
     c.line([(69, 189), (69, 213)], WHITE, 4)
 
 
+def goose_head(c, x, y, size, flip=False):
+    """A round plush head, long neck and broad bill; no font or texture."""
+    def point(px, py):
+        return (x + (1.08-px if flip else px)*size, y + py*size)
+
+    def box(x0, y0, x1, y1):
+        a, b = point(x0, y0), point(x1, y1)
+        return (min(a[0], b[0]), a[1], max(a[0], b[0]), b[1])
+
+    c.rect(box(.17, .37, .55, 1.05), WHITE, radius=size*.13)
+    c.ellipse(box(0, 0, .80, .72), WHITE)
+    # Fill the neck join so the head reads as one soft silhouette.
+    c.rect(box(.25, .49, .47, .83), WHITE, radius=3, outline=None)
+    c.polygon([point(.70, .34), point(1.08, .42),
+               point(1.08, .56), point(.72, .60)], ORANGE, width=4)
+    c.ellipse(box(.54, .22, .64, .32), INK, None)
+
+
+def card_gather(c):
+    # Three distinct heads around the central upward-facing megaphone.
+    goose_head(c, 82, 22, 64)
+    goose_head(c, 23, 136, 70)
+    goose_head(c, 160, 136, 70, flip=True)
+    c.rect((116, 158, 138, 191), GOLD, radius=6)
+    c.polygon([(91, 112), (165, 112), (141, 165), (115, 165)], GOLD)
+    c.ellipse((87, 99, 169, 122), GOLD)
+    c.ellipse((98, 105, 158, 116), INK, None)
+    c.line([(105, 128), (118, 151)], WHITE, 4)
+
+
+def card_honk_beam(c):
+    # This card's brief explicitly requests yellow -> transparent light;
+    # only its beam uses an alpha fade. The toy horn stays flat and outlined.
+    light = Image.new("RGBA", c.image.size)
+    draw = ImageDraw.Draw(light)
+    apex = (112, 166)
+    # Nested sectors: the outermost rim vanishes, the throat is brightest.
+    for radius in range(125*SCALE, 0, -1):
+        r = radius/SCALE
+        arc = [(apex[0] + r*cos(radians(-80 + 62*i/64)),
+                apex[1] + r*sin(radians(-80 + 62*i/64))) for i in range(65)]
+        alpha = round(210 * (1-r/125)**0.7)
+        draw.polygon([(round(x*SCALE), round(y*SCALE))
+                      for x, y in [apex] + arc], fill=(255, 210, 63, alpha))
+    c.image.alpha_composite(light)
+    c.ellipse((25, 157, 89, 221), GOLD)
+    c.polygon([(72, 163), (91, 140), (101, 100), (151, 149),
+               (111, 159), (89, 183)], GOLD)
+    c.polygon([(98, 99), (109, 92), (158, 141), (151, 152)], GOLD)
+    c.line([(109, 105), (146, 142)], INK, 6)
+    c.curve([(39, 182), (38, 171), (49, 166), (57, 168)], WHITE, 5)
+
+
+def static_puff(c, x, y, positive):
+    lobes = ((x+8, y+23, x+64, y+87), (x+25, y, x+83, y+67),
+             (x+53, y+26, x+102, y+89), (x+28, y+49, x+85, y+108))
+    for box in lobes:
+        c.ellipse(box, WHITE)
+    for x0, y0, x1, y1 in lobes:
+        c.ellipse((x0+5, y0+5, x1-5, y1-5), WHITE, None)
+    c.ellipse((x+27, y+31, x+80, y+83), WHITE, None)
+    c.line([(x+36, y+56), (x+73, y+56)], RED if positive else BLUE, 9)
+    if positive:
+        c.line([(x+54, y+37), (x+54, y+75)], RED, 9)
+
+
+def card_static_fluff(c):
+    static_puff(c, 16, 31, True)
+    static_puff(c, 137, 116, False)
+    # One large bolt bridges the gap without covering either pole symbol.
+    c.polygon([(137, 60), (105, 119), (129, 119), (101, 184),
+               (164, 113), (139, 113), (160, 60)], YELLOW, width=4)
+
+
+def card_mad_scientist(c):
+    goose_head(c, 26, 29, 90)
+    goose_head(c, 171, 162, 54, flip=True)
+    # Round flask with a wide neck, purple liquid and floating bubbles.
+    c.ellipse((88, 112, 197, 226), WHITE)
+    c.rect((124, 78, 161, 136), WHITE, radius=6)
+    c.rect((130, 112, 155, 150), WHITE, radius=3, outline=None)
+    liquid = [(99, 165), (116, 159), (140, 165), (165, 159), (186, 165)]
+    liquid += [(143+45*cos(radians(angle)), 169+45*sin(radians(angle)))
+               for angle in range(0, 181, 6)]
+    c.polygon(liquid, PURPLE, outline=None)
+    c.line([(120, 79), (165, 79)], INK, 6)
+    for x, y, r in ((142, 57, 10), (172, 34, 8), (177, 83, 6)):
+        c.ellipse((x-r, y-r, x+r, y+r), PURPLE, width=4)
+    c.ellipse((120, 176, 132, 188), WHITE, None)
+    c.ellipse((151, 192, 159, 200), WHITE, None)
+    c.curve([(105, 153), (107, 141), (114, 133), (119, 131)], WHITE, 4)
+
+
 BUILDERS = (
     ("card_balloon", card_balloon),
     ("card_velcro", card_velcro),
@@ -409,12 +503,16 @@ BUILDERS = (
     ("card_button_missile", card_button_missile),
     ("card_toy_train", card_toy_train),
     ("card_jack_box", card_jack_box),
+    ("card_gather", card_gather),
+    ("card_honk_beam", card_honk_beam),
+    ("card_static_fluff", card_static_fluff),
+    ("card_mad_scientist", card_mad_scientist),
 )
 
 
 def main():
-    assert len(BUILDERS) == 19, "expected exactly 19 card icons"
-    assert len({name for name, _ in BUILDERS}) == 19, "duplicate filenames"
+    assert len(BUILDERS) == 23, "expected exactly 23 card icons"
+    assert len({name for name, _ in BUILDERS}) == 23, "duplicate filenames"
     assets = []
     hashes = set()
     # Validate the complete set before creating the output directory or PNGs.
@@ -432,14 +530,14 @@ def main():
         assert digest not in hashes, f"{name}: duplicate pixel hash"
         hashes.add(digest)
         assets.append((name, image))
-    assert len(hashes) == 19, "expected 19 distinct pixel hashes"
+    assert len(hashes) == 23, "expected 23 distinct pixel hashes"
 
     OUTPUT.mkdir(parents=True, exist_ok=True)
     for name, image in assets:
         path = OUTPUT / f"{name}.png"
         image.save(path, format="PNG")
         print(f"CARD_ICON_READY {path.relative_to(ROOT).as_posix()}")
-    print("CARD_ICONS_BUILT 19")
+    print("CARD_ICONS_BUILT 23")
 
 
 if __name__ == "__main__":

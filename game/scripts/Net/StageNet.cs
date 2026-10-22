@@ -252,6 +252,13 @@ public partial class StageNet : Node
         _batch.Begin(NetEvent.CardProp); _batch.W.U8((int)kind); _batch.W.Pos(a); _batch.W.Pos(b);
     }
 
+    /// <summary>Host: a monster caught fire (gather!'s fire rounds); clients show the flames.</summary>
+    public void OnEnemyBurn(Enemy enemy, float seconds)
+    {
+        if (Role != NetRole.Host || enemy.NetId == 0) return;
+        _batch.Begin(NetEvent.EnemyBurn); _batch.W.U16(enemy.NetId); _batch.W.U8(Mathf.Clamp(Mathf.RoundToInt(seconds * 10), 0, 255));
+    }
+
     public void OnBarrelExplode(ExplosiveBarrel barrel)
     {
         if (Role != NetRole.Host) return;
@@ -640,6 +647,13 @@ public partial class StageNet : Node
                 var target = r.Pos();
                 if (thrower == null || thrower == _stage.Player) break;
                 ThrownItem.Throw(_stage, def, from, target, thrower);
+                break;
+            }
+            case NetEvent.EnemyBurn:
+            {
+                int id = r.U16();
+                float seconds = r.U8() / 10f;
+                if (_enemies.TryGetValue(id, out var burning) && IsInstanceValid(burning)) burning.ShowBurn(seconds);
                 break;
             }
             case NetEvent.CardProp:

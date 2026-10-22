@@ -30,7 +30,8 @@
 - [x] 난전 카드 규칙 3차(M-29) 3단계(2026-10-22): 카드 등급 1~7(테두리 색, 창마다 한 등급을 구간별 가중치로), "?" 카드(숨은 카드 · 슬롯머신 공개, 투표에서도), 각자 리롤 5회(한 장씩, 무장 카드 포함, 특별 카드 제외, 방장이 셈) ([계획](onslaught-cards-plan.md) 16.2~16.4)
 - [x] 난전 새 카드 1묶음(2026-10-22, M-29 4단계): 탭댄스 · 튕기는 탄(저격) · 꽥 충전(3번 칸) · 운명의 총 · 특별 "특수무기 2발", 카드 아이콘 16종(Codex) ([계획](onslaught-cards-plan.md) 16.6, [지시문](model-briefs/card-icons.md))
 - [x] 난전 새 카드 2묶음(2026-10-22, M-29 4단계): 단추 미사일(연사 계열) · 특별 "장난감 기차" · "깜짝 상자"(몹 도망 동작 새로), 모델 3종 · 아이콘 3장(Codex) ([계획](onslaught-cards-plan.md) 16.6, [지시문](model-briefs/card-props.md))
-- [ ] 난전 새 카드 3묶음(M-29 4단계): 모여라! · 꽥 광선 · 정전기 솜 · 미친 과학자 거위(선행: 불붙음 상태, 모델 · 이펙트는 Codex)
+- [x] 난전 새 카드 3묶음 3-1(2026-10-22, M-29 4단계): 특별 "미친 과학자 거위"(각자 크게 · 작게) · "모여라!"(기준인 사람 둘레 원 · 대미지 → 치명타 → 화염탄), 몹 불붙음 상태, 팀 특별 카드 Lv2 · Lv3 강화, 이펙트 스프라이트 · 아이콘(Codex, [지시문](model-briefs/card-fx.md))
+- [ ] 난전 새 카드 3묶음 3-2(M-29 4단계): 꽥 광선 · 정전기 솜
 - [ ] 난전 개편(M-27) 나머지: 소환수 카드(기본 공격 강화 · 새 능력) · 각성, 총 분류별 카드 풀, 버프 줄 ([계획](onslaught-cards-plan.md))
 - [x] 사족 펫 모델 라이브러리(A-20): 거북이·강아지·토끼 기본형, 공용 등 무기 2종 교체/해제, 시각용 걷기. 세 종 형태 개선·고품질/저품질 6개 GLB·설정 저장/전환 포함. 거북이·토끼는 귀여움 기준으로 큰 머리/볼·짧은 몸/발 재조정, 게임 크기 전후 비교 확인. 모델 185개·메뉴 44개 검사와 6마리 렌더 확인. 모델 단계이며 추종·소환 카드·공격은 후속 ([규격](pet-model-spec.md)).
 - [x] 드론·부사수 모델 라이브러리(A-21): 드론4종×고/저, 공용 하부장비4종 교체, 기존 캐릭터60% 프리셋4종·기존 걷기/무기 잡기. 소환수 공용 품질 설정, 부사수는 자동LOD 조절. 모델253·펫185·메뉴44 검사 및 실제 렌더 확인. 추종·공격·소환카드는 후속 ([규격](companion-model-spec.md)).
@@ -181,6 +182,14 @@
 
 - C# 빌드 경고 · 오류 0. 새 `StageTransitionCheck` 143(헤드리스 · 창 모드 모두), `Start-Game.ps1 -Test` → `Integration` 148, `MapCheck` 24, `VisionTierCheck` 23, `SupplyCheck` 12, `SquadCheck` 50, `ModeCheck` 123, `SpawnCheck` 41, `AudioMixCheck` 6, `CombatPacingCheck` 44, `WeaponHandlingCheck` 36, `NetSyncCheck` 32, `MenuCheck` 44, `LobbyCheck` 31 통과. 전환 소품은 Blender 스크립트 단언 통과(삼각형 · 부위 · 뚜껑 방향).
 - 렌더 `output/transition-0-stage1-street.png`(비교용 Stage 1 실내 직교) → `transition-1-safehouse-hatch`(바닥 해치 · 길게 누르기 안내) → `-2-closing`(원 닫힘) → `-3-title`(STAGE 2 · 숲속 벙커길) → `-4-opening`(벙커 해치에서 원 열림) → `-5-arrival` · `-6-arrival-close`(야외 원근 기본 · 확대) → `-7-forest` · `-bridge` · `-yard` · `-safehouse`. 참고 영상 프레임과 비교해 전환 순서 · 주변 오브젝트 · 시점 변화가 대응함을 확인. 영상의 비 · 어두운 석양 색감은 미적용(I-91). 손으로 해 본 Stage 2 플레이 · 성능 · 멀티 다음 구역은 미확인(I-26 · I-90 · I-91).
+
+### 이번 변경 확인 기록 — 2026-10-22 (새 카드 3묶음 3-1 · 프라이팬 피해 반)
+
+- C# 빌드 경고 · 오류 0. Codex `card_fx.py` 단언 통과(스프라이트 15장), `card_icons.py` 23장(4장 추가, 기존 19장 그대로).
+- `CardLabCheck` 135 → 154(헤드리스) · 155(창 모드): 혼자면 모여라! 없음 · 팀원이 있으면 나옴(등급 6) · 미친 과학자 등급 7, 켜면 모두 크게 · 작게, 크게(몸 ×1.35 · 체력 150 · 대미지 · 느림) · 작게(몸 ×0.72 · 체력 70 · 빠름 · 구르기), Lv2 강화(×1.44) · Lv3 제안, 구간마다 다시, 끄면 원래대로, 모여라! 기준 · 대미지 효과, 원 안 2명 +20%, 원 밖 0 · 혼자 기준 +10%, 5초 전 다음 기준(직전 아님), 30초 뒤 기준 교대 · 치명타, 다음 화염탄, 화염탄에 맞으면 불붙어 깎임 · 쏜 사람 몫, Lv2 7.5 m · 12%, 끄면 보너스 없음.
+- 헤드리스 통과: `ModeCheck` 147, `OnslaughtNetCheck` 29, `NetCodecCheck` 12, `NetSyncCheck` 32, `CompanionCheck` 39, `SquadCheck` 51, `SpawnCheck` 41, `SupplyCheck` 12, `MenuCheck` 44, `LobbyCheck` 31, `StageTransitionCheck` 164, `EnemyExpansion` 60, `CorpseTierCheck` 36, `Integration` 149. 실패 0, 종료 경고(I-17)만.
+- 프라이팬 17로 바꾼 뒤 `CardLabCheck`(창) 155 · `ModeCheck` 147 · `SquadCheck` 51 · `Integration` 149 다시 통과. `Integration`의 "프라이팬 부채꼴" 검사는 한 번에 죽는다는 가정을 "맞으면 깎이거나 죽음"으로 바꿈.
+- 렌더 `output/cardlab-gather.png`(금색 원 · 기준 머리 위 확성기 · 화면 위 "모여라! 대미지 +20% · 원 안 2/2명") · `cardlab-mad-scientist.png`(큰 거위와 작은 오리가 나란히). 처음 미친 과학자 렌더는 구간 다시 굴리기 뒤라 둘 다 작아 보였음 → 굴리기 전에 찍게 고침.
 
 ### 이번 변경 확인 기록 — 2026-10-22 (특수무기 N발: 0.6초 간격 · 강화 3 · 4발 · 쿨타임 대가)
 

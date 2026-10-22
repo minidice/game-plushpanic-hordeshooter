@@ -589,7 +589,9 @@ public partial class Integration : Node
         await Frames(2);
         player.SetControls(Vector2.Zero, new Vector3(9, 1, 0), false);
         await Frames(18); // Let the visible windup reach the single melee impact.
-        Check(front.All(e => !IsInstanceValid(e)) && IsInstanceValid(back) && !back.IsDead, "frying pan hits everything in the front arc only");
+        // Halved 2026-10-22 (user: too strong): it may no longer kill a common in one swing, so "hit" is hurt or dead.
+        Check(front.All(e => !IsInstanceValid(e) || e.Health < e.Monster.Hp) && IsInstanceValid(back) && !back.IsDead && back.Health >= back.Monster.Hp,
+            "frying pan hits everything in the front arc only");
         ClearEnemies();
 
         stage.LeaveSafeRoom();

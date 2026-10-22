@@ -250,7 +250,7 @@ public partial class SurvivorRules : ModeRules
         foreach (var p in Humans.Where(p => p != Stage.Player))
         {
             var queue = QueueOf(p);
-            var now = (queue.Version, Level, Segment, BossArrived, Companions.Version, Cards.SpecialMask * 8 + Cards.SpecialShots, RerollsLeft(p));
+            var now = (queue.Version, Level, Segment, BossArrived, Companions.Version, Cards.TeamVersion, RerollsLeft(p));
             if (!periodic && _sent.TryGetValue(p, out var last) && last == now) continue;
             if (net.SendCards(p, EncodeFor(p))) _sent[p] = now;
         }
@@ -266,9 +266,8 @@ public partial class SurvivorRules : ModeRules
         w.U8(BossArrived ? 1 : 0);
         CardCatalog.Write(w, QueueOf(who).Offers);
         Companions.Write(w);
-        w.U8(Cards.SpecialMask);
         w.U8(RerollsLeft(who));
-        w.U8(Cards.SpecialShots);
+        Cards.WriteTeam(w);
         return w.ToArray();
     }
 
@@ -310,9 +309,8 @@ public partial class SurvivorRules : ModeRules
         _pendingPicks.RemoveWhere(serial => offers.All(o => o.Serial != serial));
         LocalQueue.Replace(offers.Where(o => !_pendingPicks.Contains(o.Serial)));
         Companions.Read(r);
-        Cards.SetSpecialsFromHost(r.U8());
         _netRerolls = r.U8();
-        Cards.SetShotsFromHost(r.U8());
+        Cards.ReadTeam(r);
     }
 
     // ---------- named and swarm ----------
@@ -427,6 +425,7 @@ public partial class SurvivorRules : ModeRules
         Vote.Begin(CardCatalog.BossReward(Cards, Rng, SurvivorTuning.Row(Rules.SpecialGradeWeights, Segment)),
             Stage.Players.Where(p => IsInstanceValid(p) && !p.IsBot && !p.IsDead));
         Segment++;
+        Cards.NewStretch();
         _segmentStart = MatchTime;
         NextBoss = DrawBoss();
         Stage.ShowNotice(Loc.Format("fmt_survivor_midboss_down", Segment, Segments), 4);

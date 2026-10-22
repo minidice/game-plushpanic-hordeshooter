@@ -139,7 +139,7 @@ public partial class WeaponController : Node
             if (d > def.ShoutRadius + enemy.Radius) continue;
             float falloff = 1 - Mathf.Clamp(d / Mathf.Max(.1f, def.ShoutRadius), 0, 1) * .6f;
             var dir = d > .01f ? away / d : AimDirection();
-            enemy.TakeHit(new HitInfo(def.ShoutDamage * _player.DamageMultiplier * falloff, dir, enemy.GlobalPosition + Vector3.Up, false,
+            enemy.TakeHit(new HitInfo(def.ShoutDamage * _player.OutgoingDamage * falloff, dir, enemy.GlobalPosition + Vector3.Up, false,
                 def.ShoutPower * falloff, _player, def.TypeId));
         }
     }
@@ -367,7 +367,7 @@ public partial class WeaponController : Node
                 break;
             default:
                 var origin = _player.GlobalPosition + Vector3.Up * Player.AimHeight;
-                var end = Hitscan(def, origin, dir, def.Damage * _player.DamageMultiplier, def.HitPower, RangeScale(def), out bool crit);
+                var end = Hitscan(def, origin, dir, def.Damage * _player.OutgoingDamage, def.HitPower, RangeScale(def), out bool crit);
                 WeaponShotEffect.Play(Stage.Effects, def, origin, origin, end, crit, muzzleFlash: false);
                 Stage.Net?.OnShot(_player, def, origin, new[] { end }, _player.AimPoint);
                 break;
@@ -532,7 +532,7 @@ public partial class WeaponController : Node
                 float rangeScale = RangeScale(def);
                 for (int i = 0; i < pellets; i++)
                 {
-                    var end = Hitscan(def, origin, Spread(dir, cone), def.Damage * _player.DamageMultiplier / pellets, def.HitPower / pellets, rangeScale, out bool crit);
+                    var end = Hitscan(def, origin, Spread(dir, cone), def.Damage * _player.OutgoingDamage / pellets, def.HitPower / pellets, rangeScale, out bool crit);
                     anyCrit |= crit;
                     var from = MuzzlePosition;
                     if (origin.DistanceTo(end) < origin.DistanceTo(from)) from = origin;
@@ -601,7 +601,7 @@ public partial class WeaponController : Node
                 case Enemy enemy when !enemy.IsDead:
                     bool isCrit = pierced == 0 && enemy == _player.FocusTarget && _player.CritReady;
                     crit |= isCrit;
-                    enemy.TakeHit(new HitInfo(damage * falloff * (isCrit ? def.CritMultiplier : 1f), dir, end, isCrit, power, _player, def.TypeId));
+                    enemy.TakeHit(new HitInfo(damage * falloff * (isCrit ? def.CritMultiplier * (1 + _player.GatherCrit) : 1f), dir, end, isCrit, power, _player, def.TypeId));
                     exclude.Add(hit.Rid);
                     damage *= .8f;
                     continue;
@@ -669,7 +669,7 @@ public partial class WeaponController : Node
         {
             var push = to.LengthSquared() > .001f ? to.Normalized() : dir;
             bool crit = enemy == _player.FocusTarget && _player.CritReady;
-            enemy.TakeHit(new HitInfo(def.Damage * _player.DamageMultiplier * (crit ? def.CritMultiplier : 1f), push, enemy.GlobalPosition + Vector3.Up, crit, def.HitPower,
+            enemy.TakeHit(new HitInfo(def.Damage * _player.OutgoingDamage * (crit ? def.CritMultiplier * (1 + _player.GatherCrit) : 1f), push, enemy.GlobalPosition + Vector3.Up, crit, def.HitPower,
                 _player, def.TypeId));
         }
         foreach (var prop in Stage.Props)

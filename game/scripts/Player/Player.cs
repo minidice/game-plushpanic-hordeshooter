@@ -30,7 +30,7 @@ public partial class Player : CharacterBody3D
     public int ShotsFired => Weapons.ShotsFired;
     public int Health { get; private set; }
     /// <summary>Max health after cards (glass cannon halves it, M-29); never below 1.</summary>
-    public int MaxHealth => Mathf.Max(1, Mathf.RoundToInt(Definition.MaxHealth * MaxHealthScale));
+    public int MaxHealth => Mathf.Max(1, Mathf.RoundToInt(Definition.MaxHealth * MaxHealthScale * MadHealthScale));
 
     /// <summary>Cards' share of the definition's max health (1 = none). Lowering it trims health down to the new top.</summary>
     public float MaxHealthScale
@@ -95,6 +95,56 @@ public partial class Player : CharacterBody3D
     internal bool NetApplying { get; set; }
     /// <summary>Scales this survivor's weapon damage (AI squadmates hit softer, decisions.md M-12).</summary>
     public float DamageMultiplier { get; set; } = 1f;
+    /// <summary>What this survivor's weapons multiply their damage by: cards' multiplier, gather!'s bonus, the mad scientist's size.</summary>
+    public float OutgoingDamage => DamageMultiplier * (1 + GatherDamage) * MadDamageScale;
+    /// <summary>Gather! (M-29 16.6.1): this survivor's bonus while in the ring — damage, crit damage or fire rounds (host-set, 0 = none).</summary>
+    public float GatherDamage { get; set; }
+    public float GatherCrit { get; set; }
+    public float GatherFire { get; set; }
+
+    /// <summary>Mad scientist goose (M-29): 1 big, −1 small, 0 neither; its card level scales how much. Sent to clients in the snapshot.</summary>
+    public int MadSize
+    {
+        get => _madSize;
+        set
+        {
+            if (_madSize == value) return;
+            _madSize = value;
+            ApplyMadBody();
+        }
+    }
+    public int MadLevel
+    {
+        get => _madLevel;
+        set
+        {
+            if (_madLevel == value) return;
+            _madLevel = value;
+            ApplyMadBody();
+        }
+    }
+    private int _madSize, _madLevel = 1;
+    /// <summary>How strong the size change is: 1, 1.25, 1.5 by level.</summary>
+    public float MadPower => 1 + .25f * (Mathf.Clamp(_madLevel, 1, 3) - 1);
+    public float MadBodyScale => _madSize > 0 ? 1 + .35f * MadPower : _madSize < 0 ? 1 - .28f * MadPower : 1;
+    public float MadHealthScale => _madSize > 0 ? 1 + .5f * MadPower : _madSize < 0 ? 1 - .3f * MadPower : 1;
+    public float MadDamageScale => _madSize > 0 ? 1 + .3f * MadPower : 1;
+    public float MadSpeedScale => _madSize > 0 ? 1 - .1f * MadPower : _madSize < 0 ? 1 + .25f * MadPower : 1;
+    public float MadRollScale => _madSize < 0 ? 1 + .4f * MadPower : 1;
+
+    /// <summary>Bigger or smaller body and collider; health trims to the new top.</summary>
+    private void ApplyMadBody()
+    {
+        float s = MadBodyScale;
+        if (Rig != null) Rig.Scale = Vector3.One * s;
+        if (_shape?.Shape is CapsuleShape3D capsule && Definition != null)
+        {
+            capsule.Radius = Definition.ColliderRadius * s;
+            capsule.Height = Definition.ColliderHeight * s;
+            _shape.Position = new Vector3(_shape.Position.X, Definition.ColliderHeight * s * .5f, _shape.Position.Z);
+        }
+        if (Health > MaxHealth) Health = MaxHealth;
+    }
     /// <summary>Tap dance steps (M-29): each one walks and fires a little faster. Set by the host's cards, sent to clients.</summary>
     public int TapStacks { get; set; }
     /// <summary>Fire rate from cards (1 = as the weapon says).</summary>
@@ -292,10 +342,11 @@ public partial class Player : CharacterBody3D
         if (_reloadPressed && !busy && !Weapons.AimingThrow && Gun.StartReload()) PlayOwn("reload_start");
 
         var move = stunned || IsRestrained || Reviving != null || Weapons.Planted ? Vector3.Zero : new Vector3(_move.X, 0, _move.Y).LimitLength(1);
-        float speed = Definition.MoveSpeed * (IsHealing ? .35f : 1f) * (Gun.Reloading ? .85f : 1f) * HandlingSpeedScale * (1 + TapStacks * LabCards.TapSpeedPerStack);
+        float speed = Definition.MoveSpeed * (IsHealing ? .35f : 1f) * (Gun.Reloading ? .85f : 1f) * HandlingSpeedScale * (1 + TapStacks * LabCards.TapSpeedPerStack) *
+                      MadSpeedScale;
         bool grounded = IsOnFloor() && Velocity.Y <= 0;
         _push = _push.MoveToward(Vector3.Zero, dt * (grounded ? 10f : 1.2f));
-        var horizontal = IsRestrained ? RestraintVelocity() : IsRolling ? _rollDirection * RollSpeed : move * speed + _push;
+        var horizontal = IsRestrained ? RestraintVelocity() : IsRolling ? _rollDirection * RollSpeed * MadRollScale : move * speed + _push;
         // On the host a remote survivor's reported spot loses to the host's own pull (grab, launch, down).
         if (NetMotion is { } follow && !(Stage.Authoritative && HostMovesMe)) horizontal = FollowVelocity(follow, dt);
         Velocity = new Vector3(horizontal.X, grounded ? -.1f : Velocity.Y - Gravity * dt, horizontal.Z);

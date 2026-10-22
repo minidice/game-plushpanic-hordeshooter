@@ -11,7 +11,7 @@ namespace HordeShooter;
 public enum LabCard { Balloon, Velcro, StuffingBurst, Billiards, HonkReload, RubberDuck, TapDance, BouncingRounds, HonkCharge, DestinyGun, ButtonMissile }
 
 /// <summary>Three stand-in special cards for the boss-reward cheat (plan 6.3): rules for every gun, one with a price.</summary>
-public enum LabSpecial { HeliumParty, LastShot, GlassCannon, DoubleSpecial, ToyTrain, JackBox }
+public enum LabSpecial { HeliumParty, LastShot, GlassCannon, DoubleSpecial, ToyTrain, JackBox, Gather, MadScientist, HonkBeam, StaticFluff }
 
 /// <summary>
 /// The upgrade cards a base card opens once taken (plan 13.2 card tree): balloon pop radius and damage, velcro clump
@@ -34,7 +34,8 @@ public partial class LabCards : Node
 {
     public static readonly LabCard[] All = { LabCard.Balloon, LabCard.Velcro, LabCard.StuffingBurst, LabCard.Billiards, LabCard.HonkReload, LabCard.RubberDuck };
     public static readonly LabSpecial[] Specials =
-        { LabSpecial.HeliumParty, LabSpecial.LastShot, LabSpecial.GlassCannon, LabSpecial.DoubleSpecial, LabSpecial.ToyTrain, LabSpecial.JackBox };
+        { LabSpecial.HeliumParty, LabSpecial.LastShot, LabSpecial.GlassCannon, LabSpecial.DoubleSpecial, LabSpecial.ToyTrain, LabSpecial.JackBox,
+          LabSpecial.Gather, LabSpecial.MadScientist };
     /// <summary>The cards a level-up can offer; the honk and the rubber duck move to slot 3 as weapons (plan 13.1), lab only for now.</summary>
     public static readonly LabCard[] LevelUpCards =
         { LabCard.Balloon, LabCard.Velcro, LabCard.StuffingBurst, LabCard.Billiards, LabCard.TapDance, LabCard.BouncingRounds, LabCard.HonkCharge, LabCard.DestinyGun,
@@ -200,7 +201,29 @@ public partial class LabCards : Node
     {
         if (on) _specials.Add(card); else _specials.Remove(card);
         if (card == LabSpecial.DoubleSpecial) SpecialShots = on ? Mathf.Max(SpecialShots, 2) : 1;
+        if (!on) _specialLevel.Remove(card);
+        if (card == LabSpecial.MadScientist) { if (on) RollMad(); else ClearMad(); }
+        if (card == LabSpecial.Gather && !on) ClearGather();
+        TeamVersion++;
         KeepGlassCannon();
+    }
+
+    private readonly Dictionary<LabSpecial, int> _specialLevel = new();
+    /// <summary>Goes up whenever a team card or its level changes (the host resends the card sync).</summary>
+    public int TeamVersion { get; private set; }
+
+    /// <summary>A team card's level: 0 off, 1 taken, 2–3 with its upgrades (M-29: like "special weapon N shots").</summary>
+    public int SpecialLevel(LabSpecial card) => IsOn(card) ? Mathf.Max(1, _specialLevel.GetValueOrDefault(card, 1)) : 0;
+    /// <summary>Team cards that come back as upgrades in the special window (special weapon twice has its own shots).</summary>
+    public static int MaxSpecialLevel(LabSpecial card) => card is LabSpecial.Gather or LabSpecial.MadScientist or LabSpecial.HonkBeam or LabSpecial.StaticFluff ? 3 : 1;
+
+    /// <summary>The upgrade of a team card: on, at <paramref name="level"/>.</summary>
+    public void SetSpecialLevel(LabSpecial card, int level)
+    {
+        _specials.Add(card);
+        _specialLevel[card] = Mathf.Clamp(level, 1, MaxSpecialLevel(card));
+        if (card == LabSpecial.MadScientist) foreach (var p in Stage.Players.Where(IsInstanceValid)) p.MadLevel = SpecialLevel(card);
+        TeamVersion++;
     }
 
     /// <summary>
@@ -213,24 +236,49 @@ public partial class LabCards : Node
     public const float CooldownPerExtraShot = .5f;
     public float SpecialCooldownScale => 1 + CooldownPerExtraShot * (SpecialShots - 1);
 
-    /// <summary>Client: the host's shot count, so slot 3's recharge (and its HUD) matches.</summary>
-    public void SetShotsFromHost(int shots) => SpecialShots = Mathf.Clamp(shots, 1, MaxSpecialShots);
 
     /// <summary>The "special weapon N shots" upgrade: slot 3 goes off <paramref name="shots"/> times (2–4).</summary>
     public void SetSpecialShots(int shots)
     {
         _specials.Add(LabSpecial.DoubleSpecial);
         SpecialShots = Mathf.Clamp(Mathf.Max(SpecialShots, shots), 2, MaxSpecialShots);
+        TeamVersion++;
     }
 
-    /// <summary>The team's specials as bits (bit n = <see cref="Specials"/>[n]), for the client card sync.</summary>
+    /// <summary>The team's specials as bits (bit n = <see cref="Specials"/>[n]).</summary>
     public int SpecialMask => Specials.Select((s, i) => _specials.Contains(s) ? 1 << i : 0).Sum();
 
-    /// <summary>Client: the host's specials, so glass cannon's health price shows here too.</summary>
-    public void SetSpecialsFromHost(int mask)
+    /// <summary>Host → client card sync: every team card's level (special weapon twice: its shots) and gather!'s state.</summary>
+    public void WriteTeam(NetWriter w)
     {
-        for (int i = 0; i < Specials.Length; i++)
-            if ((mask & 1 << i) != 0) _specials.Add(Specials[i]); else _specials.Remove(Specials[i]);
+        w.U8(Specials.Length);
+        foreach (var s in Specials) w.U8(s == LabSpecial.DoubleSpecial && IsOn(s) ? SpecialShots : SpecialLevel(s));
+        w.I32(GatherAnchor != null && IsInstanceValid(GatherAnchor) ? GatherAnchor.PeerId : -1);
+        w.I32(GatherNext != null && IsInstanceValid(GatherNext) ? GatherNext.PeerId : -1);
+        w.U8(GatherEffect);
+        w.F32(GatherClock);
+    }
+
+    /// <summary>Client: the host's team cards, so glass cannon's price, slot 3's recharge and gather!'s ring show here too.</summary>
+    public void ReadTeam(NetReader r)
+    {
+        int n = r.U8();
+        for (int i = 0; i < n; i++)
+        {
+            int level = r.U8();
+            if (i >= Specials.Length) continue;
+            var s = Specials[i];
+            if (level == 0) { _specials.Remove(s); _specialLevel.Remove(s); continue; }
+            _specials.Add(s);
+            if (s == LabSpecial.DoubleSpecial) SpecialShots = Mathf.Clamp(level, 2, MaxSpecialShots);
+            else _specialLevel[s] = level;
+        }
+        if (!IsOn(LabSpecial.DoubleSpecial)) SpecialShots = 1;
+        int anchor = r.I32(), next = r.I32();
+        GatherAnchor = Stage.Players.FirstOrDefault(p => IsInstanceValid(p) && p.PeerId == anchor && anchor >= 0);
+        GatherNext = Stage.Players.FirstOrDefault(p => IsInstanceValid(p) && p.PeerId == next && next >= 0);
+        GatherEffect = r.U8();
+        GatherClock = r.F32();
         KeepGlassCannon();
     }
 
@@ -260,6 +308,10 @@ public partial class LabCards : Node
         LabSpecial.DoubleSpecial => "double_special",
         LabSpecial.ToyTrain => "toy_train",
         LabSpecial.JackBox => "jack_box",
+        LabSpecial.Gather => "gather",
+        LabSpecial.MadScientist => "mad_scientist",
+        LabSpecial.HonkBeam => "honk_beam",
+        LabSpecial.StaticFluff => "static_fluff",
         _ => "glass_cannon",
     };
 
@@ -322,9 +374,12 @@ public partial class LabCards : Node
     public override void _PhysicsProcess(double delta)
     {
         if (_glassed.Count > 0 || IsOn(LabSpecial.GlassCannon)) KeepGlassCannon();
-        if (!Stage.Authoritative || Stage.State != StageState.Playing) return;
+        if (!Stage.Authoritative || Stage.State != StageState.Playing) { GatherView(); return; }
         float dt = (float)delta;
         _clock += dt;
+        if (IsOn(LabSpecial.MadScientist)) foreach (var p in Stage.Players.Where(p => IsInstanceValid(p) && p.MadSize == 0 && !p.IsDead)) RollMad(p);
+        if (IsOn(LabSpecial.Gather)) GatherStep(dt);
+        GatherView();
         TapDanceEnds();
         if (_bounceFrom.Count > 0) BounceAll();
         foreach (var p in _honkBudget.Keys.ToList()) _honkBudget[p] = Mathf.Min(HonkChargePerSecond, _honkBudget[p] + dt * HonkChargePerSecond);
@@ -367,6 +422,8 @@ public partial class LabCards : Node
             // The round's last pierced monster wins: the bounce starts where the shot stopped (plan 16.6).
             if (Has(LabCard.BouncingRounds, shooter) && IsSniperType(hit.WeaponType)) _bounceFrom[shooter] = (enemy.GlobalPosition, enemy, hit);
             if (Has(LabCard.HonkCharge, shooter) && _honkFrame.GetValueOrDefault(shooter) != frame) HonkCharge(shooter, frame);
+            // Gather!'s fire rounds: the hit sets the monster burning, hotter the more are in the ring.
+            if (shooter.GatherFire > 0 && !enemy.IsDead) enemy.Ignite(GatherBurnDps * (1 + shooter.GatherFire), GatherBurnSeconds, shooter);
             if (Has(LabCard.ButtonMissile, shooter) && IsButtonGun(hit.WeaponType) && _buttonFrame.GetValueOrDefault(shooter) != frame)
             {
                 _buttonFrame[shooter] = frame;
@@ -671,7 +728,7 @@ public partial class LabCards : Node
         {
             Buttons++;
             CardProps.Spawn(Stage, CardPropKind.Button, from.GlobalPosition + Vector3.Up * 1.2f, target.GlobalPosition + Vector3.Up, shooter, target,
-                ButtonDamage * shooter.DamageMultiplier);
+                ButtonDamage * shooter.OutgoingDamage);
         }
     }
 
@@ -685,6 +742,8 @@ public partial class LabCards : Node
 
     private void OnRevived(Player who)
     {
+        // The mad scientist rolls again for anyone back on their feet.
+        if (Stage.Authoritative && IsInstanceValid(who) && IsOn(LabSpecial.MadScientist)) RollMad(who);
         if (!Stage.Authoritative || !IsInstanceValid(who) || !IsOn(LabSpecial.ToyTrain)) return;
         // Once more the other way: from out by the attackers, back past them.
         RunTrain(who, who.LastHitDirection, ToyTrain.Length - 2f);
@@ -707,6 +766,108 @@ public partial class LabCards : Node
     {
         Boxes++;
         LastBox = (JackBox)CardProps.Spawn(Stage, CardPropKind.JackBox, new Vector3(at.X, 0, at.Z), Vector3.Zero, owner);
+    }
+
+    // ---------- mad scientist goose · gather! (M-29 plan 16.6, batch 3) ----------
+
+    /// <summary>Checks: how many times the mad scientist rolled someone's size.</summary>
+    public int MadRolls { get; private set; }
+
+    /// <summary>Everyone (or <paramref name="only"/>) turns big or small at random, at the card's level (no choosing).</summary>
+    public void RollMad(Player? only = null)
+    {
+        foreach (var p in only != null ? new[] { only } : Stage.Players.ToArray())
+        {
+            if (!IsInstanceValid(p) || p.IsDead) continue;
+            MadRolls++;
+            _rng.Randomize();
+            p.MadLevel = SpecialLevel(LabSpecial.MadScientist);
+            p.MadSize = _rng.Randf() < .5f ? 1 : -1;
+            Stage.Effects.FloatingText(p.GlobalPosition + Vector3.Up * 2.8f, Loc.Text(p.MadSize > 0 ? "fx_card_mad_big" : "fx_card_mad_small"),
+                p.MadSize > 0 ? new Color("c08bff") : new Color("7dff9a"));
+        }
+    }
+
+    /// <summary>Host: a new stretch starts (after a middle boss): the mad scientist rolls everyone again.</summary>
+    public void NewStretch()
+    {
+        if (Stage.Authoritative && IsOn(LabSpecial.MadScientist)) RollMad();
+    }
+
+    private void ClearMad()
+    {
+        foreach (var p in Stage.Players.Where(IsInstanceValid)) p.MadSize = 0;
+    }
+
+    // Gather!: an anchor survivor every 30 s (not the last one), a ring around them; each one inside adds to the bonus
+    // of everyone inside. The bonus turns damage → crit damage → fire rounds, one per anchor.
+    public const float GatherPeriod = 30f, GatherWarn = 5f, GatherBurnDps = 6f, GatherBurnSeconds = 3f;
+    public Player? GatherAnchor { get; private set; }
+    /// <summary>Who is next, shown blinking for the last 5 s.</summary>
+    public Player? GatherNext { get; private set; }
+    /// <summary>0 damage, 1 crit damage, 2 fire rounds.</summary>
+    public int GatherEffect { get; private set; }
+    public float GatherClock { get; private set; }
+    public float GatherRadius => SpecialLevel(LabSpecial.Gather) switch { 3 => 9f, 2 => 7.5f, _ => 6f };
+    public float GatherPerPerson => SpecialLevel(LabSpecial.Gather) switch { 3 => .15f, 2 => .12f, _ => .10f };
+    /// <summary>Who is in the ring now (anchor included).</summary>
+    public IEnumerable<Player> GatherMembers => GatherAnchor == null || !IsInstanceValid(GatherAnchor) ? Enumerable.Empty<Player>()
+        : Stage.Players.Where(p => IsInstanceValid(p) && !p.IsDead && Flat(p.GlobalPosition - GatherAnchor.GlobalPosition).Length() <= GatherRadius);
+
+    private void GatherStep(float dt)
+    {
+        var alive = Stage.Players.Where(p => IsInstanceValid(p) && !p.IsDead).ToList();
+        if (GatherAnchor == null || !IsInstanceValid(GatherAnchor) || GatherAnchor.IsDead) { GatherAnchor = PickOther(alive, null); GatherClock = 0; TeamVersion++; }
+        GatherClock += dt;
+        if (GatherNext == null && GatherClock >= GatherPeriod - GatherWarn) { GatherNext = PickOther(alive, GatherAnchor); TeamVersion++; }
+        if (GatherClock >= GatherPeriod)
+        {
+            GatherAnchor = GatherNext ?? PickOther(alive, GatherAnchor);
+            GatherNext = null;
+            GatherEffect = (GatherEffect + 1) % 3;
+            GatherClock = 0;
+            TeamVersion++;
+        }
+        var members = GatherMembers.ToList();
+        float bonus = members.Count * GatherPerPerson;
+        foreach (var p in Stage.Players.Where(IsInstanceValid))
+        {
+            bool inside = members.Contains(p);
+            p.GatherDamage = inside && GatherEffect == 0 ? bonus : 0;
+            p.GatherCrit = inside && GatherEffect == 1 ? bonus : 0;
+            p.GatherFire = inside && GatherEffect == 2 ? bonus : 0;
+        }
+    }
+
+    /// <summary>Checks: skips gather!'s clock forward.</summary>
+    public void AdvanceGatherForTest(float seconds) => GatherStep(seconds);
+
+    private Player? PickOther(List<Player> from, Player? not)
+    {
+        var choices = from.Where(p => p != not).ToList();
+        if (choices.Count == 0) return from.FirstOrDefault();
+        _rng.Randomize();
+        return choices[_rng.RandiRange(0, choices.Count - 1)];
+    }
+
+    private void ClearGather()
+    {
+        GatherAnchor = GatherNext = null;
+        GatherClock = 0;
+        foreach (var p in Stage.Players.Where(IsInstanceValid)) p.GatherDamage = p.GatherCrit = p.GatherFire = 0;
+    }
+
+    private TeamCardView? _view;
+    /// <summary>Gather!'s ring, marks and HUD line on every PC.</summary>
+    private void GatherView()
+    {
+        if (!IsOn(LabSpecial.Gather)) { _view?.Hide(); return; }
+        if (_view == null || !IsInstanceValid(_view))
+        {
+            _view = new TeamCardView { Name = "TeamCardView", Cards = this, Stage = Stage };
+            Stage.AddChild(_view);
+        }
+        _view.Refresh();
     }
 
     // ---------- specials ----------

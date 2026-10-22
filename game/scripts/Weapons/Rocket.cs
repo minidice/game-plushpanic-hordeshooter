@@ -57,7 +57,7 @@ public partial class Rocket : Node3D
             var at = hit.Position;
             // Direct hit: the target takes the rocket's own damage, then everyone takes the warhead.
             if (hit.Collider is Enemy enemy && !enemy.IsDead)
-                enemy.TakeHit(new HitInfo(_def.Damage * (_by != null && IsInstanceValid(_by) ? _by.DamageMultiplier : 1f), _velocity.Normalized(), at, false,
+                enemy.TakeHit(new HitInfo(_def.Damage * (_by != null && IsInstanceValid(_by) ? _by.OutgoingDamage : 1f), _velocity.Normalized(), at, false,
                     _def.HitPower, _by != null && IsInstanceValid(_by) ? _by : null, _def.TypeId));
             Detonate(at);
             return;

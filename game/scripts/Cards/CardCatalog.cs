@@ -91,7 +91,12 @@ public static class CardCatalog
     public static CardChoice Special(LabSpecial card, LabCards? effects) =>
         new(card.ToString(), Loc.Text(LabCards.Key("name_card_", card)), Loc.Text("tag_card_special"), Loc.Text(LabCards.Key("desc_card_", card)),
             CardTarget.Common, Icon(LabCards.Key("", card)), who => effects?.Set(card, true, who), "s|" + card,
-            card is LabSpecial.GlassCannon or LabSpecial.JackBox ? 6 : 5);
+            card switch
+            {
+                LabSpecial.GlassCannon or LabSpecial.JackBox or LabSpecial.Gather => 6,
+                LabSpecial.MadScientist or LabSpecial.HonkBeam or LabSpecial.StaticFluff => 7,
+                _ => 5,
+            });
 
     /// <summary>
     /// A "?" card: what it turns into (<paramref name="inner"/>) is decided when it is drawn, shown only when picked
@@ -135,6 +140,9 @@ public static class CardCatalog
             case "s" when parts.Length == 3 && parts[1] == nameof(LabSpecial.DoubleSpecial) && int.TryParse(parts[2], out int shots) &&
                           shots is > 2 and <= LabCards.MaxSpecialShots:
                 return SpecialShots(shots, effects);
+            case "s" when parts.Length == 3 && Enum.TryParse<LabSpecial>(parts[1], out var leveled) && int.TryParse(parts[2], out int level) &&
+                          level >= 2 && level <= LabCards.MaxSpecialLevel(leveled):
+                return SpecialLevel(leveled, level, effects);
             case "r" when parts.Length == 2 && Repeatables.Contains(parts[1]):
                 return Repeat(parts[1]);
             case "f" when parts.Length == 2 && CompanionSpec.Parse(parts[1]) != null:
@@ -176,10 +184,33 @@ public static class CardCatalog
     /// <summary>The special cards nobody has yet; repeatables (shown as grade 5) only fill a window that runs short.</summary>
     public static List<CardChoice> SpecialPool(LabCards effects)
     {
-        var pool = LabCards.Specials.Where(s => !effects.IsOn(s)).Select(s => Special(s, effects)).ToList();
+        // Team cards about each other only make sense with two or more people (plan 16.6).
+        int people = effects.Stage.Players.Count(p => GodotObject.IsInstanceValid(p) && !p.IsBot);
+        var pool = LabCards.Specials.Where(s => !effects.IsOn(s) && (people >= 2 || !NeedsTeam(s))).Select(s => Special(s, effects)).ToList();
         // Once "special weapon twice" is on, it comes back as an upgrade: 3 shots, then 4 (user 2026-10-22).
         if (effects.IsOn(LabSpecial.DoubleSpecial) && effects.SpecialShots < LabCards.MaxSpecialShots) pool.Add(SpecialShots(effects.SpecialShots + 1, effects));
+        // So do the batch-3 team cards: Lv2, then Lv3.
+        foreach (var s in LabCards.Specials.Where(s => effects.IsOn(s) && effects.SpecialLevel(s) < LabCards.MaxSpecialLevel(s)))
+            pool.Add(SpecialLevel(s, effects.SpecialLevel(s) + 1, effects));
         return pool;
+    }
+
+    /// <summary>Team cards that need two or more people (gather!, honk beam, static fluff).</summary>
+    public static bool NeedsTeam(LabSpecial card) => card is LabSpecial.Gather or LabSpecial.HonkBeam or LabSpecial.StaticFluff;
+
+    /// <summary>A team card's upgrade (Lv2 · Lv3): same grade, what the level brings in its description.</summary>
+    public static CardChoice SpecialLevel(LabSpecial card, int level, LabCards? effects)
+    {
+        string desc = card switch
+        {
+            LabSpecial.Gather => Loc.Format("fmt_card_gather_up", level == 3 ? 9 : 7.5f, level == 3 ? 15 : 12),
+            LabSpecial.MadScientist => Loc.Format("fmt_card_mad_up", level == 3 ? 1.5f : 1.25f),
+            LabSpecial.HonkBeam => Loc.Format("fmt_card_honk_beam_up", level == 3 ? 25 : 32),
+            _ => Loc.Format("fmt_card_static_fluff_up", level == 3 ? 3 : 2),
+        };
+        var base_ = Special(card, null);
+        return new CardChoice(card.ToString(), Loc.Format("fmt_card_special_level_name", base_.Name, level), Loc.Text("tag_card_special_upgrade"), desc,
+            CardTarget.Common, base_.Icon, who => effects?.SetSpecialLevel(card, level), $"s|{card}|{level}", base_.Grade);
     }
 
     /// <summary>"Special weapon N shots": the upgrade of "special weapon twice" (grade 5, the team's).</summary>

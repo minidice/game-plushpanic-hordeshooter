@@ -19,6 +19,38 @@ public partial class Enemy
     /// <summary>Seconds left sticky (찍찍이): sticky monsters near each other clump together.</summary>
     public float StickyTime { get; set; }
     public bool Sticky => StickyTime > 0;
+    /// <summary>Burning (gather!'s fire rounds, M-29): hurts every frame for this long, with flames.</summary>
+    public float BurnTime { get; private set; }
+    private float _burnDps, _flameTick;
+    private Player? _burnBy;
+
+    /// <summary>Sets it burning for <paramref name="seconds"/> at <paramref name="dps"/> (the hotter and longer of the two), counted for <paramref name="by"/>.</summary>
+    public void Ignite(float dps, float seconds, Player? by)
+    {
+        if (IsDead || IsPuppet) return;
+        bool fresh = BurnTime < .5f;
+        BurnTime = Mathf.Max(BurnTime, seconds);
+        _burnDps = fresh ? dps : Mathf.Max(_burnDps, dps);
+        if (by != null) _burnBy = by;
+        if (fresh) Stage.Net?.OnEnemyBurn(this, BurnTime);
+    }
+
+    /// <summary>Client: the host says it burns; flames only.</summary>
+    public void ShowBurn(float seconds) => BurnTime = Mathf.Max(BurnTime, seconds);
+
+    private void BurnStep(float dt)
+    {
+        if (BurnTime <= 0) return;
+        BurnTime -= dt;
+        _flameTick -= dt;
+        if (_flameTick <= 0)
+        {
+            _flameTick = .12f;
+            CardFx.Flame(Stage, GlobalPosition + new Vector3(Rng.RandfRange(-.3f, .3f), .5f + Rng.Randf() * .8f, Rng.RandfRange(-.3f, .3f)));
+        }
+        if (!IsPuppet && _burnDps > 0) Burn(_burnDps * dt, _burnBy != null && IsInstanceValid(_burnBy) ? _burnBy : null);
+    }
+
     /// <summary>Running away from <see cref="FleeFrom"/> for this long (the jack-in-the-box, M-29).</summary>
     public float FleeTime { get; private set; }
     public Vector3 FleeFrom { get; private set; }

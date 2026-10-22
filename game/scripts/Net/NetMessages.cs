@@ -130,6 +130,8 @@ public struct NetPlayerState
     public int ActiveSlot;
     /// <summary>Tap dance steps (M-29): the client walks its own survivor, so it needs them.</summary>
     public int TapStacks;
+    /// <summary>Mad scientist size (0 none, 1 big, 2 small) + its level × 4.</summary>
+    public int Mad;
     public int Secondary, SecondaryMag, SecondaryReserve;
     public int Primary, PrimaryMag, PrimaryReserve; // Primary −1 = none
     public int Special, SpecialMag, SpecialReserve; // Special −1 = none
@@ -148,6 +150,7 @@ public struct NetPlayerState
         w.U8((int)Flags);
         w.U8(ActiveSlot);
         w.U8(TapStacks);
+        w.U8(Mad);
         w.U16(Secondary); w.U16(SecondaryMag); w.U16(SecondaryReserve);
         w.S16(Primary); w.U16(PrimaryMag); w.U16(PrimaryReserve);
         w.S16(Special); w.U16(SpecialMag); w.U16(SpecialReserve);
@@ -162,7 +165,7 @@ public struct NetPlayerState
         var s = new NetPlayerState
         {
             Peer = r.I32(), Position = r.Pos(), Aim = r.Pos(), Health = r.U8(), Medkits = r.U8(), BleedLeft = r.U8() / 4f,
-            Flags = (NetPlayerFlags)r.U8(), ActiveSlot = r.U8(), TapStacks = r.U8(),
+            Flags = (NetPlayerFlags)r.U8(), ActiveSlot = r.U8(), TapStacks = r.U8(), Mad = r.U8(),
             Secondary = r.U16(), SecondaryMag = r.U16(), SecondaryReserve = r.U16(),
             Primary = r.S16(), PrimaryMag = r.U16(), PrimaryReserve = r.U16(),
             Special = r.S16(), SpecialMag = r.U16(), SpecialReserve = r.U16(),
@@ -248,7 +251,7 @@ public sealed class NetSnapshot
 public enum NetEvent
 {
     EnemySpawn = 1, EnemyDeath, EnemyHit, EnemyAttack, EnemyAttackEnd, EnemyProjectile,
-    PlayerHit, Shot, Throw, BarrelExplode, World, PickupSpawn, Notice, StageEnd, LootSpawn, CardProp,
+    PlayerHit, Shot, Throw, BarrelExplode, World, PickupSpawn, Notice, StageEnd, LootSpawn, CardProp, EnemyBurn,
 }
 
 /// <summary>Enemy attack kinds for <see cref="NetEvent.EnemyAttack"/>.</summary>

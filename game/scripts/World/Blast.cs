@@ -13,7 +13,7 @@ public static class Blast
     public static void Explode(Stage stage, Vector3 at, float radius, float damage, Color color, Node? source = null, float selfShare = PlayerShare,
         float knockbackPower = 150f, Player? by = null)
     {
-        float scale = by != null && GodotObject.IsInstanceValid(by) ? by.DamageMultiplier : 1f;
+        float scale = by != null && GodotObject.IsInstanceValid(by) ? by.OutgoingDamage : 1f;
         stage.Effects.Explosion(at, radius, color);
         stage.Sfx.PlayAt("explosion", at + Vector3.Up, radius > 5 ? 2 : 0);
         stage.Effects.PaintSplat(at, 2f);

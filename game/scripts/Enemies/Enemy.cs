@@ -157,6 +157,8 @@ public partial class Enemy : CharacterBody3D
         Kick = Mathf.MoveToward(Kick, 0, dt * 5);
         AttackCooldown -= dt;
         FaceOverride = null;
+        BurnStep(dt);
+        if (IsDead) return;
         if (IsPuppet) { PuppetStep(dt); return; }
 
         Vector3 desired;

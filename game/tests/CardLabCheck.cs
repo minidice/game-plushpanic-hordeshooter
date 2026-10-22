@@ -795,6 +795,85 @@ public partial class CardLabCheck : Node
         Cards.Set(LabSpecial.JackBox, false);
         await Reset();
 
+        // ---------- new cards, batch 3: mad scientist goose · gather! (M-29 plan 16.6) ----------
+        player.Loadout.SetSlot(1, ArmoryCatalog.Weapon("m4"));
+        player.Loadout.SelectSlot(1);
+        // Team cards about each other need two people.
+        Check(!CardCatalog.SpecialPool(Cards).Any(c => c.Key == "s|Gather") && CardCatalog.SpecialPool(Cards).Any(c => c.Key == "s|MadScientist"),
+            "alone, gather! is never offered; the mad scientist is");
+        var buddy = Teammate(993, new Vector3(2, 0, 0));
+        await Frames(2);
+        Check(CardCatalog.SpecialPool(Cards).Any(c => c.Key == "s|Gather") && CardCatalog.FromKey("s|Gather", null)!.Grade == 6 &&
+              CardCatalog.FromKey("s|MadScientist", null)!.Grade == 7, "with a teammate gather! (grade 6) joins the pool; the mad scientist is grade 7");
+        // Mad scientist goose: everyone big or small, the card's level scales it; again on revive and every stretch.
+        int rolls = Cards.MadRolls;
+        Cards.Set(LabSpecial.MadScientist, true);
+        await Frames(2);
+        Check(player.MadSize != 0 && buddy.MadSize != 0 && Cards.MadRolls >= rolls + 2, "turned on, everyone becomes big or small at random");
+        foreach (var (who, size) in new[] { (player, 1), (buddy, -1) }) who.MadSize = size;
+        await Frames(1);
+        Check(player.MadBodyScale > 1.3f && player.MaxHealth > player.Definition.MaxHealth && player.OutgoingDamage > player.DamageMultiplier * 1.25f &&
+              player.MadSpeedScale < 1, $"big: larger (×{player.MadBodyScale:0.00}), more health ({player.MaxHealth}), harder hits, slower");
+        Check(buddy.MadBodyScale < .8f && buddy.MaxHealth < buddy.Definition.MaxHealth && buddy.MadSpeedScale > 1.2f && buddy.MadRollScale > 1.3f,
+            $"small: smaller (×{buddy.MadBodyScale:0.00}), less health ({buddy.MaxHealth}), faster, rolls further");
+        Check(CardCatalog.SpecialPool(Cards).Any(c => c.Key == "s|MadScientist|2"), "it comes back as Lv2 in the special pool");
+        float bigBefore = player.MadBodyScale;
+        CardCatalog.FromKey("s|MadScientist|2", Cards)!.Apply(player);
+        Check(Cards.SpecialLevel(LabSpecial.MadScientist) == 2 && player.MadBodyScale > bigBefore && CardCatalog.SpecialPool(Cards).Any(c => c.Key == "s|MadScientist|3"),
+            $"Lv2 makes it go further ({bigBefore:0.00} → {player.MadBodyScale:0.00}) and offers Lv3");
+        player.MadSize = 1;
+        buddy.MadSize = -1;
+        buddy.GlobalPosition = player.GlobalPosition + new Vector3(1.6f, 0, 0);
+        await Frames(2);
+        await Shot("mad-scientist");
+        rolls = Cards.MadRolls;
+        Cards.NewStretch();
+        Check(Cards.MadRolls == rolls + 2, "a new stretch rolls everyone again");
+        Cards.Set(LabSpecial.MadScientist, false);
+        await Frames(1);
+        Check(player.MadSize == 0 && buddy.MadSize == 0 && Mathf.IsEqualApprox(player.MadBodyScale, 1) && player.MaxHealth == player.Definition.MaxHealth,
+            "switched off, everyone is their own size again");
+
+        // Gather!: an anchor, a 6 m ring, +10% per person inside; damage → crit damage → fire rounds every 30 s.
+        Cards.Set(LabSpecial.Gather, true);
+        await Frames(2);
+        var anchor = Cards.GatherAnchor;
+        var other = anchor == player ? buddy : player;
+        Check(anchor != null && (anchor == player || anchor == buddy) && Cards.GatherEffect == 0, "turned on, someone is the anchor and the bonus is damage");
+        other.GlobalPosition = anchor!.GlobalPosition + new Vector3(3, 0, 0);
+        await Frames(2);
+        Check(Mathf.IsEqualApprox(anchor.GatherDamage, .2f) && Mathf.IsEqualApprox(other.GatherDamage, .2f) &&
+              Mathf.IsEqualApprox(anchor.OutgoingDamage, anchor.DamageMultiplier * anchor.MadDamageScale * 1.2f),
+            "two in the ring: +20% damage each");
+        await Shot("gather");
+        other.GlobalPosition = anchor.GlobalPosition + new Vector3(14, 0, 0);
+        await Frames(2);
+        Check(Mathf.IsEqualApprox(anchor.GatherDamage, .1f) && other.GatherDamage == 0, "outside the ring: no bonus; the anchor alone keeps +10%");
+        Cards.AdvanceGatherForTest(LabCards.GatherPeriod - LabCards.GatherWarn + .1f);
+        Check(Cards.GatherNext != null && Cards.GatherNext != anchor, "5 s before the change the next anchor is shown (never the same one)");
+        Cards.AdvanceGatherForTest(LabCards.GatherWarn);
+        Check(Cards.GatherAnchor != anchor && Cards.GatherEffect == 1 && Cards.GatherAnchor!.GatherCrit > 0 && Cards.GatherAnchor.GatherDamage == 0,
+            "after 30 s the anchor changes and the bonus turns to crit damage");
+        Cards.AdvanceGatherForTest(LabCards.GatherPeriod);
+        var fireAnchor = Cards.GatherAnchor!;
+        Check(Cards.GatherEffect == 2 && fireAnchor.GatherFire > 0, "then fire rounds");
+        fireAnchor.Loadout.SetSlot(1, ArmoryCatalog.Weapon("m4"));
+        fireAnchor.Loadout.SelectSlot(1);
+        var torch = await Common(OpenSpot(10));
+        torch.ScaleHealth(100);
+        float torchHealth = torch.Health;
+        Shoot(torch, fireAnchor, fireAnchor.Gun.Def.TypeId, 1);
+        await Frames(30);
+        Check(torch.BurnTime > 0 && torch.Health < torchHealth - 2 && torch.LastHitBy == fireAnchor, "a fire round sets the monster burning, counted for the shooter");
+        Check(CardCatalog.SpecialPool(Cards).Any(c => c.Key == "s|Gather|2"), "gather! comes back as Lv2");
+        CardCatalog.FromKey("s|Gather|2", Cards)!.Apply(player);
+        Check(Mathf.IsEqualApprox(Cards.GatherRadius, 7.5f) && Mathf.IsEqualApprox(Cards.GatherPerPerson, .12f), "Lv2: a 7.5 m ring, +12% a person");
+        Cards.Set(LabSpecial.Gather, false);
+        await Frames(1);
+        Check(player.GatherDamage == 0 && player.GatherCrit == 0 && player.GatherFire == 0 && buddy.GatherFire == 0, "switched off, nobody keeps a bonus");
+        Dismiss(buddy);
+        await Reset();
+
         // ---------- the training log ----------
         var logAt = OpenSpot(5);
         player.SetControls(Vector2.Zero, logAt + Vector3.Up, false);
