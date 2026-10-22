@@ -1,5 +1,6 @@
 using Godot;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace HordeShooter;
 
@@ -25,6 +26,7 @@ internal static class ArchitectureArt
         var root = Group(parent, "ArchitectureWall");
         if (size.Y < 1.3f && along && finish is WallFinish.Warehouse or WallFinish.Yard)
         {
+            parent.SetMeta("art_fence",true);
             // The low solid envelope remains: cloth/metal panels never suggest a walk-through gap.
             Fence(root, size.X, size.Y, finish == WallFinish.Warehouse, -size.Y/2);
             StaticArtBatch.Bake(root); return;
@@ -38,23 +40,79 @@ internal static class ArchitectureArt
             material.SetShaderParameter("lower_color",new Color(finish == WallFinish.Warehouse ? "405c69" : "426e65"));
             WallMaterials.Add((finish,along),material);
         }
-        var wall = Box(root, new Vector3(0,-.045f,0), size with { Y = size.Y-.09f }, "ffffff");
+        // Square structural ends meet flush. Rounding every separate wall used to open a seam at each junction.
+        var wall = Box(root, new Vector3(0,-.045f,0), size with { Y = size.Y-.09f }, "ffffff",false);
         wall.MaterialOverride = material;
         Vector3 strip = along ? new(size.X,.14f,size.Z+.035f) : new(size.X+.035f,.14f,size.Z);
         Box(root,new(0,-size.Y/2+.07f,0),strip,Foot);
-        Box(root,new(0,size.Y/2-.045f,0),strip with {Y=.09f},Trim);
+        // The top coping is generated as a union in JoinWalls, not two overlapping caps at corners.
         if(size.Y>1.3f && finish!=WallFinish.Yard)
             Box(root,new(0,1.14f-size.Y/2,0),strip with {Y=.035f},Trim);
         float length=along?size.X:size.Z;
         // Pilasters and end caps are within the old wall footprint (no new invisible obstacles).
-        for(float t=-length/2+.09f;t<length/2;t+=4.8f)
+        for(float t=-length/2+2.4f;t<length/2-.55f;t+=4.8f)
         {
             var at=along?new Vector3(t,0,0):new Vector3(0,0,t);
             var column=along?new Vector3(.16f,size.Y-.14f,size.Z+.05f):new Vector3(size.X+.05f,size.Y-.14f,.16f);
             Box(root,at-new Vector3(0,.05f,0),column,finish==WallFinish.Warehouse?Steel:Trim);
         }
-        var end=along?new Vector3(length/2-.045f,0,0):new Vector3(0,0,length/2-.045f);
-        Box(root,end-new Vector3(0,.05f,0),along?new(.09f,size.Y-.14f,size.Z+.035f):new(size.X+.035f,size.Y-.14f,.09f),Trim);
+        StaticArtBatch.Bake(root);
+    }
+
+    /// <summary>Build shared corner posts and a non-overlapping union of horizontal coping faces.
+    /// Bodies are axis-aligned map walls; height changes clip the lower coping against the taller wall.</summary>
+    public static void JoinWalls(Node parent,IReadOnlyList<(Node3D Body,Vector3 Size)> walls)
+    {
+        var pieces=new List<(Rect2 Rect,float Top)>();
+        var posts=new Dictionary<Vector2,float>();
+        Rect2 Footprint((Node3D Body,Vector3 Size) w)=>new(w.Body.Position.X-w.Size.X/2,w.Body.Position.Z-w.Size.Z/2,w.Size.X,w.Size.Z);
+        foreach(var w in walls)
+            if(!w.Body.HasMeta("art_fence"))pieces.Add((Footprint(w),w.Body.Position.Y+w.Size.Y/2));
+        for(int i=0;i<walls.Count;i++)for(int j=i+1;j<walls.Count;j++)
+        {
+            var a=Footprint(walls[i]);var b=Footprint(walls[j]);
+            if(!a.Grow(.002f).Intersects(b))continue;
+            var start=new Vector2(Mathf.Max(a.Position.X,b.Position.X),Mathf.Max(a.Position.Y,b.Position.Y));
+            var end=new Vector2(Mathf.Min(a.End.X,b.End.X),Mathf.Min(a.End.Y,b.End.Y));
+            var at=((start+end)/2).Snapped(Vector2.One*.01f);
+            float top=Mathf.Max(walls[i].Body.Position.Y+walls[i].Size.Y/2,walls[j].Body.Position.Y+walls[j].Size.Y/2);
+            posts[at]=Mathf.Max(posts.GetValueOrDefault(at),top);
+        }
+        var root=Group(parent,"WallJunctions");
+        foreach(var(at,top)in posts)
+        {
+            Box(root,new Vector3(at.X,(top-.09f)/2,at.Y),new Vector3(.46f,top-.09f,.46f),Trim,false);
+            pieces.Add((new Rect2(at-Vector2.One*.23f,Vector2.One*.46f),top));
+        }
+        // Coordinate subdivision makes one top face per occupied cell, including L/T corners.
+        var xs=pieces.SelectMany(p=>new[]{p.Rect.Position.X,p.Rect.End.X}).Distinct().Order().ToArray();
+        var zs=pieces.SelectMany(p=>new[]{p.Rect.Position.Y,p.Rect.End.Y}).Distinct().Order().ToArray();
+        using var mesh=new SurfaceTool();mesh.Begin(Mesh.PrimitiveType.Triangles);
+        void Quad(Vector3 a,Vector3 b,Vector3 c,Vector3 d,Vector3 n)
+        {
+            if((b-a).Cross(c-a).Dot(n)>0)(b,d)=(d,b);
+            foreach(var p in new[]{a,b,c,a,c,d}){mesh.SetNormal(n);mesh.AddVertex(p);}
+        }
+        foreach(float h in pieces.Select(p=>p.Top).Distinct())
+        {
+            var mask=new bool[xs.Length-1,zs.Length-1];
+            for(int x=0;x<xs.Length-1;x++)for(int z=0;z<zs.Length-1;z++)
+            {
+                var mid=new Vector2((xs[x]+xs[x+1])/2,(zs[z]+zs[z+1])/2);
+                mask[x,z]=pieces.Any(p=>Mathf.IsEqualApprox(p.Top,h)&&p.Rect.HasPoint(mid))&&!pieces.Any(p=>p.Top>h+.001f&&p.Rect.HasPoint(mid));
+            }
+            for(int x=0;x<xs.Length-1;x++)for(int z=0;z<zs.Length-1;z++)if(mask[x,z])
+            {
+                var a=new Vector3(xs[x],h,zs[z]);var b=new Vector3(xs[x+1],h,zs[z]);
+                var c=new Vector3(xs[x+1],h,zs[z+1]);var d=new Vector3(xs[x],h,zs[z+1]);var down=Vector3.Down*.09f;
+                Quad(a,b,c,d,Vector3.Up);
+                if(z==0||!mask[x,z-1])Quad(a,a+down,b+down,b,Vector3.Forward);
+                if(z==zs.Length-2||!mask[x,z+1])Quad(d,c,c+down,d+down,Vector3.Back);
+                if(x==0||!mask[x-1,z])Quad(a,d,d+down,a+down,Vector3.Left);
+                if(x==xs.Length-2||!mask[x+1,z])Quad(b,b+down,c+down,c,Vector3.Right);
+            }
+        }
+        mesh.SetMaterial(Mat.Solid(Trim));mesh.Index();root.AddChild(new MeshInstance3D { Name="JoinedCoping",Mesh=mesh.Commit() });
         StaticArtBatch.Bake(root);
     }
 

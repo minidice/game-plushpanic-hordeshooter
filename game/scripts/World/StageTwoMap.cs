@@ -272,13 +272,13 @@ public sealed class StageTwoMap : StageMap
         // Far side (−Z), each zone from just past its own walkable edge.
         DressEdge(new Rect2(-2.4f, far, 22.4f, -9.6f - far), EdgeSide.Far, rocky: true);
         DressEdge(new Rect2(20, far, StreamX0 - 20, -9.6f - far), EdgeSide.Far);
-        DressEdge(new Rect2(StreamX0, far, StreamX1 - StreamX0, -14 - far), EdgeSide.Far);
+        DressEdge(new Rect2(StreamX0, far, StreamX1 - StreamX0, -14 - far), EdgeSide.Far, ground: false);
         DressEdge(new Rect2(StreamX1, far, 100 - StreamX1, -10.6f - far), EdgeSide.Far, rocky: true);
         DressEdge(new Rect2(100, far, 14, -4.6f - far), EdgeSide.Far);
         // Camera side (+Z): low only.
         DressEdge(new Rect2(-2.4f, 9.6f, 22.4f, near - 9.6f), EdgeSide.Near);
         DressEdge(new Rect2(20, 9.2f, StreamX0 - 20, near - 9.2f), EdgeSide.Near);
-        DressEdge(new Rect2(StreamX0, 12, StreamX1 - StreamX0, near - 12), EdgeSide.Near);
+        DressEdge(new Rect2(StreamX0, 12, StreamX1 - StreamX0, near - 12), EdgeSide.Near, ground: false);
         DressEdge(new Rect2(StreamX1, 10.6f, 100 - StreamX1, near - 10.6f), EdgeSide.Near);
         DressEdge(new Rect2(100, 4.6f, 14, near - 4.6f), EdgeSide.Near);
         // Past both ends of the route.

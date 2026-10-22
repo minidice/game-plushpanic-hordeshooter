@@ -17,6 +17,7 @@ public abstract partial class StageMap
     protected readonly RandomNumberGenerator _rng = new();
     private readonly List<(Vector3 center, Vector3 size)> _floors = new();
     private readonly List<(Vector3 center, Vector3 size)> _solids = new();
+    protected readonly List<(Node3D Body,Vector3 Size)> ArtWalls = new();
 
     /// <summary>
     /// The map for a mode: Onslaught plays its open field, the scenario the stage it has reached (Stage 2 after the
@@ -90,6 +91,8 @@ public abstract partial class StageMap
         Mode = mode;
         _rng.Seed = 1;
         BuildMap();
+        foreach(var (body,size) in ArtWalls) DrawWall(body,size);
+        if(this is StageOneLayout or StageTwoMap) ArchitectureArt.JoinWalls(_stage,ArtWalls);
         ApplyFlow();
     }
 
@@ -135,7 +138,7 @@ public abstract partial class StageMap
     {
         var wallSize = new Vector3(x1 - x0, height, z1 - z0);
         var body = Solid(new Vector3((x0 + x1) / 2, height / 2, (z0 + z1) / 2), wallSize, color, false);
-        if (drawWall) DrawWall(body, wallSize);
+        if (drawWall) ArtWalls.Add((body,wallSize));
         // Low camera-side fences get an invisible tall collider so nobody gets launched out of the map.
         if (height < 2f)
         {
@@ -192,6 +195,7 @@ public abstract partial class StageMap
             _stage.AddChild(holder);
         }
         model.Scale = Vector3.One * scale;
+        if (this is StageTwoMap) FoliageArt.ReplaceTree(model,id);
         holder.AddChild(model);
         KitProps.Add(holder);
         return holder;

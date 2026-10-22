@@ -8,7 +8,7 @@ namespace HordeShooter;
 internal static class OutdoorEdgeArt
 {
     private static readonly Dictionary<int,ArrayMesh> Rocks = new();
-    private static readonly Dictionary<int,ArrayMesh> Pines = new();
+
     private static readonly StandardMaterial3D Stone = new() { VertexColorUseAsAlbedo=true, VertexColorIsSrgb=true, Roughness=.96f };
 
     public static ArrayMesh Rock(int variant)
@@ -57,50 +57,6 @@ internal static class OutdoorEdgeArt
         s.SetMaterial(Stone);var mesh=s.Commit();Rocks.Add(variant,mesh);return mesh;
     }
 
-    private static ArrayMesh Pine(int variant)
-    {
-        if(Pines.TryGetValue(variant,out var mesh))return mesh;
-        using var s=new SurfaceTool();s.Begin(Mesh.PrimitiveType.Triangles);
-        var rng=new RandomNumberGenerator{Seed=(ulong)(920+variant)};
-        void Tri(Vector3 a,Vector3 b,Vector3 c,Color color)
-        {
-            var normal=(b-a).Cross(c-a).Normalized();
-            if(normal.Dot(new Vector3((a.X+b.X+c.X)/3,.12f,(a.Z+b.Z+c.Z)/3))<0)normal=-normal;
-            if((b-a).Cross(c-a).Dot(normal)>0)(b,c)=(c,b);
-            foreach(var p in new[]{a,b,c}){s.SetNormal(normal);s.SetColor(color);s.AddVertex(p);}
-        }
-        // A visible short trunk under overlapping, scalloped branch skirts.
-        for(int i=0;i<7;i++)
-        {
-            float a=Mathf.Tau*i/7,b=Mathf.Tau*(i+1)/7;
-            var p=new Vector3(Mathf.Cos(a)*.06f,0,Mathf.Sin(a)*.06f);
-            var q=new Vector3(Mathf.Cos(b)*.06f,0,Mathf.Sin(b)*.06f);
-            Tri(p,q,q+Vector3.Up*.7f,new Color("544f3c"));Tri(p,q+Vector3.Up*.7f,p+Vector3.Up*.7f,new Color("544f3c"));
-        }
-        for(int layer=0;layer<4;layer++)
-        {
-            float y=.4f+layer*.62f,r=.76f-layer*.14f;
-            var rim=new Vector3[12];var shoulder=new Vector3[12];
-            for(int i=0;i<12;i++)
-            {
-                float angle=Mathf.Tau*i/12+layer*.37f;
-                float w=r*rng.RandfRange(.85f,1.10f)*(i%2==0?1:.87f);
-                rim[i]=new Vector3(Mathf.Cos(angle)*w,y+rng.RandfRange(-.09f,.07f),Mathf.Sin(angle)*w);
-                shoulder[i]=new Vector3(Mathf.Cos(angle)*r*.7f+.04f,y+.31f,Mathf.Sin(angle)*r*.7f);
-            }
-            var top=new Vector3(.07f,y+1.04f,-.025f);
-            for(int i=0;i<12;i++)
-            {
-                int j=(i+1)%12;
-                var col=new Color(layer==3?"638746":layer==2?"4b7548":"355e46").Darkened(rng.RandfRange(0,.1f));
-                Tri(rim[i],rim[j],shoulder[j],col.Darkened(.12f));Tri(rim[i],shoulder[j],shoulder[i],col.Darkened(.12f));
-                Tri(shoulder[i],shoulder[j],top,col);
-                Tri(new Vector3(0,y+.07f,0),rim[j],rim[i],new Color("294e3c"));
-            }
-        }
-        s.SetMaterial(Stone);mesh=s.Commit();Pines.Add(variant,mesh);return mesh;
-    }
-
     public static void Grove(Node parent,float from,float to,float edge,int seed)
     {
         var rng=new RandomNumberGenerator{Seed=(ulong)seed};
@@ -114,7 +70,7 @@ internal static class OutdoorEdgeArt
                 var basis=new Basis(Vector3.Up,rng.RandfRange(0,Mathf.Tau)).Scaled(new Vector3(size,size*rng.RandfRange(.88f,1.2f),size));
                 transforms.Add(new Transform3D(basis,new Vector3(x,-.08f,z)));
             }
-            var multi=new MultiMesh{TransformFormat=MultiMesh.TransformFormatEnum.Transform3D,Mesh=Pine(variant),InstanceCount=transforms.Count};
+            var multi=new MultiMesh{TransformFormat=MultiMesh.TransformFormatEnum.Transform3D,Mesh=FoliageArt.Mesh(FoliageArt.Kind.Pine,variant),InstanceCount=transforms.Count};
             for(int i=0;i<transforms.Count;i++)multi.SetInstanceTransform(i,transforms[i]);
             parent.AddChild(new MultiMeshInstance3D{Name="ClosePineGrove",Multimesh=multi},true);
         }

@@ -30,6 +30,7 @@ public partial class EnvironmentReview : Node
         bool failed = false;
         try
         {
+            if(Windowed) { DisplayServer.WindowMoveToForeground(); OS.LowProcessorUsageMode=false; Engine.MaxFps=120; }
             var args = OS.GetCmdlineUserArgs();
             _tag = args.FirstOrDefault(a => a.StartsWith("--tag="))?.Substring(6) ?? "after";
             if (_tag.Any(c => !char.IsLetterOrDigit(c) && c != '-')) throw new Exception("tag must be a file name fragment");
@@ -81,6 +82,28 @@ public partial class EnvironmentReview : Node
             .OrderBy(s => s, StringComparer.Ordinal).ToArray();
         _contracts[prefix + "-world"] = Hash(string.Join("\n", shapes));
         Check(shapes.Length > 0, prefix + " has world collisions");
+        if (number == 2)
+        {
+            var river = new Rect2(60.3f,-28,7.4f,56);
+            foreach(var ground in _stage.GetChildren().OfType<MeshInstance3D>().Where(m=>m.MaterialOverride is ShaderMaterial material && material.Shader.ResourcePath=="res://shaders/woodland_ground.gdshader"))
+            {
+                var plane=(PlaneMesh)ground.Mesh;
+                var footprint=new Rect2(ground.Position.X-plane.Size.X/2,ground.Position.Z-plane.Size.Y/2,plane.Size.X,plane.Size.Y);
+                Check(ground.Position.Y<-.38f || !river.Intersects(footprint.Grow(-.001f)),"woodland ground never covers stream water");
+                Check(ground.Position.Y>-.03f && ground.Position.Y<0,"woodland continuation lies above soil fill and below the painted ground");
+            }
+            Check(!_stage.FindChildren("edge_*", nameof(MultiMeshInstance3D), true, false).Any(),
+                "rectangular foliage-band meshes are absent from Stage 2");
+            var floors = new[]{new Rect2(-2,-9,22,18),new Rect2(20,-7,40.3f,14),new Rect2(67.7f,-10,32.3f,20),new Rect2(100.4f,-3.8f,11.4f,7.6f)};
+            foreach(var grove in (Windowed ? _stage.GetChildren() : new Godot.Collections.Array<Node>()).OfType<MultiMeshInstance3D>().Where(m=>m.Name.ToString().StartsWith("Woodland")))
+                for(int i=0;i<grove.Multimesh.InstanceCount;i++)
+                {
+                    var box=grove.Multimesh.GetInstanceTransform(i)*grove.Multimesh.Mesh.GetAabb();
+                    if(floors.Any(r=>r.Intersects(new Rect2(box.Position.X,box.Position.Z,box.Size.X,box.Size.Z))))
+                        throw new Exception("Woodland crown overlaps playable floor: "+box);
+                }
+            if(Windowed)Check(true,"woodland crowns stay outside playable floors, including region corners");
+        }
         if(number == 2 && _stage.FindChild("FarGround",true,false) is MeshInstance3D farGround)
             Check(farGround.GlobalPosition.Y + farGround.GetAabb().End.Y < -.38f,
                 "the background ground lies below the stream water (-0.38m), not across its surface");
@@ -88,7 +111,9 @@ public partial class EnvironmentReview : Node
             : new[] { _stage.Map.PlayerStart, new Vector3(64, 0, 0), new Vector3(100.2f, 0, 0) })
             Check(!_stage.Flow.IsBlocked(at), prefix + " open passage " + at);
 
-        if (!Windowed || mode != GameMode.Scenario) return;
+        if (!Windowed || mode != GameMode.Scenario || OS.GetCmdlineUserArgs().Contains("--contracts")) return;
+        bool foliage = OS.GetCmdlineUserArgs().Contains("--foliage");
+        if(foliage && number!=2)return;
         bool services = OS.GetCmdlineUserArgs().Contains("--services");
         if (services && number != 1) return;
         if(number == 2)
@@ -115,6 +140,8 @@ public partial class EnvironmentReview : Node
                 ("yard", new Vector3(82,0,0)), ("near", new Vector3(38,0,5.7f)), ("far", new Vector3(38,0,-5.7f)), ("end", new Vector3(108,0,0)) };
         if (services) shots = new[] { ("street-service", new Vector3(29,0,-4.8f)),
             ("hall-service", new Vector3(68,0,-8.5f)), ("yard-service", new Vector3(101,0,-6.5f)) };
+        if(foliage)shots=new[]{("forest",new Vector3(38,0,-3)),("far",new Vector3(38,0,-5.7f)),
+            ("end",new Vector3(108,0,0)),("back",new Vector3(108,0,-3)),("near",new Vector3(38,0,5.7f))};
         foreach (var (name, at) in shots)
         {
             _stage.Player.TeleportTo(at);

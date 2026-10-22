@@ -52,6 +52,31 @@ public partial class EnvironmentGeometryCheck : Node3D
                         "shutter frame triangles stay out of the raised slab envelope");
                 }
             portal.Free();
+            // Junction coping is a union: each point on a shared L/T/straight top is covered exactly once.
+            foreach(string junction in new[]{"L","T","straight","height"})
+            {
+                var root=new Node3D();AddChild(root);
+                var walls=new List<(Node3D Body,Vector3 Size)>();
+                void Wall(Vector3 at,Vector3 size){var node=new Node3D { Position=at };root.AddChild(node);walls.Add((node,size));}
+                Wall(new Vector3(2,1.5f,0),new Vector3(4,3,.4f));
+                if(junction=="straight")Wall(new Vector3(6,1.5f,0),new Vector3(4,3,.4f));
+                else Wall(new Vector3(junction=="T"?2:4,junction=="height"?2:1.5f,1.8f),new Vector3(.4f,junction=="height"?4:3,4));
+                ArchitectureArt.JoinWalls(root,walls);
+                var tris=root.FindChildren("*",nameof(MeshInstance3D),true,false).Cast<MeshInstance3D>().SelectMany(m=>Triangles(m.Mesh)).ToArray();
+                foreach(var w in walls)
+                {
+                    float h=w.Body.Position.Y+w.Size.Y/2;
+                    foreach(float fraction in new[]{-.47f,-.13f,.11f,.47f})
+                    {
+                        var p=new Vector2(w.Body.Position.X+w.Size.X*fraction,w.Body.Position.Z+w.Size.Z*.13f);
+                        if(walls.Any(v=>v.Size.Y>h+.01f&&new Rect2(v.Body.Position.X-v.Size.X/2,v.Body.Position.Z-v.Size.Z/2,v.Size.X,v.Size.Z).HasPoint(p)))continue;
+                        int covers=tris.Count(t=>Mathf.Abs(t.a.Y-h)<.001f&&Mathf.Abs(t.b.Y-h)<.001f&&Mathf.Abs(t.c.Y-h)<.001f&&
+                            Geometry2D.PointIsInsideTriangle(p,new Vector2(t.a.X,t.a.Z),new Vector2(t.b.X,t.b.Z),new Vector2(t.c.X,t.c.Z)));
+                        Check(covers==1,junction+" coping has one surface at "+p+" ("+covers+")");
+                    }
+                }
+                root.Free();
+            }
             GD.Print("ENVIRONMENT_GEOMETRY_CHECK_PASS "+_checks);
         }
         catch(Exception e){failed=true;GD.PushError(e.ToString());}
