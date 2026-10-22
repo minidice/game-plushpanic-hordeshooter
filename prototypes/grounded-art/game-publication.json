@@ -1,0 +1,22 @@
+{
+  "goose": {
+    "path": "game\\assets\\characters\\goose\\goose-fitted.glb",
+    "original_sha256": "3d2d2a0e85488f77748ffd07f061d1a298bfb20f2fe28279983b1ca9b858b2be",
+    "bytes": 1330408
+  },
+  "duck": {
+    "path": "game\\assets\\characters\\duck\\duck-fitted.glb",
+    "original_sha256": "edb60acf6a1e58428c6bddbeaa81f96a0c6ca91b04b5e3f705c677c1ff5be429",
+    "bytes": 1330880
+  },
+  "raccoon": {
+    "path": "game\\assets\\characters\\raccoon\\raccoon-fitted.glb",
+    "original_sha256": "9bb93e037cd072b655a0ecaa755c6bd3c4f17e5ce62f1b74a0110348983ffc10",
+    "bytes": 1360120
+  },
+  "redpanda": {
+    "path": "game\\assets\\characters\\redpanda\\redpanda-fitted.glb",
+    "original_sha256": "db5bb4df71496bac238c1cbc70ab0dfda550ed0c49746ecb804e99ce1319aed3",
+    "bytes": 1372012
+  }
+}

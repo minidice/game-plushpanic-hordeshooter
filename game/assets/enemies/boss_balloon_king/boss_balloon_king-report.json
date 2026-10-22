@@ -1,7 +1,7 @@
 {
   "id": "boss_balloon_king",
   "source_triangles": 7728,
-  "triangles": 3752,
+  "triangles": 3690,
   "meshes": 8,
   "materials": [
     "king_blue_balloon",
@@ -11,7 +11,7 @@
     "king_gold",
     "king_ink"
   ],
-  "bytes": 124916,
+  "bytes": 111224,
   "nodes": [
     "boss_balloon_king_root",
     "Body",
@@ -36,6 +36,8 @@
   ],
   "forward": "+Z",
   "notes": "No bones. Boss arm, leg and foot pivots retained for runtime object animation.",
+  "source_open_edges": 0,
+  "open_edges": 0,
   "body_dimensions": {
     "width": 0.8189393877983093,
     "depth": 0.7417692542076111

@@ -22,7 +22,7 @@ internal static class CharacterEarMesh
     private static Shape For(string species,int style)=>style switch
     {
         1=>new Shape(.37f,.27f,.06f,.050f,0f),    // round
-        2=>new Shape(.27f,.42f,.48f,.040f,0f),    // pointed
+        2=>new Shape(.27f,.46f,.48f,.040f,0f),    // pointed: stays taller than the new authored default
         3=>new Shape(.31f,.35f,.30f,.045f,1.35f), // folded tip
         _=>species=="redpanda"?new Shape(.35f,.35f,.40f,.048f,0f):new Shape(.32f,.28f,.10f,.048f,0f),    // default: rounded triangle
     };

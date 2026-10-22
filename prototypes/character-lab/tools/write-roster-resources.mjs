@@ -7,7 +7,7 @@ for(const [index,kind] of players.entries()) {
   const text=`[gd_resource type="Resource" script_class="CharacterDefinition" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/Characters/CharacterDefinition.cs" id="1_def"]
-[ext_resource type="PackedScene" path="res://assets/characters/${kind}/${kind}.glb" id="2_model"]
+[ext_resource type="PackedScene" path="res://assets/characters/${kind}/${kind}-fitted.glb" id="2_model"]
 
 [resource]
 script = ExtResource("1_def")

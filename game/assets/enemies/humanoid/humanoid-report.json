@@ -1,7 +1,7 @@
 {
   "id": "humanoid",
   "source_triangles": 11160,
-  "triangles": 4223,
+  "triangles": 4140,
   "meshes": 6,
   "materials": [
     "infected_cloth",
@@ -11,7 +11,7 @@
     "infected_skin",
     "infected_trim"
   ],
-  "bytes": 123404,
+  "bytes": 109972,
   "nodes": [
     "humanoid_root",
     "Body",
@@ -31,5 +31,7 @@
     "humanoid_rightArm"
   ],
   "forward": "+Z",
-  "notes": "No bones. Runtime object pivots. Beret included for runtime visibility. Source vertex colors preserved."
+  "notes": "No bones. Runtime object pivots. Beret included for runtime visibility. Source vertex colors preserved.",
+  "source_open_edges": 0,
+  "open_edges": 0
 }

@@ -77,14 +77,14 @@ public partial class CorpseReactionCheck : Node3D
             var lyingAt = toppled.GlobalTransform;
             Check(toppled.Rig!.Rotation.X > 1.4f, "a named corpse starts upright and falls over");
             float lowest = float.PositiveInfinity;
-            ulong until = Time.GetTicksMsec() + (ulong)((Effects.ToppleSeconds + Effects.ReboundSeconds) * 1000) + 300;
+            ulong until = Time.GetTicksMsec() + (ulong)(Effects.NamedDeathMaxSeconds * 1000) + 300;
             while (Time.GetTicksMsec() < until)
             {
                 await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
                 lowest = Mathf.Min(lowest, MinimumMeshY(toppled.Rig!));
             }
             Check(lowest >= -.02f, $"it never sinks into the floor while falling (lowest {lowest:0.000} m)");
-            Check(toppled.Rig!.Rotation.Length() < .01f && toppled.GlobalTransform.IsEqualApprox(lyingAt), "and ends lying in its fixed pose, its body never moved");
+            Check(Mathf.Abs(toppled.Rig!.GlobalBasis.Y.Dot(Vector3.Up)) < .35f && toppled.GlobalTransform.IsEqualApprox(lyingAt), "and ends lying on its side, its body never moved");
             await Frames(90);
             Check(named.Rig!.Visible && !named.Rig.IsSilhouette, "death restores full corpse materials from a living silhouette");
             var fresh = _stage.Spawn(MonsterDatabase.Get("humanoid"), _origin + new Vector3(2, 0, -1), true);
@@ -178,9 +178,10 @@ public partial class CorpseReactionCheck : Node3D
         float bottom = float.PositiveInfinity;
         if (node is MeshInstance3D mesh && mesh.IsVisibleInTree())
         {
-            var bounds = mesh.GetAabb();
-            for (int corner = 0; corner < 8; corner++)
-                bottom = Mathf.Min(bottom, (mesh.GlobalTransform * bounds.GetEndpoint(corner)).Y);
+            if (mesh.Mesh != null && !mesh.HasMeta("authored_grip"))
+                for (int s = 0; s < mesh.Mesh.GetSurfaceCount(); s++)
+                    foreach (var vertex in mesh.Mesh.SurfaceGetArrays(s)[(int)Mesh.ArrayType.Vertex].AsVector3Array())
+                        bottom = Mathf.Min(bottom, (mesh.GlobalTransform * vertex).Y);
         }
         foreach (Node child in node.GetChildren()) bottom = Mathf.Min(bottom, MinimumMeshY(child));
         return bottom;

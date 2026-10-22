@@ -441,13 +441,13 @@ public partial class Enemy : CharacterBody3D
         if (_meleeTime >= MeleeWindup + MeleeRecovery) CancelMelee();
     }
 
-    protected void CancelMelee()
+    protected void CancelMelee(bool resetPose = true)
     {
         _meleeTime = -1;
         _meleeHit = false;
         _meleeTarget = null;
         _meleeCore = null;
-        Rig?.ResetEnemyAttackPose();
+        if (resetPose) Rig?.ResetEnemyAttackPose();
     }
 
     /// <summary>Weaker (or tougher) than the data says, set right after spawning (Survivor's weak masses).</summary>
@@ -530,7 +530,8 @@ public partial class Enemy : CharacterBody3D
     public virtual void Die(Vector3 direction, float force)
     {
         if (IsDead) return;
-        CancelMelee();
+        // Keep the last visible pose for the named collapse, while cancelling all attack logic.
+        CancelMelee(resetPose: !Monster.KeepsCorpse);
         IsDead = true;
         Stage.OnEnemyDied(this);
         Stage.RaiseEnemyKilled(this, direction, force);

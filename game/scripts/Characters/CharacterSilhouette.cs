@@ -39,6 +39,8 @@ public partial class CharacterRig
             Code = """
                 shader_type spatial;
                 render_mode unshaded, cull_back;
+                #include "res://shaders/character_grip_deform.gdshaderinc"
+                void vertex() { deform_grip(VERTEX, NORMAL); }
                 uniform vec4 body : source_color = vec4(0.06, 0.08, 0.11, 1.0);
                 uniform vec4 rim : source_color = vec4(0.52, 0.62, 0.78, 1.0);
                 // 1 = every pixel drawn. Lower values leave a 4x4 ordered-dither pattern of holes.

@@ -17,6 +17,7 @@ public partial class CharacterHitFlashEffect : Node
     };
     private readonly List<(MeshInstance3D Mesh, Material? Original, Material Flash)> _meshes = new();
     private readonly Dictionary<Material, Material> _overlayCopies = new();
+    private ShaderMaterial? _gripFlash;
     private float _remaining;
     private Color _tint = Colors.White;
 
@@ -30,6 +31,7 @@ public partial class CharacterHitFlashEffect : Node
         _remaining = Duration;
         _tint = critical ? DamageBurstEffect.CriticalColor : Colors.White;
         _white.AlbedoColor = new Color(_tint, PeakAlpha);
+        _gripFlash?.SetShaderParameter("flash_color",_white.AlbedoColor);
         foreach (var entry in _meshes) entry.Mesh.MaterialOverlay = entry.Flash;
         SetProcess(true);
     }
@@ -40,7 +42,11 @@ public partial class CharacterHitFlashEffect : Node
         {
             // While a silhouette is draining off (CharacterRig.ShowAs) the real overlay is parked in meta.
             var original = mesh.HasMeta(CharacterRig.BaseOverlayMeta) ? mesh.GetMeta(CharacterRig.BaseOverlayMeta).Obj as Material : mesh.MaterialOverlay;
-            _meshes.Add((mesh, original, original == null ? _white : CopyOverlay(original)));
+            // The overlay must deform with the same instance parameters as the visible wing.
+            Material flash=CharacterGripSurface.IsSurface(mesh)
+                ? _gripFlash??=new ShaderMaterial{Shader=GD.Load<Shader>("res://shaders/character_grip_flash.gdshader"),RenderPriority=127}
+                : original == null ? _white : CopyOverlay(original);
+            _meshes.Add((mesh, original, flash));
         }
         foreach (var child in node.GetChildren()) CacheMeshes(child);
     }
@@ -59,6 +65,7 @@ public partial class CharacterHitFlashEffect : Node
     {
         _remaining = Mathf.Max(0, _remaining - (float)delta);
         _white.AlbedoColor = new Color(_tint, PeakAlpha * _remaining / Duration);
+        _gripFlash?.SetShaderParameter("flash_color",_white.AlbedoColor);
         if (_remaining > 0) return;
         foreach (var entry in _meshes)
             if (IsInstanceValid(entry.Mesh) && entry.Mesh.MaterialOverlay == entry.Flash)

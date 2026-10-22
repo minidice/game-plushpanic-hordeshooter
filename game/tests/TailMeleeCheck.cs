@@ -86,11 +86,14 @@ public partial class TailMeleeCheck : Node
             var arrays=mesh.SurfaceGetArrays(surface);
             var vertices=arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array();
             var normals=arrays[(int)Mesh.ArrayType.Normal].AsVector3Array();
-            for(int i=0;i<vertices.Length;i+=3)
+            var indices=arrays[(int)Mesh.ArrayType.Index].VariantType==Variant.Type.PackedInt32Array?arrays[(int)Mesh.ArrayType.Index].AsInt32Array():Array.Empty<int>();
+            int count=indices.Length>0?indices.Length:vertices.Length;
+            for(int i=0;i<count;i+=3)
             {
-                var face=(vertices[i+1]-vertices[i]).Cross(vertices[i+2]-vertices[i]);
+                int a=indices.Length>0?indices[i]:i,b=indices.Length>0?indices[i+1]:i+1,c=indices.Length>0?indices[i+2]:i+2;
+                var face=(vertices[b]-vertices[a]).Cross(vertices[c]-vertices[a]);
                 // Clockwise front faces must oppose the mathematical cross product.
-                Check(face.Dot(normals[i]+normals[i+1]+normals[i+2])<-.0000001f,species+" tail triangle has consistent outward facing");
+                Check(face.LengthSquared()>1e-18f&&face.Normalized().Dot((normals[a]+normals[b]+normals[c]).Normalized())<-.01f,species+" tail triangle has consistent outward facing");
             }
         }
     }

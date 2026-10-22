@@ -1,7 +1,7 @@
 {
   "id": "balloon",
   "source_triangles": 7080,
-  "triangles": 2264,
+  "triangles": 2240,
   "meshes": 8,
   "materials": [
     "balloon_body",
@@ -9,7 +9,7 @@
     "balloon_ink",
     "balloon_white"
   ],
-  "bytes": 71812,
+  "bytes": 66612,
   "nodes": [
     "balloon_root",
     "Body",
@@ -34,6 +34,8 @@
   ],
   "forward": "+Z",
   "notes": "No bones. Named arm, leg, foot and tail pivots retained for runtime object animation.",
+  "source_open_edges": 0,
+  "open_edges": 0,
   "body_dimensions": {
     "width": 0.7200000286102295,
     "depth": 0.6600000262260437

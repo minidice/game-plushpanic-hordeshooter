@@ -141,7 +141,7 @@ public partial class Effects : Node3D
         tween.Chain().TweenCallback(FreeLater(label));
     }
 
-    /// <summary>Move a character's visuals onto a tumbling rigid body (the "bowling pin" death).</summary>
+    /// <summary>Common bodies tumble; named bodies keep a fixed record while their visuals collapse by body shape.</summary>
     public RigidBody3D SpawnCorpse(CharacterRig rig, float radius, float height, Vector3 impulse, Vector3 torque, MonsterDefinition? monster = null, bool critical = false)
     {
         DeathBurst(rig, critical);
@@ -158,15 +158,20 @@ public partial class Effects : Node3D
         body.AddChild(new CollisionShape3D { Shape = new CapsuleShape3D { Radius = radius, Height = Mathf.Max(height, radius * 2.05f) } });
         AddChild(body);
         var origin = rig.GlobalPosition;
+        var visualOrigin = origin;
+        float deathSide = Mathf.Sin(rig.GlobalRotation.Y * 7.3f) >= 0 ? 1 : -1;
+        var deathPose = monster?.KeepsCorpse == true ? new CharacterRig.DeathPose(rig, monster.Id, deathSide) : null;
         if (monster?.KeepsCorpse == true)
         {
             var ground = Rays.Cast(this, origin + Vector3.Up * .5f, origin + Vector3.Down * 100, Layers.World);
             if (ground.HasValue) origin = ground.Value.Position;
         }
         body.GlobalPosition = origin + Vector3.Up * height * .5f;
-        rig.ResetPose();
-        // Limp, not a statue (I-83). The roll side follows the facing, so every PC poses a named corpse the same way.
-        rig.ApplyDeathPose(Mathf.Sin(rig.GlobalRotation.Y * 7.3f) >= 0 ? 1 : -1);
+        if (deathPose == null)
+        {
+            rig.ResetPose();
+            rig.ApplyDeathPose(deathSide);
+        }
         rig.Visible = true; // corpses are scenery, even if the enemy died outside the vision cone
         rig.ShowAs(VisionSystem.Visibility.Visible);
         rig.Reparent(body);
@@ -187,12 +192,8 @@ public partial class Effects : Node3D
             rig.Rotation = Vector3.Zero;
             body.FreezeMode = RigidBody3D.FreezeModeEnum.Static;
             body.Freeze = true;
-            rig.SetSquash(.2f);
-            float bottom = RestingMeshBottom(rig);
-            if (float.IsFinite(bottom))
-                body.GlobalPosition += Vector3.Up * Mathf.Max(0, origin.Y + .02f - bottom);
             body.NamedRecord.DeathYaw = yaw;
-            Topple(body, rig, origin);
+            Topple(rig, origin, visualOrigin, yaw, deathSide, deathPose!);
         }
         return body;
     }
@@ -208,52 +209,36 @@ public partial class Effects : Node3D
             def.ColliderHeight, def.ColliderRadius, true, critical);
     }
 
-    public const float ToppleSeconds = .45f, ReboundSeconds = .22f;
+    public const float NamedDeathMaxSeconds = .8f;
 
     /// <summary>
-    /// A named corpse is placed at its fixed resting pose at once (T-16); only its look falls there: the model starts
-    /// upright where the monster stood and tips over onto the body, then flops (I-83).
+    /// The named collision body and record remain fixed (T-16). Only the visuals move,
+    /// entering from the current pose and settling their actual surface onto the ground (I-83).
     /// </summary>
-    private static void Topple(Corpse body, CharacterRig rig, Vector3 feet)
+    private static void Topple(CharacterRig rig, Vector3 feet, Vector3 visualOrigin, float yaw, float side, CharacterRig.DeathPose pose)
     {
-        var restPosition = rig.Position;
-        var restRotation = rig.Rotation;
-        var upright = new Vector3(Mathf.Pi * .5f, 0, 0);
-        var startPosition = body.ToLocal(feet);
-        void Pose(float t)
+        var facing = Basis.FromEuler(new Vector3(0, yaw, 0));
+        rig.GlobalBasis = facing;
+        rig.GlobalPosition = visualOrigin;
+        var surface = new CorpseSurface(rig);
+        float initialBottom = surface.Bottom();
+        float initialGap = float.IsFinite(initialBottom) ? Mathf.Max(.02f, initialBottom - feet.Y) : .02f;
+        void Pose(float elapsed)
         {
             if (!IsInstanceValid(rig)) return;
-            // Falls faster and faster, then a small rebound where the head end lifts and drops again.
-            float fall = Mathf.Min(t / ToppleSeconds, 1);
-            float rebound = t > ToppleSeconds ? Mathf.Sin(Mathf.Pi * Mathf.Min((t - ToppleSeconds) / ReboundSeconds, 1)) * .12f : 0;
-            rig.Rotation = upright.Lerp(restRotation, fall * fall) + new Vector3(rebound, 0, 0);
-            rig.Position = startPosition.Lerp(restPosition, fall * fall);
-            // Splayed feet and the swing can reach below the floor for a moment: lift so nothing sinks into it.
-            float bottom = RestingMeshBottom(rig);
-            if (float.IsFinite(bottom) && bottom < feet.Y) rig.GlobalPosition += Vector3.Up * (feet.Y - bottom);
+            float t = Mathf.Clamp(elapsed / pose.Duration, 0, 1);
+            pose.Sample(t);
+            rig.GlobalBasis = facing * Basis.FromEuler(pose.Tilt(t));
+            float shift = Mathf.SmoothStep(0, 1, Mathf.Clamp((t - .2f) / .65f, 0, 1));
+            rig.GlobalPosition = feet + facing * new Vector3(-side * rig.Definition.ColliderHeight * .10f * shift, 0, 0);
+            float bottom = surface.Bottom();
+            float clearance = Mathf.Lerp(initialGap, .02f, Mathf.SmoothStep(0, 1, Mathf.Min(t / .32f, 1)));
+            if (float.IsFinite(bottom)) rig.GlobalPosition += Vector3.Up * (feet.Y + clearance - bottom);
         }
         Pose(0);
         var tween = rig.CreateTween();
-        tween.TweenMethod(Callable.From<float>(Pose), 0f, ToppleSeconds + ReboundSeconds, ToppleSeconds + ReboundSeconds);
-        tween.TweenCallback(Callable.From(() =>
-        {
-            if (!IsInstanceValid(rig)) return;
-            rig.Rotation = restRotation;
-            rig.Position = restPosition;
-        }));
-    }
-
-    private static float RestingMeshBottom(Node node)
-    {
-        float bottom = float.PositiveInfinity;
-        if (node is MeshInstance3D mesh && mesh.IsVisibleInTree())
-        {
-            var bounds = mesh.GetAabb();
-            for (int corner = 0; corner < 8; corner++)
-                bottom = Mathf.Min(bottom, (mesh.GlobalTransform * bounds.GetEndpoint(corner)).Y);
-        }
-        foreach (Node child in node.GetChildren()) bottom = Mathf.Min(bottom, RestingMeshBottom(child));
-        return bottom;
+        tween.TweenMethod(Callable.From<float>(Pose), 0f, pose.Duration, pose.Duration);
+        tween.TweenCallback(Callable.From(() => Pose(pose.Duration)));
     }
 
     private void Burst(Vector3 at, Vector3 direction, Color color, int amount, float speed, float size)

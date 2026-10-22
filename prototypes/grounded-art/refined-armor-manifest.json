@@ -1,0 +1,91 @@
+{
+  "status": "offline basic armor candidate 04; not game integrated",
+  "protected_files_sha256": {
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\source\\goose-field-kit.blend": "48460c9358dfe53d67d9721788938d67c1cec3c203af9127bc66148288e0738b",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-field-kit.glb": "7abcf7578bd092d51f06330591fa2e0c720d779d95a9dbb91cf92b5382438a69",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\source\\goose-workwear.blend": "22bb86f17baf11de376f704b7d21f4c4f3a3bfbd5395ec942cb45e98f1f4ae25",
+    "D:\\Project\\Game\\game-hordeshooter\\game\\assets\\characters\\goose\\goose.glb": "3d2d2a0e85488f77748ffd07f061d1a298bfb20f2fe28279983b1ca9b858b2be",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\source\\goose-wrap-armor.blend": "a0ce80542ff64713aa66c934813f64c43aa168e6ccfaa3ab552339fa1fa7700f",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-wrap-armor.glb": "9b9a6295b4828c562dd8d80620052087224483792a2797d627ca9819c5233d83"
+  },
+  "unchanged_meshes": {
+    "goose_beak_mesh": "232142c24a393963e42ec2826360b5a003c0dca963f2cde6983c2e02c237554b",
+    "goose_leftBrow_mesh": "9b20006bb8581c2e65c7cb05b1bba4e8f4bada19dd866ba2abe7c701f356b13d",
+    "goose_leftEye_mesh": "c8edd7b88ed05d97145da40e5befd6e5f480ddd9d911a6bb0dab5ccff82f537f",
+    "goose_rightBrow_mesh": "d48c70737096ff15e130528895807cc8fc4ba393a85d972fd31b38b954343b2e",
+    "goose_rightEye_mesh": "b573c9fad4bd49e6b7bbb6692232770a31b6dcf69f0454e182abbc16d9d8cd56",
+    "goose_leftArm_mesh": "328b9aaff7dded04eddc2ebe6cdd2f05da4d0f9c0c8d30ed9a68d0dd42217ba9",
+    "goose_leftFoot_mesh": "6c65fb8570c58a104c01f7922a08f152cb60c1add4aeffb93d28a43debc623d8",
+    "goose_rightArm_mesh": "db2e19fa1d603526c9e32369de605273126ea8f1b53ff23274cf2038f97366d1",
+    "goose_rightFoot_mesh": "b29a662f9ea29e021000837b134bc05d6e28d8cd360b509d9d5b3a7b7c40507c",
+    "goose_tail_mesh": "d598f20680e007e9dc709c57004de972701985cb8b0d3a0ce121d863d354109b",
+    "goose_torso_mesh": "564bbe710b8f0fa99ca2a6a8fefbd20bf0dc342ec50b4d721b7d48fdebd10919",
+    "goose_helmet_field_mesh": "656cd870f80ca25b883920c9f853de9e0f497f14b3d86f2d7d4620f9d5981a3c",
+    "goose_pack_field_mesh": "e7e093f9b38db81f42394128d69c97ab8446b738abf5bc50cd63289d23af66d8"
+  },
+  "candidate": {
+    "triangles": 28546,
+    "mesh_objects": 14,
+    "materials": 20,
+    "bounds_min": [
+      -0.5516014695167542,
+      -0.6790671944618225,
+      0.015999944880604744
+    ],
+    "bounds_max": [
+      0.5499624013900757,
+      0.6898864507675171,
+      2.0448315143585205
+    ]
+  },
+  "vest": {
+    "triangles": 7068,
+    "mesh_objects": 1,
+    "materials": 3,
+    "bounds_min": [
+      -0.5052717924118042,
+      -0.4582698345184326,
+      0.6150000095367432
+    ],
+    "bounds_max": [
+      0.5052717924118042,
+      0.45227178931236267,
+      1.3409314155578613
+    ]
+  },
+  "before_vest": {
+    "triangles": 15644,
+    "mesh_objects": 1,
+    "materials": 3,
+    "bounds_min": [
+      -0.5190981030464172,
+      -0.5522664189338684,
+      0.6080718040466309
+    ],
+    "bounds_max": [
+      0.5190981030464172,
+      0.45456257462501526,
+      1.3560621738433838
+    ]
+  },
+  "axes": "Blender Z up/-Y front; glTF Y up/+Z front",
+  "wing_opening": {
+    "center_angle": 1.18,
+    "half_angle": 0.56,
+    "center_height": 0.925,
+    "lower_radius": 0.24,
+    "upper_radius": 0.27,
+    "profile_exponent": 0.7
+  },
+  "limitations": [
+    "Original wing motion probes are not the procedural weapon-grip arms used by Godot.",
+    "No game integration, body-slider, reload, death or performance validation."
+  ],
+  "fit_allowance_metres": 0.02052180477551052,
+  "material_changes": {
+    "helmet": "green painted shell, roughness 0.46, metallic 0.05",
+    "vest": "dark fabric 0.91, webbing 0.90, binding 0.94; no texture maps"
+  },
+  "render_contract": "Both models in identical neutral lighting, then identical cool ambient/warm key lighting. No postprocess retouch.",
+  "geometry_changes": "Flatter front and back, slanted neckline, shaped armholes, flat bindings; three broad bands replace pouch blocks."
+}

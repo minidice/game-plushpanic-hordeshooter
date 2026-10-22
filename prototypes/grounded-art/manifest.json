@@ -1,0 +1,181 @@
+{
+  "status": "review candidate; not integrated into game",
+  "date": "2026-10-22",
+  "source": "source/reference/goose-original.glb",
+  "source_sha256": "3d2d2a0e85488f77748ffd07f061d1a298bfb20f2fe28279983b1ca9b858b2be",
+  "source_game_path": "game/assets/characters/goose/goose.glb",
+  "units": "metres",
+  "export_axes": "+Y up, +Z front",
+  "blender_axes": "+Z up, -Y front",
+  "unchanged_body_sha256": "564bbe710b8f0fa99ca2a6a8fefbd20bf0dc342ec50b4d721b7d48fdebd10919",
+  "unchanged_meshes": {
+    "goose_beak_mesh": "232142c24a393963e42ec2826360b5a003c0dca963f2cde6983c2e02c237554b",
+    "goose_leftBrow_mesh": "9b20006bb8581c2e65c7cb05b1bba4e8f4bada19dd866ba2abe7c701f356b13d",
+    "goose_leftEye_mesh": "c8edd7b88ed05d97145da40e5befd6e5f480ddd9d911a6bb0dab5ccff82f537f",
+    "goose_rightBrow_mesh": "d48c70737096ff15e130528895807cc8fc4ba393a85d972fd31b38b954343b2e",
+    "goose_rightEye_mesh": "b573c9fad4bd49e6b7bbb6692232770a31b6dcf69f0454e182abbc16d9d8cd56",
+    "goose_leftArm_mesh": "5ad6a28c76276b289c669cd51d4186bce7fcdba179cf75b45db7e0d9d59ef1ab",
+    "goose_leftFoot_mesh": "64ba787a6bc53ef52537fc043e2917ff9a8d59c3eb6eb177e1d4be2e620e427c",
+    "goose_rightArm_mesh": "9de07b084091c8da778bb9366a825f861e746ab833077e9e96da203691a35923",
+    "goose_rightFoot_mesh": "788ecbe05c6cb867f47d53e433ea2428cfe31f6df291b25ed6bacb92c6a22e38",
+    "goose_tail_mesh": "d598f20680e007e9dc709c57004de972701985cb8b0d3a0ce121d863d354109b",
+    "goose_torso_mesh": "564bbe710b8f0fa99ca2a6a8fefbd20bf0dc342ec50b4d721b7d48fdebd10919"
+  },
+  "original_default": {
+    "mesh_objects": 14,
+    "triangles": 20975,
+    "materials": 27,
+    "bounds_min": [
+      -0.5516014695167542,
+      -0.6790671944618225,
+      0.015999941155314445
+    ],
+    "bounds_max": [
+      0.5499624013900757,
+      0.7009999752044678,
+      2.049947500228882
+    ]
+  },
+  "candidate": {
+    "mesh_objects": 14,
+    "triangles": 26914,
+    "materials": 19,
+    "bounds_min": [
+      -0.5516014695167542,
+      -0.6790671944618225,
+      0.015999941155314445
+    ],
+    "bounds_max": [
+      0.5499624013900757,
+      0.6898864507675171,
+      2.0448315143585205
+    ]
+  },
+  "equipment": {
+    "mesh_objects": 3,
+    "triangles": 11716,
+    "materials": 7,
+    "bounds_min": [
+      -0.4856080412864685,
+      -0.5449358820915222,
+      0.6252447366714478
+    ],
+    "bounds_max": [
+      0.4945727586746216,
+      0.6539799571037292,
+      2.0448315143585205
+    ]
+  },
+  "parts": {
+    "goose_helmet": {
+      "mesh_objects": 1,
+      "triangles": 4340,
+      "materials": 4,
+      "bounds_min": [
+        -0.46699997782707214,
+        -0.4050000011920929,
+        1.625
+      ],
+      "bounds_max": [
+        0.46699997782707214,
+        0.4050000011920929,
+        2.0448315143585205
+      ]
+    },
+    "goose_vest": {
+      "mesh_objects": 1,
+      "triangles": 5436,
+      "materials": 4,
+      "bounds_min": [
+        -0.4856080412864685,
+        -0.5449358820915222,
+        0.6252447366714478
+      ],
+      "bounds_max": [
+        0.4945727586746216,
+        0.44851773977279663,
+        1.472126841545105
+      ]
+    },
+    "goose_pack": {
+      "mesh_objects": 1,
+      "triangles": 1940,
+      "materials": 4,
+      "bounds_min": [
+        -0.2767600119113922,
+        0.3230358362197876,
+        0.7000000476837158
+      ],
+      "bounds_max": [
+        0.2767600119113922,
+        0.6539799571037292,
+        1.3803011178970337
+      ]
+    }
+  },
+  "original_parts": {
+    "goose_helmet": {
+      "mesh_objects": 1,
+      "triangles": 2110,
+      "materials": 6,
+      "bounds_min": [
+        -0.5322800278663635,
+        -0.4671284854412079,
+        1.593623161315918
+      ],
+      "bounds_max": [
+        0.5320172905921936,
+        0.45765435695648193,
+        2.049947500228882
+      ]
+    },
+    "goose_vest": {
+      "mesh_objects": 1,
+      "triangles": 2557,
+      "materials": 3,
+      "bounds_min": [
+        -0.5181850790977478,
+        -0.5339999794960022,
+        0.3767957091331482
+      ],
+      "bounds_max": [
+        0.5181850790977478,
+        0.4351503252983093,
+        1.0667181015014648
+      ]
+    },
+    "goose_pack": {
+      "mesh_objects": 1,
+      "triangles": 1110,
+      "materials": 6,
+      "bounds_min": [
+        -0.3100000023841858,
+        0.3349999785423279,
+        0.565000057220459
+      ],
+      "bounds_max": [
+        0.3100000023841858,
+        0.7009999752044678,
+        1.2899999618530273
+      ]
+    }
+  },
+  "files": [
+    "assets/goose-field-kit.glb",
+    "assets/goose-equipment-only.glb",
+    "source/goose-field-kit.blend"
+  ],
+  "preserved_attachment_nodes": [
+    "goose_helmet",
+    "goose_vest",
+    "goose_pack"
+  ],
+  "material_contract": "Existing goose materials untouched. 7 new equipment materials, standard glTF PBR; shared webbing/hardware are not runtime color channels.",
+  "render_contract": "Both imported from identical source; default helmet, vest and pack; alternate hats, hair, headset, goggles, padded vest and built-in gun excluded equally. No runtime Godot shader or appearance overrides.",
+  "limitations": [
+    "Idle pose only; original wings and feet unchanged.",
+    "No Godot/multiplayer/animation/performance validation.",
+    "Outfit candidate replaces only default equipment; alternate variants are empty pivots.",
+    "Shared trim materials need a deliberate runtime customization mapping before integration."
+  ]
+}

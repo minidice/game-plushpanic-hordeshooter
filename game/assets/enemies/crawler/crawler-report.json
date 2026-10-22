@@ -1,7 +1,7 @@
 {
   "id": "crawler",
   "source_triangles": 10008,
-  "triangles": 3787,
+  "triangles": 3708,
   "meshes": 6,
   "materials": [
     "infected_cloth.001",
@@ -11,7 +11,7 @@
     "infected_skin.001",
     "infected_trim.001"
   ],
-  "bytes": 113032,
+  "bytes": 101084,
   "nodes": [
     "crawler_root",
     "Body",
@@ -31,5 +31,7 @@
     "crawler_rightArm"
   ],
   "forward": "+Z",
-  "notes": "No bones. Runtime object pivots. Beret included for runtime visibility. Source vertex colors preserved."
+  "notes": "No bones. Runtime object pivots. Beret included for runtime visibility. Source vertex colors preserved.",
+  "source_open_edges": 0,
+  "open_edges": 0
 }

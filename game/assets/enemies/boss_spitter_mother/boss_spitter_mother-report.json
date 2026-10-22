@@ -1,7 +1,7 @@
 {
   "id": "boss_spitter_mother",
   "source_triangles": 6704,
-  "triangles": 3352,
+  "triangles": 3282,
   "meshes": 8,
   "materials": [
     "mother_cream",
@@ -10,7 +10,7 @@
     "mother_minion_pouches",
     "mother_skin"
   ],
-  "bytes": 114828,
+  "bytes": 101444,
   "nodes": [
     "boss_spitter_mother_root",
     "Body",
@@ -35,6 +35,8 @@
   ],
   "forward": "+Z",
   "notes": "No bones. Boss arm, leg and foot pivots retained for runtime object animation.",
+  "source_open_edges": 64,
+  "open_edges": 54,
   "body_dimensions": {
     "width": 1.4038962125778198,
     "depth": 1.2239192724227905
