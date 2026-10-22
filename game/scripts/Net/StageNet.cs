@@ -259,6 +259,13 @@ public partial class StageNet : Node
         _batch.Begin(NetEvent.EnemyBurn); _batch.W.U16(enemy.NetId); _batch.W.U8(Mathf.Clamp(Mathf.RoundToInt(seconds * 10), 0, 255));
     }
 
+    /// <summary>Host: a monster melts in the honk beam; clients show the pink glow.</summary>
+    public void OnEnemyWeak(Enemy enemy, float seconds)
+    {
+        if (Role != NetRole.Host || enemy.NetId == 0) return;
+        _batch.Begin(NetEvent.EnemyWeak); _batch.W.U16(enemy.NetId); _batch.W.U8(Mathf.Clamp(Mathf.RoundToInt(seconds * 10), 0, 255));
+    }
+
     public void OnBarrelExplode(ExplosiveBarrel barrel)
     {
         if (Role != NetRole.Host) return;
@@ -647,6 +654,13 @@ public partial class StageNet : Node
                 var target = r.Pos();
                 if (thrower == null || thrower == _stage.Player) break;
                 ThrownItem.Throw(_stage, def, from, target, thrower);
+                break;
+            }
+            case NetEvent.EnemyWeak:
+            {
+                int id = r.U16();
+                float seconds = r.U8() / 10f;
+                if (_enemies.TryGetValue(id, out var melting) && IsInstanceValid(melting)) melting.ShowWeak(seconds);
                 break;
             }
             case NetEvent.EnemyBurn:

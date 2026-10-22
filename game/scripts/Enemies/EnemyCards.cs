@@ -19,6 +19,36 @@ public partial class Enemy
     /// <summary>Seconds left sticky (찍찍이): sticky monsters near each other clump together.</summary>
     public float StickyTime { get; set; }
     public bool Sticky => StickyTime > 0;
+    /// <summary>Melting in the honk beam (M-29 16.6.2): takes double damage, slower, flies further, for this long.</summary>
+    public float WeakTime { get; private set; }
+    private float _weakSlow, _weakKnock = 1, _weakTick;
+    /// <summary>What every hit's damage is multiplied by now (2 while melting).</summary>
+    public float DamageTakenScale => WeakTime > 0 ? 2 : 1;
+
+    public void Weaken(float seconds, float slow, float knock)
+    {
+        if (IsDead) return;
+        bool fresh = WeakTime <= 0;
+        WeakTime = Mathf.Max(WeakTime, seconds);
+        _weakSlow = slow;
+        _weakKnock = knock;
+        if (fresh && !IsPuppet) Stage.Net?.OnEnemyWeak(this, WeakTime);
+    }
+
+    /// <summary>Client: the host says it melts; the pink glow only.</summary>
+    public void ShowWeak(float seconds) => WeakTime = Mathf.Max(WeakTime, seconds);
+
+    private void WeakStep(float dt, ref Vector3 desired)
+    {
+        if (WeakTime <= 0) return;
+        WeakTime -= dt;
+        desired *= 1 - _weakSlow;
+        _weakTick -= dt;
+        if (_weakTick > 0) return;
+        _weakTick = .3f;
+        Stage.Effects.Puff(GlobalPosition + Vector3.Up * (.4f + Rng.Randf() * .9f), .35f, new Color("ff9ccc"));
+    }
+
     /// <summary>Burning (gather!'s fire rounds, M-29): hurts every frame for this long, with flames.</summary>
     public float BurnTime { get; private set; }
     private float _burnDps, _flameTick;

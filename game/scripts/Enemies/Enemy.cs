@@ -159,7 +159,13 @@ public partial class Enemy : CharacterBody3D
         FaceOverride = null;
         BurnStep(dt);
         if (IsDead) return;
-        if (IsPuppet) { PuppetStep(dt); return; }
+        if (IsPuppet)
+        {
+            var none = Vector3.Zero;
+            WeakStep(dt, ref none);
+            PuppetStep(dt);
+            return;
+        }
 
         Vector3 desired;
         if (StunTime > 0)
@@ -194,6 +200,7 @@ public partial class Enemy : CharacterBody3D
             FlinchTime -= dt;
             desired *= .25f;
         }
+        WeakStep(dt, ref desired);
         bool floating = CardStep(ref desired, dt);
         desired += Stage.Crowd.Separation(this) * 2.2f;
         Knock = Knock.MoveToward(Vector3.Zero, dt * 14f);
@@ -345,7 +352,7 @@ public partial class Enemy : CharacterBody3D
         if (IsDead || damage <= 0) return;
         if (IsPuppet) { Rig.FlashHit(); return; }
         if (by != null) LastHitBy = by;
-        Health -= damage;
+        Health -= damage * DamageTakenScale;
         Rig.FlashHit();
         Wake();
         Hurt = Mathf.Max(Hurt, .3f);
@@ -462,7 +469,7 @@ public partial class Enemy : CharacterBody3D
         if (IsPuppet) { PuppetHit(hit.Point, hit.Direction, hit.Crit); return; }
         if (hit.Shooter != null) LastHitBy = hit.Shooter;
         Stage.Net?.OnEnemyHit(this, hit.Point, hit.Direction, hit.Crit);
-        Health -= hit.Damage;
+        Health -= hit.Damage * DamageTakenScale;
         if (hit.Damage > 0) Rig.FlashHit(hit.Crit);
         Hurt = 1;
         Wake();
@@ -485,7 +492,7 @@ public partial class Enemy : CharacterBody3D
     {
         if (power <= 0) return;
         CancelMelee();
-        Knock += direction * HordeShooter.Knockback.Hit(power) / Monster.Mass;
+        Knock += direction * HordeShooter.Knockback.Hit(power) * (WeakTime > 0 ? _weakKnock : 1) / Monster.Mass;
         FlinchTime = Mathf.Max(FlinchTime, Mathf.Clamp(power / Monster.Mass * .004f, .05f, .35f));
     }
 
@@ -499,7 +506,7 @@ public partial class Enemy : CharacterBody3D
         if (IsPuppet) { if (damage > 0) Rig.FlashHit(); Hurt = 1; return; }
         if (by != null) LastHitBy = by;
         Wake();
-        Health -= damage;
+        Health -= damage * DamageTakenScale;
         if (damage > 0) Rig.FlashHit();
         Hurt = 1;
         ApplyKnock(direction, power);

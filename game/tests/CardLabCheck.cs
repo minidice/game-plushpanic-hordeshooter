@@ -871,6 +871,77 @@ public partial class CardLabCheck : Node
         Cards.Set(LabSpecial.Gather, false);
         await Frames(1);
         Check(player.GatherDamage == 0 && player.GatherCrit == 0 && player.GatherFire == 0 && buddy.GatherFire == 0, "switched off, nobody keeps a bonus");
+        // ---------- batch 3-2: honk beam · static fluff ----------
+        await Reset();
+        player.Loadout.SetSlot(1, ArmoryCatalog.Weapon("m4"));
+        player.Loadout.SelectSlot(1);
+        Check(CardCatalog.FromKey("s|HonkBeam", null)!.Grade == 7 && CardCatalog.FromKey("s|StaticFluff", null)!.Grade == 7 &&
+              CardCatalog.SpecialPool(Cards).Any(c => c.Key == "s|HonkBeam") && CardCatalog.SpecialPool(Cards).Any(c => c.Key == "s|StaticFluff"),
+            "honk beam and static fluff are grade 7 team cards, offered with a teammate");
+        // Honk beam: someone gets 3 s of a red cone following their aim, then the beam.
+        Cards.Set(LabSpecial.HonkBeam, true);
+        Cards.AdvanceBeamForTest(Cards.BeamPeriod - LabCards.BeamTelegraph + .2f);
+        var beamer = Cards.BeamShooter;
+        var caught = beamer == player ? buddy : player;
+        Check(beamer != null && Cards.BeamTelegraphing, $"{LabCards.BeamTelegraph:0} s before the beam someone is picked and their cone shows");
+        beamer!.SetControls(Vector2.Zero, beamer.GlobalPosition + new Vector3(10, 1, 0), false);
+        caught.GlobalPosition = beamer.GlobalPosition + new Vector3(4, 0, .5f);
+        var burst = await Common(beamer.GlobalPosition + new Vector3(8, 0, -1));
+        var melted = _stage.Spawn(MonsterDatabase.Get("bull"), beamer.GlobalPosition + new Vector3(12, 0, 1), awake: false);
+        var behind = await Common(beamer.GlobalPosition + new Vector3(-6, 0, 0));
+        await Frames(2);
+        await Shot("honk-beam-telegraph");
+        beamer.Loadout.Equip(3, new WeaponState(ArmoryCatalog.Weapon("alabong")));
+        await Frames(1);
+        beamer.Loadout.Special!.Trigger(true, true);
+        Check(beamer.Loadout.Special.CooldownLeft > 0, "the beamer's slot 3 is recharging");
+        int bursts = Cards.BeamBursts;
+        Cards.AdvanceBeamForTest(LabCards.BeamTelegraph);
+        Check(Cards.Beams == 1 && Cards.BeamBursts > bursts && (!IsInstanceValid(burst) || burst.IsDead), "the beam bursts the commons in its cone");
+        Check(melted.WeakTime > 0 && Mathf.IsEqualApprox(melted.DamageTakenScale, 2), "a named one in it melts: double damage for a while");
+        Check(IsInstanceValid(behind) && !behind.IsDead, "nothing behind the beamer is touched");
+        Check(caught.DazeTime > 0 && caught.WeakTime > caught.DazeTime && caught.IsStunned == false && caught.OutgoingDamage < caught.DamageMultiplier * caught.MadDamageScale,
+            "a teammate in it is dazed, then weak (softer hits, slower)");
+        Check(beamer.Loadout.Special.CooldownLeft == 0 && beamer.DazeTime == 0, "the beamer gets slot 3 back at once and is not dazed");
+        await Shot("honk-beam");
+        Check(CardCatalog.SpecialPool(Cards).Any(c => c.Key == "s|HonkBeam|2"), "honk beam comes back as Lv2");
+        CardCatalog.FromKey("s|HonkBeam|2", Cards)!.Apply(player);
+        Check(Mathf.IsEqualApprox(Cards.BeamPeriod, 32), "Lv2: a beam every 32 s");
+        Cards.Set(LabSpecial.HonkBeam, false);
+        await Frames(Mathf.CeilToInt((LabCards.BeamDaze + LabCards.BeamWeak) * Engine.PhysicsTicksPerSecond) + 5);
+        Check(caught.DazeTime == 0 && caught.WeakTime == 0, "the daze and the weakness wear off");
+        await Reset();
+
+        // Static fluff: + or − each; opposite poles close drain health (to 20%), the same pole close makes rounds jump.
+        Cards.Set(LabSpecial.StaticFluff, true);
+        await Frames(2);
+        Check(player.Pole != 0 && buddy.Pole != 0, "turned on, everyone gets a pole");
+        player.Invulnerable = false;
+        player.Pole = 1;
+        buddy.Pole = -1;
+        buddy.GlobalPosition = player.GlobalPosition + new Vector3(2, 0, 0);
+        int hp = buddy.Health;
+        Cards.AdvanceStaticForTest(2);
+        Check(buddy.Health < hp && buddy.Health >= buddy.MaxHealth * LabCards.StaticFloor, $"opposite poles close: health drains ({hp} → {buddy.Health})");
+        Cards.AdvanceStaticForTest(40);
+        Check(buddy.Health == Mathf.CeilToInt(buddy.MaxHealth * LabCards.StaticFloor) || buddy.Pole == player.Pole, "it never goes below 20% (or the poles moved on)");
+        await Shot("static-fluff");
+        player.Pole = buddy.Pole = 1;
+        Cards.AdvanceStaticForTest(.1f);
+        Check(player.Charged && buddy.Charged, "the same pole close: both charged");
+        spot = OpenSpot(10);
+        var zapped = await Common(spot);
+        var jumpTo = await Common(spot + new Vector3(2, 0, 0));
+        foreach (var e in new[] { zapped, jumpTo }) e.ScaleHealth(100);
+        float jumpHealth = jumpTo.Health;
+        int jumps = Cards.StaticJumps;
+        Shoot(zapped, player, player.Gun.Def.TypeId, 20);
+        Check(Cards.StaticJumps > jumps && jumpTo.Health < jumpHealth && jumpTo.LastHitBy == player, "a charged survivor's round jumps on to a monster nearby");
+        await Shot("static-chain");
+        Check(CardCatalog.SpecialPool(Cards).Any(c => c.Key == "s|StaticFluff|2"), "static fluff comes back as Lv2");
+        Cards.Set(LabSpecial.StaticFluff, false);
+        player.Invulnerable = true;
+        Check(player.Pole == 0 && buddy.Pole == 0 && !player.Charged, "switched off, no poles");
         Dismiss(buddy);
         await Reset();
 

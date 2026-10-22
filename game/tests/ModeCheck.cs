@@ -333,9 +333,10 @@ public partial class ModeCheck : Node
               fours.Choices.Where(c => c != mystery).All(c => c.Key != mystery.Inner.Key && c.Grade is 3 or 4),
             "a grade 4 window with no grade 4 card yet: a \"?\" hiding a 3–4 and the nearest grade fills the rest, the hidden card not shown twice");
         var specials = CardCatalog.BossReward(rules.Cards, gradeRng, new float[] { 0, 0, 1 });
-        Check(specials.Grade == 7 && specials.Choices.Any(c => c.Inner?.Key == "s|GlassCannon" || c.Inner?.Grade >= 6 || rules.Cards.IsOn(LabSpecial.GlassCannon)) &&
+        // Grade 7 now has real cards (mad scientist; honk beam and static fluff with a teammate) besides the special "?".
+        Check(specials.Grade == 7 && specials.Choices.Any(c => c.Grade == 7) && specials.Choices.All(c => c.Inner == null || c.Inner.Grade >= 6) &&
               specials.Choices.All(c => c.Grade >= 5 || c.Key.StartsWith("r|")) && !specials.CanReroll,
-            "a special window has grades 5–7 (a special \"?\" hides a 6–7) and cannot be rerolled");
+            $"a special window has grades 5–7 (a special \"?\" hides a 6–7) and cannot be rerolled ({string.Join(", ", specials.Choices.Select(c => $"{c.Key}={c.Grade}"))})");
         stage.Players.Remove(fresh);
         fresh.QueueFree();
         // A "?" card picked: the slot machine shows what it was, and that card applies.

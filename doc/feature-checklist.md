@@ -31,7 +31,7 @@
 - [x] 난전 새 카드 1묶음(2026-10-22, M-29 4단계): 탭댄스 · 튕기는 탄(저격) · 꽥 충전(3번 칸) · 운명의 총 · 특별 "특수무기 2발", 카드 아이콘 16종(Codex) ([계획](onslaught-cards-plan.md) 16.6, [지시문](model-briefs/card-icons.md))
 - [x] 난전 새 카드 2묶음(2026-10-22, M-29 4단계): 단추 미사일(연사 계열) · 특별 "장난감 기차" · "깜짝 상자"(몹 도망 동작 새로), 모델 3종 · 아이콘 3장(Codex) ([계획](onslaught-cards-plan.md) 16.6, [지시문](model-briefs/card-props.md))
 - [x] 난전 새 카드 3묶음 3-1(2026-10-22, M-29 4단계): 특별 "미친 과학자 거위"(각자 크게 · 작게) · "모여라!"(기준인 사람 둘레 원 · 대미지 → 치명타 → 화염탄), 몹 불붙음 상태, 팀 특별 카드 Lv2 · Lv3 강화, 이펙트 스프라이트 · 아이콘(Codex, [지시문](model-briefs/card-fx.md))
-- [ ] 난전 새 카드 3묶음 3-2(M-29 4단계): 꽥 광선 · 정전기 솜
+- [x] 난전 새 카드 3묶음 3-2(2026-10-22, M-29 4단계): 특별 "꽥 광선"(경고 부채꼴 → 터짐 · 녹아내림 · 팀원 멍/약해짐) · "정전기 솜"(+ / − · 반대 극 체력 감소 · 같은 극 튐), Lv2 · Lv3 — **M-29 새 카드 전부**
 - [ ] 난전 개편(M-27) 나머지: 소환수 카드(기본 공격 강화 · 새 능력) · 각성, 총 분류별 카드 풀, 버프 줄 ([계획](onslaught-cards-plan.md))
 - [x] 사족 펫 모델 라이브러리(A-20): 거북이·강아지·토끼 기본형, 공용 등 무기 2종 교체/해제, 시각용 걷기. 세 종 형태 개선·고품질/저품질 6개 GLB·설정 저장/전환 포함. 거북이·토끼는 귀여움 기준으로 큰 머리/볼·짧은 몸/발 재조정, 게임 크기 전후 비교 확인. 모델 185개·메뉴 44개 검사와 6마리 렌더 확인. 모델 단계이며 추종·소환 카드·공격은 후속 ([규격](pet-model-spec.md)).
 - [x] 드론·부사수 모델 라이브러리(A-21): 드론4종×고/저, 공용 하부장비4종 교체, 기존 캐릭터60% 프리셋4종·기존 걷기/무기 잡기. 소환수 공용 품질 설정, 부사수는 자동LOD 조절. 모델253·펫185·메뉴44 검사 및 실제 렌더 확인. 추종·공격·소환카드는 후속 ([규격](companion-model-spec.md)).
@@ -182,6 +182,12 @@
 
 - C# 빌드 경고 · 오류 0. 새 `StageTransitionCheck` 143(헤드리스 · 창 모드 모두), `Start-Game.ps1 -Test` → `Integration` 148, `MapCheck` 24, `VisionTierCheck` 23, `SupplyCheck` 12, `SquadCheck` 50, `ModeCheck` 123, `SpawnCheck` 41, `AudioMixCheck` 6, `CombatPacingCheck` 44, `WeaponHandlingCheck` 36, `NetSyncCheck` 32, `MenuCheck` 44, `LobbyCheck` 31 통과. 전환 소품은 Blender 스크립트 단언 통과(삼각형 · 부위 · 뚜껑 방향).
 - 렌더 `output/transition-0-stage1-street.png`(비교용 Stage 1 실내 직교) → `transition-1-safehouse-hatch`(바닥 해치 · 길게 누르기 안내) → `-2-closing`(원 닫힘) → `-3-title`(STAGE 2 · 숲속 벙커길) → `-4-opening`(벙커 해치에서 원 열림) → `-5-arrival` · `-6-arrival-close`(야외 원근 기본 · 확대) → `-7-forest` · `-bridge` · `-yard` · `-safehouse`. 참고 영상 프레임과 비교해 전환 순서 · 주변 오브젝트 · 시점 변화가 대응함을 확인. 영상의 비 · 어두운 석양 색감은 미적용(I-91). 손으로 해 본 Stage 2 플레이 · 성능 · 멀티 다음 구역은 미확인(I-26 · I-90 · I-91).
+
+### 이번 변경 확인 기록 — 2026-10-22 (새 카드 3묶음 3-2: 꽥 광선 · 정전기 솜)
+
+- C# 빌드 경고 · 오류 0. `CardLabCheck` 155 → 172(헤드리스) · 173(창 모드): 두 카드 등급 7 · 팀원 있을 때 나옴, 꽥 광선(3초 전 기준 · 부채꼴, 터짐, 네임드 녹아내림 · 받는 피해 2배, 뒤쪽 안전, 팀원 멍 → 약해짐 · 대미지 감소, 쏜 사람 3번 칸 즉시 회복 · 멍 없음, Lv2 32초, 멍 · 약해짐 풀림), 정전기 솜(모두 극, 반대 극 체력 감소, 20% 바닥, 같은 극 충전, 튐 · 쏜 사람 몫, Lv2, 끄면 없음).
+- 헤드리스: `ModeCheck`가 처음에 1개 실패 — 특별 창 검사가 "등급 7은 ? 카드뿐"을 가정했는데 이제 진짜 등급 7 카드가 있어 ?가 안 들어갈 수 있음(정상 동작) → 검사를 "등급 7 카드가 하나 이상, ?가 있으면 6~7을 숨김"으로 고쳐 147 통과(2회). 나머지 `OnslaughtNetCheck` 29, `NetCodecCheck` 12, `NetSyncCheck` 32, `CompanionCheck` 39, `SquadCheck` 51, `SpawnCheck` 41, `SupplyCheck` 12, `MenuCheck` 44, `LobbyCheck` 31, `StageTransitionCheck` 164, `EnemyExpansion` 60, `CorpseTierCheck` 36, `Integration` 149 통과. 종료 경고(I-17)만.
+- 렌더 `output/cardlab-honk-beam-telegraph.png`(붉은 부채꼴 · "꽥 광선 3초 — 몹 쪽으로 겨누세요!") · `cardlab-honk-beam.png`(노란 광선 · 멍든 팀원 머리 위 별) · `cardlab-static-fluff.png` · `cardlab-static-chain.png`(머리 위 + 표시 · "정전기 솜: 나는 + · 바뀔 때까지 18초"). 화면이 붉은 것은 체력 감소 검사 뒤 체력 20/100의 경고 테두리.
 
 ### 이번 변경 확인 기록 — 2026-10-22 (새 카드 3묶음 3-1 · 프라이팬 피해 반)
 

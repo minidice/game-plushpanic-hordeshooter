@@ -176,3 +176,12 @@ ui_gather_crit,치명타 대미지
 ui_gather_fire,화염탄
 fmt_gather_hud,모여라! {0} +{1}% · 원 안 {2}/{3}명
 fmt_gather_out,모여라! 원 밖 — {0} 곁으로 ({1})
+name_card_honk_beam,꽥 광선
+desc_card_honk_beam,"팀 전원: 40초마다 한 명이 3초 뒤 손전등 크기 꽥 광선 발사 · 일반 몹은 터지고 네임드 · 보스는 12초 녹아내림(받는 피해 2배) · 맞은 팀원은 2초 멍 · 10초 약해짐"
+name_card_static_fluff,정전기 솜
+desc_card_static_fluff,"팀 전원: 30초마다 각자 + 또는 − · 다른 극끼리 4 m 안이면 찌릿(초당 체력 3% · 20%에서 멈춤) · 같은 극끼리면 총알이 근처 몹 1~2마리에게 튐"
+fx_card_honk_beam,꽥 광선!
+fmt_beam_you,꽥 광선 {0}초 — 몹 쪽으로 겨누세요!
+fmt_beam_other,꽥 광선: {0} {1}초 — 앞을 비키세요!
+fmt_beam_wait,꽥 광선까지 {0}초
+fmt_static_me,정전기 솜: 나는 {0} · 바뀔 때까지 {1}초

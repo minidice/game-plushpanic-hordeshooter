@@ -176,3 +176,12 @@ ui_gather_crit,crit damage
 ui_gather_fire,fire rounds
 fmt_gather_hud,Gather! {0} +{1}% · {2}/{3} in the ring
 fmt_gather_out,Gather! outside the ring — go to {0} ({1})
+name_card_honk_beam,Honk beam
+desc_card_honk_beam,"Whole team: every 40 s someone fires a flashlight-sized honk beam after 3 s · commons burst, named and bosses melt for 12 s (double damage taken) · teammates caught are dazed 2 s and weak 10 s"
+name_card_static_fluff,Static fluff
+desc_card_static_fluff,"Whole team: every 30 s each gets + or − · opposite poles within 4 m spark (3% health a second, stops at 20%) · the same pole together makes rounds jump to 1-2 monsters nearby"
+fx_card_honk_beam,HONK BEAM!
+fmt_beam_you,Honk beam in {0} s — aim at the monsters!
+fmt_beam_other,Honk beam: {0} in {1} s — get out of the way!
+fmt_beam_wait,Honk beam in {0} s
+fmt_static_me,Static fluff: you are {0} · {1} s until it changes

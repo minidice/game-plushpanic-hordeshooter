@@ -96,7 +96,29 @@ public partial class Player : CharacterBody3D
     /// <summary>Scales this survivor's weapon damage (AI squadmates hit softer, decisions.md M-12).</summary>
     public float DamageMultiplier { get; set; } = 1f;
     /// <summary>What this survivor's weapons multiply their damage by: cards' multiplier, gather!'s bonus, the mad scientist's size.</summary>
-    public float OutgoingDamage => DamageMultiplier * (1 + GatherDamage) * MadDamageScale;
+    public float OutgoingDamage => DamageMultiplier * (1 + GatherDamage) * MadDamageScale * (WeakTime > 0 ? 1 - HonkBeamWeakDamage : 1);
+
+    /// <summary>Caught in a teammate's honk beam (M-29 16.6.2): dazed (no moving, no shooting, stars), then weak (slower, softer).</summary>
+    public float DazeTime { get; set; }
+    public float WeakTime { get; set; }
+    public const float HonkBeamWeakSpeed = .4f, HonkBeamWeakDamage = .5f;
+    /// <summary>Static fluff's pole (M-29 16.6.3): 1 plus, −1 minus, 0 none. Sent to clients in the snapshot.</summary>
+    public int Pole { get; set; }
+    /// <summary>Static fluff: next to someone of the same pole, this survivor's rounds jump on to nearby monsters (host).</summary>
+    public bool Charged { get; set; }
+    private float _drainDebt;
+
+    /// <summary>Static fluff's spark between opposite poles: loses health, never below <paramref name="floor"/> of the max (never downs).</summary>
+    public void Drain(float amount, float floor)
+    {
+        if (IsDead || IsDowned || Invulnerable) return;
+        _drainDebt += amount;
+        int whole = Mathf.FloorToInt(_drainDebt);
+        if (whole <= 0) return;
+        _drainDebt -= whole;
+        int lowest = Mathf.CeilToInt(MaxHealth * floor);
+        if (Health > lowest) Health = Mathf.Max(lowest, Health - whole);
+    }
     /// <summary>Gather! (M-29 16.6.1): this survivor's bonus while in the ring — damage, crit damage or fire rounds (host-set, 0 = none).</summary>
     public float GatherDamage { get; set; }
     public float GatherCrit { get; set; }
@@ -320,8 +342,12 @@ public partial class Player : CharacterBody3D
         if (IsLocal && Stage.Role == NetRole.Client) RecordNetEdges();
         HeliumTime = Mathf.Max(0, HeliumTime - dt);
         RollCooldownLeft = Mathf.Max(0, RollCooldownLeft - dt);
-        bool stunned = StunTime > 0;
-        if (stunned) StunTime = Mathf.Max(0, StunTime - dt);
+        // A daze (honk beam) holds like a stun but keeps them on their feet.
+        bool knocked = StunTime > 0;
+        bool stunned = knocked || DazeTime > 0;
+        if (knocked) StunTime = Mathf.Max(0, StunTime - dt);
+        DazeTime = Mathf.Max(0, DazeTime - dt);
+        WeakTime = Mathf.Max(0, WeakTime - dt);
         UpdateHealing(dt, stunned);
 
         if (_rollPressed) TryStartRoll(stunned);
@@ -343,7 +369,7 @@ public partial class Player : CharacterBody3D
 
         var move = stunned || IsRestrained || Reviving != null || Weapons.Planted ? Vector3.Zero : new Vector3(_move.X, 0, _move.Y).LimitLength(1);
         float speed = Definition.MoveSpeed * (IsHealing ? .35f : 1f) * (Gun.Reloading ? .85f : 1f) * HandlingSpeedScale * (1 + TapStacks * LabCards.TapSpeedPerStack) *
-                      MadSpeedScale;
+                      MadSpeedScale * (WeakTime > 0 ? 1 - HonkBeamWeakSpeed : 1);
         bool grounded = IsOnFloor() && Velocity.Y <= 0;
         _push = _push.MoveToward(Vector3.Zero, dt * (grounded ? 10f : 1.2f));
         var horizontal = IsRestrained ? RestraintVelocity() : IsRolling ? _rollDirection * RollSpeed * MadRollScale : move * speed + _push;
@@ -362,7 +388,7 @@ public partial class Player : CharacterBody3D
         Rig.SetLocomotionPose(dt,move.Length(),_fire||_firePressed);
         Weapons.Tick(dt, move.LengthSquared() > .01f, _firePressed, _fire, busy);
 
-        UpdateTumble(dt, stunned);
+        UpdateTumble(dt, knocked);
         float amount = Mathf.Min(1, new Vector2(Velocity.X, Velocity.Z).Length() / Definition.MoveSpeed);
         Rig.Animate(dt, stunned || IsRolling ? 0 : amount, Weapons.Kick, _hurt, Velocity);
         if (IsRolling) Rig.DodgePose(1 - _rollTime / RollTime);

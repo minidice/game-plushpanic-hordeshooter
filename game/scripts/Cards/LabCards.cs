@@ -35,7 +35,7 @@ public partial class LabCards : Node
     public static readonly LabCard[] All = { LabCard.Balloon, LabCard.Velcro, LabCard.StuffingBurst, LabCard.Billiards, LabCard.HonkReload, LabCard.RubberDuck };
     public static readonly LabSpecial[] Specials =
         { LabSpecial.HeliumParty, LabSpecial.LastShot, LabSpecial.GlassCannon, LabSpecial.DoubleSpecial, LabSpecial.ToyTrain, LabSpecial.JackBox,
-          LabSpecial.Gather, LabSpecial.MadScientist };
+          LabSpecial.Gather, LabSpecial.MadScientist, LabSpecial.HonkBeam, LabSpecial.StaticFluff };
     /// <summary>The cards a level-up can offer; the honk and the rubber duck move to slot 3 as weapons (plan 13.1), lab only for now.</summary>
     public static readonly LabCard[] LevelUpCards =
         { LabCard.Balloon, LabCard.Velcro, LabCard.StuffingBurst, LabCard.Billiards, LabCard.TapDance, LabCard.BouncingRounds, LabCard.HonkCharge, LabCard.DestinyGun,
@@ -204,6 +204,8 @@ public partial class LabCards : Node
         if (!on) _specialLevel.Remove(card);
         if (card == LabSpecial.MadScientist) { if (on) RollMad(); else ClearMad(); }
         if (card == LabSpecial.Gather && !on) ClearGather();
+        if (card == LabSpecial.HonkBeam && !on) { BeamShooter = null; BeamClock = 0; }
+        if (card == LabSpecial.StaticFluff) { if (on) DealPoles(); else ClearPoles(); }
         TeamVersion++;
         KeepGlassCannon();
     }
@@ -257,6 +259,10 @@ public partial class LabCards : Node
         w.I32(GatherNext != null && IsInstanceValid(GatherNext) ? GatherNext.PeerId : -1);
         w.U8(GatherEffect);
         w.F32(GatherClock);
+        w.I32(BeamShooter != null && IsInstanceValid(BeamShooter) ? BeamShooter.PeerId : -1);
+        w.F32(BeamClock);
+        w.Yaw(BeamAim);
+        w.F32(StaticClock);
     }
 
     /// <summary>Client: the host's team cards, so glass cannon's price, slot 3's recharge and gather!'s ring show here too.</summary>
@@ -279,6 +285,11 @@ public partial class LabCards : Node
         GatherNext = Stage.Players.FirstOrDefault(p => IsInstanceValid(p) && p.PeerId == next && next >= 0);
         GatherEffect = r.U8();
         GatherClock = r.F32();
+        int beam = r.I32();
+        BeamShooter = Stage.Players.FirstOrDefault(p => IsInstanceValid(p) && p.PeerId == beam && beam >= 0);
+        BeamClock = r.F32();
+        BeamAim = r.Yaw();
+        StaticClock = r.F32();
         KeepGlassCannon();
     }
 
@@ -379,6 +390,8 @@ public partial class LabCards : Node
         _clock += dt;
         if (IsOn(LabSpecial.MadScientist)) foreach (var p in Stage.Players.Where(p => IsInstanceValid(p) && p.MadSize == 0 && !p.IsDead)) RollMad(p);
         if (IsOn(LabSpecial.Gather)) GatherStep(dt);
+        if (IsOn(LabSpecial.HonkBeam)) BeamStep(dt);
+        if (IsOn(LabSpecial.StaticFluff)) StaticStep(dt);
         GatherView();
         TapDanceEnds();
         if (_bounceFrom.Count > 0) BounceAll();
@@ -424,6 +437,12 @@ public partial class LabCards : Node
             if (Has(LabCard.HonkCharge, shooter) && _honkFrame.GetValueOrDefault(shooter) != frame) HonkCharge(shooter, frame);
             // Gather!'s fire rounds: the hit sets the monster burning, hotter the more are in the ring.
             if (shooter.GatherFire > 0 && !enemy.IsDead) enemy.Ignite(GatherBurnDps * (1 + shooter.GatherFire), GatherBurnSeconds, shooter);
+            // Static fluff: next to a same-pole teammate, the round jumps on.
+            if (shooter.Charged && IsOn(LabSpecial.StaticFluff) && _staticFrame.GetValueOrDefault(shooter) != frame)
+            {
+                _staticFrame[shooter] = frame;
+                StaticChain(shooter, enemy, hit);
+            }
             if (Has(LabCard.ButtonMissile, shooter) && IsButtonGun(hit.WeaponType) && _buttonFrame.GetValueOrDefault(shooter) != frame)
             {
                 _buttonFrame[shooter] = frame;
@@ -857,11 +876,168 @@ public partial class LabCards : Node
         foreach (var p in Stage.Players.Where(IsInstanceValid)) p.GatherDamage = p.GatherCrit = p.GatherFire = 0;
     }
 
+    // Honk beam (16.6.2): every 40 s (32, 25 with its upgrades) someone other than last time gets 3 s of a red cone
+    // following their aim (locked for the last 0.5 s), then a honk beam the size of the flashlight cone: commons in it
+    // burst, named and bosses melt for 12 s (double damage, slower, fly further), teammates in it are dazed 2 s and
+    // weak 10 s (not the downed). Firing it resets the shooter's slot-3 recharge.
+    public const float BeamTelegraph = 3f, BeamLock = .5f, BeamMelt = 12f, BeamDaze = 2f, BeamWeak = 10f;
+    public Player? BeamShooter { get; private set; }
+    /// <summary>Seconds into the beam's cycle; the telegraph runs over its last 3 s.</summary>
+    public float BeamClock { get; private set; }
+    public Vector3 BeamAim { get; private set; } = Vector3.Forward;
+    public float BeamPeriod => SpecialLevel(LabSpecial.HonkBeam) switch { 3 => 25f, 2 => 32f, _ => 40f };
+    public bool BeamTelegraphing => BeamShooter != null && BeamClock >= BeamPeriod - BeamTelegraph;
+    /// <summary>Checks: beams fired, monsters burst, named melted, teammates dazed.</summary>
+    public int Beams { get; private set; }
+    public int BeamBursts { get; private set; }
+    public int BeamMelts { get; private set; }
+    public int BeamDazes { get; private set; }
+    private Player? _lastBeamShooter;
+
+    private void BeamStep(float dt)
+    {
+        BeamClock += dt;
+        var alive = Stage.Players.Where(p => IsInstanceValid(p) && !p.IsDead && !p.IsDowned).ToList();
+        if (BeamShooter == null && BeamClock >= BeamPeriod - BeamTelegraph)
+        {
+            BeamShooter = PickOther(alive, _lastBeamShooter);
+            TeamVersion++;
+        }
+        if (BeamShooter == null) return;
+        if (!IsInstanceValid(BeamShooter) || BeamShooter.IsDead) { BeamShooter = null; return; }
+        // Follows the aim until the last half second, then holds still so the others can get out.
+        if (BeamClock < BeamPeriod - BeamLock) BeamAim = Flat(BeamShooter.AimDirection).Normalized();
+        if (BeamClock >= BeamPeriod) FireBeam();
+    }
+
+    /// <summary>Checks: skips the honk beam's clock forward.</summary>
+    public void AdvanceBeamForTest(float seconds)
+    {
+        while (seconds > 0) { float step = Mathf.Min(seconds, .1f); BeamStep(step); seconds -= step; }
+    }
+
+    private void FireBeam()
+    {
+        var shooter = BeamShooter!;
+        var at = shooter.GlobalPosition;
+        var aim = BeamAim;
+        Beams++;
+        Stage.Sfx.PlayAt("honk", at + Vector3.Up, 10, .6f);
+        Stage.Effects.FloatingText(at + Vector3.Up * 3f, Loc.Text("fx_card_honk_beam"), new Color("ffd23f"));
+        _view?.Flash(at, aim);
+        float half = Mathf.DegToRad(VisionSystem.NormalHalfAngle);
+        bool InCone(Vector3 p)
+        {
+            var to = Flat(p - at);
+            float d = to.Length();
+            return d <= VisionSystem.Range && (d < .5f || to.Normalized().AngleTo(aim) <= half);
+        }
+        foreach (var e in Stage.Enemies.ToList())
+        {
+            if (!IsInstanceValid(e) || e.IsDead || !InCone(e.GlobalPosition)) continue;
+            if (!e.IsSpecial)
+            {
+                BeamBursts++;
+                Stage.Effects.Stuffing(e.GlobalPosition + Vector3.Up * .7f, aim, e.Definition.StuffingColor, 24);
+                e.Shove(aim, 90, e.Health + 1, shooter);
+                continue;
+            }
+            BeamMelts++;
+            bool boss = e.Monster.Tier == MonsterTier.Boss;
+            e.Weaken(BeamMelt, boss ? .3f : .6f, boss ? 1.5f : 2f);
+        }
+        foreach (var p in Stage.Players.ToList())
+        {
+            if (p == shooter || !IsInstanceValid(p) || p.IsDead || p.IsDowned || !InCone(p.GlobalPosition)) continue;
+            BeamDazes++;
+            p.DazeTime = BeamDaze;
+            p.WeakTime = BeamDaze + BeamWeak;
+        }
+        // The one who fired it gets slot 3 back at once.
+        shooter.Loadout.Special?.ShortenCooldown(999);
+        _lastBeamShooter = shooter;
+        BeamShooter = null;
+        BeamClock = 0;
+        TeamVersion++;
+    }
+
+    // Static fluff (16.6.3): every 30 s everyone gets + or − (with 3+, both kinds at least once). Opposite poles within
+    // 4 m spark and lose 3% health a second (never below 20%); the same pole within 4 m charges both: their rounds jump on
+    // to 1–2 monsters near what they hit (2, 3 with its upgrades), harder with each level.
+    public const float StaticPeriod = 30f, StaticWarn = 3f, StaticReach = 4f, StaticDrain = .03f, StaticFloor = .2f, StaticJump = 6f;
+    public float StaticClock { get; private set; }
+    /// <summary>Checks: rounds that jumped on.</summary>
+    public int StaticJumps { get; private set; }
+    private readonly Dictionary<Player, ulong> _staticFrame = new();
+
+    private void DealPoles()
+    {
+        var people = Stage.Players.Where(p => IsInstanceValid(p) && !p.IsDead).OrderBy(_ => _rng.Randf()).ToList();
+        _rng.Randomize();
+        for (int i = 0; i < people.Count; i++) people[i].Pole = _rng.Randf() < .5f ? 1 : -1;
+        // Three or more: at least one of each.
+        if (people.Count >= 3 && people.All(p => p.Pole == people[0].Pole)) people[^1].Pole = -people[0].Pole;
+        StaticClock = 0;
+        TeamVersion++;
+    }
+
+    private void ClearPoles()
+    {
+        foreach (var p in Stage.Players.Where(IsInstanceValid)) { p.Pole = 0; p.Charged = false; }
+        StaticClock = 0;
+    }
+
+    private void StaticStep(float dt)
+    {
+        StaticClock += dt;
+        if (StaticClock >= StaticPeriod) DealPoles();
+        var people = Stage.Players.Where(p => IsInstanceValid(p) && !p.IsDead).ToList();
+        foreach (var p in people)
+        {
+            if (p.Pole == 0) p.Pole = _rng.Randf() < .5f ? 1 : -1;
+            p.Charged = false;
+        }
+        for (int i = 0; i < people.Count; i++)
+            for (int j = i + 1; j < people.Count; j++)
+            {
+                var a = people[i];
+                var b = people[j];
+                if (Flat(a.GlobalPosition - b.GlobalPosition).Length() > StaticReach) continue;
+                if (a.Pole == b.Pole) { a.Charged = b.Charged = true; continue; }
+                a.Drain(a.MaxHealth * StaticDrain * dt, StaticFloor);
+                b.Drain(b.MaxHealth * StaticDrain * dt, StaticFloor);
+            }
+    }
+
+    /// <summary>Checks: skips static fluff's clock forward.</summary>
+    public void AdvanceStaticForTest(float seconds)
+    {
+        while (seconds > 0) { float step = Mathf.Min(seconds, .1f); StaticStep(step); seconds -= step; }
+    }
+
+    private void StaticChain(Player shooter, Enemy from, HitInfo hit)
+    {
+        int level = SpecialLevel(LabSpecial.StaticFluff);
+        int count = level switch { 3 => 3, 2 => 2, _ => _rng.RandiRange(1, 2) };
+        float share = .4f + .15f * (level - 1);
+        var targets = Stage.Enemies.Where(e => IsInstanceValid(e) && !e.IsDead && e != from && Flat(e.GlobalPosition - from.GlobalPosition).Length() <= StaticJump)
+            .OrderBy(e => Flat(e.GlobalPosition - from.GlobalPosition).LengthSquared()).Take(count).ToList();
+        foreach (var t in targets)
+        {
+            StaticJumps++;
+            _view?.Bolt(from.GlobalPosition + Vector3.Up, t.GlobalPosition + Vector3.Up);
+            _bouncing = true;
+            t.TakeHit(new HitInfo(Mathf.Max(1, hit.Damage * share), Flat(t.GlobalPosition - from.GlobalPosition).Normalized(), t.GlobalPosition + Vector3.Up,
+                false, hit.Power * .3f, shooter, "static"));
+            _bouncing = false;
+        }
+    }
+
     private TeamCardView? _view;
-    /// <summary>Gather!'s ring, marks and HUD line on every PC.</summary>
+    /// <summary>The team cards' rings, cones, marks and HUD lines on every PC.</summary>
     private void GatherView()
     {
-        if (!IsOn(LabSpecial.Gather)) { _view?.Hide(); return; }
+        if (!IsOn(LabSpecial.Gather) && !IsOn(LabSpecial.HonkBeam) && !IsOn(LabSpecial.StaticFluff)) { _view?.Hide(); return; }
         if (_view == null || !IsInstanceValid(_view))
         {
             _view = new TeamCardView { Name = "TeamCardView", Cards = this, Stage = Stage };
