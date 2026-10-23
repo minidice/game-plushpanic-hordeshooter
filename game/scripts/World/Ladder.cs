@@ -5,7 +5,7 @@ namespace HordeShooter;
 /// <summary>
 /// A ladder up a tier's cliff (decisions.md L-16 · L-18, doc/elevation-tiers.md 5.1장). Survivors use it with the
 /// interact key at either end; squadmates take it when their route goes up or down it; armed animals and wall climbers
-/// path through it. Placeholder rails and rungs until the final model (local Codex work).
+/// path through it. Bundle A sections are stacked at the same 1.2 m spacing as the tiers.
 /// </summary>
 public partial class Ladder : Node3D
 {
@@ -54,19 +54,15 @@ public partial class Ladder : Node3D
 
     private void BuildLook()
     {
-        float height = Rim.Y - Foot.Y + .9f;
-        var across = (Top - Bottom) with { Y = 0 };
-        var side = across.LengthSquared() > .001f ? across.Normalized().Cross(Vector3.Up) * .28f : Vector3.Right * .28f;
-        var wood = Mat.Solid("7a5a38", .8f);
-        foreach (float s in new[] { 1f, -1f })
+        var towardTop = (Top - Bottom) with { Y = 0 };
+        float yaw = Mathf.Atan2(-towardTop.X, -towardTop.Z);
+        for (int i = 0; i <= Tiers; i++)
         {
-            var rail = Mat.Box(this, side * s + Vector3.Up * height / 2, new Vector3(.07f, height, .07f), wood);
-            rail.CastShadow = GeometryInstance3D.ShadowCastingSetting.On;
-        }
-        for (float y = .3f; y < height - .1f; y += .35f)
-        {
-            var rung = Mat.Box(this, Vector3.Up * y, new Vector3(.05f, .05f, .05f), wood);
-            rung.Scale = new Vector3(Mathf.Abs(side.X) * 2 / .05f + 1, 1, Mathf.Abs(side.Z) * 2 / .05f + 1);
+            var art = PropLibrary.Instance(i == Tiers ? "ladder_top" : "ladder_section");
+            if (art == null) continue;
+            AddChild(art);
+            art.Position = Vector3.Up * (i * TierMap.Height);
+            art.Rotation = new Vector3(0, yaw, 0);
         }
     }
 }

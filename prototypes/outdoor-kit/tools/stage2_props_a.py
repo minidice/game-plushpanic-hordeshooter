@@ -233,13 +233,15 @@ def gondola_cabin():
     root, keep, upper, data = start('gondola_cabin', '개방형 곤돌라 객차',
         '피벗=4×4 m 바닥 윗면, 바닥판 -0.15…0 m. 앞벽 0.6 m, 나머지 1 m. '
         '모서리 기둥 2.4 m, 바퀴 중심 높이 3.4 m. 기존 탑승판 그림 교체용; '
-        '진입/퇴장 경로와 기둥 가림은 후속 게임 렌더 검수.', 'Frame')
+        '양옆 ±X 중앙 폭 1.6 m 출입구. 기둥 가림은 게임 Occlude_Frame 처리.', 'Frame')
     floor = box(keep, 'Floor', (0, 0, -.075), (4, 4, .15), 'Metal', .025)
     box(keep, 'FrontWall', (0, -1.92, .30), (4, .16, .60), 'Ochre', .035)
     box(keep, 'RearWall', (0, 1.92, .50), (4, .16, 1.0), 'Ochre', .035)
     for x in (-1.92, 1.92):
-        box(keep, 'SideWall', (x, 0, .50), (.16, 3.68, 1.0), 'Ochre', .035)
-        beam(keep, 'SideRail', (x, -1.88, 1.0), (x, 1.88, 1.0), .055, 'Metal')
+        # Walk through the actual opening rather than a decorative solid wall.
+        for sign in (-1, 1):
+            box(keep, 'SideWall', (x, sign * 1.32, .50), (.16, 1.04, 1.0), 'Ochre', .035)
+            beam(keep, 'SideRail', (x, sign * .8, 1.0), (x, sign * 1.88, 1.0), .055, 'Metal')
         for y in (-1.92, 1.92):
             beam(upper, 'CornerPost', (x, y, .55), (x, y, 2.4), .075, 'Metal')
             beam(upper, 'HangerArm', (x, y, 2.4), (0, 0, 3.23), .07, 'Metal')

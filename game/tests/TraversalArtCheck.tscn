@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/TraversalArtCheck.cs" id="1"]
+
+[node name="TraversalArtCheck" type="Node"]
+script = ExtResource("1")

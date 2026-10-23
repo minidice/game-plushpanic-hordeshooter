@@ -249,8 +249,13 @@ def main():
     for entry in bundle_entries(entries):
         clear()
         objects = validate(entry)
+        if '--checks-only' in sys.argv:
+            continue
         render(objects, entry['id'] + '-front')
         render(objects, entry['id'] + '-back', rear=True)
+    if '--checks-only' in sys.argv:
+        print('STAGE2_REVIEW_PASS', len(REPORT['assets']), 'assets', len(REPORT['checks']), 'checks', 0, 'renders')
+        return
     clear()
     stack = []
     for tier in range(3):

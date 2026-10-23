@@ -185,3 +185,5 @@ python tools/floorplan/render_floorplan.py game/content/data/stages/stage2_layou
 - 해치에서 세이프하우스까지 2.6분(몬스터 없이) → 문 닫기 → 클리어.
 
 **아직 아닌 것**: 실제 플레이(전투가 들어간 시간 · 난이도 · 20분이 맞는지), 죽은 사람이 안전 구역에서 돌아오기(M-32), 다리 판 · 펌프 · 오두막 · 세이프하우스 모델(지금은 상자, 로컬 Codex 작업 — 지시문 [`model-briefs/stage2-landmarks.md`](model-briefs/stage2-landmarks.md) 준비됨, 실행 전), 정식 메뉴 연결 · 지금 Stage 2 교체(L-29: 확정 뒤. 지금은 `-Stage2Draft` 실행 옵션으로만), 경보 트럭(E의 소음 장치), 멀티 2PC 확인.
+
+**2026-10-23 묶음 A 후속**: 사다리·짚라인·곤돌라 임시 도형을 GLB로 교체했다. 단 높이·3m 도르래 연결·객차 상부 가림·6인 승하차와 도착/중단 복구를 실제 Forward+ 렌더 14장 및 `TraversalArtCheck`로 확인했다. `SizeDraftCheck` 74개와 끝까지 동선은 유지한다. 위 기존 사진은 모델 연결 전 이력이며 최신 [검수·재현](stage2-props-a-validation.md#게임-연결-검수-2026-10-23)을 참조한다.

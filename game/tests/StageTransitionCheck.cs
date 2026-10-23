@@ -55,8 +55,8 @@ public partial class StageTransitionCheck : Node
     /// <summary>Every kit and transition model loads with its contract parts (guide 2장).</summary>
     private void KitLibrary()
     {
-        Check(PropLibrary.Errors.Count == 0, "both prop manifests read without errors: " + string.Join("; ", PropLibrary.Errors));
-        Check(PropLibrary.All.Count == 47, $"32 outdoor kit models + 4 transition props + 6 edge-kit pieces + 5 ground bits are listed ({PropLibrary.All.Count})");
+        Check(PropLibrary.Errors.Count == 0, "all prop manifests read without errors: " + string.Join("; ", PropLibrary.Errors));
+        Check(PropLibrary.All.Count == 52, $"32 outdoor kit + 4 transition + 6 edge-kit + 5 ground bits + 5 traversal props are listed ({PropLibrary.All.Count})");
         var edge = PropLibrary.All.Values.Where(p => p.Id.StartsWith("edge_")).ToList();
         Check(edge.Count == 6 && edge.All(p => p.Collision.Kind == "none" && p.OcclusionParts.Length == 0 && p.File.Contains("/edge-kit/")),
             "the edge kit has no colliders and no fading parts (A-23)");

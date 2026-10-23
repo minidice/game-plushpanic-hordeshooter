@@ -9,7 +9,7 @@ namespace HordeShooter;
 /// survivor must be on the platform before it leaves. Then the world holds (the same all-stop as the card vote, M-29)
 /// while the gondola and its riders stay where they are and a fake backdrop of the gorge scrolls beneath them in depth
 /// layers; at the end everyone steps off at the far station. The real gorge is never built (the way the reference game
-/// avoids the cost of moving through it). Placeholder boxes until the final model and backdrop (local Codex work).
+/// avoids the cost of moving through it). Bundle A supplies the cabin and both station models.
 /// </summary>
 public partial class Gondola : Node3D
 {
@@ -18,6 +18,7 @@ public partial class Gondola : Node3D
     public Rect2 Platform { get; private set; }
     public Vector3 Arrival { get; private set; }
     public bool Riding { get; private set; }
+    public bool Completed { get; private set; }
     public float Progress { get; private set; }
     /// <summary>How far the backdrop has scrolled (checks).</summary>
     public float BackdropTravel { get; private set; }
@@ -25,6 +26,11 @@ public partial class Gondola : Node3D
     private Stage _stage = null!;
     private Vector3 _travel;
     private Node3D? _backdrop;
+    private Node3D? _cabin, _departureStation, _arrivalStation;
+    // A small visual offset prevents the imported floor fighting the terrain's existing walkable surface.
+    private const float FloorClearance = .012f;
+    private readonly List<Node3D> _hiddenWorld = new();
+    private Interactable _use = null!;
     private readonly List<(Node3D layer, float depth)> _layers = new();
 
     public static Gondola Create(Stage stage, Rect2 platform, float floorY, Vector3 arrival, Vector3 travelDirection, float seconds)
@@ -43,30 +49,36 @@ public partial class Gondola : Node3D
         };
         stage.AddChild(gondola);
         gondola.GlobalPosition = center;
-        Mat.Box(gondola, Vector3.Up * .05f, new Vector3(platform.Size.X, .1f, platform.Size.Y), Mat.Solid("8a6a46", .8f));
+        gondola.BuildLook();
         var use = new Interactable { Name = "GondolaUse", Position = center, Prompt = "ui_use_gondola", Radius = Mathf.Max(platform.Size.X, platform.Size.Y) * .6f };
         use.OnUse = _ => gondola.TryDepart();
+        gondola._use = use;
         stage.AddChild(use);
         stage.AddInteractable(use);
         stage.Gondolas.Add(gondola);
         return gondola;
     }
 
-    public bool Aboard(Player p) => Platform.Grow(.3f).HasPoint(new Vector2(p.GlobalPosition.X, p.GlobalPosition.Z));
+    public bool Aboard(Player p) => !p.OnLadder && !p.OnZipline
+        && Mathf.Abs(p.GlobalPosition.Y - GlobalPosition.Y) <= .3f
+        && Platform.Grow(-p.Definition.ColliderRadius).HasPoint(new Vector2(p.GlobalPosition.X, p.GlobalPosition.Z));
 
     /// <summary>Leaves when every living survivor is aboard; otherwise says so and waits.</summary>
     public bool TryDepart()
     {
-        if (Riding) return false;
-        if (!_stage.AlivePlayers.All(Aboard))
+        if (Riding || Completed || _stage.AllStopped) return false;
+        var passengers = _stage.AlivePlayers.ToList();
+        if (passengers.Count == 0 || !passengers.All(Aboard))
         {
             _stage.ShowNotice(Loc.Text("msg_gondola_wait"), 2.5f);
             return false;
         }
         Riding = true;
+        _use.Enabled = false;
         Progress = 0;
         BackdropTravel = 0;
         BuildBackdrop();
+        HideWorld();
         _stage.SetAllStop(true);
         return true;
     }
@@ -92,10 +104,13 @@ public partial class Gondola : Node3D
     {
         if (!Riding) return;
         Riding = false;
+        Completed = true;
         Progress = 1;
         _backdrop?.QueueFree();
         _backdrop = null;
         _layers.Clear();
+        RestoreWorld();
+        if (_cabin != null) _cabin.GlobalPosition = Arrival + Vector3.Up * FloorClearance;
         int i = 0;
         foreach (var p in _stage.AlivePlayers.ToList())
         {
@@ -104,12 +119,58 @@ public partial class Gondola : Node3D
             i++;
         }
         _stage.SetAllStop(false);
+        _stage.Cam.SnapTo(_stage.Player.GlobalPosition + Vector3.Up * .8f);
+    }
+
+    private void BuildLook()
+    {
+        Node3D? Place(string id, Vector3 at)
+        {
+            var model = PropLibrary.Instance(id);
+            if (model == null) return null;
+            AddChild(model);
+            model.GlobalPosition = at;
+            PropOcclusion.Attach(_stage, model);
+            return model;
+        }
+        _cabin = Place("gondola_cabin", GlobalPosition + Vector3.Up * FloorClearance);
+        _departureStation = Place("gondola_station", GlobalPosition);
+        _arrivalStation = Place("gondola_station", Arrival);
+    }
+
+    private void HideWorld()
+    {
+        // Collision and flow stay intact. Only rendering is suspended; remember exactly which roots were visible.
+        foreach (var node in _stage.GetChildren().OfType<Node3D>())
+        {
+            if (node == this || node is Player or Camera3D or Light3D || !node.Visible) continue;
+            _hiddenWorld.Add(node);
+            node.Visible = false;
+        }
+        foreach (var station in new[] { _departureStation, _arrivalStation })
+            if (station != null && station.Visible) { _hiddenWorld.Add(station); station.Visible = false; }
+    }
+
+    private void RestoreWorld()
+    {
+        foreach (var node in _hiddenWorld)
+            if (IsInstanceValid(node)) node.Visible = true;
+        _hiddenWorld.Clear();
+    }
+
+    public override void _ExitTree()
+    {
+        if (!Riding) return;
+        RestoreWorld();
+        if (IsInstanceValid(_stage) && _stage.IsInsideTree()) _stage.SetAllStop(false);
     }
 
     private void BuildBackdrop()
     {
         _backdrop = new Node3D { Name = "GondolaBackdrop" };
         AddChild(_backdrop);
+        // The cabin wheels run along local X. This short visual span disappears with the ride backdrop.
+        Mat.Box(_backdrop, Vector3.Up * (3.4f + FloorClearance), new Vector3(100, .04f, .04f), Mat.Solid("8d9298", .4f));
         var colors = new[] { ("2f4a3a", 4f), ("3d5c46", 2.5f), ("51704f", 1.6f), ("6d8a69", 1.1f) };
         var rng = new RandomNumberGenerator { Seed = 7 };
         foreach (var (color, depth) in colors)
