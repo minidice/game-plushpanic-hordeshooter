@@ -444,8 +444,8 @@ public partial class SquadBrain : Node
             _goalFlow.Update(goal);
             field = _goalFlow;
         }
-        var flow = field.Direction(Bot.GlobalPosition);
-        return (flow != Vector3.Zero ? flow : to / d) * speed;
+        var flow = Rays.FlowDirection(Bot, field);
+        return (flow != Vector3.Zero || field.IsBlocked(Bot.GlobalPosition) ? flow : to / d) * speed;
     }
 
     /// <summary>Straight line to the goal is open for the whole body width, not just its centre (door frames).</summary>

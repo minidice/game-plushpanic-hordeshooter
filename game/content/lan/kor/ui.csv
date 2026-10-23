@@ -31,6 +31,7 @@ ui_end_keys_client,방장이 방으로 돌아가기를 기다립니다    [Esc] 
 ui_objective_leave_saferoom,세이프룸 문을 여세요  [E]
 ui_objective_reach_shutter,창고 끝 셔터 제어판으로 이동  [E]
 fmt_objective_hold_out,셔터가 열릴 때까지 버티기  {0}초
+fmt_objective_hold_bridge,다리가 내려올 때까지 버티기  {0}초
 ui_objective_reach_safehouse,세이프하우스로 이동
 ui_objective_close_safehouse,세이프하우스 문 닫기  [E]
 ui_objective_cleared,스테이지 클리어

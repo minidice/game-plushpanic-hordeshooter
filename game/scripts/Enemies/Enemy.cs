@@ -295,7 +295,7 @@ public partial class Enemy : CharacterBody3D
             return Vector3.Zero;
         }
         if (dist < 4f) return toCore / dist * Speed;
-        var flow = Stage.FlowFor(Monster.Climb).Direction(GlobalPosition);
+        var flow = Rays.FlowDirection(this, Stage.FlowFor(Monster.Climb));
         return (flow != Vector3.Zero ? flow : toCore / Mathf.Max(dist, .001f)) * Speed;
     }
 
@@ -319,7 +319,7 @@ public partial class Enemy : CharacterBody3D
         if (dist > lure.AttractRadius) return null;
         Awake = true;
         if (dist < 1.4f) return Vector3.Zero;
-        var flow = Stage.LureFlow?.Direction(GlobalPosition) ?? Vector3.Zero;
+        var flow = Stage.LureFlow is { } lureFlow ? Rays.FlowDirection(this, lureFlow) : Vector3.Zero;
         if (dist < 5f || flow == Vector3.Zero) return to / dist * Speed;
         return flow * Speed;
     }
@@ -376,7 +376,7 @@ public partial class Enemy : CharacterBody3D
         // With height tiers the straight line may run off a cliff or into one: only take it on the same tier (L-16).
         bool straight = !Stage.Tiers.Any || (Target ?? Stage.NearestAlivePlayer(GlobalPosition)) is not { } chased || Stage.Tiers.TierOf(this) == Stage.Tiers.TierOf(chased);
         if (los && dist < 8f && straight) return toPlayer / Mathf.Max(dist, .001f);
-        var flow = Stage.FlowFor(Monster.Climb).Direction(GlobalPosition);
+        var flow = Rays.FlowDirection(this, Stage.FlowFor(Monster.Climb));
         if (flow != Vector3.Zero) return flow;
         return los ? toPlayer / Mathf.Max(dist, .001f) : Vector3.Zero;
     }

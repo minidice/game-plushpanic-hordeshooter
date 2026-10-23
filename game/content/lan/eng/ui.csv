@@ -31,6 +31,7 @@ ui_end_keys_client,Waiting for the host to go back to the room    [Esc] Menu (le
 ui_objective_leave_saferoom,Open the safe room door  [E]
 ui_objective_reach_shutter,Reach the shutter panel at the end of the warehouse  [E]
 fmt_objective_hold_out,Hold out until the shutter opens  {0}s
+fmt_objective_hold_bridge,Hold out until the bridge lowers  {0}s
 ui_objective_reach_safehouse,Get to the safehouse
 ui_objective_close_safehouse,Close the safehouse door  [E]
 ui_objective_cleared,Stage clear

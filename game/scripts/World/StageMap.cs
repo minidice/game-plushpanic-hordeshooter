@@ -69,6 +69,7 @@ public abstract partial class StageMap
     public virtual float CrescendoSeconds { get; set; } = 50f;
     /// <summary>Language keys of the crescendo beat (Stage 1's shutter by default): the objective line, the alarm and the "it opened" notices.</summary>
     public virtual string CrescendoObjectiveKey => "ui_objective_reach_shutter";
+    public virtual string CrescendoHoldOutKey => "fmt_objective_hold_out";
     public virtual string CrescendoAlarmKey => "msg_stage_alarm";
     public virtual string CrescendoDoneKey => "msg_stage_shutter_open";
     /// <summary>The notice when a stage starts out on the route.</summary>

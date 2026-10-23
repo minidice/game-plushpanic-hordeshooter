@@ -63,6 +63,7 @@ public sealed class LayoutMap : StageMap
     public override AlarmCar? AlarmDevice => _alarmTruck;
     public override Interactable? ShutterPanel => _pump;
     public override string CrescendoObjectiveKey => "ui_objective_lower_bridge";
+    public override string CrescendoHoldOutKey => "fmt_objective_hold_bridge";
     public override string CrescendoAlarmKey => "msg_stage_bridge_alarm";
     public override string CrescendoDoneKey => "msg_stage_bridge_down";
     public override string RouteStartKey => "msg_stage_draft_start";

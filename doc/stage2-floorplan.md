@@ -172,7 +172,7 @@ python tools/floorplan/render_floorplan.py game/content/data/stages/stage2_layou
 | 조우 | 구역 7개(A~G를 x로 나눔, 들어간 구역의 다음 구역을 채움). 미리 배치 무리 약 95마리(혼자면 인원 보정으로 줄어듦) + 이름 있는 특수 3, 숨은 등장 지점 49곳(모든 단 — 감시탑 기둥 옆, 컨테이너 위, 고지 단마다). 해치 8 m 보호 | `stage2_draft_encounters.json` |
 | 중간 안전 구역(D) | 감시소 오두막 12 × 10 m, 양 끝 출입구 3 m(다리 쪽 · 야적장 쪽), 문 없음. 미리 배치 금지 15 m · 웨이브 금지 25 m · 사람이 8 m 안에 있으면 시간 습격 멈춤. 주요 보급 2 | `safe_zones`, `LayoutMap.BuildHut`, `HordeDirector.IsProtected` · `RaidsHeld` |
 | 시간 습격 | 이동 구역(B 숲 · E 야적장 · F 고지)에서만, 무리 90~120초 · 특수 60~90초, 시작 60초 · 크레센도 뒤 45초 멈춤, 압박 높을 때 미루기는 그대로 | `raids`, `HordeDirector.TickRaids` |
-| 다리 임무(C) | 다리 가운데에 들린 다리 판(문)이 서 있어 건널 수 없음 → 서쪽 둑에서 뛰어내려 펌프 켜기(E) → 크레센도 50초 → 판이 내려가며 다리가 열림. Stage 1 셔터와 같은 문 · 패널 · 목표 단계를 써서 멀티 동기화 비트 · 버티기 타이머가 그대로. 목표 · 안내 문구는 맵별 키 | `LayoutMap.BuildBridgeMission`, `StageMap.Crescendo*Key` |
+| 다리 임무(C) | 다리 가운데에 들린 다리 판(문)이 서 있어 건널 수 없음 → 서쪽 둑에서 뛰어내려 펌프 켜기(E) → 크레센도 50초 → 판이 내려가며 다리가 열림. Stage 1 셔터와 같은 문 · 패널 · 목표 단계를 써서 멀티 동기화 비트 · 버티기 타이머가 그대로. 목표 · 안내 문구는 맵별 키. 방어 중 `CrescendoHoldOutKey`는 `fmt_objective_hold_bridge`(다리 내리기), 기본 Stage 1은 기존 셔터 키 유지(I-115) | `LayoutMap.BuildBridgeMission`, `StageMap.Crescendo*Key` |
 | 돌아오는 길 재등장(L-27) | 크레센도가 끝나 다리가 열릴 때 서쪽 둑 사다리 위 · 다리 앞에 무리 2개(경계 6 · 잠복 3)를 화면 밖 우선으로 배치 | `after: "mission"`, `HordeDirector.FillAfterMission` |
 | 보급 | 시작 1 · 주요 3(다리 앞 검문소 · 감시소 · 야적장 끝) · 선택 2(감시탑 · 정비 창고) · 이벤트 1(펌프장 M249) · 도착 1. 구급상자 4 · 투척물 5 · 길에서 찾는 무기 2 · 탄약 더미 3(주요 지점만, 펌프 10 m 밖). 물건은 선 단의 바닥에 놓임 | `stage2_draft_supplies.json`, `StageMap.PlaceSupplies` |
 | 세이프하우스(G) | 14 × 12 m 방, 서쪽 문, 안에 들어가면 문 닫기 스위치 → 클리어(다음 스테이지 연결은 아직 없음) | `LayoutMap.BuildSafehouse` |

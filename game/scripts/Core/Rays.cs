@@ -28,4 +28,31 @@ public static class Rays
     }
 
     public static bool Clear(Node3D context, Vector3 from, Vector3 to, uint mask) => Cast(context, from, to, mask) == null;
+
+    /// <summary>
+    /// Recover from the free portion of a grid cell marked by wall padding. A cheap adjacent cell may be across
+    /// a thin wall; seek a nearby reachable cell on the same floor whose centre line is physically clear instead.
+    /// Ordinary open-cell following stays on the cached field. Physics still owns the mover's body clearance.
+    /// </summary>
+    public static Vector3 FlowDirection(Node3D mover, FlowField field)
+    {
+        var from = mover.GlobalPosition;
+        if (!field.IsBlocked(from)) return field.Direction(from);
+        Vector3 best = Vector3.Zero;
+        float distance = float.PositiveInfinity;
+        foreach (var cell in field.OpenCellsNear(from, 0, 2.5f))
+        {
+            var to = cell with { Y = from.Y };
+            float d = from.DistanceSquaredTo(to);
+            if (d >= distance) continue;
+            bool sameFloor = true;
+            if (field.Tiers is { Any: true } tiers)
+                for (int step = 1; step <= 10; step++)
+                    if (Mathf.Abs(tiers.GroundY(from.Lerp(to, step / 10f)) - tiers.GroundY(from)) > .1f) { sameFloor = false; break; }
+            if (!sameFloor || !Clear(mover, from + Vector3.Up * .5f, to + Vector3.Up * .5f, Layers.World | Layers.Props)) continue;
+            distance = d;
+            best = (to - from).Normalized();
+        }
+        return best;
+    }
 }

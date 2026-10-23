@@ -1228,7 +1228,7 @@ public partial class Stage : Node3D
     {
         Objective.LeaveSafeRoom => Loc.Text("ui_objective_leave_saferoom"),
         Objective.ReachShutter => Loc.Text(Map.CrescendoObjectiveKey),
-        Objective.HoldOut => Loc.Format("fmt_objective_hold_out", Mathf.CeilToInt(Mathf.Max(0, Director.CrescendoRemaining))),
+        Objective.HoldOut => Loc.Format(Map.CrescendoHoldOutKey, Mathf.CeilToInt(Mathf.Max(0, Director.CrescendoRemaining))),
         Objective.ReachSafehouse => Loc.Text("ui_objective_reach_safehouse"),
         Objective.CloseSafehouse => Loc.Text("ui_objective_close_safehouse"),
         Objective.TakeExit => Loc.Text("ui_objective_take_exit"),
