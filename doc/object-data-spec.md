@@ -1,6 +1,6 @@
 # 오브젝트 품질 비교와 상호작용 데이터 방향
 
-2026-10-24 · T-25 후속. **품질 비교와 이동/탄환 차단 공통 데이터 연결은 구현**, **파괴/폭발 조건은 후속 계획**이다. 차단 필드만 현재 게임이 읽는 설정 키이며 파괴/폭발 필드는 설계 초안이다.
+2026-10-24 · T-25 후속. **품질 비교와 이동/탄환 차단 공통 데이터 연결은 구현**. 같은 날 **낮은 엄폐물(`cover`)과 파괴(`destruction`: 깰 수 있는 강도 타입 · 내구도)도 구현**(C-29, 아래 「엄폐 · 파괴 데이터」). **폭발 조건만 후속 계획**이다.
 
 ## 확인된 현재 구조
 
@@ -35,6 +35,24 @@
 - Studio는 같은 `ObjectInteractions.Current.ForProp`를 호출해 **이동 차단 / 탄환 차단 / 프로필 / 출처 / 적용 범위**와 원본 JSON을 표시한다. API의 `interaction`에 `source`, `profile`, 두 bool을 제공하고 미연결은 null로 유지한다. 표의 값은 기본 배치 정책이며 개별 맵 인스턴스의 최종 충돌 검사 결과가 아니다.
 - JSON 변경 후 게임은 재실행, Studio는 **로컬 데이터 다시 읽기**를 사용한다. 현재 프로세스에서 자동 감시하지 않으며 웹에서 값을 저장하지 않는다. 공통 데이터/로더는 실제 게임 구성 요소이고 Studio UI/렌더 bridge만 배포 제외다.
 
+## 엄폐 · 파괴 데이터 (2026-10-24 구현, C-29)
+
+같은 `object_interactions.json`에 더했다. 값이 없는 기존 프로필은 이전과 같다(엄폐 아님 · 파괴 정의 없음).
+
+| 키 | 의미 | 지금 값 |
+|---|---|---|
+| `cover_rules.shoot_over_gap_bodies` | 쏘는 사람 몸과 엄폐물 사이 틈이 **자기 몸 폭의 이 배수 미만**이면 그 엄폐물을 넘겨 쏜다. 그 이상이면 엄폐물이 총알을 막는다 | `1.0` (캐릭터 하나 들어갈 틈이면 막힘) |
+| `profiles.<id>.cover` | 낮은 엄폐물: 걷기 · 던진 물건은 막고, 시야 · 근접 · 잡기는 넘어감, 총알은 위 규칙. `blocks_movement`와 `blocks_projectiles`가 둘 다 true여야 함(아니면 로더 오류) | `sandbag_cover`, `barrier_cover` |
+| `profiles.<id>.destruction.breakable_by` | 깰 수 있는 강도: `gun`(총탄 · 몬스터 총탄 · 폭발 모두) / `explosive`(폭발 계열만 — 총은 막기만). 다른 값은 오류 | 모래자루 `gun` |
+| `profiles.<id>.destruction.max_health` | 내구도(누적 피해). 0 이하 오류. `destruction`이 없으면 **안 깨짐** | 모래자루 `50` (캐릭터 체력 100의 절반) |
+| `objects` | `sandbags: sandbag_cover`, `concrete_barrier: barrier_cover`(안 깨지는 엄폐물) | |
+
+- **충돌 층**: 엄폐물의 실제(낮은) 모양은 `Cover`(64) — 이동 마스크(`MovementWorld`)에 포함, 시야 · 근접(`MeleeMask`)에서 제외. 총알은 낮은 모양 위로 지나가므로 같은 자리에 키 큰(2.4 m) 보이지 않는 **사격막** `CoverShot`(128)을 두고, 총탄 마스크(`BulletMask`)와 몬스터 사격(`EnemyShotMask`)만 이것을 본다.
+- **규칙 위치**: `CoverRule`(`game/scripts/World/ObjectBody.cs`) 하나를 플레이어 · 분대원 총(`WeaponController.Hitscan`), 로켓, 몬스터 총탄(`EnemyProjectile`), 몬스터 · 분대원의 사격 가능 판단(`RangedEnemy.ShotClear`, `SquadBrain.InSight`)이 함께 쓴다. 곡사(박격포 · 투척)는 포물선이라 엄폐물을 넘어간다.
+- **파괴**: `ObjectBody`가 내구도를 들고, 총탄은 맞은 피해만큼(거리 감소 포함), 폭발은 몬스터와 같은 식으로 깎는다. 0이 되면 먼지 · 소리와 함께 사라지고 흐름장 칸이 열린다. 판정은 방장만, 다른 PC는 드럼통처럼 번호(만든 순서)로 같은 물체를 지운다(이벤트 + 월드 스냅샷 목록).
+- **Studio**: 오브젝트 속성에 「엄폐 (낮은 엄폐물)」 · 「파괴」 · 「내구도」 · 「폭발 (부서질 때)」 줄을 같은 로더(`ObjectInteractions.Current`)에서 표시. API `interaction`에 `cover` · `breakable_by` · `max_health`를 더함.
+- **검사**: `game/tests/CoverCheck.tscn` 27개 — 데이터 검증, 붙어서 넘겨 쏘기 · 몸 폭 0.9/1.1배 경계 · 양쪽 붙음, 시야 · 걷기 · 흐름장, 실제 M4 사격, 근접 넘기, 몬스터 총탄 막힘/넘김, 총 · 폭발 파괴와 흐름장 해제, 방벽 무적.
+
 ## 파괴·폭발 후속 계약 초안
 
 사용자 요구는 외형과 이동 차단·탄환 차단·파괴·폭발 조건을 하나의 오브젝트 정의에서 읽고 웹에도 표시하는 것이다. `blocks_everything` 같은 단일 값으로 묶지 않는다.
@@ -43,10 +61,9 @@
 |---|---|---|
 | 이동 (구현) | `blocks_movement` | 캐릭터 이동을 막는지 |
 | 탄환 (구현) | `blocks_projectiles` | 기본 탄환 충돌을 막는지. 관통탄/폭발 피해 전파 규칙은 별도 |
-| 파괴 | `destruction.enabled` | 부서지는 오브젝트인지 |
-| 공격 종류 | `destruction.accepted_damage_types` | 총탄, 폭발, 충돌 등 파괴 피해를 받는 종류 |
-| 공격 등급 | `destruction.minimum_damage_tier` | 같은 종류 안에서도 필요한 최소 파괴 등급. 총/폭탄이라는 종류와 구분 |
-| 내구도 | `destruction.max_health` | 허용된 공격으로 누적 감소하는 내구도 |
+| 파괴 (구현, 단순화) | `destruction` 있음/없음 | 부서지는 오브젝트인지 — 위 「엄폐 · 파괴 데이터」 |
+| 공격 종류 · 등급 (구현, 단순화) | `destruction.breakable_by` | 초안의 종류 목록 · 최소 등급 두 칸 대신 `gun` / `explosive` 한 칸으로 시작(사용자: "총으로 터지나, 폭탄류급으로 터지나"). 충돌(황소 등) 파괴는 아직 없음 |
+| 내구도 (구현) | `destruction.max_health` | 허용된 공격으로 누적 감소하는 내구도 |
 | 폭발 | `explosion.on_destroy` | 부서질 때 자체 폭발하는지. 단순 파괴와 별개 |
 | 폭발 강도 | `explosion.damage`, `radius_m`, `impulse`, `delay_s` | 결과 폭발의 피해·반경·밀침·지연. 파괴에 필요한 공격 강도와 별개 |
 

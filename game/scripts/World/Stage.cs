@@ -188,6 +188,8 @@ public partial class Stage : Node3D
 
     public List<Enemy> Enemies { get; } = new();
     public List<RigidBody3D> Props { get; } = new();
+    /// <summary>Placed objects that can still break (object_interactions.json <c>destruction</c>, C-29).</summary>
+    public List<ObjectBody> Breakables { get; } = new();
     /// <summary>Loud devices that go off when shot or caught in a blast (spawn-design.md 4장).</summary>
     public List<AlarmCar> AlarmCars { get; } = new();
     public List<Interactable> Interactables { get; } = new();

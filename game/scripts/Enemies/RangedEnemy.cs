@@ -46,7 +46,7 @@ public partial class RangedEnemy : Enemy
                     ShotClear(from, _target))
                 {
                     var projectile = new EnemyProjectile();
-                    projectile.Setup(Stage, from, _target, Shot, AttackDamage);
+                    projectile.Setup(Stage, from, _target, Shot, AttackDamage, Radius);
                     Stage.AddChild(projectile);
                     Stage.Net?.OnEnemyProjectile(this, from, _target);
                     ProjectilesFired++;
@@ -81,7 +81,8 @@ public partial class RangedEnemy : Enemy
             if (Shot.HazardSeconds > 0 && fromTier != toTier) return true;
             if (toTier < fromTier) to = new Vector3(to.X, from.Y, to.Z);
         }
-        return Rays.Clear(this, from, to, Layers.World | Layers.Props);
+        // Low cover right in front of it is fired over; cover the target hides behind stops the shot (C-29).
+        return CoverRule.Clear(this, GlobalPosition, Radius, from, to, Layers.EnemyShotMask);
     }
 
     /// <param name="victim">Client puppet: the survivor the host's enemy is aiming at.</param>

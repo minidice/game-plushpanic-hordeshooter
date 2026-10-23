@@ -1,10 +1,18 @@
 {
   "default_solid_profile": "structure",
+  "cover_rules": { "shoot_over_gap_bodies": 1.0 },
   "profiles": {
     "structure": { "blocks_movement": true, "blocks_projectiles": true },
-    "wire_fence": { "blocks_movement": true, "blocks_projectiles": false }
+    "wire_fence": { "blocks_movement": true, "blocks_projectiles": false },
+    "sandbag_cover": {
+      "blocks_movement": true, "blocks_projectiles": true, "cover": true,
+      "destruction": { "breakable_by": "gun", "max_health": 50 }
+    },
+    "barrier_cover": { "blocks_movement": true, "blocks_projectiles": true, "cover": true }
   },
   "objects": {
-    "wire_fence": "wire_fence"
+    "wire_fence": "wire_fence",
+    "sandbags": "sandbag_cover",
+    "concrete_barrier": "barrier_cover"
   }
 }

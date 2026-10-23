@@ -13,7 +13,8 @@ public partial class StudioPreview
     private sealed record LibraryProperty(string label, string value);
     private sealed record LibraryDetail(string title, JsonElement data);
     private sealed record LibraryVariant(string id, string name);
-    private sealed record LibraryInteraction(string source, string profile, bool blocks_movement, bool blocks_projectiles);
+    private sealed record LibraryInteraction(string source, string profile, bool blocks_movement, bool blocks_projectiles,
+        bool cover, string? breakable_by, float? max_health);
     private sealed record LibraryEntry(string id, string name, string category, string source, string summary,
         List<LibraryProperty> properties, List<LibraryDetail> details, LibraryVariant[] variants, JsonElement? sourceData = null,
         string qualityMode = "single", LibraryInteraction? interaction = null);
@@ -125,16 +126,28 @@ public partial class StudioPreview
             entry.properties.Insert(3, new("탄환 차단", rule == null ? "공통 데이터 미연결 · 맵 배치 코드에서 결정" : rule.BlocksProjectiles ? "차단" : "통과"));
             if (rule != null)
             {
+                // Low cover and destruction (decisions.md C-29) come from the same data as the blocking above.
+                float gap = ObjectInteractions.Current.ShootOverGapBodies;
+                entry.properties.Insert(4, new("엄폐 (낮은 엄폐물)", rule.Cover
+                    ? $"엄폐 — 몸과의 틈이 몸 폭 {Number(gap)}배 미만이면 넘겨 쏘기, 그보다 멀면 총알을 막음. 근접 · 시야는 넘어감"
+                    : "아님"));
+                entry.properties.Insert(5, new("파괴", rule.Destruction is not { } d ? "파괴 안 됨 (데이터)"
+                    : d.BreakableBy == BreakableBy.Gun ? "총으로 파괴 (폭발로도)" : "폭발로만 파괴 (총은 막기만)"));
+                entry.properties.Insert(6, new("내구도", rule.Destruction is { } h ? Number(h.MaxHealth) : "—"));
                 entry.properties.Add(new("차단 프로필", rule.Profile));
                 entry.properties.Add(new("차단 데이터 출처", ObjectInteractions.DataPath));
                 entry.properties.Add(new("차단 적용 범위", "StageMap.Prop 기본 배치 · 장식(solid:false) 제외. 별도 충돌은 맵 코드 확인"));
                 entry.details.Add(new("게임 공통 차단 데이터", ReadJson(ObjectInteractions.DataPath)));
-                _objectEntries[i] = entry with { interaction = new(ObjectInteractions.DataPath, rule.Profile, rule.BlocksMovement, rule.BlocksProjectiles) };
+                _objectEntries[i] = entry with { interaction = new(ObjectInteractions.DataPath, rule.Profile, rule.BlocksMovement, rule.BlocksProjectiles,
+                    rule.Cover, rule.Destruction is { } k ? (k.BreakableBy == BreakableBy.Gun ? "gun" : "explosive") : null, rule.Destruction?.MaxHealth) };
             }
-            entry.properties.Add(new("파괴·폭발 규칙", entry.id == "runtime:barrel"
-                ? "현재 코드: 피격·주변 폭발·황소 충돌로 점화. 공통 데이터 미연결"
-                : "공통 데이터 미연결 · 미정(파괴 불가를 뜻하지 않음)"));
-            entry.properties.Add(new("파괴에 필요한 공격·내구도", "공통 데이터 미연결 · 후속 정의"));
+            else
+            {
+                entry.properties.Add(new("엄폐 · 파괴", entry.id == "runtime:barrel"
+                    ? "현재 코드: 피격 · 주변 폭발 · 황소 충돌로 점화. 공통 데이터 미연결"
+                    : "공통 데이터 미연결 · 미정(파괴 불가를 뜻하지 않음)"));
+            }
+            entry.properties.Add(new("폭발 (부서질 때)", entry.id == "runtime:barrel" ? "현재 코드 상수(반경 위) · 공통 데이터 미연결" : "공통 데이터 미연결 · 후속(폭발 오브젝트)"));
         }
         AddQualityEntries();
         _objectEntries = _objectEntries.OrderBy(e => e.category).ThenBy(e => e.name).ToList();

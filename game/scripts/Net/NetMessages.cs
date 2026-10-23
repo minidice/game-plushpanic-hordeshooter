@@ -256,7 +256,7 @@ public sealed class NetSnapshot
 public enum NetEvent
 {
     EnemySpawn = 1, EnemyDeath, EnemyHit, EnemyAttack, EnemyAttackEnd, EnemyProjectile,
-    PlayerHit, Shot, Throw, BarrelExplode, World, PickupSpawn, Notice, StageEnd, LootSpawn, CardProp, EnemyBurn, EnemyWeak, Roster,
+    PlayerHit, Shot, Throw, BarrelExplode, World, PickupSpawn, Notice, StageEnd, LootSpawn, CardProp, EnemyBurn, EnemyWeak, Roster, ObjectBreak,
 }
 
 /// <summary>Enemy attack kinds for <see cref="NetEvent.EnemyAttack"/>.</summary>

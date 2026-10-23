@@ -106,18 +106,18 @@ public partial class CaptureEnemy : Enemy
     private bool ClearToPlayer() => _victim != null && ClearTo(_victim);
     private bool ClearTo(Player player)
     {
-        // Height tiers (L-16): grabs are the exception that reaches across tiers. The line is checked at the higher body's
+        // Grabs reach over low cover like melee (C-29). Height tiers (L-16): grabs are the exception that reaches across tiers. The line is checked at the higher body's
         // chest height, so the cliff between them does not count but a wall up there does.
         if (Stage.Tiers.Any && Stage.Tiers.TierOf(this) != Stage.Tiers.TierOf(player))
         {
             float y = Mathf.Max(GlobalPosition.Y, player.GlobalPosition.Y) + .7f;
-            return Rays.Clear(this, GlobalPosition with { Y = y }, player.GlobalPosition with { Y = y }, Layers.MovementWorld | Layers.Props);
+            return Rays.Clear(this, GlobalPosition with { Y = y }, player.GlobalPosition with { Y = y }, Layers.MeleeMask);
         }
         var body = GlobalPosition + Vector3.Up * .7f;
-        if (!Rays.Clear(this, body, player.GlobalPosition + Vector3.Up * .7f, Layers.MovementWorld | Layers.Props))
+        if (!Rays.Clear(this, body, player.GlobalPosition + Vector3.Up * .7f, Layers.MeleeMask))
             return false;
-        return IsLeaper || (Rays.Clear(this, body, Rig.Muzzle.GlobalPosition, Layers.MovementWorld | Layers.Props) &&
-            Rays.Clear(this, Rig.Muzzle.GlobalPosition, player.GlobalPosition + Vector3.Up * .8f, Layers.MovementWorld | Layers.Props));
+        return IsLeaper || (Rays.Clear(this, body, Rig.Muzzle.GlobalPosition, Layers.MeleeMask) &&
+            Rays.Clear(this, Rig.Muzzle.GlobalPosition, player.GlobalPosition + Vector3.Up * .8f, Layers.MeleeMask));
     }
 
     /// <summary>The survivor currently held (null when not holding anyone).</summary>

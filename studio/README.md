@@ -8,6 +8,6 @@
 
 [구조·검증·제약](../doc/studio-prototype.md). Node.js 외 웹 의존성 없음. 별도 서버 배포 없음. `output/`은 로그·검사 이미지용 로컬 산출물이다.
 
-목록은 현재 로컬 자산에서 읽는다. **펫3·드론4·부사수4는 하나의 항목에서 고/저품질을 나란히 비교**한다. 펫/드론은 별도 GLB, 부사수는 자동 LOD 설정이며 원본 삼각형 수를 표시한다. 몬스터는 배율 적용 전 기본값, 모델 충돌은 manifest 추천값이다. 이동/탄환 차단은 실제 `object_interactions.json`과 게임 공통 로더에서 읽는다. 철조망은 이동 차단/탄환 통과, 일반 구조물은 양쪽 차단이며 배치 예외와 출처를 함께 표시한다. 파괴/폭발은 아직 미연결이다. [현재/후속 계약](../doc/object-data-spec.md).
+목록은 현재 로컬 자산에서 읽는다. **펫3·드론4·부사수4는 하나의 항목에서 고/저품질을 나란히 비교**한다. 펫/드론은 별도 GLB, 부사수는 자동 LOD 설정이며 원본 삼각형 수를 표시한다. 몬스터는 배율 적용 전 기본값, 모델 충돌은 manifest 추천값이다. 이동/탄환 차단은 실제 `object_interactions.json`과 게임 공통 로더에서 읽는다. 철조망은 이동 차단/탄환 통과, 일반 구조물은 양쪽 차단이며 배치 예외와 출처를 함께 표시한다. 낮은 엄폐물(모래자루 · 콘크리트 방벽)과 파괴(깰 수 있는 강도 · 내구도)도 같은 데이터에서 표시한다(C-29). 부서질 때 폭발은 아직 미연결이다. [현재/후속 계약](../doc/object-data-spec.md).
 
 실행 중 `node studio/tests/smoke.mjs`, `node studio/tests/library.mjs --all`, `node studio/tests/quality.mjs`, `node studio/tests/interactions.mjs`로 검증한다(검사에만 Python + Pillow 필요).

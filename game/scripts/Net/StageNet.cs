@@ -321,6 +321,13 @@ public partial class StageNet : Node
         _batch.Begin(NetEvent.BarrelExplode); _batch.W.U16(barrel.NetId);
     }
 
+    /// <summary>Host: a sandbag (or another breakable object, C-29) gave way.</summary>
+    public void OnObjectBreak(ObjectBody body)
+    {
+        if (Role != NetRole.Host || body.NetId == 0) return;
+        _batch.Begin(NetEvent.ObjectBreak); _batch.W.U16(body.NetId);
+    }
+
     /// <summary>Host: one client's card queue and the mode's card state (Onslaught, decisions.md M-27). False = not sent yet.</summary>
     public bool SendCards(Player who, byte[] data)
     {
@@ -500,6 +507,8 @@ public partial class StageNet : Node
         var barrels = _stage.Props.OfType<ExplosiveBarrel>().ToList();
         w.U16(barrels.Count);
         foreach (var b in barrels) w.U16(b.NetId);
+        w.U16(_stage.Breakables.Count);
+        foreach (var o in _stage.Breakables) w.U16(o.NetId);
     }
 
     private void SendEvents(int peer, byte[] packet)
@@ -671,7 +680,7 @@ public partial class StageNet : Node
                 var target = r.Pos();
                 if (!_enemies.TryGetValue(id, out var enemy) || !IsInstanceValid(enemy) || enemy.Monster.Ranged is not { } shot) break;
                 var projectile = new EnemyProjectile();
-                projectile.Setup(_stage, from, target, shot, 0); // the host already decided the damage
+                projectile.Setup(_stage, from, target, shot, 0, enemy.Radius); // the host already decided the damage
                 _stage.AddChild(projectile);
                 _stage.Sfx.PlayAt(enemy.Monster.Behavior == MonsterBehavior.Shooter ? "shot_rifle" : "zombie_hit", from);
                 enemy.PuppetEndAttack();
@@ -736,6 +745,12 @@ public partial class StageNet : Node
             {
                 int id = r.U16();
                 _stage.Props.OfType<ExplosiveBarrel>().FirstOrDefault(b => b.NetId == id)?.Explode();
+                break;
+            }
+            case NetEvent.ObjectBreak:
+            {
+                int id = r.U16();
+                _stage.Breakables.FirstOrDefault(o => o.NetId == id)?.Break();
                 break;
             }
             case NetEvent.PickupSpawn:
@@ -838,6 +853,11 @@ public partial class StageNet : Node
         var alive = new HashSet<int>();
         for (int i = 0; i < barrels; i++) alive.Add(r.U16());
         foreach (var b in _stage.Props.OfType<ExplosiveBarrel>().Where(b => !alive.Contains(b.NetId)).ToList()) b.Explode();
+        // Breakable objects the host no longer lists gave way there (a missed event, or a late join).
+        int objects = r.U16();
+        var standing = new HashSet<int>();
+        for (int i = 0; i < objects; i++) standing.Add(r.U16());
+        foreach (var o in _stage.Breakables.Where(o => !standing.Contains(o.NetId)).ToList()) o.Break();
         _stage.ApplyNetState(state);
     }
 }

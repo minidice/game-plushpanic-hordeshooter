@@ -36,6 +36,16 @@ public static class Blast
             enemy.Shove(away, 40f + (knockbackPower - 40f) * falloff, (damage * falloff + 15f) * scale, by);
         }
 
+        // Breakable objects take the blast like a monster would (C-29); explosive-only ones only from this.
+        foreach (var placed in System.Linq.Enumerable.ToList(stage.Breakables))
+        {
+            if (!GodotObject.IsInstanceValid(placed)) continue;
+            if (tiers != null && Mathf.Abs(TierMap.FloorTier(placed.GlobalPosition.Y) - blastTier) > 1) continue;
+            float d = (placed.GlobalPosition - at).Length();
+            if (d > radius) continue;
+            placed.TakeDamage((damage * (1 - d / radius) + 15f) * scale, ObjectDamage.Explosion);
+        }
+
         // Include corpses created by the damage above, even before the next physics broadphase.
         stage.Effects.BlastCorpses(at, radius, knockbackPower, source);
 

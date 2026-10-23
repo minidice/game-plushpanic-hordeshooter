@@ -13,6 +13,9 @@ public partial class Rocket : Node3D
     private Player? _by;
     /// <summary>The tier it was fired from (L-15): it flies over lower tiers and finds targets there on the floor plan.</summary>
     private int _tier;
+    /// <summary>Where the shooter stood and how wide it is: low cover right there is fired over (C-29).</summary>
+    private Vector3 _launchedFrom;
+    private float _shooterRadius = .4f;
 
     /// <param name="by">Who fired it: the hit and the warhead count for them and take their damage multiplier.</param>
     public static Rocket Launch(Stage stage, Vector3 from, Vector3 direction, WeaponDefinition def, Rid shooter, Player? by = null)
@@ -27,7 +30,9 @@ public partial class Rocket : Node3D
             _shooter = shooter,
             _by = by,
             _tier = by != null && stage.Tiers.Any ? stage.Tiers.TierOf(by) : TierMap.FloorTier(from.Y - Player.AimHeight),
+            _launchedFrom = by?.GlobalPosition ?? from,
         };
+        if (by != null) rocket._shooterRadius = by.Definition.ColliderRadius;
         stage.Effects.AddChild(rocket);
         rocket.GlobalPosition = from;
         rocket.LookAt(from + direction, Vector3.Up);
@@ -55,7 +60,7 @@ public partial class Rocket : Node3D
         _life -= dt;
         var from = GlobalPosition;
         var to = from + _velocity * dt;
-        var hitOrNull = Rays.Cast(this, from, to, Layers.BulletMask, new[] { _shooter });
+        var hitOrNull = CoverRule.Cast(this, _launchedFrom, _shooterRadius, from, to, Layers.BulletMask, new[] { _shooter });
         if (_stage.Tiers.Any)
         {
             var tiers = _stage.Tiers;

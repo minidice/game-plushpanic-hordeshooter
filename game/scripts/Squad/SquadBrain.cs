@@ -222,7 +222,8 @@ public partial class SquadBrain : Node
             if (theirs > mine) return false;
             if (theirs < mine) target = target with { Y = eye.Y };
         }
-        return Rays.Clear(Bot, eye, target, Layers.World | Layers.Props);
+        // The same cover rule as the bot's gun (C-29): it fires over sandbags it hugs, not into ones further off.
+        return CoverRule.Clear(Bot, Bot.GlobalPosition, Bot.Definition.ColliderRadius, eye, target, Layers.EnemyShotMask);
     }
 
     private Interactable? PickupWanted()
