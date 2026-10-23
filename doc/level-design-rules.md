@@ -30,6 +30,10 @@
 
 구현: `game/scripts/World/CameraRig.cs`, `StageOneLayout.cs`, Stage 2는 `StageTwoMap.cs`(아래). 아이템 배치 데이터: `game/content/data/stages/stage1_supplies.json`(L-12), 몬스터 배치·등장 지점: `stage1_encounters.json`(L-7). 관련 검사: `game/tests/CombatPacingCheck.tscn`. 전체 기능 현황은 [기능 체크리스트](feature-checklist.md).
 
+## 지형 높이 단 (2026-10-23 방향, 미구현)
+
+턱 · 절벽은 정수 **높이 단**(1단 = 1.2 m)으로 판정한다(L-15). 이동 유형별 오르기 · 사다리 · 넉백 낙하는 L-16, 보스전 공간은 단차 없는 평지(L-17). 레벨에 단차를 넣을 때는 **모든 위 단 공간에 몬스터가 올라오는 경로가 있는지**(고지대 무적 방지)와 카메라 쪽(+Z)에 낮은 단이 오는지를 확인한다. 상세는 [높이 단 규격](elevation-tiers.md). 지금 코드는 평평한 바닥 전제라 단차를 쓸 수 없다(I-104).
+
 ## 맵 인터페이스 (2026-10-21 구현, L-13)
 
 모든 맵은 `game/scripts/World/StageMap.cs`의 `StageMap`을 상속한다. Stage는 맵 종류를 모르고 아래만 쓴다. 바닥·벽·상자·드럼통·조명·줍기 물건·보급 지점 같은 조립 블록과 흐름장 찍기(전부 막고 → 바닥을 뚫고 → 벽·문을 다시 막음)도 이 기반 클래스에 있다.
