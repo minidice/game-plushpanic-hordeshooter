@@ -51,6 +51,10 @@ msg_stage_down,쓰러졌습니다...
 ui_use_open_door,문 열기
 ui_use_shutter,셔터 열기 (경보 작동!)
 ui_use_close_safehouse,문 닫기 (스테이지 클리어)
+ui_use_ladder_up,사다리 오르기
+ui_use_ladder_down,사다리 내려가기
+ui_use_zipline,짚라인 타기
+ui_use_gondola,곤돌라 출발
 ui_use_ammo,탄약 보충 (2번 무기)
 ui_use_medkit,구급상자 줍기
 fmt_use_pickup_weapon,{0} 줍기  ({1}번)
@@ -62,6 +66,7 @@ fmt_pickup_upgraded,{0}!
 msg_pickup_full,더 가져갈 수 없습니다
 msg_pickup_ammo,+탄약
 msg_pickup_medkit,구급상자 획득 — [Q] 로 치료
+msg_gondola_wait,모두 곤돌라에 타야 출발합니다
 msg_pickup_medkit_full,구급상자는 하나만 들 수 있습니다
 msg_refill_no_primary,2번 무기가 없습니다
 fmt_refill_not_refillable,{0}은(는) 탄약을 보충할 수 없습니다
@@ -262,3 +267,8 @@ msg_stage_exit_open,세이프하우스 바닥 해치가 열렸다 — 다음 구
 msg_stage_route_start,벙커를 빠져나왔다 — 숲길을 따라 세이프하우스로
 ui_transition_stage2,숲속 벙커길
 ui_transition_stage_number,STAGE {0}
+ui_use_pump,펌프 켜기 (다리 내리기 · 경보!)
+ui_objective_lower_bridge,협곡 펌프장에서 다리 내리기  [E]
+msg_stage_bridge_alarm,펌프 작동! 다리가 내려올 때까지 버티세요
+msg_stage_bridge_down,다리가 내려왔습니다! 사다리로 올라가 다리를 건너세요
+msg_stage_draft_start,벙커를 빠져나왔다 — 숲을 지나 협곡의 다리를 내리세요

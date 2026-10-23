@@ -9,6 +9,12 @@ namespace HordeShooter;
 /// <summary>Common, named or boss (decisions.md T-21). Bosses keep their corpse like named ones.</summary>
 public enum MonsterTier { Common, Named, Boss }
 
+/// <summary>
+/// How a body gets up a height tier (decisions.md L-16): ladders only (survivors, squadmates, armed animals), climbing
+/// any climbable wall (zombies), jumping up to two tiers (leapers, beasts, bosses) or flying over (balloons).
+/// </summary>
+public enum MonsterClimb { Ladder, Wall, Jump, Fly }
+
 public enum MonsterBehavior
 {
     /// <summary>Common infected (<see cref="Enemy"/>).</summary>
@@ -44,6 +50,8 @@ public sealed class MonsterDefinition
     public string DisplayName => Loc.Text(NameKey);
     public MonsterBehavior Behavior { get; set; }
     public MonsterTier Tier { get; set; }=MonsterTier.Common;
+    /// <summary>How it gets up a height tier (the climb column, L-16).</summary>
+    public MonsterClimb Climb { get; set; } = MonsterClimb.Wall;
     public string LookId { get; set; } = "";
     /// <summary>Use the player's species with its gear stripped (zombie version) instead of the look's own model.</summary>
     public bool MirrorPlayer { get; set; }
@@ -75,7 +83,7 @@ public sealed class MonsterDatabase
     public static readonly string[] Columns =
     {
         "id", "name", "behavior", "look", "mirror_player", "hp", "move_speed_mps", "mass", "attack_damage",
-        "attack_interval_ms", "attack_reach_m", "wake_range_m", "traits", "tier",
+        "attack_interval_ms", "attack_reach_m", "wake_range_m", "traits", "tier", "climb",
     };
 
     private static readonly Dictionary<string, string[]> TraitKeys = new()
@@ -134,12 +142,15 @@ public sealed class MonsterDatabase
             var c = new CellReader(where, row.Cells, db._errors);
             var tier = row.Cells.GetValueOrDefault("tier", "").ToLowerInvariant();
             if (tier is not ("" or "common" or "named" or "boss")) db._errors.Add($"{where}: tier '{tier}' must be common/named/boss; common used");
+            var climb = row.Cells.GetValueOrDefault("climb", "").ToLowerInvariant();
+            if (climb is not ("" or "ladder" or "wall" or "jump" or "fly")) db._errors.Add($"{where}: climb '{climb}' must be ladder/wall/jump/fly; wall used");
             var m = new MonsterDefinition
             {
                 Id = id,
                 NameKey = row.Cells.GetValueOrDefault("name", ""),
                 Behavior = c.Enum<MonsterBehavior>("behavior"),
                 Tier = tier switch { "named" => MonsterTier.Named, "boss" => MonsterTier.Boss, _ => MonsterTier.Common },
+                Climb = climb switch { "ladder" => MonsterClimb.Ladder, "jump" => MonsterClimb.Jump, "fly" => MonsterClimb.Fly, _ => MonsterClimb.Wall },
                 LookId = row.Cells.GetValueOrDefault("look", id),
                 MirrorPlayer = c.Bool("mirror_player", false),
                 Hp = c.Float("hp", 30),

@@ -26,7 +26,7 @@ public abstract partial class StageMap
     public static StageMap Create(GameMode mode, int scenarioStage = 1) => mode switch
     {
         GameMode.Survivor => new OpenFieldMap(),
-        GameMode.Scenario when scenarioStage == 2 => new StageTwoMap(),
+        GameMode.Scenario when scenarioStage == 2 => GameSession.Stage2Draft ? new LayoutMap() : new StageTwoMap(),
         _ => new StageOneLayout(),
     };
 
@@ -67,6 +67,12 @@ public abstract partial class StageMap
     public virtual Door? Shutter => null;
     public virtual Interactable? ShutterPanel => null;
     public virtual float CrescendoSeconds { get; set; } = 50f;
+    /// <summary>Language keys of the crescendo beat (Stage 1's shutter by default): the objective line, the alarm and the "it opened" notices.</summary>
+    public virtual string CrescendoObjectiveKey => "ui_objective_reach_shutter";
+    public virtual string CrescendoAlarmKey => "msg_stage_alarm";
+    public virtual string CrescendoDoneKey => "msg_stage_shutter_open";
+    /// <summary>The notice when a stage starts out on the route.</summary>
+    public virtual string RouteStartKey => "msg_stage_route_start";
     public virtual Door? SafehouseDoor => null;
     public virtual Interactable? SafehouseSwitch => null;
     /// <summary>The hatch that leads to <see cref="NextStage"/>, opened once the safehouse is shut.</summary>
@@ -133,6 +139,67 @@ public abstract partial class StageMap
         if (draw) StageArt.Floor(body, size, IndoorFloor(x0));
         _floors.Add((center, size));
     }
+
+    /// <summary>
+    /// A walkable floor whose top is <paramref name="tier"/> × <see cref="TierMap.Height"/> (decisions.md L-15). Its sides
+    /// are the cliff: they stop walkers, and bullets from below. Tier 0 is an ordinary <see cref="Floor"/>.
+    /// </summary>
+    protected void Raised(float x0, float x1, float z0, float z1, int tier, string color, bool draw = true)
+    {
+        _stage.Tiers.PaintTier(x0, x1, z0, z1, tier);
+        if (tier == 0) { Floor(x0, x1, z0, z1, color, draw); return; }
+        float top = tier * TierMap.Height;
+        var center = new Vector3((x0 + x1) / 2, (top - .4f) / 2, (z0 + z1) / 2);
+        var size = new Vector3(x1 - x0, top + .4f, z1 - z0);
+        var body = new StaticBody3D { Name = "Raised", Position = center, CollisionLayer = Layers.World, CollisionMask = 0 };
+        _stage.AddChild(body);
+        body.AddChild(new CollisionShape3D { Shape = new BoxShape3D { Size = size } });
+        if (draw) StageArt.Floor(body, size, IndoorFloor(x0));
+        _floors.Add((center, size));
+    }
+
+    /// <summary>
+    /// A ramp from <paramref name="lowTier"/> up one tier, rising toward <paramref name="up"/> (±X or ±Z). It stands on the
+    /// low tier's floor in front of the cliff, its high end flush with the tier above. Give it whole cells (edges on the
+    /// 1 m grid): the cells painted as ramp and the wedge must cover the same ground.
+    /// </summary>
+    protected void Ramp(float x0, float x1, float z0, float z1, int lowTier, Vector3 up, string color)
+    {
+        _stage.Tiers.PaintRamp(x0, x1, z0, z1, lowTier, up);
+        bool alongX = Mathf.Abs(up.X) > .5f;
+        float run = alongX ? x1 - x0 : z1 - z0, across = alongX ? z1 - z0 : x1 - x0;
+        // PrismMesh: a right triangle in XY rising toward +X, extruded along Z; turned to face up.
+        var wedge = new PrismMesh { LeftToRight = 1, Size = new Vector3(run, TierMap.Height, across) };
+        float yaw = alongX ? (up.X > 0 ? 0 : 180) : (up.Z > 0 ? -90 : 90);
+        var body = new StaticBody3D
+        {
+            Name = "Ramp",
+            Position = new Vector3((x0 + x1) / 2, lowTier * TierMap.Height + TierMap.Height / 2, (z0 + z1) / 2),
+            RotationDegrees = new Vector3(0, yaw, 0),
+            CollisionLayer = Layers.World,
+            CollisionMask = 0,
+        };
+        _stage.AddChild(body);
+        body.AddChild(new CollisionShape3D { Shape = wedge.CreateConvexShape() });
+        body.AddChild(new MeshInstance3D { Mesh = wedge, MaterialOverride = Mat.Solid(color, .9f) });
+        _floors.Add((new Vector3((x0 + x1) / 2, 0, (z0 + z1) / 2), new Vector3(x1 - x0, 0, z1 - z0)));
+    }
+
+    /// <summary>A climbable stretch of cliff for wall climbers; paint the cells on both sides of the edge (L-16).</summary>
+    protected void ClimbableWall(float x0, float x1, float z0, float z1) => _stage.Tiers.PaintClimb(x0, x1, z0, z1);
+
+    /// <summary>A ladder from <paramref name="bottom"/> (at the cliff foot) to <paramref name="top"/> (just past the rim above).</summary>
+    protected Ladder Ladder(Vector3 bottom, Vector3 top) => HordeShooter.Ladder.Create(_stage, bottom, top);
+
+    /// <summary>A zipline from <paramref name="start"/> (high) down to <paramref name="end"/> (L-18).</summary>
+    protected Zipline Zipline(Vector3 start, Vector3 end) => HordeShooter.Zipline.Create(_stage, start, end);
+
+    /// <summary>A gondola station on <paramref name="platform"/> (x, z) whose ride ends at <paramref name="arrival"/> (L-18).</summary>
+    protected Gondola Gondola(Rect2 platform, float floorY, Vector3 arrival, Vector3 travel, float seconds = 12f) =>
+        HordeShooter.Gondola.Create(_stage, platform, floorY, arrival, travel, seconds);
+
+    /// <summary>Rim cells of a raised floor where anyone may step off and drop down (one way, L-16).</summary>
+    protected void DropEdge(float x0, float x1, float z0, float z1) => _stage.Tiers.PaintDrop(x0, x1, z0, z1);
 
     protected StaticBody3D Wall(float x0, float x1, float z0, float z1, float height, string color, bool drawWall = true)
     {
@@ -353,12 +420,16 @@ public abstract partial class StageMap
     protected void PlaceSupplies(StageSupplies supplies)
     {
         foreach (var item in supplies.Points.SelectMany(p => p.Items))
+        {
+            // On a raised tier the item lies on that tier's floor (L-15); a flat map keeps the data's height.
+            var at = _stage.Tiers.Any ? item.At with { Y = item.At.Y + _stage.Tiers.GroundY(item.At) } : item.At;
             switch (item.Kind)
             {
-                case SupplyItemKind.Weapon: Weapon(item.At, item.Id); break;
-                case SupplyItemKind.Throwable: Throwable(item.At, item.Id); break;
-                case SupplyItemKind.Ammo: AmmoPile(item.At); break;
-                case SupplyItemKind.Medkit: Medkit(item.At); break;
+                case SupplyItemKind.Weapon: Weapon(at, item.Id); break;
+                case SupplyItemKind.Throwable: Throwable(at, item.Id); break;
+                case SupplyItemKind.Ammo: AmmoPile(at); break;
+                case SupplyItemKind.Medkit: Medkit(at); break;
             }
+        }
     }
 }

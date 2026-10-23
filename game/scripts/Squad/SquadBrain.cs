@@ -198,7 +198,7 @@ public partial class SquadBrain : Node
             if (enemy.IsDead || !enemy.Awake) continue;
             float d = enemy.GlobalPosition.DistanceTo(Bot.GlobalPosition);
             if (d > range) continue;
-            if (!Rays.Clear(Bot, eye, enemy.GlobalPosition + Vector3.Up * Player.AimHeight, Layers.World | Layers.Props)) continue;
+            if (!InSight(eye, enemy)) continue;
             float score = -d;
             if (enemy.Victim is { } victim && victim != Bot && victim.GlobalPosition.DistanceTo(enemy.GlobalPosition) < 3f) score += 40;
             if (enemy.IsSpecial) score += 25;
@@ -206,6 +206,23 @@ public partial class SquadBrain : Node
             if (score > bestScore) { bestScore = score; best = enemy; }
         }
         return best;
+    }
+
+    /// <summary>
+    /// Line of fire to an enemy. With height tiers (L-15) nothing up a tier can be shot, and below the line is checked at
+    /// the squadmate's own height, the way the bullet flies over the edge.
+    /// </summary>
+    private bool InSight(Vector3 eye, Enemy enemy)
+    {
+        var target = enemy.GlobalPosition + Vector3.Up * Player.AimHeight;
+        var tiers = _stage.Tiers;
+        if (tiers.Any)
+        {
+            int mine = tiers.TierOf(Bot), theirs = tiers.TierOf(enemy);
+            if (theirs > mine) return false;
+            if (theirs < mine) target = target with { Y = eye.Y };
+        }
+        return Rays.Clear(Bot, eye, target, Layers.World | Layers.Props);
     }
 
     private Interactable? PickupWanted()
@@ -249,8 +266,10 @@ public partial class SquadBrain : Node
         float lateral = Slot switch { 0 => -1.4f, 1 => 1.4f, _ => 0f };
         if (Slot >= 2) back += 1.2f;
         var spot = leader.GlobalPosition - forward * back + side * lateral;
-        if (_stage.Flow.IsBlocked(spot)) spot = leader.GlobalPosition - forward * back;
-        if (_stage.Flow.IsBlocked(spot)) spot = leader.GlobalPosition;
+        // Height tiers: a slot that falls off the leader's tier is no slot.
+        bool Off(Vector3 p) => _stage.Flow.IsBlocked(p) || (_stage.Tiers.Any && _stage.Tiers.TierAt(p) != _stage.Tiers.TierAt(leader.GlobalPosition));
+        if (Off(spot)) spot = leader.GlobalPosition - forward * back;
+        if (Off(spot)) spot = leader.GlobalPosition;
         return spot with { Y = Bot.GlobalPosition.Y };
     }
 
@@ -258,6 +277,8 @@ public partial class SquadBrain : Node
 
     private void Act(float dt)
     {
+        // On a ladder the climb drives; nothing to decide until the top or the bottom.
+        if (Bot.OnLadder || Bot.OnZipline) { Bot.SetControls(Vector2.Zero, Bot.AimPoint, false); return; }
         var move = Vector3.Zero;
         var aim = Bot.GlobalPosition + _watchDirection * 5 + Vector3.Up * Player.AimHeight;
         bool fire = false;
@@ -333,7 +354,37 @@ public partial class SquadBrain : Node
         // Semi-automatic weapons need a fresh press per shot; automatic ones are held.
         if (!Bot.Gun.Def.Automatic) { bool press = fire && !_firePulse; _firePulse = fire && press; fire = press; }
         Bot.HoldRevive(revive);
+        if (TakeLadder(move) || TakeZipline()) return;
         Bot.SetControls(new Vector2(move.X, move.Z).LimitLength(1), aim, fire);
+    }
+
+    /// <summary>When the way to the leader is a zipline from right here (L-18), ride it.</summary>
+    private bool TakeZipline()
+    {
+        if (_stage.Ziplines.Count == 0 || Leader == null) return false;
+        int here = _stage.Tiers.Index(Bot.GlobalPosition);
+        foreach (var line in _stage.Ziplines)
+        {
+            if (line.StartCell != here) continue;
+            if (_stage.LeaderFlow.NextCell(Bot.GlobalPosition) == line.EndCell) return Bot.RideZipline(line);
+        }
+        return false;
+    }
+
+    /// <summary>When the route steps onto a ladder (L-16), climb it the way a survivor would.</summary>
+    private bool TakeLadder(Vector3 move)
+    {
+        var tiers = _stage.Tiers;
+        if (!tiers.Any || _stage.Ladders.Count == 0 || move.LengthSquared() < .01f) return false;
+        int here = tiers.Index(Bot.GlobalPosition);
+        int ahead = tiers.Index(Bot.GlobalPosition + new Vector3(move.X, 0, move.Z).Normalized() * (Bot.Definition.ColliderRadius + .5f));
+        if (here < 0 || ahead < 0 || here == ahead || tiers.LadderEnd(here) != ahead) return false;
+        foreach (var ladder in _stage.Ladders)
+        {
+            if (ladder.BottomCell == here && ladder.TopCell == ahead) return Bot.ClimbLadder(ladder, up: true);
+            if (ladder.TopCell == here && ladder.BottomCell == ahead) return Bot.ClimbLadder(ladder, up: false);
+        }
+        return false;
     }
 
     /// <summary>Reload when empty; fall back to the pistol when the primary is dry; back to it after a refill.</summary>
@@ -377,7 +428,9 @@ public partial class SquadBrain : Node
         float d = to.Length();
         if (d < .35f) return Vector3.Zero;
         float speed = Mathf.Min(pace, d / 1.5f + .2f);
-        if (d < 8f && WideClear(goal)) return to / d * speed;
+        // Height tiers: straight only on the same tier; another tier is reached by the route field (ramps, drop edges).
+        bool sameTier = !_stage.Tiers.Any || _stage.Tiers.TierAt(goal) == _stage.Tiers.TierAt(Bot.GlobalPosition);
+        if (d < 8f && sameTier && WideClear(goal)) return to / d * speed;
         FlowField field;
         if (toLeader) field = _stage.LeaderFlow;
         else
@@ -385,6 +438,7 @@ public partial class SquadBrain : Node
             if (_goalFlow == null || _goalFlowVersion != _stage.FlowVersion)
             {
                 _goalFlow = _stage.Flow.CopyLayout();
+                _goalFlow.Riders = true;
                 _goalFlowVersion = _stage.FlowVersion;
             }
             _goalFlow.Update(goal);

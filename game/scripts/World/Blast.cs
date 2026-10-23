@@ -21,9 +21,14 @@ public static class Blast
         foreach (var car in stage.AlarmCars)
             if (car.GlobalPosition.DistanceTo(at) < radius + 2f) car.Trigger();
 
+        // Height tiers (L-15, elevation-tiers.md 6장): a blast reaches one tier up or down, not further.
+        var tiers = stage.Tiers.Any ? stage.Tiers : null;
+        // The tier whose floor the blast is on or above: a rocket bursting at chest height is still on that floor.
+        int blastTier = TierMap.FloorTier(at.Y);
         foreach (var enemy in stage.Enemies)
         {
             if (enemy.IsDead) continue;
+            if (tiers != null && Mathf.Abs(tiers.TierOf(enemy) - blastTier) > 1) continue;
             var away = enemy.GlobalPosition - at;
             float d = away.Length();
             if (d > radius) continue;
@@ -36,6 +41,7 @@ public static class Blast
 
         foreach (var player in System.Linq.Enumerable.ToList(stage.AlivePlayers))
         {
+            if (tiers != null && Mathf.Abs(tiers.TierOf(player) - blastTier) > 1) continue;
             var toPlayer = player.GlobalPosition - at;
             float pd = toPlayer.Length();
             if (pd >= radius) continue;

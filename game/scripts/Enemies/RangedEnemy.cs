@@ -43,7 +43,7 @@ public partial class RangedEnemy : Enemy
                 var from = Monster.Behavior == MonsterBehavior.Spitter ? Rig.Muzzle.GlobalPosition : body;
                 // A protruding mouth must not spawn a projectile on the far side of cover.
                 if ((from.IsEqualApprox(body) || Rays.Clear(this, body, from, Layers.World | Layers.Props)) &&
-                    Rays.Clear(this, from, _target, Layers.World | Layers.Props))
+                    ShotClear(from, _target))
                 {
                     var projectile = new EnemyProjectile();
                     projectile.Setup(Stage, from, _target, Shot, AttackDamage);
@@ -57,12 +57,31 @@ public partial class RangedEnemy : Enemy
             }
             return Vector3.Zero;
         }
-        if (Awake && distance < Shot.Range && _cooldown <= 0 &&
-            Rays.Clear(this, GlobalPosition + Vector3.Up * .8f, player.GlobalPosition + Vector3.Up * .8f, Layers.World | Layers.Props))
+        if (Awake && distance < Shot.Range && _cooldown <= 0 && CanShootAt(player) &&
+            ShotClear(GlobalPosition + Vector3.Up * .8f, player.GlobalPosition + Vector3.Up * .8f))
         { StartWindup(); return Vector3.Zero; }
         if (Awake && distance > 3 && distance < Shot.Range && _cooldown > 0 && HasLineOfSight(dt))
         { FaceOverride = to; return Vector3.Zero; }
         return base.Think(dt);
+    }
+
+    /// <summary>Height tiers (L-15): a gun does not shoot up a tier; vomit is lobbed and may (the lob exception).</summary>
+    private bool CanShootAt(Player player) =>
+        !Stage.Tiers.Any || Shot.HazardSeconds > 0 || Stage.Tiers.TierOf(player) <= Stage.Tiers.TierOf(this);
+
+    /// <summary>
+    /// Nothing in the way of the shot. Across tiers a lob clears the edge, and a gun firing down a tier checks the line at
+    /// its own height (the shot flies level over the edge, see <see cref="EnemyProjectile"/>).
+    /// </summary>
+    private bool ShotClear(Vector3 from, Vector3 to)
+    {
+        if (Stage.Tiers.Any)
+        {
+            int fromTier = TierMap.FloorTier(from.Y - .8f), toTier = TierMap.FloorTier(to.Y - .8f);
+            if (Shot.HazardSeconds > 0 && fromTier != toTier) return true;
+            if (toTier < fromTier) to = new Vector3(to.X, from.Y, to.Z);
+        }
+        return Rays.Clear(this, from, to, Layers.World | Layers.Props);
     }
 
     /// <param name="victim">Client puppet: the survivor the host's enemy is aiming at.</param>

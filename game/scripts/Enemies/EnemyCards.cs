@@ -23,7 +23,7 @@ public partial class Enemy
     public float WeakTime { get; private set; }
     private float _weakSlow, _weakKnock = 1, _weakTick;
     /// <summary>What every hit's damage is multiplied by now (2 while melting).</summary>
-    public float DamageTakenScale => WeakTime > 0 ? 2 : 1;
+    public float DamageTakenScale => (WeakTime > 0 ? 2 : 1) * (ClimbingWall ? ClimbDamageScale : 1);
 
     public void Weaken(float seconds, float slow, float knock)
     {

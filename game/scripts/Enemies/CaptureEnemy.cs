@@ -54,7 +54,9 @@ public partial class CaptureEnemy : Enemy
                     _timer = Capture.Range / Capture.Speed + .15f;
                     _direction = (_target - GlobalPosition) with { Y = 0 };
                     _direction = _direction.Normalized();
-                    Velocity = new Vector3(0, 4f, 0);
+                    // A pounce up onto a higher tier needs the height to clear its edge (the grab exception, L-16).
+                    float rise = player.GlobalPosition.Y - GlobalPosition.Y;
+                    Velocity = new Vector3(0, Stage.Tiers.Any && rise > .3f ? Mathf.Sqrt(2 * 20f * (rise + .6f)) : 4f, 0);
                 }
                 else
                 {
@@ -104,6 +106,13 @@ public partial class CaptureEnemy : Enemy
     private bool ClearToPlayer() => _victim != null && ClearTo(_victim);
     private bool ClearTo(Player player)
     {
+        // Height tiers (L-16): grabs are the exception that reaches across tiers. The line is checked at the higher body's
+        // chest height, so the cliff between them does not count but a wall up there does.
+        if (Stage.Tiers.Any && Stage.Tiers.TierOf(this) != Stage.Tiers.TierOf(player))
+        {
+            float y = Mathf.Max(GlobalPosition.Y, player.GlobalPosition.Y) + .7f;
+            return Rays.Clear(this, GlobalPosition with { Y = y }, player.GlobalPosition with { Y = y }, Layers.World | Layers.Props);
+        }
         var body = GlobalPosition + Vector3.Up * .7f;
         if (!Rays.Clear(this, body, player.GlobalPosition + Vector3.Up * .7f, Layers.World | Layers.Props))
             return false;

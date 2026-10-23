@@ -42,11 +42,22 @@ public partial class HordeDirector : Node
     private readonly RandomNumberGenerator _placeRng = new() { Seed = 1 };
     private float _mobTimer, _specialTimer, _waveTimer, _alarmWaveTimer;
     private int _crescendoSpecials;
+    /// <summary>Seconds of timed raids still held: the start, or the rest after a crescendo (stage2-floorplan.md 6장).</summary>
+    private float _raidHold;
+    /// <summary>The mission's way-back groups are out (L-27).</summary>
+    public bool MissionRefilled { get; private set; }
 
     public void Begin()
     {
         if (Active) return;
         Active = true;
+        if (Encounters?.Raids is { } raids)
+        {
+            _raidHold = raids.StartDelay;
+            _mobTimer = _rng.RandfRange(raids.MobMin, raids.MobMax);
+            _specialTimer = _rng.RandfRange(raids.SpecialMin, raids.SpecialMax);
+            return;
+        }
         _mobTimer = _rng.RandfRange(30, 45);
         _specialTimer = _rng.RandfRange(20, 30);
     }
@@ -74,6 +85,11 @@ public partial class HordeDirector : Node
         _alarmWaveTimer = 1f;
         MakeNoise(at, Rules.NoiseAlarm);
     }
+
+    /// <summary>Checks only: the start or after-crescendo hold ends now.</summary>
+    public void EndRaidHoldForTest() => _raidHold = 0;
+    /// <summary>Checks only: the crescendo runs out on the next physics frame.</summary>
+    public void EndCrescendoForTest() { if (CrescendoActive) CrescendoRemaining = 0; }
 
     public void ReportDamage(int damage) => Intensity = Mathf.Min(1, Intensity + damage / 60f);
 
@@ -113,7 +129,19 @@ public partial class HordeDirector : Node
                 _crescendoSpecials++;
                 SpawnSpecial();
             }
-            if (CrescendoRemaining <= 0) CrescendoActive = false;
+            if (CrescendoRemaining <= 0)
+            {
+                CrescendoActive = false;
+                if (Encounters?.Raids is { } after) _raidHold = after.AfterCrescendo;
+            }
+            return;
+        }
+
+        if (Encounters?.Raids is { } raids)
+        {
+            _raidHold = Mathf.Max(0, _raidHold - dt);
+            if (RaidsHeld) return;
+            TickRaids(dt, raids);
             return;
         }
 
@@ -134,6 +162,53 @@ public partial class HordeDirector : Node
             SpawnSpecial();
             _specialTimer = _rng.RandfRange(30, 45);
         }
+    }
+
+    /// <summary>
+    /// Timed raids wait (stage2-floorplan.md 6장): at the start and after a crescendo, while a survivor is inside a safe zone
+    /// (L-24), and while the leader is outside the travel areas. False on a stage without raid rules.
+    /// </summary>
+    public bool RaidsHeld
+    {
+        get
+        {
+            if (Encounters?.Raids is not { } raids) return false;
+            if (_raidHold > 0 || InSafeZone()) return true;
+            var areas = Encounters.Areas;
+            return areas.Count > 0 && !raids.Areas.Contains(areas[Encounters.AreaIndex(Stage.Leader.GlobalPosition.X)].Id);
+        }
+    }
+
+    private void TickRaids(float dt, RaidRules raids)
+    {
+        _mobTimer -= dt;
+        if (_mobTimer <= 0)
+        {
+            // The same relax rule as the director's own timers.
+            if (Intensity > .7f || Stage.Player.Health < 25) _mobTimer = 10;
+            else
+            {
+                SpawnMob(_rng.RandiRange(8, 12));
+                _mobTimer = _rng.RandfRange(raids.MobMin, raids.MobMax);
+            }
+        }
+        _specialTimer -= dt;
+        if (_specialTimer <= 0)
+        {
+            SpawnSpecial();
+            _specialTimer = _rng.RandfRange(raids.SpecialMin, raids.SpecialMax);
+        }
+    }
+
+    /// <summary>A living person stands inside a safe zone (AI squadmates do not count: one stuck there must not stop the raids).</summary>
+    public bool InSafeZone()
+    {
+        if (Encounters == null || Encounters.SafeZones.Count == 0) return false;
+        foreach (var p in Stage.AlivePlayers)
+            if (!p.IsBot)
+                foreach (var zone in Encounters.SafeZones)
+                if (Flat(p.GlobalPosition - zone.At).Length() < zone.Inside) return true;
+        return false;
     }
 
     public int AliveCommons => Stage.AllEnemies.Count(e => !e.IsDead && !e.IsSpecial);
@@ -241,13 +316,18 @@ public partial class HordeDirector : Node
     /// <summary>On any survivor's screen (with a body-sized margin).</summary>
     public bool OnScreen(Vector3 at) => Stage.Effects.IsOnScreen(at + Vector3.Up, 1.2f);
 
-    /// <summary>Near a stair or sewer landing: nothing waits or appears there (decisions.md L-11).</summary>
-    public bool IsProtected(Vector3 at)
+    /// <summary>
+    /// Near a stair or sewer landing (decisions.md L-11), or a safe zone (L-24: wider for waves than for waiting monsters):
+    /// nothing waits or appears there. <paramref name="wave"/> false asks about monsters placed before anyone arrives.
+    /// </summary>
+    public bool IsProtected(Vector3 at, bool wave = true)
     {
         if (Encounters == null) return false;
         float r2 = Rules.ProtectRadius * Rules.ProtectRadius;
         foreach (var p in Encounters.Protected)
             if (Flat(p - at).LengthSquared() < r2) return true;
+        foreach (var zone in Encounters.SafeZones)
+            if (Flat(zone.At - at).Length() < (wave ? zone.NoWave : zone.NoPlace)) return true;
         return false;
     }
 
@@ -270,10 +350,11 @@ public partial class HordeDirector : Node
             else EncounterErrors.Add($"{e.Kind} entry at ({e.At.X:0.#}, {e.At.Z:0.#}) lands on a wall or prop");
         }
         foreach (var g in set.Groups.Where(g => g.Special >= 0))
-            if (Stage.Flow.IsBlocked(g.At) || IsProtected(g.At))
+            if (Stage.Flow.IsBlocked(g.At) || IsProtected(g.At, wave: false))
                 EncounterErrors.Add($"special in {g.Area} at ({g.At.X:0.#}, {g.At.Z:0.#}) is inside a wall or a protected landing");
         foreach (var error in EncounterErrors) GD.PushError("[spawn] " + error);
         FilledThrough = -1;
+        MissionRefilled = false;
         UpdateAreas();
     }
 
@@ -295,16 +376,29 @@ public partial class HordeDirector : Node
 
     private void Fill(EncounterArea area)
     {
-        foreach (var group in Encounters!.Groups.Where(g => g.Area == area.Id))
+        foreach (var group in Encounters!.Groups.Where(g => g.Area == area.Id && g.After == "")) Place(group);
+    }
+
+    private void Place(EncounterGroup group)
+    {
+        if (group.Special >= 0)
         {
-            if (group.Special >= 0)
-            {
-                if (!Stage.Flow.IsBlocked(group.At) && !IsProtected(group.At))
-                    Stage.SpawnInitialSpecial(group.Special, group.At).Reaction = group.Reaction;
-                continue;
-            }
-            Scatter(group);
+            if (!Stage.Flow.IsBlocked(group.At) && !IsProtected(group.At, wave: false))
+                Stage.SpawnInitialSpecial(group.Special, group.At).Reaction = group.Reaction;
+            return;
         }
+        Scatter(group);
+    }
+
+    /// <summary>
+    /// The mission is done: its way back fills again (decisions.md L-27), off screen first like any waiting group. Once per
+    /// stage; only the host places monsters.
+    /// </summary>
+    public void FillAfterMission()
+    {
+        if (!Stage.Authoritative || Encounters == null || MissionRefilled) return;
+        MissionRefilled = true;
+        foreach (var group in Encounters.Groups.Where(g => g.After == "mission")) Place(group);
     }
 
     /// <summary>Random spots in the group's rectangle; off screen first, then anywhere open.</summary>
@@ -318,7 +412,7 @@ public partial class HordeDirector : Node
             {
                 var r = group.Rect;
                 var p = new Vector3(_placeRng.RandfRange(r.Position.X, r.End.X), 0, _placeRng.RandfRange(r.Position.Y, r.End.Y));
-                if (Stage.Flow.IsBlocked(p) || IsProtected(p) || (pass == 0 && OnScreen(p))) continue;
+                if (Stage.Flow.IsBlocked(p) || IsProtected(p, wave: false) || (pass == 0 && OnScreen(p))) continue;
                 Stage.SpawnCommon(p, false).Reaction = group.Reaction;
                 placed++;
             }

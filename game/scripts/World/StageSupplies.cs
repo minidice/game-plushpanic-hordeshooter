@@ -81,7 +81,16 @@ public sealed class StageSupplies
             return _stage2;
         }
     }
-    public static void Reload() { _stage1 = null; _stage2 = null; }
+    private static readonly Dictionary<string, StageSupplies> _byPath = new();
+    /// <summary>Any stage's supplies by file (the size draft's, decisions.md L-29), read once.</summary>
+    public static StageSupplies Load(string path)
+    {
+        if (_byPath.TryGetValue(path, out var db)) return db;
+        db = FromText(FileAccess.FileExists(path) ? FileAccess.GetFileAsString(path) : "", path.GetFile());
+        foreach (var error in db.Errors) GD.PushError("[supplies] " + error);
+        return _byPath[path] = db;
+    }
+    public static void Reload() { _stage1 = null; _stage2 = null; _byPath.Clear(); }
 
     public IEnumerable<SupplyItem> ItemsOf(params SupplyKind[] kinds) => Points.Where(p => kinds.Contains(p.Kind)).SelectMany(p => p.Items);
 

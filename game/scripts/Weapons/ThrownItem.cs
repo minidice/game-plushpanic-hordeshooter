@@ -59,6 +59,8 @@ public partial class ThrownItem : RigidBody3D
     public static ThrownItem Throw(Stage stage, ThrowableDefinition def, Vector3 from, Vector3 target, Player? thrower = null)
     {
         target = ClampTarget(from, target, def.MaxRange);
+        // Height tiers (L-15): aim for the floor of the tier it lands on.
+        if (stage.Tiers.Any) target.Y = stage.Tiers.GroundY(target) + .2f;
         var item = new ThrownItem
         {
             Name = "Thrown_" + def.Id,
