@@ -328,3 +328,7 @@ dotnet build game/HordeShooter.csproj
 - 종료 경고: 환경 헤드리스 ObjectDB 잔존 2개(I-17). 이번 이동·소품·기하·대표/전체 렌더 로그에는 오류/종료 경고 없음. 통합·전환·멀티·ModeCheck는 이번 장식 교체에서 재실행하지 않았다. 기존 I-106은 미해결, 모든 모드 회귀 통과로 표현하지 않는다.
 - 재현: Godot `--headless --path game --fixed-fps 60 res://tests/WorkshopWalkthrough.tscn`; 실제 화면은 `--headless`를 빼고 `--disable-vsync --resolution 1600x900` 추가. 외곽 전후는 `EnvironmentReview.tscn -- --services --tag=service-sets-after --uncapped`, 전체는 `--services`를 빼고 `--tag=service-sets-full`. 로그 `output/service-sets-*.log`, `output/walkthrough-final-render.log`; 이미지 `output/walkthrough-*.png`, `output/environment-service-sets-*.png`. 생성 산출물은 커밋하지 않는다.
 - 남은 검수: 다른 캐릭터/크기 변화·임의 방향 조준·군중전·6인/저사양 장시간·사람의 조작감·최종 미술 승인. 다음 확대는 다른 공간의 용도를 먼저 정하며 무작정 같은 설비를 복제하지 않는다.
+
+## 후속 우선순위 변경 — 맵 구조 확장 우선 (2026-10-23)
+
+사용자가 현재 맵이 비좁으며, 시나리오는 넓은 전진 구역과 짧은 보상/미션 분기, 두 번째 모드는 덕코프 지향의 넓은 맵 탐색을 원한다고 설명했다. 따라서 단조로운 구간의 세부 배치 확대를 보류하고 전체 맵 구조·크기 검증을 먼저 한다. 기존 미술/소품 작업은 재사용 가능한 자산으로 유지한다. 이번은 방향 기록이며 맵 확장 구현이 아니다. [확정 방향·설계 제안·미결 사항](scenario-level-design.md#10-넓은-구역을-연결하는-시나리오-2026-10-23-방향-확인).
