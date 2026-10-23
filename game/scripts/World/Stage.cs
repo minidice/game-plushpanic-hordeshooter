@@ -309,7 +309,7 @@ public partial class Stage : Node3D
 
         Hud = new Hud { Name = "Hud" };
         AddChild(Hud);
-        if (ModeRules == null) ShowNotice(Loc.Text(Objective == Objective.LeaveSafeRoom ? "msg_stage_start" : "msg_stage_route_start"));
+        if (ModeRules == null) ShowNotice(Loc.Text(Objective == Objective.LeaveSafeRoom ? "msg_stage_start" : Map.RouteStartKey));
         // A stage that starts out on the route (no safe-room door to open) wakes the director at once.
         if (ModeRules == null && Objective != Objective.LeaveSafeRoom && DirectorEnabled) Director.Begin();
         if (arriving)
@@ -807,7 +807,9 @@ public partial class Stage : Node3D
             shutter.SetOpen(true, 1.2f);
         }
         Objective = Objective.ReachSafehouse;
-        ShowNotice(Loc.Text("msg_stage_shutter_open"));
+        ShowNotice(Loc.Text(Map.CrescendoDoneKey));
+        // The way back from the mission fills again (L-27); a stage without such groups places nothing.
+        Director.FillAfterMission();
     }
 
     /// <summary>
@@ -921,7 +923,7 @@ public partial class Stage : Node3D
         Director.Begin();
         Director.StartCrescendo(Map.CrescendoSeconds);
         Cam.AddShake(.3f);
-        ShowNotice(Loc.Text("msg_stage_alarm"));
+        ShowNotice(Loc.Text(Map.CrescendoAlarmKey));
     }
 
     public bool TryCloseSafehouse()
@@ -1201,7 +1203,7 @@ public partial class Stage : Node3D
     public string ObjectiveText => Objective switch
     {
         Objective.LeaveSafeRoom => Loc.Text("ui_objective_leave_saferoom"),
-        Objective.ReachShutter => Loc.Text("ui_objective_reach_shutter"),
+        Objective.ReachShutter => Loc.Text(Map.CrescendoObjectiveKey),
         Objective.HoldOut => Loc.Format("fmt_objective_hold_out", Mathf.CeilToInt(Mathf.Max(0, Director.CrescendoRemaining))),
         Objective.ReachSafehouse => Loc.Text("ui_objective_reach_safehouse"),
         Objective.CloseSafehouse => Loc.Text("ui_objective_close_safehouse"),

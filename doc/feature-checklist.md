@@ -384,6 +384,13 @@
 - 기존 검사 모두 통과: `SpawnCheck` 41, `ModeCheck` 147, `CombatPacingCheck` 44, `EnemyExpansion` 60, `EnemyAttackCheck` 79, `CardLabCheck` 172, `SquadCheck` 51, `StageTransitionCheck` 164, `NetSyncCheck` 32, `OnslaughtNetCheck` 29, `CorpseTierCheck` 36, `SupplyCheck` 12, `Start-Game.ps1 -Test`(Integration) 149. 검사 장면은 인원을 정하지 않으면 4인 줄이라 기존 수치 검사는 그대로.
 - 종료 경고(I-17): `SpawnCheck` · `CardLabCheck` · `StageTransitionCheck` · `CorpseTierCheck` · `SupplyCheck`에서 ObjectDB 잔존 한 줄씩. 화면 모양은 바뀌지 않아 렌더는 하지 않음. 실제 싱글 플레이의 난이도 변화는 미확인(I-103).
 
+### 이번 변경 확인 기록 — 2026-10-23 (Stage 2 배치 1차, 7.2 5단계)
+
+- 클라우드 세션(Linux, Godot 4.7.2 .NET 헤드리스). C# 빌드 경고 · 오류 0. **정정**: 바로 아래 크기 시안 기록의 "빌드 경고 0"은 틀렸다 — `LayoutMap`에 이름 가림 경고(CS0108) 2개가 있었고(출력 끝 두 줄만 보고 놓침), 이번에 `GondolaStation` · `FloorAt`으로 이름을 바꿔 없앴다.
+- `SizeDraftCheck` 72개 통과(배치 · 안전 구역 · 시간 습격 · 다리 임무 · 세이프하우스 클리어 포함). 처음 실행에서 I-112(무기 줍기가 단 위에 안 놓임)를 찾아 고침. 검사 자체의 실수 2개(보급 도달을 "보급 → 해치" 방향으로 잼 — 곤돌라가 한 방향이라 틀림, 곤돌라 건너편 섬 G를 경로 접근 대상으로 셈)도 고침.
+- 회귀(커밋 시점까지): `ElevationCheck` 76 · `Integration` 149 · `SquadCheck` 51 · `MapCheck` 24 · `StageTransitionCheck` 164 · `EnemyAttackCheck` 79 통과(종료 경고 I-17만). `SpawnCheck` · `SupplyCheck` · `ModeCheck` · `CombatPacingCheck` · `CardLabCheck`는 실행 중 — 결과는 다음 커밋에서 이 줄에 적는다.
+- 렌더 · 실제 플레이 · 2PC는 안 함.
+
 ### 이번 변경 확인 기록 — 2026-10-23 (Stage 2 크기 시안, L-29)
 
 - 클라우드 세션(Linux, Godot 4.7.2 .NET, .NET 8 SDK). C# 빌드 경고 · 오류 0. 새 `SizeDraftCheck` 28개 통과(`--fixed-fps 60`, 측정은 [평면도](stage2-floorplan.md) 11장). 처음 걷기에서 경사로 옆 끼임 · 다리 끝 추락을 찾아 고침(I-110).
@@ -441,5 +448,6 @@
 - [x] 시나리오의 넓은 전진 구역/짧은 분기와 두 번째 모드의 넓은 탐색 맵 방향을 문서화.
 - [ ] 목표 시간·크기·구역 배치 및 모드별 맵 공유 범위 결정.
 - [x] Stage 2 평면도(L-29) → 크기 시안 1차(2026-10-23): 평면도 JSON을 게임이 읽어 그레이박스 별도 맵을 지음(`LayoutMap`), 주 경로 620 m · 끝까지 걷기 2.6분 · 끼임 없음(`SizeDraftCheck` 28). 지금 Stage 2는 그대로이며 메뉴 · 시나리오 연결 전. 흐름장 계산 시간 I-109 열림. [평면도 11장](stage2-floorplan.md)
-- [ ] 임무/보급/조우 배치 → 이동/성능 검증 → 미술 마감(새 모델은 로컬 작업).
+- [x] 배치 1차(2026-10-23): 조우 · 보급 · 중간 안전 구역(L-24) · 시간 습격 · 들린 다리 + 펌프 크레센도 · 돌아오는 길 재등장(L-27) · 세이프하우스 클리어까지 시안에서 한 판(`SizeDraftCheck` 72). 수치 `[임시]`, 실제 플레이 · 죽은 사람 복귀(M-32) · 경보 트럭 · 멀티 확인 전. [평면도 12장](stage2-floorplan.md)
+- [ ] 이동/성능 검증(실제 플레이, 흐름장 I-109) → 미술 마감(새 모델은 로컬 작업).
 - 기존 완료된 환경/소품 자산은 재사용한다. 아직 새 맵이나 분기 임무가 구현된 것은 아니다. [맵 확장 계획](map-expansion-plan.md).

@@ -156,7 +156,7 @@
 | 근접(플레이어 · 몬스터) | 같은 단은 기존 벽 검사, 한 단 차이는 둘 다 경계 띠(0.8 m) 안일 때만, 두 단 이상은 불가 | `TierMap.MeleeReach`, `WeaponController.Swing`, `Enemy.CanReachAcrossTiers` |
 | 박격포 · 투척 | 목표 높이 = 목표 칸의 바닥 높이(조준 원 · 궤적 미리보기 포함) | `LobTarget`, `MortarShell.Fire`, `ThrownItem.Throw`, `ThrowPreview` |
 | 폭발 | 폭발 지점에서 한 단 위아래까지만 피해 | `Blast.Explode` |
-| 등장 | 몬스터를 단 위에 만들면 그 바닥 위에 섬 | `Stage.SpawnEnemy` |
+| 등장 · 줍기 | 몬스터를 단 위에 만들면 그 바닥 위에 섬. 무기 · 투척물 줍기(보급 · 떨어뜨린 것)와 보급 물건도 그 칸의 단 바닥에 놓임(2026-10-23 I-112) | `Stage.SpawnEnemy`, `WeaponPickup.Create`, `StageMap.PlaceSupplies` |
 | 로켓 · 꽥(2026-10-23 3차) | 로켓은 쏜 단 높이로 날며 아래 단 적은 평면 선으로 찾아 맞히고 그 자리에서 폭발, 위로 쏘면 절벽에서 터짐. 폭발 · 꽥은 한 단까지(폭발의 단은 터진 바닥 기준 `TierMap.FloorTier`) | `Rocket`, `WeaponController.Shout`, `Blast` |
 | 몬스터 원거리(3차) | 총 쏘는 몬스터는 아래로만: 아래 단을 쏠 땐 탄이 제 높이로 수평으로 날며 생존자를 평면 선으로 찾음, 위 단은 겨누지 않음. 토사물은 곡사 예외로 단을 넘어 포물선으로 날아 목표 바닥에 웅덩이 | `RangedEnemy.CanShootAt` · `ShotClear`, `EnemyProjectile` |
 | 잡기 예외(L-16, 3차) | 끌기 · 덮치기는 단을 넘어 잡음: 높은 쪽 가슴 높이로 가림만 봄, 덮치기는 높이 차이만큼 더 높이 뜀. 끌려가면 가장자리 밖으로 떨어질 수 있음(끌림은 걷기 막기에서 빠짐) | `CaptureEnemy.ClearTo` |

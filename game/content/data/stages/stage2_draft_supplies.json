@@ -1,0 +1,64 @@
+{
+  "description": "Stage 2 size draft supply points (decisions.md L-29, doc/stage2-floorplan.md 5장: the 20-minute budget for a 4-player team, [임시]). Replaces stage2_supplies.json once the draft replaces today's Stage 2. The game lays each item on the floor of the tier it stands on. Main points sit on the route (rim checkpoint before the bridge, the watch post, the yard's far end); optional ones on the two reward branches (watchtower, workshop); the event reward at the pump house. Ammo piles only in main points, none within 10 m of the pump (L-12). kind: start | main | optional | event | arrival. at = [x, z].",
+  "points": [
+    {
+      "id": "hatch_kit", "kind": "start", "area": "clearing",
+      "items": [
+        { "item": "ammo", "at": [9.4, 4] },
+        { "item": "medkit", "at": [10.6, 5] },
+        { "item": "weapon", "id": "m4", "at": [8, 6.5] },
+        { "item": "weapon", "id": "r870", "at": [9.5, 6.8] },
+        { "item": "throwable", "id": "molotov", "at": [11, 6.5] }
+      ]
+    },
+    {
+      "id": "tower_cache", "kind": "optional", "area": "forest",
+      "items": [
+        { "item": "weapon", "id": "mp5", "at": [119, -75] },
+        { "item": "throwable", "id": "flashbang", "at": [120.5, -75.5] }
+      ]
+    },
+    {
+      "id": "rim_checkpoint", "kind": "main", "area": "canyon",
+      "items": [
+        { "item": "ammo", "at": [171, -37] },
+        { "item": "medkit", "at": [172.5, -37] },
+        { "item": "throwable", "id": "frag", "at": [174, -36.5] }
+      ]
+    },
+    {
+      "id": "pump_reward", "kind": "event", "area": "canyon",
+      "items": [
+        { "item": "weapon", "id": "m249", "at": [205, -7] }
+      ]
+    },
+    {
+      "id": "watch_post", "kind": "main", "area": "rim",
+      "items": [
+        { "item": "ammo", "at": [234, -50] },
+        { "item": "medkit", "at": [235.5, -50.5] }
+      ]
+    },
+    {
+      "id": "workshop", "kind": "optional", "area": "yard",
+      "items": [
+        { "item": "weapon", "id": "ak47", "at": [360, -12] },
+        { "item": "throwable", "id": "molotov", "at": [361.5, -12.5] }
+      ]
+    },
+    {
+      "id": "yard_end", "kind": "main", "area": "yard",
+      "items": [
+        { "item": "ammo", "at": [432, -64] },
+        { "item": "medkit", "at": [433.5, -64] },
+        { "item": "throwable", "id": "frag", "at": [432.8, -62.6] }
+      ]
+    },
+    {
+      "id": "safehouse", "kind": "arrival", "area": "arrival",
+      "items": [
+        { "item": "ammo", "at": [636, -141] }
+      ]
+    }
+  ]
+}

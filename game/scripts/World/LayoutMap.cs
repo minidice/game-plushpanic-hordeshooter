@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace HordeShooter;
 
@@ -11,10 +12,21 @@ namespace HordeShooter;
 /// edges, ziplines and the gondola; climbable edges are painted for wall climbers. Plain boxes only: the look comes
 /// later from the existing kit and new models (local Codex work). Not wired into <see cref="StageMap.Create"/> yet:
 /// the current Stage 2 stays until this draft is accepted (L-29).
+/// Placement (7.2 step 5) reads two more files: encounters (areas, waiting groups, wave entries, the safe zone, timed
+/// raids, the mission's way back) and supply points. Markers build the beats: the raised bridge ("blocked") is the
+/// crescendo's door, the pump ("mission") its panel, a hut stands on the safe zone and the safehouse on its marker.
 /// </summary>
 public sealed class LayoutMap : StageMap
 {
     public const string Stage2Path = "res://content/data/stages/stage2_layout.json";
+    public const string Stage2EncountersPath = "res://content/data/stages/stage2_draft_encounters.json";
+    public const string Stage2SuppliesPath = "res://content/data/stages/stage2_draft_supplies.json";
+    /// <summary>Safe-zone hut (`[임시]`, stage2-floorplan.md 4장): 12 × 10 m, a 3 m doorway at each end along X.</summary>
+    public static readonly Vector2 HutSize = new(12, 10);
+    public const float HutDoorway = 3f;
+    /// <summary>Safehouse room (`[임시]`): 14 × 12 m, the door on the west wall.</summary>
+    public static readonly Vector2 SafehouseSize = new(14, 12);
+    private const float WallHeight = 2.6f, WallThick = .4f;
     /// <summary>Ramp length along its slope (`[임시]`): 6 m per tier, about 11°.</summary>
     public const float RampLength = 6f;
     // Strong steps between tiers so a graybox reads at a glance (green ground, then sand, clay, slate, steel blue).
@@ -24,17 +36,38 @@ public sealed class LayoutMap : StageMap
     /// <summary>Floor and blocker rectangles the grid was merged into (checks).</summary>
     public int FloorRects { get; private set; }
     public int VoidRects { get; private set; }
-    public Gondola? Gondola { get; private set; }
+    public Gondola? GondolaStation { get; private set; }
     private Vector3 _goal;
+    private readonly string? _encountersPath, _suppliesPath;
+    private Door? _gate, _safehouseDoor;
+    private Interactable? _pump, _safehouseSwitch;
+    private Rect2 _safehouseRoom;
 
-    public LayoutMap(string path = Stage2Path) => Layout = StageLayout.Load(path);
+    public LayoutMap(string path = Stage2Path, string? encounters = Stage2EncountersPath, string? supplies = Stage2SuppliesPath)
+    {
+        Layout = StageLayout.Load(path);
+        _encountersPath = encounters;
+        _suppliesPath = supplies;
+    }
 
     public override Rect2 Area => Layout.Bounds;
     public override string TitleKey => "ui_hud_stage2";
     public override bool HasRoute => true;
     public override Vector3 RouteGoal => _goal;
     public override int StageNumber => 2;
-    public override Objective ScenarioStart => Objective.ReachSafehouse;
+    public override Objective ScenarioStart => _gate != null ? Objective.ReachShutter : Objective.ReachSafehouse;
+    public override EncounterSet? Encounters => _encountersPath == null ? null : SpawnDatabase.Current.Load(_encountersPath);
+    public override IReadOnlyList<Door> Doors => new[] { _gate, _safehouseDoor }.OfType<Door>().ToArray();
+    public override Door? Shutter => _gate;
+    public override Interactable? ShutterPanel => _pump;
+    public override string CrescendoObjectiveKey => "ui_objective_lower_bridge";
+    public override string CrescendoAlarmKey => "msg_stage_bridge_alarm";
+    public override string CrescendoDoneKey => "msg_stage_bridge_down";
+    public override string RouteStartKey => "msg_stage_draft_start";
+    public override Door? SafehouseDoor => _safehouseDoor;
+    public override Interactable? SafehouseSwitch => _safehouseSwitch;
+    public override bool InSafehouse(Vector3 p) => _safehouseDoor != null && _safehouseRoom.HasPoint(new Vector2(p.X, p.Z));
+    public override bool NearSafehouse(Vector3 p) => _safehouseDoor != null && _safehouseRoom.Grow(.6f).HasPoint(new Vector2(p.X, p.Z));
     public override CameraView View => CameraView.Outdoor;
     public override Rect2? CameraBounds => Layout.Bounds;
 
@@ -102,14 +135,78 @@ public sealed class LayoutMap : StageMap
         foreach (var link in Layout.Links) BuildLink(link);
 
         var start = Layout.FindMarker("start")?.Pos ?? Layout.Bounds.GetCenter();
-        PlayerStart = Ground(start) + Vector3.Up * .05f;
+        PlayerStart = FloorAt(start) + Vector3.Up * .05f;
         var goal = Layout.FindMarker("safehouse")?.Pos ?? start;
-        _goal = Ground(goal);
+        _goal = FloorAt(goal);
         foreach (var marker in Layout.Markers) Post(marker);
         Lamp(PlayerStart + Vector3.Up * 4, "ffe6b0", 3, 24, false);
+
+        if (Layout.FindMarker("blocked") is { } blocked && Layout.FindMarker("mission") is { } mission) BuildBridgeMission(blocked.Pos, mission.Pos);
+        if (Layout.FindMarker("safe_zone") is { } zone) BuildHut(zone.Pos);
+        if (Layout.FindMarker("safehouse") is { } safehouse) BuildSafehouse(safehouse.Pos);
+        if (Mode == GameMode.Scenario && _suppliesPath != null) PlaceSupplies(StageSupplies.Load(_suppliesPath));
     }
 
-    private Vector3 Ground(Vector2 p) => new(p.X, _stage.Tiers.GroundY(new Vector3(p.X, 0, p.Y)), p.Y);
+    /// <summary>
+    /// The raised bridge (stage2-floorplan.md 2장 C): a leaf stands up across the deck until the pump's crescendo is held
+    /// out, then sinks — the crescendo door of Stage 1, so the beat, its sync bit and the "hold out" timer are the same.
+    /// </summary>
+    private void BuildBridgeMission(Vector2 bridge, Vector2 pump)
+    {
+        var deck = FloorAt(bridge);
+        _gate = Door.Create(_stage, deck, new Vector3(1.2f, 3.6f, 4.6f), new Color("8a6d3b"), new Vector3(0, -3.9f, 0));
+        _gate.Name = "BridgeGate";
+        _gate.OpenSeconds = 1.2f;
+        var at = FloorAt(pump);
+        Mat.Box(_stage, at + new Vector3(0, .7f, -1.6f), new Vector3(2.4f, 1.4f, 1.4f), Mat.Solid("5a6f7d", .7f));
+        _pump = Use(at, "ui_use_pump", _stage.StartCrescendo);
+        Lamp(at + new Vector3(0, 2.8f, -1), "ffcf8a", 3, 12, true);
+    }
+
+    /// <summary>The safe zone's hut (L-24): four low-roofless walls with a doorway at each end along X, never shut.</summary>
+    private void BuildHut(Vector2 center)
+    {
+        float y = FloorAt(center).Y;
+        float x0 = center.X - HutSize.X / 2, x1 = center.X + HutSize.X / 2, z0 = center.Y - HutSize.Y / 2, z1 = center.Y + HutSize.Y / 2;
+        float g0 = center.Y - HutDoorway / 2, g1 = center.Y + HutDoorway / 2;
+        RoomWall(x0, x1, z0, z0 + WallThick, y);
+        RoomWall(x0, x1, z1 - WallThick, z1, y);
+        foreach (float x in new[] { x0, x1 - WallThick })
+        {
+            RoomWall(x, x + WallThick, z0, g0, y);
+            RoomWall(x, x + WallThick, g1, z1, y);
+        }
+        Lamp(new Vector3(center.X, y + 2.6f, center.Y), "b5e6c3", 3, 10, false);
+    }
+
+    /// <summary>The safehouse (today's Stage 2 parts: a door that stays open until the switch, then the clear).</summary>
+    private void BuildSafehouse(Vector2 center)
+    {
+        float y = FloorAt(center).Y;
+        float x0 = center.X - SafehouseSize.X / 2, x1 = center.X + SafehouseSize.X / 2, z0 = center.Y - SafehouseSize.Y / 2, z1 = center.Y + SafehouseSize.Y / 2;
+        const float door = 2.6f;
+        RoomWall(x0, x1, z0, z0 + WallThick, y);
+        RoomWall(x0, x1, z1 - WallThick, z1, y);
+        RoomWall(x1 - WallThick, x1, z0, z1, y);
+        RoomWall(x0, x0 + WallThick, z0, center.Y - door / 2, y);
+        RoomWall(x0, x0 + WallThick, center.Y + door / 2, z1, y);
+        _safehouseRoom = new Rect2(x0 + WallThick, z0 + WallThick, SafehouseSize.X - 2 * WallThick, SafehouseSize.Y - 2 * WallThick);
+        _safehouseDoor = Door.Create(_stage, new Vector3(x0 + WallThick / 2, y, center.Y), new Vector3(.3f, 2.4f, door), new Color("4f6b4a"), new Vector3(0, 0, 2.5f), open: true);
+        _safehouseSwitch = Use(new Vector3(x0 + 1.4f, y, center.Y), "ui_use_close_safehouse", () => _stage.TryCloseSafehouse());
+        _safehouseSwitch.Enabled = false;
+        Lamp(new Vector3(center.X, y + 2.85f, center.Y), "b5e6c3", 3.6f, 12, false);
+    }
+
+    /// <summary>A plain graybox wall standing on the floor at height <paramref name="y"/>.</summary>
+    private void RoomWall(float x0, float x1, float z0, float z1, float y)
+    {
+        var center = new Vector3((x0 + x1) / 2, y + WallHeight / 2, (z0 + z1) / 2);
+        var size = new Vector3(x1 - x0, WallHeight, z1 - z0);
+        Solid(center, size, "", drawCargo: false);
+        Mat.Box(_stage, center, size, Mat.Solid("6b7a68", .9f));
+    }
+
+    private Vector3 FloorAt(Vector2 p) => new(p.X, _stage.Tiers.GroundY(new Vector3(p.X, 0, p.Y)), p.Y);
 
     private void BuildLink(StageLayout.Link link)
     {
@@ -152,15 +249,15 @@ public sealed class LayoutMap : StageMap
                 break;
             }
             case "zipline":
-                Zipline(Ground(link.From), Ground(link.To));
+                Zipline(FloorAt(link.From), FloorAt(link.To));
                 break;
             case "gondola":
             {
-                var from = Ground(link.From);
-                var to = Ground(link.To);
-                Gondola = Gondola(new Rect2(link.From.X - 2, link.From.Y - 2, 4, 4), from.Y, to, to - from);
+                var from = FloorAt(link.From);
+                var to = FloorAt(link.To);
+                GondolaStation = Gondola(new Rect2(link.From.X - 2, link.From.Y - 2, 4, 4), from.Y, to, to - from);
                 // The route crosses the gorge by the gondola (survivors only, like a zipline).
-                _stage.Tiers.AddRide(from, to, Gondola.RideSeconds);
+                _stage.Tiers.AddRide(from, to, GondolaStation.RideSeconds);
                 break;
             }
         }
@@ -203,7 +300,7 @@ public sealed class LayoutMap : StageMap
             "start" => "e04a3a", "safehouse" => "e04a3a", "safe_zone" => "3fbf6a", "mission" => "f08a24",
             "blocked" => "e04a3a", "noise" => "c63dbf", _ => "dddddd",
         };
-        var at = Ground(marker.Pos);
+        var at = FloorAt(marker.Pos);
         Mat.Box(_stage, at + Vector3.Up * 1.5f, new Vector3(.3f, 3, .3f), Mat.Glow(new Color(color), 1.2f));
         _stage.AddChild(new Label3D
         {

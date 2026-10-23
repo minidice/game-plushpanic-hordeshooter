@@ -67,6 +67,12 @@ public abstract partial class StageMap
     public virtual Door? Shutter => null;
     public virtual Interactable? ShutterPanel => null;
     public virtual float CrescendoSeconds { get; set; } = 50f;
+    /// <summary>Language keys of the crescendo beat (Stage 1's shutter by default): the objective line, the alarm and the "it opened" notices.</summary>
+    public virtual string CrescendoObjectiveKey => "ui_objective_reach_shutter";
+    public virtual string CrescendoAlarmKey => "msg_stage_alarm";
+    public virtual string CrescendoDoneKey => "msg_stage_shutter_open";
+    /// <summary>The notice when a stage starts out on the route.</summary>
+    public virtual string RouteStartKey => "msg_stage_route_start";
     public virtual Door? SafehouseDoor => null;
     public virtual Interactable? SafehouseSwitch => null;
     /// <summary>The hatch that leads to <see cref="NextStage"/>, opened once the safehouse is shut.</summary>
@@ -414,12 +420,16 @@ public abstract partial class StageMap
     protected void PlaceSupplies(StageSupplies supplies)
     {
         foreach (var item in supplies.Points.SelectMany(p => p.Items))
+        {
+            // On a raised tier the item lies on that tier's floor (L-15); a flat map keeps the data's height.
+            var at = _stage.Tiers.Any ? item.At with { Y = item.At.Y + _stage.Tiers.GroundY(item.At) } : item.At;
             switch (item.Kind)
             {
-                case SupplyItemKind.Weapon: Weapon(item.At, item.Id); break;
-                case SupplyItemKind.Throwable: Throwable(item.At, item.Id); break;
-                case SupplyItemKind.Ammo: AmmoPile(item.At); break;
-                case SupplyItemKind.Medkit: Medkit(item.At); break;
+                case SupplyItemKind.Weapon: Weapon(at, item.Id); break;
+                case SupplyItemKind.Throwable: Throwable(at, item.Id); break;
+                case SupplyItemKind.Ammo: AmmoPile(at); break;
+                case SupplyItemKind.Medkit: Medkit(at); break;
             }
+        }
     }
 }

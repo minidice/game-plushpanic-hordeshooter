@@ -21,7 +21,7 @@ public partial class SizeDraftCapture : Node
         ("d-safezone", new(236, -50), new(260, -50)),
         ("e-yard", new(330, -50), new(370, -60)),
         ("f-plateau", new(490, -100), new(520, -125)),
-        ("g-arrival", new(605, -142), new(630, -145)),
+        ("g-arrival", new(618, -144), new(640, -145)),
     };
 
     public override async void _Ready()

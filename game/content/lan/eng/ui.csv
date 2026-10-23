@@ -267,3 +267,8 @@ msg_stage_exit_open,The safehouse floor hatch is open — on to the next area
 msg_stage_route_start,Out of the bunker — follow the forest road to the safehouse
 ui_transition_stage2,Forest Bunker Road
 ui_transition_stage_number,STAGE {0}
+ui_use_pump,Start the pump (lowers the bridge · sets off the alarm!)
+ui_objective_lower_bridge,Lower the bridge at the canyon pump house  [E]
+msg_stage_bridge_alarm,Pump running! Hold out until the bridge is down
+msg_stage_bridge_down,The bridge is down! Climb the ladder and cross
+msg_stage_draft_start,Out of the bunker — through the forest and lower the canyon bridge

@@ -267,3 +267,8 @@ msg_stage_exit_open,세이프하우스 바닥 해치가 열렸다 — 다음 구
 msg_stage_route_start,벙커를 빠져나왔다 — 숲길을 따라 세이프하우스로
 ui_transition_stage2,숲속 벙커길
 ui_transition_stage_number,STAGE {0}
+ui_use_pump,펌프 켜기 (다리 내리기 · 경보!)
+ui_objective_lower_bridge,협곡 펌프장에서 다리 내리기  [E]
+msg_stage_bridge_alarm,펌프 작동! 다리가 내려올 때까지 버티세요
+msg_stage_bridge_down,다리가 내려왔습니다! 사다리로 올라가 다리를 건너세요
+msg_stage_draft_start,벙커를 빠져나왔다 — 숲을 지나 협곡의 다리를 내리세요
