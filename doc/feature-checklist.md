@@ -388,8 +388,8 @@
 
 - 클라우드 세션(Linux, Godot 4.7.2 .NET 헤드리스). C# 빌드 경고 · 오류 0. **정정**: 바로 아래 크기 시안 기록의 "빌드 경고 0"은 틀렸다 — `LayoutMap`에 이름 가림 경고(CS0108) 2개가 있었고(출력 끝 두 줄만 보고 놓침), 이번에 `GondolaStation` · `FloorAt`으로 이름을 바꿔 없앴다.
 - `SizeDraftCheck` 72개 통과(배치 · 안전 구역 · 시간 습격 · 다리 임무 · 세이프하우스 클리어 포함). 처음 실행에서 I-112(무기 줍기가 단 위에 안 놓임)를 찾아 고침. 검사 자체의 실수 2개(보급 도달을 "보급 → 해치" 방향으로 잼 — 곤돌라가 한 방향이라 틀림, 곤돌라 건너편 섬 G를 경로 접근 대상으로 셈)도 고침.
-- 회귀(커밋 시점까지): `ElevationCheck` 76 · `Integration` 149 · `SquadCheck` 51 · `MapCheck` 24 · `StageTransitionCheck` 164 · `EnemyAttackCheck` 79 통과(종료 경고 I-17만). `SpawnCheck` · `SupplyCheck` · `ModeCheck` · `CombatPacingCheck` · `CardLabCheck`는 실행 중 — 결과는 다음 커밋에서 이 줄에 적는다.
-- 렌더 · 실제 플레이 · 2PC는 안 함.
+- 회귀: `ElevationCheck` 76 · `Integration` 149 · `SquadCheck` 51 · `MapCheck` 24 · `StageTransitionCheck` 164 · `EnemyAttackCheck` 79 · `SpawnCheck` 41 · `SupplyCheck` 12 · `ModeCheck` 147 · `CombatPacingCheck` 44 · `CardLabCheck` 172 모두 통과(종료 경고 I-17 ObjectDB 잔존이 6개 검사에 한 줄씩).
+- 렌더: xvfb + 호환 렌더러로 구역 8곳(`SizeDraftCapture`, [평면도 12장](stage2-floorplan.md) 그림) — 시작 보급 · 들린 다리 판 · 펌프 표식 · 감시소 오두막과 보급 · 세이프하우스 벽 · 목표 문구가 보임. Forward+ · 실제 플레이 · 2PC는 안 함.
 
 ### 이번 변경 확인 기록 — 2026-10-23 (Stage 2 크기 시안, L-29)
 
