@@ -81,6 +81,7 @@
 | `attack_damage`, `attack_interval_ms`, `attack_reach_m` | 근접 공격 |
 | `wake_range_m` | 이 거리 안에 오면 깨어남 |
 | `traits` | 고유 행동 (`balloon_pop`, `bull_charge`) |
+| `climb` | 높이 단 오르기(L-16): `ladder`(사다리만 — 무장 동물) · `wall`(오를 수 있는 벽 — 좀비 계열) · `jump`(두 단까지 점프 — 덮치는 적 · 야생 동물 · 황소 · 보스) · `fly`(비행 — 풍선). 비우면 `wall`, 잘못된 값은 오류를 기록하고 `wall`. [높이 단 규격](elevation-tiers.md) 4장 |
 
 ### 외형 변경 시 판정 동반 점검 (2026-10-20, I-68)
 

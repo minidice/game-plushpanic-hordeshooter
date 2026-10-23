@@ -166,6 +166,11 @@ public partial class Enemy : CharacterBody3D
             PuppetStep(dt);
             return;
         }
+        if (Climbing)
+        {
+            ClimbStep(dt);
+            return;
+        }
 
         Vector3 desired;
         if (StunTime > 0)
@@ -202,6 +207,12 @@ public partial class Enemy : CharacterBody3D
         }
         WeakStep(dt, ref desired);
         bool floating = CardStep(ref desired, dt);
+        // Height tiers (L-16): walking into a higher tier this monster can climb starts the climb instead.
+        if (!floating && StunTime <= 0 && TryStartClimb(desired))
+        {
+            ClimbStep(dt);
+            return;
+        }
         desired += Stage.Crowd.Separation(this) * 2.2f;
         Knock = Knock.MoveToward(Vector3.Zero, dt * 14f);
         var horizontal = desired + Knock;
@@ -284,7 +295,7 @@ public partial class Enemy : CharacterBody3D
             return Vector3.Zero;
         }
         if (dist < 4f) return toCore / dist * Speed;
-        var flow = Stage.Flow.Direction(GlobalPosition);
+        var flow = Stage.FlowFor(Monster.Climb).Direction(GlobalPosition);
         return (flow != Vector3.Zero ? flow : toCore / Mathf.Max(dist, .001f)) * Speed;
     }
 
@@ -365,7 +376,7 @@ public partial class Enemy : CharacterBody3D
         // With height tiers the straight line may run off a cliff or into one: only take it on the same tier (L-16).
         bool straight = !Stage.Tiers.Any || (Target ?? Stage.NearestAlivePlayer(GlobalPosition)) is not { } chased || Stage.Tiers.TierOf(this) == Stage.Tiers.TierOf(chased);
         if (los && dist < 8f && straight) return toPlayer / Mathf.Max(dist, .001f);
-        var flow = Stage.Flow.Direction(GlobalPosition);
+        var flow = Stage.FlowFor(Monster.Climb).Direction(GlobalPosition);
         if (flow != Vector3.Zero) return flow;
         return los ? toPlayer / Mathf.Max(dist, .001f) : Vector3.Zero;
     }

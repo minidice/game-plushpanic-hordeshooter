@@ -51,6 +51,8 @@ msg_stage_down,쓰러졌습니다...
 ui_use_open_door,문 열기
 ui_use_shutter,셔터 열기 (경보 작동!)
 ui_use_close_safehouse,문 닫기 (스테이지 클리어)
+ui_use_ladder_up,사다리 오르기
+ui_use_ladder_down,사다리 내려가기
 ui_use_ammo,탄약 보충 (2번 무기)
 ui_use_medkit,구급상자 줍기
 fmt_use_pickup_weapon,{0} 줍기  ({1}번)

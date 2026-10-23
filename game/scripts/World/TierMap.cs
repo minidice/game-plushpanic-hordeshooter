@@ -18,7 +18,15 @@ public sealed class TierMap
     public const float EdgeBand = .8f;
 
     [Flags]
-    private enum CellFlag : byte { None = 0, Ramp = 1, Drop = 2 }
+    private enum CellFlag : byte { None = 0, Ramp = 1, Drop = 2, Climb = 4 }
+
+    /// <summary>
+    /// Extra flow cost of going up or down one tier per mover, in flow units (10 = one metre). Seconds × walking pace
+    /// (~4.4 m/s): ladder up 1 s, down 0.4 s; wall climb 1.5 s; a jump or a float is quick (doc/elevation-tiers.md 4장).
+    /// </summary>
+    public const int LadderUpCost = 44, LadderDownCost = 18, WallUpCost = 66, WallDownCost = 20, JumpCost = 10, FlyCost = 6;
+    /// <summary>The highest a jumper gets up in one go (L-16).</summary>
+    public const int MaxJumpTiers = 2;
 
     public float MinX { get; }
     public float MinZ { get; }
@@ -33,6 +41,8 @@ public sealed class TierMap
     private readonly sbyte[] _tier;
     private readonly float[] _ground;
     private readonly CellFlag[] _flags;
+    /// <summary>Ladder ends: each cell maps to the cell at the ladder's other end.</summary>
+    private readonly Dictionary<int, int> _ladders = new();
 
     public TierMap(float minX, float minZ, int width, int depth, float cell)
     {
@@ -134,6 +144,26 @@ public sealed class TierMap
     public void PaintDrop(float x0, float x1, float z0, float z1) =>
         Paint(x0, x1, z0, z1, (i, _, _) => _flags[i] |= CellFlag.Drop);
 
+    /// <summary>
+    /// A climbable stretch of cliff (rock, rough wall): paint the cells on both sides of the edge. Wall climbers go up or
+    /// down where either cell is marked; smooth walls, fences and containers are simply not painted (L-16).
+    /// </summary>
+    public void PaintClimb(float x0, float x1, float z0, float z1) =>
+        Paint(x0, x1, z0, z1, (i, _, _) => _flags[i] |= CellFlag.Climb);
+
+    /// <summary>A ladder between two neighbouring cells, one at the cliff foot and one on the tier above.</summary>
+    public void AddLadder(Vector3 bottom, Vector3 top)
+    {
+        int a = Index(bottom), b = Index(top);
+        if (a < 0 || b < 0 || a == b) return;
+        _ladders[a] = b;
+        _ladders[b] = a;
+        Any = true;
+    }
+
+    /// <summary>The cell at the other end of a ladder starting in <paramref name="cell"/>, or −1.</summary>
+    public int LadderEnd(int cell) => _ladders.TryGetValue(cell, out int other) ? other : -1;
+
     // ---------- walking ----------
 
     /// <summary>
@@ -148,6 +178,33 @@ public sealed class TierMap
         if (tf == tt + 1 && (_flags[to] & CellFlag.Ramp) != 0) return true;
         return tt < tf && (_flags[from] & CellFlag.Drop) != 0;
     }
+
+    /// <summary>
+    /// Extra flow cost for <paramref name="mover"/> to go from cell <paramref name="from"/> to its neighbour
+    /// <paramref name="to"/>, or −1 when it cannot (L-16): everyone walks a tier, ramps and drop edges; ladder users and
+    /// wall climbers also take ladders; wall climbers climb painted walls; jumpers go up or down two tiers anywhere;
+    /// flyers anywhere.
+    /// </summary>
+    public int StepCost(int from, int to, MonsterClimb mover)
+    {
+        if (CanStep(from, to)) return 0;
+        int tf = _tier[from], tt = _tier[to];
+        int rise = tt - tf, tiers = Math.Abs(rise);
+        if ((mover is MonsterClimb.Ladder or MonsterClimb.Wall) && _ladders.TryGetValue(from, out int end) && end == to)
+            return tiers * (rise > 0 ? LadderUpCost : LadderDownCost);
+        return mover switch
+        {
+            MonsterClimb.Wall when ((_flags[from] | _flags[to]) & CellFlag.Climb) != 0 => tiers * (rise > 0 ? WallUpCost : WallDownCost),
+            MonsterClimb.Jump when tiers <= MaxJumpTiers => tiers * JumpCost,
+            MonsterClimb.Fly => tiers * FlyCost,
+            _ => -1,
+        };
+    }
+
+    public int TierOfCell(int cell) => _tier[cell];
+
+    /// <summary>The cells' centres and floors (for a climb's start and end).</summary>
+    public Vector3 CellFloor(int cell) => new(MinX + (cell % Width + .5f) * Cell, _ground[cell], MinZ + (cell / Width + .5f) * Cell);
 
     /// <summary>Whether walking (not being shoved) from <paramref name="from"/> to <paramref name="to"/> is allowed.</summary>
     public bool CanWalk(Vector3 from, Vector3 to)

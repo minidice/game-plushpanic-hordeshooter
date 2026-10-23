@@ -21,6 +21,8 @@ public sealed class FlowField
 
     /// <summary>Height tiers of the same cells (decisions.md L-15); shared by every copy. Null or flat: no tier rules.</summary>
     public TierMap? Tiers { get; set; }
+    /// <summary>Who walks this field: the steps between tiers it may take (L-16). Survivors and the route use ladders.</summary>
+    public MonsterClimb Mover { get; set; } = MonsterClimb.Ladder;
 
     private readonly bool[] _blocked;
     private readonly int[] _cost;
@@ -48,7 +50,7 @@ public sealed class FlowField
     /// <summary>Same walls, independent costs: used for a second target such as the lure.</summary>
     public FlowField CopyLayout()
     {
-        var copy = new FlowField(MinX, MinZ, MinX + Width * Cell, MinZ + Depth * Cell, Cell) { Tiers = Tiers };
+        var copy = new FlowField(MinX, MinZ, MinX + Width * Cell, MinZ + Depth * Cell, Cell) { Tiers = Tiers, Mover = Mover };
         System.Array.Copy(_blocked, copy._blocked, _blocked.Length);
         return copy;
     }
@@ -138,8 +140,9 @@ public sealed class FlowField
                 int n = nz * Width + nx;
                 if (_blocked[n] || !CanStep(cx, cz, dx, dz)) continue;
                 // Costs spread from the target outward, so a walker would step from n to current.
-                if (tiers != null && !tiers.CanStep(n, current)) continue;
-                int next = cost + step;
+                int extra = tiers?.StepCost(n, current, Mover) ?? 0;
+                if (extra < 0) continue;
+                int next = cost + step + extra;
                 if (next >= _cost[n]) continue;
                 _cost[n] = next;
                 open.Enqueue(n, next);
@@ -210,7 +213,7 @@ public sealed class FlowField
             if (!InBounds(nx, nz)) continue;
             int n = nz * Width + nx;
             if (_blocked[n] || (!_blocked[i] && !CanStep(x, z, dx, dz))) continue;
-            if (Tiers is { Any: true } tiers && !tiers.CanStep(i, n)) continue;
+            if (Tiers is { Any: true } tiers && tiers.StepCost(i, n, Mover) < 0) continue;
             if (_cost[n] < best)
             {
                 best = _cost[n];

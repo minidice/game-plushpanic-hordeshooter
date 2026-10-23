@@ -191,6 +191,8 @@ public partial class Stage : Node3D
     /// <summary>Loud devices that go off when shot or caught in a blast (spawn-design.md 4장).</summary>
     public List<AlarmCar> AlarmCars { get; } = new();
     public List<Interactable> Interactables { get; } = new();
+    /// <summary>Ladders up tier cliffs (L-16).</summary>
+    public List<Ladder> Ladders { get; } = new();
     public List<OmniLight3D> FlickerLights { get; } = new();
     /// <summary>Common infected (monsters.csv row "plush"); its look is the zombie version of the player species when mirror_player is on.</summary>
     public MonsterDefinition CommonDefinition { get; private set; } = null!;
@@ -619,10 +621,30 @@ public partial class Stage : Node3D
     public int PendingEnemies => _pending.Count;
     public IEnumerable<Enemy> AllEnemies => System.Linq.Enumerable.Concat(Enemies, _pending);
 
+    private readonly Dictionary<MonsterClimb, FlowField> _climbFlows = new();
+
+    /// <summary>
+    /// The chase field for a way of climbing (L-16). On a flat map, or for ladder users, it is <see cref="Flow"/>; on a map
+    /// with tiers each other climb gets its own copy toward the same targets, made the first time someone asks.
+    /// </summary>
+    public FlowField FlowFor(MonsterClimb climb)
+    {
+        if (!Tiers.Any || climb == MonsterClimb.Ladder) return Flow;
+        if (!_climbFlows.TryGetValue(climb, out var field))
+        {
+            field = Flow.CopyLayout();
+            field.Mover = climb;
+            if (_flowTargets.Count > 0) field.Update(_flowTargets);
+            _climbFlows[climb] = field;
+        }
+        return field;
+    }
+
     /// <summary>Re-stamp the whole flow grid (doors opening or closing). Layout is null while it is still being built.</summary>
     public void RebuildFlow()
     {
         _map?.ApplyFlow();
+        _climbFlows.Clear();
         FlowVersion++;
         if (ExitFlow != null) RefreshRouteFlows();
         if (Lure != null && LureFlow != null)
@@ -651,7 +673,11 @@ public partial class Stage : Node3D
         foreach (var p in AlivePlayers) _flowTargets.Add(p.GlobalPosition);
         // Survival: the horde also paths to the base.
         if (ModeRules?.Core is { Alive: true } core && _flowTargets.Count > 0) _flowTargets.Add(core.GlobalPosition);
-        if (_flowTargets.Count > 0) Flow.Update(_flowTargets);
+        if (_flowTargets.Count > 0)
+        {
+            Flow.Update(_flowTargets);
+            foreach (var field in _climbFlows.Values) field.Update(_flowTargets);
+        }
         if (!Player.IsDead)
         {
             LeaderFlow.Update(Player.GlobalPosition);

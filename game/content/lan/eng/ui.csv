@@ -51,6 +51,8 @@ msg_stage_down,You went down...
 ui_use_open_door,Open door
 ui_use_shutter,Open shutter (sets off the alarm!)
 ui_use_close_safehouse,Close door (clear stage)
+ui_use_ladder_up,Climb ladder
+ui_use_ladder_down,Climb down ladder
 ui_use_ammo,Refill ammo (weapon 2)
 ui_use_medkit,Pick up medkit
 fmt_use_pickup_weapon,Pick up {0}  (slot {1})

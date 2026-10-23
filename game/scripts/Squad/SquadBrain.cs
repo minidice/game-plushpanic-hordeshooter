@@ -277,6 +277,8 @@ public partial class SquadBrain : Node
 
     private void Act(float dt)
     {
+        // On a ladder the climb drives; nothing to decide until the top or the bottom.
+        if (Bot.OnLadder) { Bot.SetControls(Vector2.Zero, Bot.AimPoint, false); return; }
         var move = Vector3.Zero;
         var aim = Bot.GlobalPosition + _watchDirection * 5 + Vector3.Up * Player.AimHeight;
         bool fire = false;
@@ -352,7 +354,24 @@ public partial class SquadBrain : Node
         // Semi-automatic weapons need a fresh press per shot; automatic ones are held.
         if (!Bot.Gun.Def.Automatic) { bool press = fire && !_firePulse; _firePulse = fire && press; fire = press; }
         Bot.HoldRevive(revive);
+        if (TakeLadder(move)) return;
         Bot.SetControls(new Vector2(move.X, move.Z).LimitLength(1), aim, fire);
+    }
+
+    /// <summary>When the route steps onto a ladder (L-16), climb it the way a survivor would.</summary>
+    private bool TakeLadder(Vector3 move)
+    {
+        var tiers = _stage.Tiers;
+        if (!tiers.Any || _stage.Ladders.Count == 0 || move.LengthSquared() < .01f) return false;
+        int here = tiers.Index(Bot.GlobalPosition);
+        int ahead = tiers.Index(Bot.GlobalPosition + new Vector3(move.X, 0, move.Z).Normalized() * (Bot.Definition.ColliderRadius + .5f));
+        if (here < 0 || ahead < 0 || here == ahead || tiers.LadderEnd(here) != ahead) return false;
+        foreach (var ladder in _stage.Ladders)
+        {
+            if (ladder.BottomCell == here && ladder.TopCell == ahead) return Bot.ClimbLadder(ladder, up: true);
+            if (ladder.TopCell == here && ladder.BottomCell == ahead) return Bot.ClimbLadder(ladder, up: false);
+        }
+        return false;
     }
 
     /// <summary>Reload when empty; fall back to the pistol when the primary is dry; back to it after a refill.</summary>

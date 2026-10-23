@@ -16,8 +16,9 @@ namespace HordeShooter.Tests;
 public partial class ElevationCheck : Node
 {
     /// <summary>
-    /// Ground (tier 0) x −20…40. Tier 1 plateau x 10…25, z −15…0, reached by a ramp at x 4…10. Tier 2 plateau x 25…40,
-    /// z −15…0, reached from tier 1 by a ramp at x 19…25, with a drop edge on its camera side at x 30…36.
+    /// Ground (tier 0) x −20…40. Tier 1 plateau x 10…25, z −15…0, reached by a ramp at x 4…10 (and its west face x 10,
+    /// z −14…−8 is climbable). Tier 2 plateau x 25…40, z −15…0, reached from tier 1 by a ramp at x 19…25, with a drop
+    /// edge on its camera side at x 30…36 and a ladder at x 27.
     /// </summary>
     private sealed class TierTestMap : StageMap
     {
@@ -32,6 +33,9 @@ public partial class ElevationCheck : Node
             Ramp(4, 10, -6, -2, 0, Vector3.Right, "7a705a");
             Ramp(19, 25, -12, -8, 1, Vector3.Right, "7a705a");
             DropEdge(30, 36, -1, 0);
+            // Tier 1's west face is climbable rock; tier 2 has a ladder on its camera side.
+            ClimbableWall(9, 11, -14, -8);
+            Ladder(new Vector3(27, 0, .6f), new Vector3(27, 0, -.6f));
             Lamp(new Vector3(10, 6, 0), "ffe6b0", 4, 40, false);
         }
     }
@@ -126,7 +130,8 @@ public partial class ElevationCheck : Node
         Check(up.Any(p => InRect(p, 4, 10, -6, -2)) && up.Any(p => InRect(p, 19, 25, -12, -8)), "it climbs by both ramps, not up a cliff");
         Check(up.Zip(up.Skip(1)).All(s => tiers.CanWalk(s.First, s.Second)), "every step of that path is a step the tiers allow");
         var underDrop = FollowFlow(stage.Flow, new Vector3(33, 0, 2), new Vector3(32, 0, -8));
-        Check(underDrop.Any(p => InRect(p, 4, 10, -6, -2)), "the drop edge is one way: from under it the path still goes round by the ramps");
+        Check(!underDrop.Any(p => InRect(p, 30, 36, -1, 0)) && underDrop[^1].DistanceTo(new Vector3(32, 0, -8)) <= 1.2f,
+            "the drop edge is one way: from under it the path goes round (here by the ladder), never up the drop edge");
 
         stage.Flow.Update(new Vector3(33, 0, 5));
         var down = FollowFlow(stage.Flow, new Vector3(33, 2 * H, -8), new Vector3(33, 0, 5));
@@ -254,6 +259,119 @@ public partial class ElevationCheck : Node
         await Vision();
         await Ranged();
         await Squad();
+        await Climbing();
+    }
+
+    /// <summary>L-16: each way of climbing has its own route, monsters climb for real, survivors and squadmates take ladders.</summary>
+    private async Task Climbing()
+    {
+        var stage = await NewStage(new TierTestMap(), squad: 1);
+        var player = stage.Player;
+        var tiers = stage.Tiers;
+        var bot = stage.Squad[0].Bot;
+        bot.Invulnerable = true;
+        var ladder = stage.Ladders.Single();
+        async Task Clear()
+        {
+            foreach (var e in stage.AllEnemies.ToList()) if (IsInstanceValid(e)) e.QueueFree();
+            await Frames(2);
+        }
+        await Clear();
+
+        // ---------- a route per way of climbing ----------
+        await Place(player, new Vector3(20, H, -13), new Vector3(24, 1, -13));
+        await Place(bot, new Vector3(20.6f, H, -13), new Vector3(24, 1, -13));
+        var wall = FollowFlow(stage.FlowFor(MonsterClimb.Wall), new Vector3(5, 0, -13), new Vector3(20, 0, -13));
+        Check(wall[^1].DistanceTo(new Vector3(20, 0, -13)) <= 1.2f && !wall.Any(p => InRect(p, 4, 10, -6, -2)) && wall.Count < 20,
+            $"a wall climber's route goes straight up the climbable face ({wall.Count} steps)");
+        var walker = FollowFlow(stage.Flow, new Vector3(5, 0, -13), new Vector3(20, 0, -13));
+        Check(walker.Any(p => InRect(p, 4, 10, -6, -2)), "a ladder user's route from the same spot goes round by the ramp");
+        var jump = FollowFlow(stage.FlowFor(MonsterClimb.Jump), new Vector3(15, 0, 5), new Vector3(20, 0, -13));
+        Check(jump[^1].DistanceTo(new Vector3(20, 0, -13)) <= 1.2f && !jump.Any(p => InRect(p, 4, 10, -6, -2)), "a jumper's route jumps the south face");
+        var fly = FollowFlow(stage.FlowFor(MonsterClimb.Fly), new Vector3(15, 0, 5), new Vector3(20, 0, -13));
+        Check(fly[^1].DistanceTo(new Vector3(20, 0, -13)) <= 1.2f && fly.Count <= jump.Count, "a flyer's route goes straight over");
+        var noClimb = FollowFlow(stage.FlowFor(MonsterClimb.Wall), new Vector3(15, 0, 5), new Vector3(20, 0, -13));
+        Check(noClimb.Any(p => InRect(p, 4, 11, -14, -2)), "where the face is not climbable a wall climber goes round to the rock or the ramp");
+
+        // ---------- monsters climb for real ----------
+        // The squadmate would shoot them down (it shoots down a tier now): keep it out of this part.
+        var brain = stage.Squad[0];
+        brain.ProcessMode = ProcessModeEnum.Disabled;
+        await Place(bot, new Vector3(-15, 0, 10), new Vector3(-15, 1, 14));
+        async Task<Enemy> Climber(string id, Vector3 at, Vector3 target, int tier)
+        {
+            await Clear();
+            await Place(player, target, target + Vector3.Back * 3);
+            var e = stage.Spawn(MonsterDatabase.Get(id), at, awake: true);
+            for (int i = 0; i < 600 && IsInstanceValid(e) && tiers.TierOf(e) != tier; i++)
+            {
+                await Frames(1);
+            }
+            return e;
+        }
+        var zombie = await Climber("humanoid", new Vector3(6, 0, -13), new Vector3(20, H, -13), 1);
+        Check(zombie.ClimbsStarted > 0 && tiers.TierOf(zombie) == 1, "a zombie climbs the rock face up to tier 1");
+        var beast = await Climber("wild_animal", new Vector3(30, 0, 4), new Vector3(30, 2 * H, -4), 2);
+        Check(beast.ClimbsStarted > 0 && tiers.TierOf(beast) == 2, "a wild animal jumps two tiers straight up");
+        var armed = await Climber("armed_animal", new Vector3(27, 0, 4), new Vector3(29, 2 * H, -6), 2);
+        Check(armed.ClimbsStarted > 0 && tiers.TierOf(armed) == 2, "an armed animal takes the ladder up to tier 2");
+
+        await Clear();
+        await Place(player, new Vector3(20, H, -13), new Vector3(24, 1, -13));
+        var hanging = stage.Spawn(MonsterDatabase.Get("humanoid"), new Vector3(8.6f, 0, -13), awake: true);
+        for (int i = 0; i < 120 && !hanging.ClimbingWall; i++) await Frames(1);
+        Check(hanging.ClimbingWall && Mathf.IsEqualApprox(hanging.DamageTakenScale, Enemy.ClimbDamageScale), "a zombie on the wall takes extra damage");
+        hanging.Shove(Vector3.Left, 120, 0);
+        await Frames(60);
+        Check(!hanging.Climbing && tiers.TierOf(hanging) == 0, "a hard hit knocks a climbing zombie off the wall");
+        await Clear();
+
+        brain.ProcessMode = ProcessModeEnum.Inherit;
+
+        // ---------- survivors on the ladder ----------
+        await Place(player, ladder.Bottom, ladder.Top);
+        await Place(bot, new Vector3(-15, 0, 10), new Vector3(-15, 1, 14));
+        Check(player.ClimbLadder(ladder, up: true), "a survivor gets on the ladder at its foot");
+        await Frames(40);
+        int mag = player.Gun.Mag;
+        player.SetControls(Vector2.Zero, ladder.Top + Vector3.Back * 5, true);
+        player.Launch(new Vector3(6, 3, 0), .4f);
+        await Frames(10);
+        Check(player.OnLadder && player.Gun.Mag == mag && player.GlobalPosition.Y > .5f, "on the ladder: no shooting, and a hit does not knock you off");
+        player.SetControls(Vector2.Zero, ladder.Top + Vector3.Back * 5, false);
+        await Place(bot, ladder.Top, ladder.Top + Vector3.Forward);
+        for (int i = 0; i < 240 && player.OnLadder; i++) await Frames(1);
+        Check(!player.OnLadder && tiers.TierOf(player) == 2, $"climbing up takes about a second a tier and ends on tier 2");
+        await Frames(10);
+        Check(bot.GlobalPosition.DistanceTo(ladder.Top) > .9f, "arriving at the top shoves whoever stood at the exit");
+        var started = Time.GetTicksMsec();
+        player.ClimbLadder(ladder, up: false);
+        for (int i = 0; i < 240 && player.OnLadder; i++) await Frames(1);
+        Check(!player.OnLadder && tiers.TierOf(player) == 0, "climbing down ends on the ground");
+
+        // Two on one ladder pass through each other (the squadmate's own mind paused so only the ladder moves it).
+        brain.ProcessMode = ProcessModeEnum.Disabled;
+        for (int i = 0; i < 240 && bot.OnLadder; i++) await Frames(1);
+        await Place(player, ladder.Bottom, ladder.Top);
+        await Place(bot, ladder.Bottom + Vector3.Back * .4f, ladder.Top);
+        player.ClimbLadder(ladder, up: true);
+        await Frames(10);
+        Check(bot.ClimbLadder(ladder, up: true), "a second survivor gets on the ladder while the first is still climbing");
+        for (int i = 0; i < 300 && (player.OnLadder || bot.OnLadder); i++) await Frames(1);
+        Check(tiers.TierOf(player) == 2 && tiers.TierOf(bot) == 2, "two survivors climb the same ladder one behind the other");
+
+        brain.ProcessMode = ProcessModeEnum.Inherit;
+
+        // ---------- a squadmate takes the ladder on its own ----------
+        await Place(player, new Vector3(27.5f, 2 * H, -3), new Vector3(27.5f, 1, -8));
+        await Place(bot, new Vector3(27, 0, 5), new Vector3(27, 1, 0));
+        bool climbed = false;
+        for (int i = 0; i < 600 && tiers.TierOf(bot) != 2; i++)
+        {
+            await Frames(1);
+            climbed |= bot.OnLadder;
+        }
+        Check(climbed && tiers.TierOf(bot) == 2, "a squadmate following the leader climbs the ladder by itself");
     }
 
     /// <summary>AI squadmates on tiers: follow up a ramp, shoot down a tier, never up.</summary>

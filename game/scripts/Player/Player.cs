@@ -336,12 +336,24 @@ public partial class Player : CharacterBody3D
         BlindTime = Mathf.Max(0, BlindTime - dt);
         _honkCooldown -= dt;
         UpdateRestraint(dt);
+        // Downed, dead or grabbed on a ladder: let go, and gravity does the rest.
+        if (OnLadder && (IsDead || IsDowned || IsRestrained)) EndLadder(arrived: false);
         if (IsDead) return;
         if (IsDowned) { UpdateDowned(dt); return; }
 
         if (!ManualControl) ReadInput();
         // A client's own presses are kept until its next input message to the host.
         if (IsLocal && Stage.Role == NetRole.Client) RecordNetEdges();
+        if (OnLadder)
+        {
+            // On a ladder: no shooting, using or rolling (L-16); presses made now are dropped.
+            LadderStep(dt);
+            IsAiming = false;
+            _firePressed = _reloadPressed = _healPressed = _throwPressed = _rollPressed = _cancelPressed = false;
+            _cycle = 0;
+            _slotPressed = 0;
+            return;
+        }
         HeliumTime = Mathf.Max(0, HeliumTime - dt);
         RollCooldownLeft = Mathf.Max(0, RollCooldownLeft - dt);
         // A daze (honk beam) holds like a stun but keeps them on their feet.
@@ -593,7 +605,8 @@ public partial class Player : CharacterBody3D
     public void Launch(Vector3 impulse, float stun)
     {
         if (!Stage.Authoritative && !NetApplying) return;
-        if (IsDead || IsDowned || IsRolling) return;
+        // Nothing knocks a survivor off a ladder (L-16).
+        if (IsDead || IsDowned || IsRolling || OnLadder) return;
         _push = new Vector3(impulse.X, 0, impulse.Z);
         Velocity = new Vector3(Velocity.X, impulse.Y, Velocity.Z);
         StunTime = Mathf.Max(StunTime, stun);
@@ -612,6 +625,8 @@ public partial class Player : CharacterBody3D
     /// <summary>Moves the survivor instantly (AI catch-up); clears momentum so it does not slide on arrival.</summary>
     public void TeleportTo(Vector3 at)
     {
+        // A teleport (squad catch-up) takes them off any ladder first, or the climb would pull them back.
+        EndLadder(arrived: false);
         GlobalPosition = at;
         Velocity = Vector3.Zero;
         _push = Vector3.Zero;
