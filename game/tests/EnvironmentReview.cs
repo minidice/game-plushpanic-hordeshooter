@@ -30,7 +30,7 @@ public partial class EnvironmentReview : Node
         bool failed = false;
         try
         {
-            if(Windowed) { DisplayServer.WindowMoveToForeground(); OS.LowProcessorUsageMode=false; Engine.MaxFps=120; }
+            if(Windowed) { DisplayServer.WindowMoveToForeground(); OS.LowProcessorUsageMode=false; Engine.MaxFps=OS.GetCmdlineUserArgs().Contains("--uncapped")?0:120; }
             var args = OS.GetCmdlineUserArgs();
             _tag = args.FirstOrDefault(a => a.StartsWith("--tag="))?.Substring(6) ?? "after";
             if (_tag.Any(c => !char.IsLetterOrDigit(c) && c != '-')) throw new Exception("tag must be a file name fragment");
@@ -94,12 +94,18 @@ public partial class EnvironmentReview : Node
             }
             Check(!_stage.FindChildren("edge_*", nameof(MultiMeshInstance3D), true, false).Any(),
                 "rectangular foliage-band meshes are absent from Stage 2");
+            var cover=_stage.GetChildren().OfType<MultiMeshInstance3D>().Where(m=>m.Name.ToString().StartsWith("WoodlandGrass")).ToArray();
+            Check(cover.Length>0&&cover.All(m=>m.CastShadow==GeometryInstance3D.ShadowCastingSetting.Off),
+                "inaccessible ground has instanced grass without grass shadows");
             var floors = new[]{new Rect2(-2,-9,22,18),new Rect2(20,-7,40.3f,14),new Rect2(67.7f,-10,32.3f,20),new Rect2(100.4f,-3.8f,11.4f,7.6f)};
             foreach(var grove in (Windowed ? _stage.GetChildren() : new Godot.Collections.Array<Node>()).OfType<MultiMeshInstance3D>().Where(m=>m.Name.ToString().StartsWith("Woodland")))
                 for(int i=0;i<grove.Multimesh.InstanceCount;i++)
                 {
                     var box=grove.Multimesh.GetInstanceTransform(i)*grove.Multimesh.Mesh.GetAabb();
-                    if(floors.Any(r=>r.Intersects(new Rect2(box.Position.X,box.Position.Z,box.Size.X,box.Size.Z))))
+                    var footprint=new Rect2(box.Position.X,box.Position.Z,box.Size.X,box.Size.Z);
+                    if(grove.Name.ToString().StartsWith("WoodlandGrass")&&river.Intersects(footprint))
+                        throw new Exception("Grass blades cross stream water: "+box);
+                    if(floors.Any(r=>r.Intersects(footprint)))
                         throw new Exception("Woodland crown overlaps playable floor: "+box);
                 }
             if(Windowed)Check(true,"woodland crowns stay outside playable floors, including region corners");

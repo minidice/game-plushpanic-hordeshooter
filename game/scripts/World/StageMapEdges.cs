@@ -40,10 +40,11 @@ public abstract partial class StageMap
             Position=new Vector3(region.GetCenter().X,-.025f,region.GetCenter().Y),
             MaterialOverride=new ShaderMaterial { Shader=GD.Load<Shader>("res://shaders/woodland_ground.gdshader") },
             CastShadow=GeometryInstance3D.ShadowCastingSetting.Off });
+        if(ground)WoodlandCover.Populate(_stage,region,side);
         // Spatial chunks bound culling. The positions form uneven groves rather than connected tiled masses.
         for(float chunk=from;chunk<to;chunk+=16)
         {
-            var groups=new Dictionary<(FoliageArt.Kind,int,bool),List<Transform3D>>();
+            var groups=new Dictionary<(FoliageArt.Kind,int,bool,int),List<Transform3D>>();
             float end=Mathf.Min(to,chunk+16);
             for(float d=1.2f;d<Mathf.Min(depth,38);d+=d<5?2.4f:4.3f)
             {
@@ -51,17 +52,20 @@ public abstract partial class StageMap
                 float spacing=low?1.5f:2.6f;
                 for(float t=chunk+_edgeRng.RandfRange(0,.8f);t<end;t+=spacing*_edgeRng.RandfRange(.8f,1.25f))
                 {
-                    // Leave a few natural pockets, but keep the wall's first shrub layer continuous enough to ground it.
-                    if(d>3 && _edgeRng.Randf()<.12f)continue;
-                    float run=Mathf.Clamp(t+_edgeRng.RandfRange(-.45f,.45f),from+.5f,to-.5f);
-                    float offset=Mathf.Max(.85f,d+_edgeRng.RandfRange(-.7f,.7f)+.75f*Mathf.Sin(run*.43f+d));
+                    float run=Mathf.Clamp(t+_edgeRng.RandfRange(-.75f,.75f),from+.5f,to-.5f);
+                    float offset=Mathf.Max(.85f,d+_edgeRng.RandfRange(-1.1f,1.1f)+1.15f*Mathf.Sin(run*.43f+d));
+                    var point=alongX?new Vector2(run,edge+away*offset):new Vector2(edge+away*offset,run);
+                    float density=WoodlandCover.Density(point);
+                    // Ground cover carries the low layer; shrubs gather in pockets rather than evenly covering it.
+                    if(_edgeRng.Randf()>(low?.12f+.4f*density:.58f+.35f*density))continue;
                     var kind=low?FoliageArt.Kind.Shrub:(_edgeRng.Randf()<.15f?FoliageArt.Kind.Broadleaf:FoliageArt.Kind.Pine);
                     int variant=_edgeRng.RandiRange(0,3);
                     float scale=low?_edgeRng.RandfRange(.7f,1.15f):_edgeRng.RandfRange(.85f,1.35f);
                     var at=alongX?new Vector3(run,-.06f,edge+away*offset):new Vector3(edge+away*offset,-.06f,run);
                     var basis=new Basis(Vector3.Up,_edgeRng.RandfRange(0,Mathf.Tau)).Scaled(new Vector3(scale,scale*_edgeRng.RandfRange(.9f,1.15f),scale));
                     // The full foliage footprint must stay behind the edge. Includes irregular crown overhang.
-                    var box=new Transform3D(basis,at)*FoliageArt.Mesh(kind,variant).GetAabb();
+                    int detail=d<9?0:d<20?1:2;
+                    var box=new Transform3D(basis,at)*FoliageArt.Mesh(kind,variant,detail).GetAabb();
                     if(alongX)at.Z+=away<0?-Mathf.Max(0,box.End.Z-edge):Mathf.Max(0,edge-box.Position.Z);
                     else at.X+=away<0?-Mathf.Max(0,box.End.X-edge):Mathf.Max(0,edge-box.Position.X);
                     // Also contain the ends of a strip: neighbouring rooms can have wider walkable floors.
@@ -76,14 +80,14 @@ public abstract partial class StageMap
                         at.Z+=Mathf.Max(0,from-box.Position.Z)-Mathf.Max(0,box.End.Z-to);
                     }
                     bool shadows=!near && d<EdgeShadowDepth;
-                    var key=(kind,variant,shadows);
+                    var key=(kind,variant,shadows,detail);
                     if(!groups.TryGetValue(key,out var list))groups[key]=list=new();
                     list.Add(new Transform3D(basis,at));
                     string id=kind.ToString();EdgeCounts[id]=EdgeCounts.GetValueOrDefault(id)+1;
                 }
             }
             foreach(var(key,items)in groups)
-                FoliageArt.Instances(_stage,"Woodland"+key.Item1,key.Item1,key.Item2,items,key.Item3);
+                FoliageArt.Instances(_stage,"Woodland"+key.Item1,key.Item1,key.Item2,items,key.Item3,key.Item4);
         }
     }
     /// <summary>A plain ground far past the dressed edges, so the end of the floor is never in view (A-23).</summary>
