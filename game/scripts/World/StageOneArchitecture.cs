@@ -35,9 +35,9 @@ public sealed partial class StageOneLayout
         StaticArtBatch.Bake(drive);
 
         // Unreachable service vignettes behind existing solid walls. The black room cutaway remains intentional.
-        ServiceBay(new Vector3(29,0,-9.3f),8,4.8f,false);
-        ServiceBay(new Vector3(68,0,-13.4f),9.5f,5.4f,true);
-        ServiceBay(new Vector3(101,0,-10.6f),7,5f,true);
+        ServiceBay(new Vector3(29,0,-9.3f),8,4.8f,false,WorkshopArt.Kind.Workbench);
+        ServiceBay(new Vector3(68,0,-13.4f),9.5f,5.4f,true,WorkshopArt.Kind.Generator);
+        ServiceBay(new Vector3(101,0,-10.6f),7,5f,true,WorkshopArt.Kind.PipeRack);
 
         // Shared route marker between the two ends of the bunker connection (no added light/interaction).
         ArchitectureArt.Services(_stage,new Vector3(125.95f,0,1.4f),-90);
@@ -47,7 +47,7 @@ public sealed partial class StageOneLayout
         StaticArtBatch.Bake(hatch);
     }
 
-    private void ServiceBay(Vector3 at,float width,float depth,bool cloth)
+    private void ServiceBay(Vector3 at,float width,float depth,bool cloth,WorkshopArt.Kind equipment)
     {
         var bay=ArchitectureArt.Group(_stage,"ExteriorServiceBay",at);
         StageArt.Box(bay,new(0,-.16f,0),new(width,.3f,depth),"303e48",true);
@@ -57,11 +57,12 @@ public sealed partial class StageOneLayout
         ArchitectureArt.Fence(partition,depth,1.65f,cloth);
         var cabinet=ArchitectureArt.Group(bay,"Cabinet",new Vector3(width*.27f,.8f,-depth*.18f));
         StageArt.Cargo(cabinet,new Vector3(1.5f,1.6f,.8f),"5d706d");
-        var crate=ArchitectureArt.Group(bay,"StoredEquipment",new Vector3(-width*.22f,.42f,.1f));
-        StageArt.Cargo(crate,new Vector3(1.45f,.84f,1.1f),"776f56");
-        StageArt.Carton(bay,new Vector3(-width*.22f,1.12f,.1f),new Vector3(.8f,.55f,.7f));
-        foreach(float z in new[]{-.5f,-.17f,.17f})
-            StageArt.Box(bay,new(.2f,.14f,z),new(2.6f,.11f,.14f),"40545e",true);
+        // These bays are behind the existing blocking wall: visual-only set pieces, no extra flow stamps.
+        WorkshopArt.Create(bay,equipment,new Vector3(-width*.2f,0,.25f));
+        if(equipment==WorkshopArt.Kind.Workbench)
+            WorkshopArt.Create(bay,WorkshopArt.Kind.ToolChest,new Vector3(.65f,0,.25f));
+        else if(equipment==WorkshopArt.Kind.Generator)
+            WorkshopArt.Create(bay,WorkshopArt.Kind.CableReel,new Vector3(.4f,0,1.1f));
         ArchitectureArt.Services(bay,new Vector3(-width*.23f,0,-depth/2+.1f));
         StaticArtBatch.Bake(bay);
     }

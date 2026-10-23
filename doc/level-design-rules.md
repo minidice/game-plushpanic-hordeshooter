@@ -91,3 +91,5 @@ Stage 1 세이프하우스 바닥 해치로 내려가 도착하는 야외 스테
 `WorkshopArt`가 작업대·공구 서랍장·벽 부품 선반·발전기·케이블 릴·파이프 적재대·안전 게시판을 생성한다. 원점은 바닥/벽 장식 하단, +Y 위, 전면 +Z. 기존 도구 상자/기본 선반과 차별되는 바이스·서랍·팬·계기·원통 단면을 사용한다. 재질별 정적 결합, 모델당 3,500삼각형 미만의 이번 시제품 예산. 크기/예산/배치는 [작업 기록](environment-quality-plan.md#workshop-prop-sets)을 따른다.
 
 `StageMap.WorkshopProp`는 모델 크기의 상자 충돌과 기존 `Solid` 흐름장 등록을 사용한다. `WorkshopMounted`는 벽 장식 전용이며 충돌·광원·상호작용은 없다. 바닥 설비 5개는 Stage 1 작업대/서랍장, Stage 2 발전기/릴/파이프 적재대다. 기존 도형은 보존하되 새 장애물의 차단 셀(Stage 1 10개, Stage 2 16개)은 의도된 변경이다. 원본 계약과 차이를 검토한 후 6개 계약 해시를 갱신했다. `WorkshopArtCheck`의 모델/충돌 범위·벽/설비 비간섭·중앙 통로·등장 위치 및 모든 등장 지점에서 출구까지의 도달 가능성 검사와 `EnvironmentReview -- --workshop` 대표 10개 시점을 함께 검증한다. 맵 확장과 들판 적용은 하지 않는다.
+
+2026-10-23 후속: `StageOneLayout.ServiceBay`의 기존 접근 불가 3곳에 정비/전력/자재별 `WorkshopArt` 장식을 적용했다. 베이 단위 정적 결합, 추가 충돌/광원/상호작용 없음. 이전 6개 월드/흐름장 계약을 유지한다. `WorkshopWalkthrough.tscn`은 기본 거위의 실제 물리 이동으로 기존 대표 구간을 왕복하고 보급 선택/추적 카메라를 검수한다. 자동 조작이며 수동 플레이를 대체하지 않는다. [배치·재현·한계](environment-quality-plan.md#workshop-walkthrough).
