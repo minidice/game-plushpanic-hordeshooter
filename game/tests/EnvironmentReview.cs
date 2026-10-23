@@ -80,6 +80,7 @@ public partial class EnvironmentReview : Node
         for (float z = area.Position.Y + .5f; z < area.End.Y; z++)
             for (float x = area.Position.X + .5f; x < area.End.X; x++) cells.Append(_stage.Flow.IsBlocked(new Vector3(x, 0, z)) ? '1' : '0');
         _contracts[prefix + "-flow"] = Hash(cells.ToString());
+        System.IO.File.WriteAllText(ProjectSettings.GlobalizePath($"res://output/environment-{_tag}-{prefix}-flow.txt"),cells.ToString());
         var bodies = Walk(_stage).OfType<StaticBody3D>().Where(b => (b.CollisionLayer & Layers.World) != 0);
         var shapes = bodies.SelectMany(b => b.GetChildren().OfType<CollisionShape3D>()
             .Select(c => $"{b.GlobalTransform}|{c.Transform}|{c.Shape.GetClass()}|" + (c.Shape is BoxShape3D box ? box.Size.ToString() : c.Shape is CylinderShape3D cy ? $"{cy.Radius},{cy.Height}" : "other")))
@@ -183,6 +184,9 @@ public partial class EnvironmentReview : Node
             ("hall-service", new Vector3(68,0,-8.5f)), ("yard-service", new Vector3(101,0,-6.5f)) };
         if(foliage)shots=new[]{("forest",new Vector3(38,0,-3)),("far",new Vector3(38,0,-5.7f)),
             ("end",new Vector3(108,0,0)),("back",new Vector3(108,0,-3)),("near",new Vector3(38,0,5.7f))};
+        if(OS.GetCmdlineUserArgs().Contains("--workshop"))shots=number==1
+            ?new[]{("workshop",new Vector3(70,0,-5.8f)),("workshop-route",new Vector3(70,0,-3))}
+            :new[]{("power-bay",new Vector3(79.4f,0,-5.4f)),("pipe-bay",new Vector3(88.4f,0,-5.2f)),("yard-route",new Vector3(83,0,0))};
         foreach (var (name, at) in shots)
         {
             _stage.Player.TeleportTo(at);

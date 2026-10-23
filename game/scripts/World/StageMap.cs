@@ -151,6 +151,20 @@ public abstract partial class StageMap
     /// <summary>Art may vary by map; collision and flow stamping remain owned by Wall.</summary>
     protected virtual void DrawWall(Node3D body, Vector3 size) => StageArt.Wall(body, size);
 
+    private protected void WorkshopProp(WorkshopArt.Kind kind,Vector3 at)
+    {
+        var size=WorkshopArt.Size(kind);
+        var body=Solid(at+Vector3.Up*size.Y/2,size,"",false);
+        body.Name="Workshop_"+kind;
+        WorkshopArt.Create(body,kind,Vector3.Down*size.Y/2);
+    }
+
+    private protected void WorkshopMounted(WorkshopArt.Kind kind,Vector3 at)
+    {
+        var root=ArchitectureArt.Group(_stage,"Workshop_"+kind,at);
+        WorkshopArt.Create(root,kind);
+    }
+
     protected StaticBody3D Solid(Vector3 center, Vector3 size, string color, bool drawCargo = true)
     {
         var body = new StaticBody3D { Name = "Solid", Position = center, CollisionLayer = Layers.World, CollisionMask = 0 };

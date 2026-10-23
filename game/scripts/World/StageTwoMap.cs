@@ -162,6 +162,11 @@ public sealed class StageTwoMap : StageMap
 
     private void BuildYard()
     {
+        // Keep the container/shed gap connected to the route, including navigation padding.
+        WorkshopProp(WorkshopArt.Kind.Generator,new Vector3(80.2f,0,-3.3f));
+        WorkshopProp(WorkshopArt.Kind.CableReel,new Vector3(78.4f,0,-5.3f));
+        WorkshopProp(WorkshopArt.Kind.PipeRack,new Vector3(88.4f,0,-7.3f));
+        WorkshopMounted(WorkshopArt.Kind.SafetyBoard,new Vector3(84.7f,1.15f,-6.22f));
         Floor(StreamX1, 100, -10, 10, "", draw: false);
         Wall(StreamX1, 100, -10.4f, -10, 3f, "", drawWall: false);
         Wall(StreamX1, 100, 10, 10.4f, 1f, "", drawWall: false);

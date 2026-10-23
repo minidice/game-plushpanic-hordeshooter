@@ -13,6 +13,11 @@ public sealed partial class StageOneLayout
 
     private void DressArchitecture()
     {
+        // Maintenance bay along the rear wall; the central route and shelf aisles stay open.
+        WorkshopProp(WorkshopArt.Kind.Workbench,new Vector3(70,0,-7.4f));
+        WorkshopProp(WorkshopArt.Kind.ToolChest,new Vector3(72.3f,0,-7.4f));
+        WorkshopMounted(WorkshopArt.Kind.PartsShelf,new Vector3(70,1.65f,-9.94f));
+        WorkshopMounted(WorkshopArt.Kind.SafetyBoard,new Vector3(72.3f,1.53f,-9.94f));
         ArchitectureArt.Portal(_stage,10.2f,2.6f,2.65f);
         ArchitectureArt.Portal(_stage,52.2f,5f,3.25f);
         // The tall raised slab keeps its existing animation; its new housing is offset toward the yard.
