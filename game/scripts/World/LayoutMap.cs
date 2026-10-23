@@ -139,7 +139,7 @@ public sealed class LayoutMap : StageMap
         var goal = Layout.FindMarker("safehouse")?.Pos ?? start;
         _goal = FloorAt(goal);
         foreach (var marker in Layout.Markers)
-            if (marker.Type is not ("mission" or "blocked" or "safe_zone" or "noise") && marker.Label is not ("크레인" or "벙커 정문")) Post(marker);
+            if (marker.Type is not ("mission" or "blocked" or "safe_zone" or "noise" or "safehouse") && marker.Label is not ("크레인" or "벙커 정문")) Post(marker);
         Lamp(PlayerStart + Vector3.Up * 4, "ffe6b0", 3, 24, false);
 
         if (Layout.FindMarker("blocked") is { } blocked && Layout.FindMarker("mission") is { } mission) BuildBridgeMission(blocked.Pos, mission.Pos);
@@ -195,20 +195,24 @@ public sealed class LayoutMap : StageMap
         Lamp(new Vector3(center.X, y + 2.6f, center.Y), "b5e6c3", 3, 10, false);
     }
 
-    /// <summary>The safehouse (today's Stage 2 parts: a door that stays open until the switch, then the clear).</summary>
+    /// <summary>Modeled destination shelter; existing walls, sliding-door collision and clear rules stay in the game.</summary>
     private void BuildSafehouse(Vector2 center)
     {
         float y = FloorAt(center).Y;
         float x0 = center.X - SafehouseSize.X / 2, x1 = center.X + SafehouseSize.X / 2, z0 = center.Y - SafehouseSize.Y / 2, z1 = center.Y + SafehouseSize.Y / 2;
         const float door = 2.6f;
-        RoomWall(x0, x1, z0, z0 + WallThick, y);
-        RoomWall(x0, x1, z1 - WallThick, z1, y);
-        RoomWall(x1 - WallThick, x1, z0, z1, y);
-        RoomWall(x0, x0 + WallThick, z0, center.Y - door / 2, y);
-        RoomWall(x0, x0 + WallThick, center.Y + door / 2, z1, y);
+        RoomWall(x0, x1, z0, z0 + WallThick, y, draw: false);
+        RoomWall(x0, x1, z1 - WallThick, z1, y, draw: false);
+        RoomWall(x1 - WallThick, x1, z0, z1, y, draw: false);
+        RoomWall(x0, x0 + WallThick, z0, center.Y - door / 2, y, draw: false);
+        RoomWall(x0, x0 + WallThick, center.Y + door / 2, z1, y, draw: false);
+        var at = new Vector3(center.X, y, center.Y);
+        Landmark("safehouse", at);
         _safehouseRoom = new Rect2(x0 + WallThick, z0 + WallThick, SafehouseSize.X - 2 * WallThick, SafehouseSize.Y - 2 * WallThick);
-        _safehouseDoor = Door.Create(_stage, new Vector3(x0 + WallThick / 2, y, center.Y), new Vector3(.3f, 2.4f, door), new Color("4f6b4a"), new Vector3(0, 0, 2.5f), open: true);
-        _safehouseSwitch = Use(new Vector3(x0 + 1.4f, y, center.Y), "ui_use_close_safehouse", () => _stage.TryCloseSafehouse());
+        var leaf = PropLibrary.Instance("safehouse_door");
+        _safehouseDoor = Door.Create(_stage, new Vector3(x0 + WallThick / 2, y, center.Y), new Vector3(.3f, 2.4f, door), new Color("4f6b4a"), new Vector3(0, 0, 2.5f), open: true, visual: leaf);
+        if (leaf != null) PropOcclusion.Attach(_stage, leaf);
+        _safehouseSwitch = Use(at + new Vector3(-6.5f, 1.4f, 1.8f), "ui_use_close_safehouse", () => _stage.TryCloseSafehouse());
         _safehouseSwitch.Enabled = false;
         Lamp(new Vector3(center.X, y + 2.85f, center.Y), "b5e6c3", 3.6f, 12, false);
     }

@@ -292,6 +292,48 @@
       "bounds_min_y": 0.0,
       "triangles": 1364,
       "weather": "PBR 원본 / 젖음·적설 미검수"
+    },
+    {
+      "id": "safehouse",
+      "name": "Stage 2 도착 세이프하우스",
+      "category": "Stage 2 랜드마크",
+      "note": "외벽14×12 m/두께0.4 m/높이2.6 m, 서쪽 입구2.6×2.4 m. 게임 바닥/벽 충돌 사용. 제어판 버튼 게임로컬(-6.5,1.4,1.8), rear 반지붕 최저3.03 m.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [
+        "Occlude_Walls"
+      ],
+      "file": "safehouse.glb",
+      "dimensions_m": [
+        14.1615,
+        3.75,
+        12.0965
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 2376,
+      "weather": "PBR 원본 / 젖음·적설 미검수"
+    },
+    {
+      "id": "safehouse_door",
+      "name": "세이프하우스 슬라이딩 철문",
+      "category": "Stage 2 랜드마크",
+      "note": "게임 X두께0.3/Y높이2.4/Z폭2.6 m, 바닥중심. Door가 +Z2.5 m 이동 후 벽 속 숨김. 충돌은 게임 소유.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [
+        "Occlude_Door"
+      ],
+      "file": "safehouse_door.glb",
+      "dimensions_m": [
+        0.3,
+        2.4,
+        2.6
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 616,
+      "weather": "PBR 원본 / 젖음·적설 미검수"
     }
   ]
 }
