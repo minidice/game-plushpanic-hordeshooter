@@ -133,6 +133,8 @@ public partial class WeaponController : Node
         foreach (var enemy in Stage.Enemies.ToList())
         {
             if (!IsInstanceValid(enemy) || enemy.IsDead) continue;
+            // Height tiers (L-15): like a blast, the honk reaches one tier up or down.
+            if (Stage.Tiers.Any && Mathf.Abs(Stage.Tiers.TierOf(enemy) - Stage.Tiers.TierOf(_player)) > 1) continue;
             var away = enemy.GlobalPosition - center;
             away.Y = 0;
             float d = away.Length();
@@ -657,19 +659,7 @@ public partial class WeaponController : Node
     {
         var tiers = Stage.Tiers;
         int shooterTier = tiers.TierOf(_player);
-        var flatDir = Flat(dir).Normalized();
-        var list = new List<(Enemy, float)>();
-        foreach (var enemy in Stage.Enemies)
-        {
-            if (enemy.IsDead || tiers.TierOf(enemy) >= shooterTier) continue;
-            var to = Flat(enemy.GlobalPosition - origin);
-            float along = to.Dot(flatDir);
-            if (along <= 0 || along > range) continue;
-            if ((to - flatDir * along).Length() > enemy.Radius) continue;
-            list.Add((enemy, along));
-        }
-        list.Sort((a, b) => a.Item2.CompareTo(b.Item2));
-        return list;
+        return TierMap.Along(Stage.Enemies, e => e.Radius, e => !e.IsDead && tiers.TierOf(e) < shooterTier, origin, dir, range);
     }
 
     public void CancelMeleeSwing()

@@ -24,7 +24,7 @@ public static class Blast
         // Height tiers (L-15, elevation-tiers.md 6장): a blast reaches one tier up or down, not further.
         var tiers = stage.Tiers.Any ? stage.Tiers : null;
         // The tier whose floor the blast is on or above: a rocket bursting at chest height is still on that floor.
-        int blastTier = Mathf.FloorToInt((at.Y + .1f) / TierMap.Height);
+        int blastTier = TierMap.FloorTier(at.Y);
         foreach (var enemy in stage.Enemies)
         {
             if (enemy.IsDead) continue;

@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 
 namespace HordeShooter;
 
@@ -48,6 +49,12 @@ public sealed class TierMap
     public TierMap(FlowField flow) : this(flow.MinX, flow.MinZ, flow.Width, flow.Depth, flow.Cell) { }
 
     public static int TierOfHeight(float y) => Mathf.RoundToInt(y / Height);
+
+    /// <summary>
+    /// The tier whose floor a point is on or just above: a blast or a shot at chest height still belongs to the
+    /// floor under it, while a point resting on a tier's floor counts as that tier.
+    /// </summary>
+    public static int FloorTier(float y) => Mathf.FloorToInt((y + .05f) / Height);
 
     public int Index(Vector3 p)
     {
@@ -152,6 +159,32 @@ public sealed class TierMap
     }
 
     // ---------- fighting ----------
+
+    /// <summary>
+    /// Bodies whose floor-plan circle the line from <paramref name="origin"/> along <paramref name="direction"/> crosses
+    /// within <paramref name="range"/>, nearest first. Shots fired from a tier pass over everything on lower tiers, so
+    /// targets down there are found on the floor plan instead of by the ray (elevation-tiers.md 6장).
+    /// </summary>
+    public static List<(T body, float along)> Along<T>(IEnumerable<T> bodies, Func<T, float> radius, Func<T, bool> include,
+        Vector3 origin, Vector3 direction, float range) where T : Node3D
+    {
+        var flat = new Vector3(direction.X, 0, direction.Z);
+        var list = new List<(T, float)>();
+        if (flat.LengthSquared() < .0001f) return list;
+        flat = flat.Normalized();
+        foreach (var body in bodies)
+        {
+            if (!GodotObject.IsInstanceValid(body) || !include(body)) continue;
+            var to = body.GlobalPosition - origin;
+            to.Y = 0;
+            float along = to.Dot(flat);
+            if (along <= 0 || along > range) continue;
+            if ((to - flat * along).Length() > radius(body)) continue;
+            list.Add((body, along));
+        }
+        list.Sort((a, b) => a.Item2.CompareTo(b.Item2));
+        return list;
+    }
 
     /// <summary>Is <paramref name="p"/> within <see cref="EdgeBand"/> of a cell of <paramref name="tier"/>?</summary>
     public bool NearTier(Vector3 p, int tier, float band = EdgeBand)

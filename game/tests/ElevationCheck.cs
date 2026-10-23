@@ -252,6 +252,92 @@ public partial class ElevationCheck : Node
         Check(lifted.Position.Y >= H, "a monster spawned over a plateau starts on its floor, not inside it");
 
         await Vision();
+        await Ranged();
+    }
+
+    /// <summary>Rockets, monster guns, vomit and grabs across tiers (L-15 · L-16).</summary>
+    private async Task Ranged()
+    {
+        var stage = await NewStage(new TierTestMap());
+        var player = stage.Player;
+        var tiers = stage.Tiers;
+        var common = stage.CommonDefinition;
+        var rocket = ArmoryCatalog.Weapon("alabong");
+
+        async Task Clear()
+        {
+            foreach (var e in stage.AllEnemies.ToList()) if (IsInstanceValid(e)) e.QueueFree();
+            await Frames(2);
+        }
+
+        // Rockets fly level from the shooter's tier: down onto the ground, but into the cliff when fired up.
+        await Clear();
+        var below = stage.SpawnEnemy<Enemy>(common, new Vector3(32, 0, 7), awake: false);
+        await Place(player, new Vector3(32, 2 * H, -3), new Vector3(32, 1, 7));
+        float belowBefore = below.Health;
+        Rocket.Launch(stage, new Vector3(32, 2 * H + 1.1f, -3), Vector3.Back, rocket, player.GetRid(), player);
+        await Frames(40);
+        Check(!IsInstanceValid(below) || below.IsDead || below.Health < belowBefore, "a rocket fired from tier 2 hits a monster on the ground below");
+        await Clear();
+        var above = stage.SpawnEnemy<Enemy>(common, new Vector3(19, H, -10), awake: false);
+        await Place(player, new Vector3(1, 0, -10), new Vector3(19, 1, -10));
+        float aboveBefore = above.Health;
+        Rocket.Launch(stage, new Vector3(1, 1.1f, -10), Vector3.Right, rocket, player.GetRid(), player);
+        await Frames(40);
+        Check(IsInstanceValid(above) && !above.IsDead && above.Health == aboveBefore, "a rocket fired from the ground at tier 1 bursts on the cliff");
+
+        // A monster gun shoots down a tier, never up.
+        player.Invulnerable = false;
+        await Clear();
+        await Place(player, new Vector3(38, 0, 6), new Vector3(38, 1, -4));
+        var gunner = (RangedEnemy)stage.Spawn(MonsterDatabase.Get("armed_animal"), new Vector3(38, 2 * H, -5), awake: true);
+        int health = player.Health;
+        bool hitFromAbove = false;
+        for (int i = 0; i < 300 && !hitFromAbove; i++)
+        {
+            await Frames(1);
+            if (player.Health < health && tiers.TierOf(gunner) == 2) hitFromAbove = true;
+            health = player.Health;
+        }
+        Check(hitFromAbove, "an armed animal up on tier 2 shoots a survivor on the ground");
+        await Clear();
+        await Place(player, new Vector3(15, H, -2), new Vector3(15, 1, 8));
+        var lowGunner = (RangedEnemy)stage.Spawn(MonsterDatabase.Get("armed_animal"), new Vector3(15, 0, 8), awake: true);
+        bool shotUp = false;
+        int fired = 0;
+        for (int i = 0; i < 180; i++)
+        {
+            await Frames(1);
+            if (lowGunner.ProjectilesFired > fired && tiers.TierOf(lowGunner) < tiers.TierOf(player)) shotUp = true;
+            fired = lowGunner.ProjectilesFired;
+        }
+        Check(!shotUp, "an armed animal on the ground never shoots up at tier 1");
+
+        // Vomit is lobbed (the lob exception): a spitter below still reaches tier 1.
+        await Clear();
+        await Place(player, new Vector3(15, H, -2), new Vector3(15, 1, 7));
+        var spitter = (RangedEnemy)stage.Spawn(MonsterDatabase.Get("spitter"), new Vector3(15, 0, 7), awake: true);
+        bool lobbed = false;
+        for (int i = 0; i < 360 && !lobbed; i++)
+        {
+            await Frames(1);
+            if (spitter.ProjectilesFired > 0 && tiers.TierOf(spitter) == 0) lobbed = true;
+        }
+        Check(lobbed, "a spitter on the ground lobs its vomit up onto tier 1");
+
+        // Grabs reach across tiers (L-16): a tether below catches a survivor on the edge above.
+        await Clear();
+        await Place(player, new Vector3(15, H, -1.2f), new Vector3(15, 1, 5));
+        var tether = stage.Spawn(MonsterDatabase.Get("tether"), new Vector3(15, 0, 5), awake: true);
+        bool grabbed = false;
+        for (int i = 0; i < 480 && !grabbed; i++)
+        {
+            await Frames(1);
+            if (player.IsRestrained && tiers.TierOf(tether) == 0) grabbed = true;
+        }
+        Check(grabbed, "a tether on the ground grabs a survivor up on tier 1");
+        player.Invulnerable = true;
+        await Clear();
     }
 
     /// <summary>L-21: from below, enemies up a tier are hidden unless a survivor up there lights them or they attack you.</summary>
