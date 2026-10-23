@@ -253,6 +253,51 @@ public partial class ElevationCheck : Node
 
         await Vision();
         await Ranged();
+        await Squad();
+    }
+
+    /// <summary>AI squadmates on tiers: follow up a ramp, shoot down a tier, never up.</summary>
+    private async Task Squad()
+    {
+        var stage = await NewStage(new TierTestMap(), squad: 1);
+        var player = stage.Player;
+        var tiers = stage.Tiers;
+        var bot = stage.Squad[0].Bot;
+        bot.Invulnerable = true;
+        var common = stage.CommonDefinition;
+
+        await Place(player, new Vector3(15, H, -8), new Vector3(20, 1, -8));
+        await Place(bot, new Vector3(-5, 0, 5), new Vector3(0, 1, 5));
+        for (int i = 0; i < 900 && tiers.TierOf(bot) != 1; i++) await Frames(1);
+        Check(tiers.TierOf(bot) == 1, "a squadmate follows the leader up the ramp onto tier 1");
+
+        await Place(player, new Vector3(35, 2 * H, -8), new Vector3(35, 1, 6));
+        await Place(bot, new Vector3(33, 2 * H, -4), new Vector3(33, 1, 6));
+        var below = stage.SpawnEnemy<Enemy>(common, new Vector3(33, 0, 7), awake: true);
+        float before = below.Health;
+        bool hit = false;
+        for (int i = 0; i < 300 && !hit; i++)
+        {
+            await Frames(1);
+            hit = !IsInstanceValid(below) || below.IsDead || (below.Health < before && tiers.TierOf(bot) == 2);
+        }
+        Check(hit, "a squadmate up on tier 2 shoots a monster on the ground");
+        foreach (var e in stage.AllEnemies.ToList()) if (IsInstanceValid(e)) e.QueueFree();
+        await Frames(2);
+
+        await Place(player, new Vector3(2, 0, 8), new Vector3(15, 1, -6));
+        await Place(bot, new Vector3(4, 0, 9), new Vector3(15, 1, -6));
+        var above = stage.SpawnEnemy<Enemy>(common, new Vector3(15, H, -6), awake: true);
+        int mag = bot.Gun.Mag;
+        bool firedUp = false;
+        for (int i = 0; i < 120; i++)
+        {
+            await Frames(1);
+            if (!IsInstanceValid(above) || above.IsDead) break;
+            if (bot.Gun.Mag < mag && tiers.TierOf(above) > tiers.TierOf(bot)) firedUp = true;
+            mag = bot.Gun.Mag;
+        }
+        Check(!firedUp, "a squadmate on the ground does not shoot at a monster up on tier 1");
     }
 
     /// <summary>Rockets, monster guns, vomit and grabs across tiers (L-15 · L-16).</summary>

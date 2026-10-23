@@ -198,7 +198,7 @@ public partial class SquadBrain : Node
             if (enemy.IsDead || !enemy.Awake) continue;
             float d = enemy.GlobalPosition.DistanceTo(Bot.GlobalPosition);
             if (d > range) continue;
-            if (!Rays.Clear(Bot, eye, enemy.GlobalPosition + Vector3.Up * Player.AimHeight, Layers.World | Layers.Props)) continue;
+            if (!InSight(eye, enemy)) continue;
             float score = -d;
             if (enemy.Victim is { } victim && victim != Bot && victim.GlobalPosition.DistanceTo(enemy.GlobalPosition) < 3f) score += 40;
             if (enemy.IsSpecial) score += 25;
@@ -206,6 +206,23 @@ public partial class SquadBrain : Node
             if (score > bestScore) { bestScore = score; best = enemy; }
         }
         return best;
+    }
+
+    /// <summary>
+    /// Line of fire to an enemy. With height tiers (L-15) nothing up a tier can be shot, and below the line is checked at
+    /// the squadmate's own height, the way the bullet flies over the edge.
+    /// </summary>
+    private bool InSight(Vector3 eye, Enemy enemy)
+    {
+        var target = enemy.GlobalPosition + Vector3.Up * Player.AimHeight;
+        var tiers = _stage.Tiers;
+        if (tiers.Any)
+        {
+            int mine = tiers.TierOf(Bot), theirs = tiers.TierOf(enemy);
+            if (theirs > mine) return false;
+            if (theirs < mine) target = target with { Y = eye.Y };
+        }
+        return Rays.Clear(Bot, eye, target, Layers.World | Layers.Props);
     }
 
     private Interactable? PickupWanted()
@@ -249,8 +266,10 @@ public partial class SquadBrain : Node
         float lateral = Slot switch { 0 => -1.4f, 1 => 1.4f, _ => 0f };
         if (Slot >= 2) back += 1.2f;
         var spot = leader.GlobalPosition - forward * back + side * lateral;
-        if (_stage.Flow.IsBlocked(spot)) spot = leader.GlobalPosition - forward * back;
-        if (_stage.Flow.IsBlocked(spot)) spot = leader.GlobalPosition;
+        // Height tiers: a slot that falls off the leader's tier is no slot.
+        bool Off(Vector3 p) => _stage.Flow.IsBlocked(p) || (_stage.Tiers.Any && _stage.Tiers.TierAt(p) != _stage.Tiers.TierAt(leader.GlobalPosition));
+        if (Off(spot)) spot = leader.GlobalPosition - forward * back;
+        if (Off(spot)) spot = leader.GlobalPosition;
         return spot with { Y = Bot.GlobalPosition.Y };
     }
 
@@ -377,7 +396,9 @@ public partial class SquadBrain : Node
         float d = to.Length();
         if (d < .35f) return Vector3.Zero;
         float speed = Mathf.Min(pace, d / 1.5f + .2f);
-        if (d < 8f && WideClear(goal)) return to / d * speed;
+        // Height tiers: straight only on the same tier; another tier is reached by the route field (ramps, drop edges).
+        bool sameTier = !_stage.Tiers.Any || _stage.Tiers.TierAt(goal) == _stage.Tiers.TierAt(Bot.GlobalPosition);
+        if (d < 8f && sameTier && WideClear(goal)) return to / d * speed;
         FlowField field;
         if (toLeader) field = _stage.LeaderFlow;
         else
