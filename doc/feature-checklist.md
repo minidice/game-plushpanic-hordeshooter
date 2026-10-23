@@ -388,7 +388,8 @@
 
 - 클라우드 세션(Linux, Godot 4.7.2 .NET 헤드리스). C# 빌드 경고 · 오류 0.
 - 새 `FlowBench`: Stage 1 · 지금 Stage 2 · 시안에서 벽 찍기 · 문 열림 · 이동 유형별 다시 계산 시간과 칸별 거리 · 방향 지문(`FLOW_HASH`) 10개를 출력. 바꾸기 전 실행과 지문이 모두 같음(결과 불변). 시간은 I-109 해결 칸.
-- 회귀(커밋 시점까지): 흐름장 변경 위에서 `ElevationCheck` 76 통과. 나머지 회귀 · `SizeDraftCheck`(실행 옵션 검사 2개 추가)는 실행 중 — 결과는 다음 커밋에서 이 줄에 적는다. 실행 옵션 변경은 컴파일만 확인.
+- 회귀(흐름장 변경 위): `ElevationCheck` 76 · `Integration` 149 · `SquadCheck` 51 · `MapCheck` 24 · `StageTransitionCheck` 164 · `EnemyAttackCheck` 79 · `SpawnCheck` 41 · `SupplyCheck` 12 · `ModeCheck` 147 · `CombatPacingCheck` 44 · `CardLabCheck` 172 · `CompanionCheck` 39 · `EnemyExpansion` 60 통과(종료 경고 I-17 4개 검사에 한 줄씩). 실행 옵션까지 넣은 최종 빌드에서 `SizeDraftCheck` 74(옵션 검사 2개 추가) · `Integration` 149 · `StageTransitionCheck` 164 다시 통과. 시안 짓기 3.4 → 약 1.8~1.9초(단 칠하기도 상자 둘레만).
+- 실행 옵션은 검사에서 `GameSession` · `StageMap.Create` 경로만 확인 — 실제 창에서 `-Stage2Draft`로 메뉴 → 시나리오 시작은 로컬에서 확인해야 함.
 - 실제 플레이 · 저사양 · 창 모드 프레임 측정은 안 함.
 
 ### 이번 변경 확인 기록 — 2026-10-23 (Stage 2 배치 1차, 7.2 5단계)
