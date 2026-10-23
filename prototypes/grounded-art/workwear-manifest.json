@@ -1,0 +1,94 @@
+{
+  "status": "offline review candidate; game not integrated",
+  "date": "2026-10-22",
+  "protected_files_sha256": {
+    "D:\\Project\\Game\\game-hordeshooter\\game\\assets\\characters\\goose\\goose.glb": "3d2d2a0e85488f77748ffd07f061d1a298bfb20f2fe28279983b1ca9b858b2be",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\source\\goose-field-kit.blend": "48460c9358dfe53d67d9721788938d67c1cec3c203af9127bc66148288e0738b"
+  },
+  "unchanged_meshes": {
+    "goose_tail_mesh": "d598f20680e007e9dc709c57004de972701985cb8b0d3a0ce121d863d354109b",
+    "goose_leftBrow_mesh": "9b20006bb8581c2e65c7cb05b1bba4e8f4bada19dd866ba2abe7c701f356b13d",
+    "goose_torso_mesh": "564bbe710b8f0fa99ca2a6a8fefbd20bf0dc342ec50b4d721b7d48fdebd10919",
+    "goose_rightFoot_mesh": "788ecbe05c6cb867f47d53e433ea2428cfe31f6df291b25ed6bacb92c6a22e38",
+    "goose_rightArm_mesh": "9de07b084091c8da778bb9366a825f861e746ab833077e9e96da203691a35923",
+    "goose_leftEye_mesh": "c8edd7b88ed05d97145da40e5befd6e5f480ddd9d911a6bb0dab5ccff82f537f",
+    "goose_leftArm_mesh": "5ad6a28c76276b289c669cd51d4186bce7fcdba179cf75b45db7e0d9d59ef1ab",
+    "goose_beak_mesh": "232142c24a393963e42ec2826360b5a003c0dca963f2cde6983c2e02c237554b",
+    "goose_rightBrow_mesh": "d48c70737096ff15e130528895807cc8fc4ba393a85d972fd31b38b954343b2e",
+    "goose_rightEye_mesh": "b573c9fad4bd49e6b7bbb6692232770a31b6dcf69f0454e182abbc16d9d8cd56",
+    "goose_leftFoot_mesh": "64ba787a6bc53ef52537fc043e2917ff9a8d59c3eb6eb177e1d4be2e620e427c"
+  },
+  "candidate": {
+    "triangles": 34214,
+    "mesh_objects": 13,
+    "materials": 18,
+    "bounds_min": [
+      -0.5516014695167542,
+      -0.6790671944618225,
+      0.015999941155314445
+    ],
+    "bounds_max": [
+      0.5499624013900757,
+      0.6898864507675171,
+      2.018068790435791
+    ]
+  },
+  "clothing": {
+    "triangles": 19016,
+    "mesh_objects": 2,
+    "materials": 6,
+    "bounds_min": [
+      -0.49323076009750366,
+      -0.46944543719291687,
+      0.5739378333091736
+    ],
+    "bounds_max": [
+      0.49323076009750366,
+      0.4335988759994507,
+      2.018068790435791
+    ]
+  },
+  "parts": {
+    "goose_helmet_workwear_mesh": {
+      "triangles": 4516,
+      "mesh_objects": 1,
+      "materials": 2,
+      "bounds_min": [
+        -0.45396947860717773,
+        -0.46944543719291687,
+        1.6942135095596313
+      ],
+      "bounds_max": [
+        0.45396947860717773,
+        0.3909774124622345,
+        2.018068790435791
+      ]
+    },
+    "goose_vest_workwear_mesh": {
+      "triangles": 14500,
+      "mesh_objects": 1,
+      "materials": 4,
+      "bounds_min": [
+        -0.49323076009750366,
+        -0.4635619819164276,
+        0.5739378333091736
+      ],
+      "bounds_max": [
+        0.49323076009750366,
+        0.4335988759994507,
+        1.4151959419250488
+      ]
+    }
+  },
+  "axes": "Blender +Z up/-Y front; glTF +Y up/+Z front; metres",
+  "clothing_nodes": [
+    "goose_helmet",
+    "goose_vest"
+  ],
+  "design": "Muted blue sleeveless work vest, ochre soft cap; no armor or pack.",
+  "limitations": [
+    "Idle fit only. Animation, body sliders, other species and Godot untested.",
+    "No armor layering or outfit selection system implemented.",
+    "Top-down preview is a Blender view, not a game screenshot."
+  ]
+}

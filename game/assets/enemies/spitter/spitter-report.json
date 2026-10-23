@@ -1,7 +1,7 @@
 {
   "id": "spitter",
   "source_triangles": 10584,
-  "triangles": 4005,
+  "triangles": 3924,
   "meshes": 6,
   "materials": [
     "infected_cloth.004",
@@ -11,7 +11,7 @@
     "infected_skin.004",
     "infected_trim.004"
   ],
-  "bytes": 120524,
+  "bytes": 107840,
   "nodes": [
     "spitter_root",
     "Body",
@@ -31,5 +31,7 @@
     "spitter_rightArm"
   ],
   "forward": "+Z",
-  "notes": "No bones. Runtime object pivots. Beret included for runtime visibility. Source vertex colors preserved."
+  "notes": "No bones. Runtime object pivots. Beret included for runtime visibility. Source vertex colors preserved.",
+  "source_open_edges": 0,
+  "open_edges": 0
 }

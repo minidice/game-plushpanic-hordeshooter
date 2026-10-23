@@ -1,7 +1,7 @@
 {
   "id": "bull",
   "source_triangles": 10608,
-  "triangles": 2644,
+  "triangles": 2592,
   "meshes": 9,
   "materials": [
     "bull_cream",
@@ -9,7 +9,7 @@
     "bull_ink",
     "bull_pink"
   ],
-  "bytes": 84484,
+  "bytes": 79620,
   "nodes": [
     "bull_root",
     "Body",
@@ -36,6 +36,8 @@
   ],
   "forward": "+Z",
   "notes": "No bones. Named arm, leg, foot and tail pivots retained for runtime object animation.",
+  "source_open_edges": 0,
+  "open_edges": 0,
   "body_dimensions": {
     "width": 1.1399999856948853,
     "depth": 1.1832729578018188

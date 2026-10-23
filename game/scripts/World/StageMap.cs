@@ -17,6 +17,7 @@ public abstract partial class StageMap
     protected readonly RandomNumberGenerator _rng = new();
     private readonly List<(Vector3 center, Vector3 size)> _floors = new();
     private readonly List<(Vector3 center, Vector3 size)> _solids = new();
+    protected readonly List<(Node3D Body,Vector3 Size)> ArtWalls = new();
 
     /// <summary>
     /// The map for a mode: Onslaught plays its open field, the scenario the stage it has reached (Stage 2 after the
@@ -90,6 +91,8 @@ public abstract partial class StageMap
         Mode = mode;
         _rng.Seed = 1;
         BuildMap();
+        foreach(var (body,size) in ArtWalls) DrawWall(body,size);
+        if(this is StageOneLayout or StageTwoMap) ArchitectureArt.JoinWalls(_stage,ArtWalls);
         ApplyFlow();
     }
 
@@ -135,7 +138,7 @@ public abstract partial class StageMap
     {
         var wallSize = new Vector3(x1 - x0, height, z1 - z0);
         var body = Solid(new Vector3((x0 + x1) / 2, height / 2, (z0 + z1) / 2), wallSize, color, false);
-        if (drawWall) StageArt.Wall(body, wallSize);
+        if (drawWall) ArtWalls.Add((body,wallSize));
         // Low camera-side fences get an invisible tall collider so nobody gets launched out of the map.
         if (height < 2f)
         {
@@ -143,6 +146,23 @@ public abstract partial class StageMap
             body.AddChild(new CollisionShape3D { Shape = new BoxShape3D { Size = size }, Position = new Vector3(0, 2f - height / 2, 0) });
         }
         return body;
+    }
+
+    /// <summary>Art may vary by map; collision and flow stamping remain owned by Wall.</summary>
+    protected virtual void DrawWall(Node3D body, Vector3 size) => StageArt.Wall(body, size);
+
+    private protected void WorkshopProp(WorkshopArt.Kind kind,Vector3 at)
+    {
+        var size=WorkshopArt.Size(kind);
+        var body=Solid(at+Vector3.Up*size.Y/2,size,"",false);
+        body.Name="Workshop_"+kind;
+        WorkshopArt.Create(body,kind,Vector3.Down*size.Y/2);
+    }
+
+    private protected void WorkshopMounted(WorkshopArt.Kind kind,Vector3 at)
+    {
+        var root=ArchitectureArt.Group(_stage,"Workshop_"+kind,at);
+        WorkshopArt.Create(root,kind);
     }
 
     protected StaticBody3D Solid(Vector3 center, Vector3 size, string color, bool drawCargo = true)
@@ -189,6 +209,7 @@ public abstract partial class StageMap
             _stage.AddChild(holder);
         }
         model.Scale = Vector3.One * scale;
+        if (this is StageTwoMap) FoliageArt.ReplaceTree(model,id);
         holder.AddChild(model);
         KitProps.Add(holder);
         return holder;

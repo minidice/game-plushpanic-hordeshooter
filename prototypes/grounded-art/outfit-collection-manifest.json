@@ -1,0 +1,208 @@
+{
+  "date": "2026-10-23",
+  "status": "offline review collection; game not integrated",
+  "protected_files_sha256": {
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-equipment-only.glb": "6312c245c3691677fe6ce635175a66b5f3a37fd3b1f6e57de0f331c25bfa3d8d",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-field-kit.glb": "7abcf7578bd092d51f06330591fa2e0c720d779d95a9dbb91cf92b5382438a69",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-refined-armor.glb": "555e0c9d122a01429d6d774cd2d45fab94b6a8ed3dd143e4617886ecd6195fa9",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-refined-vest-only.glb": "9d684ac6f37bb3da53a780098d0ee4aeef9d1c92314946f7d1e0773dcf0aabe3",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-workwear-only.glb": "e509e79d9270b44f5d48022f562dc8fee63dd4484647702b7aa7dee5abb08a0b",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-workwear.glb": "c22c783f316946b8df5b949a45f5722aee66f8054616cf55379bea38887bd5f6",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-wrap-armor.glb": "9b9a6295b4828c562dd8d80620052087224483792a2797d627ca9819c5233d83",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-wrap-vest-only.glb": "c18c08a2fc911862fd08a84f30d5c23dea9effe003ab8058c23f1d18c23089cf",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\source\\goose-field-kit.blend": "48460c9358dfe53d67d9721788938d67c1cec3c203af9127bc66148288e0738b",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\source\\goose-refined-armor-mood.blend": "d02ce48210cc32f63b8d0f639b55ff85a51836dc1abdd12c0d94d3fefecff4d1",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\source\\goose-refined-armor.blend": "a92aaae142160d0161f2c350c679bb0c7e9087b17456703555f4990663c7c1e5",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\source\\goose-workwear.blend": "22bb86f17baf11de376f704b7d21f4c4f3a3bfbd5395ec942cb45e98f1f4ae25",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\source\\goose-wrap-armor.blend": "a0ce80542ff64713aa66c934813f64c43aa168e6ccfaa3ab552339fa1fa7700f",
+    "D:\\Project\\Game\\game-hordeshooter\\game\\assets\\characters\\goose\\goose.glb": "3d2d2a0e85488f77748ffd07f061d1a298bfb20f2fe28279983b1ca9b858b2be"
+  },
+  "outfits": {
+    "light": {
+      "full": {
+        "mesh_objects": 13,
+        "triangles": 22914,
+        "materials": 18,
+        "bounds_min": [
+          -0.5516014695167542,
+          -0.6790671944618225,
+          0.015999944880604744
+        ],
+        "bounds_max": [
+          0.5499624013900757,
+          0.6898864507675171,
+          2.041999578475952
+        ]
+      },
+      "helmet": {
+        "mesh_objects": 1,
+        "triangles": 3940,
+        "materials": 4,
+        "bounds_min": [
+          -0.46393606066703796,
+          -0.4414999783039093,
+          1.6544603109359741
+        ],
+        "bounds_max": [
+          0.46393606066703796,
+          0.40397918224334717,
+          2.041999578475952
+        ]
+      },
+      "vest": {
+        "mesh_objects": 1,
+        "triangles": 3776,
+        "materials": 3,
+        "bounds_min": [
+          -0.506262481212616,
+          -0.5490544438362122,
+          0.6370664834976196
+        ],
+        "bounds_max": [
+          0.5062622427940369,
+          0.44258347153663635,
+          1.2752385139465332
+        ]
+      },
+      "preserved_body_meshes": [
+        "goose_beak_mesh",
+        "goose_leftBrow_mesh",
+        "goose_leftEye_mesh",
+        "goose_rightBrow_mesh",
+        "goose_rightEye_mesh",
+        "goose_leftArm_mesh",
+        "goose_leftFoot_mesh",
+        "goose_rightArm_mesh",
+        "goose_rightFoot_mesh",
+        "goose_tail_mesh",
+        "goose_torso_mesh"
+      ]
+    },
+    "recon": {
+      "full": {
+        "mesh_objects": 13,
+        "triangles": 24466,
+        "materials": 18,
+        "bounds_min": [
+          -0.5516014695167542,
+          -0.6790671944618225,
+          0.015999944880604744
+        ],
+        "bounds_max": [
+          0.5499624013900757,
+          0.6898864507675171,
+          2.0969998836517334
+        ]
+      },
+      "helmet": {
+        "mesh_objects": 1,
+        "triangles": 3384,
+        "materials": 3,
+        "bounds_min": [
+          -0.4635000228881836,
+          -0.4054967761039734,
+          1.6710000038146973
+        ],
+        "bounds_max": [
+          0.4635000228881836,
+          0.41099998354911804,
+          2.0969998836517334
+        ]
+      },
+      "vest": {
+        "mesh_objects": 1,
+        "triangles": 5884,
+        "materials": 4,
+        "bounds_min": [
+          -0.5130218267440796,
+          -0.5945217609405518,
+          0.6299999952316284
+        ],
+        "bounds_max": [
+          0.5130218267440796,
+          0.4600217640399933,
+          1.343332052230835
+        ]
+      },
+      "preserved_body_meshes": [
+        "goose_beak_mesh",
+        "goose_leftBrow_mesh",
+        "goose_leftEye_mesh",
+        "goose_rightBrow_mesh",
+        "goose_rightEye_mesh",
+        "goose_leftArm_mesh",
+        "goose_leftFoot_mesh",
+        "goose_rightArm_mesh",
+        "goose_rightFoot_mesh",
+        "goose_tail_mesh",
+        "goose_torso_mesh"
+      ]
+    },
+    "heavy": {
+      "full": {
+        "mesh_objects": 13,
+        "triangles": 28118,
+        "materials": 19,
+        "bounds_min": [
+          -0.5516014695167542,
+          -0.6790671944618225,
+          0.015999944880604744
+        ],
+        "bounds_max": [
+          0.5499624013900757,
+          0.6898864507675171,
+          2.0869998931884766
+        ]
+      },
+      "helmet": {
+        "mesh_objects": 1,
+        "triangles": 5040,
+        "materials": 4,
+        "bounds_min": [
+          -0.48277002573013306,
+          -0.49900001287460327,
+          1.664501667022705
+        ],
+        "bounds_max": [
+          0.48277002573013306,
+          0.4320000112056732,
+          2.0869998931884766
+        ]
+      },
+      "vest": {
+        "mesh_objects": 1,
+        "triangles": 7880,
+        "materials": 3,
+        "bounds_min": [
+          -0.5188530683517456,
+          -0.5892027020454407,
+          0.6299999952316284
+        ],
+        "bounds_max": [
+          0.5188530683517456,
+          0.4600217640399933,
+          1.4111828804016113
+        ]
+      },
+      "preserved_body_meshes": [
+        "goose_beak_mesh",
+        "goose_leftBrow_mesh",
+        "goose_leftEye_mesh",
+        "goose_rightBrow_mesh",
+        "goose_rightEye_mesh",
+        "goose_leftArm_mesh",
+        "goose_leftFoot_mesh",
+        "goose_rightArm_mesh",
+        "goose_rightFoot_mesh",
+        "goose_tail_mesh",
+        "goose_torso_mesh"
+      ]
+    }
+  },
+  "axes": "Blender Z up/-Y front; glTF Y up/+Z front; metres",
+  "scope": "Three new helmet/vest sets. No backpacks, including in the basic reference render.",
+  "limitations": [
+    "No runtime weapon-arm, body-slider or performance validation.",
+    "Only existing goose body; other species require fitting."
+  ]
+}

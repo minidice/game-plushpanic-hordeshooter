@@ -1,8 +1,8 @@
 {
   "id": "boss",
   "source_triangles": 11608,
-  "triangles": 4466,
-  "meshes": 6,
+  "triangles": 4344,
+  "meshes": 8,
   "materials": [
     "boss_cream",
     "boss_fur",
@@ -10,16 +10,20 @@
     "boss_ink",
     "boss_leather"
   ],
-  "bytes": 131240,
+  "bytes": 117360,
   "nodes": [
     "boss_root",
     "Body",
     "Deform",
     "Deform_mesh",
+    "boss_leftLeg",
+    "boss_leftLeg_mesh",
     "LeftFoot",
     "LeftFoot_mesh",
     "boss_leftArm",
     "boss_leftArm_mesh",
+    "boss_rightLeg",
+    "boss_rightLeg_mesh",
     "RightFoot",
     "RightFoot_mesh",
     "boss_rightArm",
@@ -30,5 +34,7 @@
     "Weapon"
   ],
   "forward": "+Z",
-  "notes": "No bones. Runtime object pivots. Beret included for runtime visibility. Source vertex colors preserved."
+  "notes": "No bones. Runtime object pivots. Beret included for runtime visibility. Source vertex colors preserved.",
+  "source_open_edges": 0,
+  "open_edges": 0
 }

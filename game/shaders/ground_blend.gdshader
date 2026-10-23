@@ -3,6 +3,7 @@ shader_type spatial;
 // (R dirt, G asphalt, B gravel); small world-space noise breaks the edges finer than the map, and speckles stand in
 // for the kit tiles' pebbles. Flat toy colours from the outdoor kit palette, no textures.
 render_mode diffuse_burley, specular_schlick_ggx;
+#include "res://shaders/woodland_surface.gdshaderinc"
 
 uniform sampler2D blend : filter_linear, repeat_disable;
 // World rectangle the blend map covers: x0, z0, width, depth.
@@ -46,7 +47,7 @@ void fragment() {
 	float asphalt = smoothstep(0.45, 0.55, w.g + n * 0.10);
 	vec2 q = ROT * p;
 	float patch = 0.93 + 0.14 * (vnoise(q * 0.33) * 0.6 + vnoise(ROT * q * 0.9) * 0.4);
-	vec3 col = grass_color * patch;
+	vec3 col = woodland_grass(grass_color * patch,p);
 	col = mix(col, gravel_color * (0.94 + 0.12 * vnoise(q * 2.1)), gravel);
 	col = mix(col, dirt_color * (0.95 + 0.10 * (vnoise(q * 0.45 + 7.0) * 0.6 + vnoise(ROT * q * 1.3) * 0.4)), dirt);
 	col = mix(col, asphalt_color * (0.96 + 0.08 * vnoise(q * 1.3 + 3.0)), asphalt);

@@ -213,19 +213,20 @@ public partial class StageTransitionCheck : Node
         Check(_stage.GetChildren().OfType<MultiMeshInstance3D>().Where(m => m.Name.ToString().StartsWith("bit_"))
             .All(m => m.CastShadow == GeometryInstance3D.ShadowCastingSetting.Off), "ground bits cast no shadows");
         var placed = map.KitProps.Select(p => p.Name.ToString()).Distinct().ToList();
-        foreach (var id in new[] { "bunker_hatch", "warning_sign", "concrete_barrier", "container_closed", "wire_fence", "cliff_segment", "boulder",
+        foreach (var id in new[] { "bunker_hatch", "warning_sign", "concrete_barrier", "container_closed", "wire_fence", "boulder",
                      "stream_straight", "timber_bridge", "corrugated_fence", "streetlamp", "utility_shed", "sandbags", "barrel" })
             Check(placed.Contains(id), $"Stage 2 places {id}");
+        Check(_stage.GetChildren().OfType<MultiMeshInstance3D>().Any(m => m.Name.ToString().StartsWith("CloseRockBank")),
+            "close rock outcrops replace the repeated cliff-segment wall");
         // Ground nobody can reach is packed with the edge kit (A-23).
         var edges = map.EdgeCounts;
-        Check(edges.GetValueOrDefault("edge_forest_pine") + edges.GetValueOrDefault("edge_forest_round") > 40 && edges.GetValueOrDefault("edge_backdrop") > 60 &&
-              edges.GetValueOrDefault("edge_shrub_band") > 40 && edges.GetValueOrDefault("edge_forest_low") > 20 && edges.GetValueOrDefault("edge_rock_wall") > 8,
-            "forest, backdrop, shrub bands, low clumps and rock walls pack the unreachable ground: " + string.Join(", ", edges.Select(kv => $"{kv.Key} {kv.Value}")));
-        var dressing = _stage.GetChildren().OfType<MultiMeshInstance3D>().Where(m => m.Name.ToString().StartsWith("edge_")).ToList();
-        Check(dressing.Count > 0 && !_stage.FindChildren("edge_*", nameof(StaticBody3D), true, false).Any(), "the dressing is instanced and has no physics");
-        Check(dressing.Where(m => m.Name.ToString().StartsWith("edge_backdrop")).All(m => m.CastShadow == GeometryInstance3D.ShadowCastingSetting.Off) &&
-              dressing.Any(m => m.Name.ToString().StartsWith("edge_shrub_band") && m.CastShadow == GeometryInstance3D.ShadowCastingSetting.On),
-            "only the rows next to the play area cast shadows");
+        Check(edges.GetValueOrDefault("Pine")>80 && edges.GetValueOrDefault("Broadleaf")>10 && edges.GetValueOrDefault("Shrub")>100,
+            "coherent trees and independent shrubs pack the unreachable ground: " + string.Join(", ", edges.Select(kv => $"{kv.Key} {kv.Value}")));
+        var dressing = _stage.GetChildren().OfType<MultiMeshInstance3D>().Where(m => m.Name.ToString().StartsWith("Woodland")).ToList();
+        Check(dressing.Count > 0 && !_stage.FindChildren("Woodland*", nameof(StaticBody3D), true, false).Any(), "the dressing is instanced and has no physics");
+        Check(dressing.Any(m => m.CastShadow == GeometryInstance3D.ShadowCastingSetting.Off) &&
+              dressing.Any(m => m.CastShadow == GeometryInstance3D.ShadowCastingSetting.On),
+            "distant and camera-side foliage omits shadows while the nearby far-side canopy casts them");
         Check(_stage.FindChild("FarGround", true, false) is MeshInstance3D && _stage.Cam.Bounds == map.CameraBounds && map.CameraBounds != null,
             "a far ground plane lies under everything and the camera keeps to the route");
         var flow = _stage.Flow;

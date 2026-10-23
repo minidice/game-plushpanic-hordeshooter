@@ -11,6 +11,8 @@ public partial class CharacterRig
     private float _tailClock, _tailMove;
     private MeshInstance3D? _tailMesh;
     private int _tailStyleBuilt;
+    private Mesh? _defaultTailMesh;
+    private Transform3D _defaultTailTransform;
 
     private void PrepareTail()
     {
@@ -35,12 +37,16 @@ public partial class CharacterRig
         tail.Transform=Transform3D.Identity;
         if(tail.FindChild(_tailSpecies+"_tail_mesh",true,false) is MeshInstance3D mesh && mesh.Mesh!=null)
         {
-            // The .19 decimation pass folded imported tail faces. Rebuild a clean surface
-            // with the same palette before PrepareColors creates per-character overrides.
+            // Published mammal defaults are closed authored surfaces. Birds retain their runtime
+            // default; alternate styles remain procedural with the same palette and attachment.
             var materials=new Material[mesh.Mesh.GetSurfaceCount()];
             for(int i=0;i<materials.Length;i++)materials[i]=mesh.GetActiveMaterial(i);
-            mesh.Mesh=CharacterTailMesh.Build(_tailSpecies,materials);
-            mesh.Transform=Transform3D.Identity;
+            if(AppearanceCatalog.IsBird(_tailSpecies))
+            {
+                mesh.Mesh=CharacterTailMesh.Build(_tailSpecies,materials);
+                mesh.Transform=Transform3D.Identity;
+            }
+            _defaultTailMesh=mesh.Mesh;_defaultTailTransform=mesh.Transform;
             _tailMesh=mesh;
         }
         _tailMotionHome=_tailMotion.Transform;
@@ -53,7 +59,8 @@ public partial class CharacterRig
         var materials=new Material[_tailMesh.Mesh.GetSurfaceCount()];
         var overrides=new Material?[materials.Length];
         for(int i=0;i<materials.Length;i++){materials[i]=_tailMesh.Mesh.SurfaceGetMaterial(i);overrides[i]=_tailMesh.GetSurfaceOverrideMaterial(i);}
-        _tailMesh.Mesh=CharacterTailMesh.Build(_tailSpecies,materials,style);
+        _tailMesh.Mesh=style==0?_defaultTailMesh:CharacterTailMesh.Build(_tailSpecies,materials,style);
+        _tailMesh.Transform=style==0?_defaultTailTransform:Transform3D.Identity;
         for(int i=0;i<overrides.Length;i++)_tailMesh.SetSurfaceOverrideMaterial(i,overrides[i]);
         _tailStyleBuilt=style;
     }

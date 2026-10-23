@@ -1,0 +1,81 @@
+{
+  "status": "offline art candidate 03; not game integrated",
+  "protected_files_sha256": {
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\source\\goose-field-kit.blend": "48460c9358dfe53d67d9721788938d67c1cec3c203af9127bc66148288e0738b",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-field-kit.glb": "7abcf7578bd092d51f06330591fa2e0c720d779d95a9dbb91cf92b5382438a69",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\source\\goose-workwear.blend": "22bb86f17baf11de376f704b7d21f4c4f3a3bfbd5395ec942cb45e98f1f4ae25",
+    "D:\\Project\\Game\\game-hordeshooter\\game\\assets\\characters\\goose\\goose.glb": "3d2d2a0e85488f77748ffd07f061d1a298bfb20f2fe28279983b1ca9b858b2be"
+  },
+  "unchanged_meshes": {
+    "goose_beak_mesh": "232142c24a393963e42ec2826360b5a003c0dca963f2cde6983c2e02c237554b",
+    "goose_leftBrow_mesh": "9b20006bb8581c2e65c7cb05b1bba4e8f4bada19dd866ba2abe7c701f356b13d",
+    "goose_leftEye_mesh": "c8edd7b88ed05d97145da40e5befd6e5f480ddd9d911a6bb0dab5ccff82f537f",
+    "goose_rightBrow_mesh": "d48c70737096ff15e130528895807cc8fc4ba393a85d972fd31b38b954343b2e",
+    "goose_rightEye_mesh": "b573c9fad4bd49e6b7bbb6692232770a31b6dcf69f0454e182abbc16d9d8cd56",
+    "goose_leftArm_mesh": "328b9aaff7dded04eddc2ebe6cdd2f05da4d0f9c0c8d30ed9a68d0dd42217ba9",
+    "goose_leftFoot_mesh": "e26b3a28626fcf8e4255bdab98910625c8868302ca01043e7cd709f540b92a7b",
+    "goose_rightArm_mesh": "db2e19fa1d603526c9e32369de605273126ea8f1b53ff23274cf2038f97366d1",
+    "goose_rightFoot_mesh": "b1f8334eb17a7dfef8a08acf2af36b5cb4416dc820f99b08ff09d0b7b7b90def",
+    "goose_tail_mesh": "d598f20680e007e9dc709c57004de972701985cb8b0d3a0ce121d863d354109b",
+    "goose_torso_mesh": "564bbe710b8f0fa99ca2a6a8fefbd20bf0dc342ec50b4d721b7d48fdebd10919",
+    "goose_helmet_field_mesh": "656cd870f80ca25b883920c9f853de9e0f497f14b3d86f2d7d4620f9d5981a3c",
+    "goose_pack_field_mesh": "e7e093f9b38db81f42394128d69c97ab8446b738abf5bc50cd63289d23af66d8"
+  },
+  "candidate": {
+    "triangles": 37122,
+    "mesh_objects": 14,
+    "materials": 19,
+    "bounds_min": [
+      -0.5516014695167542,
+      -0.6790671944618225,
+      0.015999941155314445
+    ],
+    "bounds_max": [
+      0.5499624013900757,
+      0.6898864507675171,
+      2.0448315143585205
+    ]
+  },
+  "vest": {
+    "triangles": 15644,
+    "mesh_objects": 1,
+    "materials": 3,
+    "bounds_min": [
+      -0.5190981030464172,
+      -0.5522664189338684,
+      0.6080718040466309
+    ],
+    "bounds_max": [
+      0.5190981030464172,
+      0.45456257462501526,
+      1.3560621738433838
+    ]
+  },
+  "before_vest": {
+    "triangles": 5436,
+    "mesh_objects": 1,
+    "materials": 4,
+    "bounds_min": [
+      -0.4856080412864685,
+      -0.5449358820915222,
+      0.6252447366714478
+    ],
+    "bounds_max": [
+      0.4945727586746216,
+      0.44851773977279663,
+      1.472126841545105
+    ]
+  },
+  "axes": "Blender Z up/-Y front; glTF Y up/+Z front",
+  "wing_opening": {
+    "center_angle": 1.16,
+    "half_angle": 0.59,
+    "center_height": 0.91,
+    "lower_radius": 0.26,
+    "upper_radius": 0.27
+  },
+  "limitations": [
+    "Original wing motion probes are not the procedural weapon-grip arms used by Godot.",
+    "No game integration, body-slider, reload, death or performance validation."
+  ]
+}

@@ -18,8 +18,9 @@ export function createBoss() {
   ell(deform,'round_belly',[0,.88,.31],[.49,.39,.25],fur);
   for(const side of [-1,1]) {
     const label=side<0?'Left':'Right';
-    limb(deform,`${label}Leg`,[side*.34,.49,-.02],[side*.34,.14,-.01],.17,fur);
-    const foot=group(`${label}Foot`,deform,[side*.34,.12,.08]);
+    const leg=group(`boss_${side<0?'left':'right'}Leg`,deform,[side*.34,.49,-.02]);
+    limb(leg,`${label}Leg`,[0,0,0],[0,-.35,.01],.17,fur);
+    const foot=group(`${label}Foot`,leg,[0,-.37,.10]);
     ell(foot,`${label}Boot`,[0,0,.03],[.22,.12,.29],leather);
     ell(deform,`${label}ShoulderPad`,[side*.52,1.47,-.01],[.27,.27,.29],leather);
 

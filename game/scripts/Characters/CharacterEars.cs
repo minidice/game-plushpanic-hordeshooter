@@ -3,13 +3,14 @@ using System.Collections.Generic;
 
 namespace HordeShooter;
 
-/// <summary>Mammal ears: rebuilt cupped shells (CharacterEarMesh), a style per profile, size and outward tilt.</summary>
+/// <summary>Authored default ears, procedural alternate styles, size and outward tilt.</summary>
 public partial class CharacterRig
 {
     private readonly List<(Node3D Pivot,MeshInstance3D Mesh,float Side)> _ears=new();
     private string _earSpecies="";
     private readonly Dictionary<Node3D,Transform3D> _earHomes=new();
     private int _earStyleBuilt;
+    private readonly Dictionary<MeshInstance3D,(Mesh Mesh,Transform3D Transform)> _authoredEars=new();
 
     private void PrepareEars()
     {
@@ -19,11 +20,8 @@ public partial class CharacterRig
                 if(Model.FindChild(species+"_"+suffix,true,false) is Node3D pivot
                    && pivot.FindChild(species+"_"+suffix+"_mesh",true,false) is MeshInstance3D { Mesh: not null } mesh)
                 {
-                    var materials=new Material[mesh.Mesh.GetSurfaceCount()];
-                    for(int i=0;i<materials.Length;i++)materials[i]=mesh.GetActiveMaterial(i);
-                    mesh.Mesh=CharacterEarMesh.Get(species,0,materials);
+                    _authoredEars[mesh]=(mesh.Mesh,mesh.Transform);
                     _earSpecies=species;
-                    mesh.Transform=Transform3D.Identity;
                     _ears.Add((pivot,mesh,side));
                     _earHomes[pivot]=pivot.Transform;
                 }
@@ -41,7 +39,9 @@ public partial class CharacterRig
                 var materials=new Material[mesh.Mesh.GetSurfaceCount()];
                 var overrides=new Material?[materials.Length];
                 for(int i=0;i<materials.Length;i++){materials[i]=mesh.Mesh.SurfaceGetMaterial(i);overrides[i]=mesh.GetSurfaceOverrideMaterial(i);}
-                mesh.Mesh=CharacterEarMesh.Get(_earSpecies,p.EarStyle,materials);
+                var authored=_authoredEars[mesh];
+                mesh.Mesh=p.EarStyle==0?authored.Mesh:CharacterEarMesh.Get(_earSpecies,p.EarStyle,materials);
+                mesh.Transform=p.EarStyle==0?authored.Transform:Transform3D.Identity;
                 for(int i=0;i<overrides.Length;i++)mesh.SetSurfaceOverrideMaterial(i,overrides[i]);
             }
             _earStyleBuilt=p.EarStyle;

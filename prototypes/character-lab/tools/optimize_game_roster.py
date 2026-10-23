@@ -3,6 +3,7 @@
 Run export-game-roster.mjs first. Authoring .blend and previews stay outside game/.
 """
 import bpy
+import bmesh
 import json
 import sys
 from pathlib import Path
@@ -18,7 +19,7 @@ NAMED_ONLY='--named-only' in sys.argv
 NAMED=['bull','balloon']
 MIDBOSSES=['boss_balloon_king','boss_spitter_mother']
 MIDBOSS_ONLY='--midboss-only' in sys.argv
-SELECTED=['boss'] if BOSS_ONLY else MIDBOSSES if MIDBOSS_ONLY else NAMED if NAMED_ONLY else PLAYERS if '--players-only' in sys.argv else ENEMIES if '--enemies-only' in sys.argv else PLAYERS+ENEMIES
+SELECTED=ENEMIES+NAMED+['boss']+MIDBOSSES if '--monsters-only' in sys.argv else ['boss'] if BOSS_ONLY else MIDBOSSES if MIDBOSS_ONLY else NAMED if NAMED_ONLY else PLAYERS if '--players-only' in sys.argv else ENEMIES if '--enemies-only' in sys.argv else PLAYERS+ENEMIES
 
 def clear():
     bpy.ops.object.select_all(action='SELECT')
@@ -27,6 +28,21 @@ def clear():
         if material.users==0: bpy.data.materials.remove(material)
 
 def triangles(obj): return sum(len(p.vertices)-2 for p in obj.data.polygons)
+
+def connect_surface(mesh):
+    # glTF duplicates positions at UV/normal seams. Decimating these as independent
+    # borders opens cracks. Weld within each authored part, preserving loop UVs and
+    # material slots; never fill intentional open cloth/hood edges.
+    bm=bmesh.new();bm.from_mesh(mesh)
+    bmesh.ops.remove_doubles(bm,verts=list(bm.verts),dist=.00001)
+    count=sum(edge.is_boundary for edge in bm.edges)
+    bm.to_mesh(mesh);bm.free()
+    return count
+
+def surface_boundaries(mesh):
+    bm=bmesh.new();bm.from_mesh(mesh)
+    count=sum(edge.is_boundary for edge in bm.edges)
+    bm.free();return count
 
 def named_dimensions(kind, head_only):
     points=[]
@@ -94,6 +110,7 @@ for kind in SELECTED:
                 assert all(abs(obj.matrix_world[r][c]-world[r][c])<1e-6 for r in range(4) for c in range(4))
     keep={f'{kind}_{p}' for p in ['root','body','deform','torso','head','helmet','beret','goggles','headset','vest','vestPadded','pack','weapon','tail','beak','leftFoot','rightFoot','leftArm','rightArm','leftEar','rightEar']}
     keep.update({'Muzzle','Body','Deform','Head','LeftFoot','RightFoot','Weapon'})
+    if kind=='boss': keep.update({'boss_leftLeg','boss_rightLeg'})
     if kind in MIDBOSSES:
         keep.update({f'{kind}_leftLeg',f'{kind}_rightLeg','boss_leftArm','boss_rightArm'})
     if kind in NAMED:
@@ -102,11 +119,15 @@ for kind in SELECTED:
     keep.update(f'{kind}_{p}' for p in ['leftEye','rightEye','leftBrow','rightBrow','snout','crestShort','crestSwept'])
     groups={}
     before=0
+    source_open_edges=0
     dimensions=({'body':named_dimensions(kind,False),'head':named_dimensions(kind,True)} if kind in NAMED else {'body':midboss_dimensions(kind,False),'head':midboss_dimensions(kind,True)} if kind in MIDBOSSES else None)
     for obj in list(bpy.context.scene.objects):
         if obj.type!='MESH': continue
         before+=triangles(obj)
         bpy.context.view_layer.objects.active=obj
+        if not player:
+            original_open_edges=connect_surface(obj.data)
+            source_open_edges+=original_open_edges
         if player and len(obj.data.polygons)>100:
             mod=obj.modifiers.new('Game simplification','DECIMATE')
             # Faces are inspected close up in the workshop. Preserve the silhouette of eyes,
@@ -118,6 +139,8 @@ for kind in SELECTED:
             mod=obj.modifiers.new('Crowd budget','DECIMATE')
             mod.ratio=(.25 if kind=='bull' else .32) if kind in NAMED else .8 if kind=='boss_balloon_king' and obj.name=='great_balloon_head' else (.44 if kind=='boss_balloon_king' else .5) if kind in MIDBOSSES else .38
             bpy.ops.object.modifier_apply(modifier=mod.name)
+        if not player:
+            assert surface_boundaries(obj.data)<=original_open_edges,(kind,obj.name,'simplification opened surface')
         anchor=obj.parent
         while anchor and anchor.name not in keep: anchor=anchor.parent
         world=obj.matrix_world.copy();obj.parent=anchor;obj.matrix_world=world
@@ -142,6 +165,10 @@ for kind in SELECTED:
     path=target/f'{kind}.glb'
     bpy.ops.export_scene.gltf(filepath=str(path),export_format='GLB',export_animations=False,export_extras=True)
     report={'id':kind,'source_triangles':before,'triangles':sum(triangles(o) for o in meshes),'meshes':len(meshes),'materials':sorted({m.name for o in meshes for m in o.data.materials if m}),'bytes':path.stat().st_size,'nodes':[o.name for o in bpy.context.scene.objects],'forward':'+Z','notes':'No bones. Runtime object pivots. Beret included for runtime visibility. Source vertex colors preserved.'}
+    if not player:
+        report['source_open_edges']=source_open_edges
+        report['open_edges']=sum(surface_boundaries(o.data) for o in meshes)
+        assert report['open_edges']<=source_open_edges,report
     if kind in NAMED+MIDBOSSES:
         report['body_dimensions']=dimensions['body']
         report['head_dimensions']=dimensions['head']
@@ -177,6 +204,7 @@ for kind in SELECTED:
     else:
         assert report['triangles'] < 4500,report
         assert all(name in report['nodes'] for name in ['boss_leftArm','boss_rightArm','boss_leftArm_mesh','boss_rightArm_mesh']),report
+        assert all(name in report['nodes'] for name in ['boss_leftLeg','boss_rightLeg','LeftFoot','RightFoot']),report
 
 if '--no-preview' in sys.argv:
     contact='boss-contact' if BOSS_ONLY else 'midboss-contact' if MIDBOSS_ONLY else 'named-contact' if NAMED_ONLY else 'players-contact' if '--players-only' in sys.argv else 'enemies-contact' if '--enemies-only' in sys.argv else 'roster-contact'

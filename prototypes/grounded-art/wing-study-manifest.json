@@ -1,0 +1,200 @@
+{
+  "date": "2026-10-23",
+  "status": "offline art candidate; not integrated",
+  "protected_files_sha256": {
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-equipment-only.glb": "6312c245c3691677fe6ce635175a66b5f3a37fd3b1f6e57de0f331c25bfa3d8d",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-face-aviator-cap.glb": "fdf46891e7c573654d62932e196acfe8c8d2dac2a43182255dce3a07274189b9",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-face-combo-character.glb": "f147c68f2b82c3b419faec6d7e175593a8131cab2ee08c7e73170ded5d5de2d8",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-face-glasses-character.glb": "99ac7f46eb9c1b5b678f929407288984bb96e9ff707e6fdf598e2a14280cddc6",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-face-glasses.glb": "813c0290a47d3b5039d223c3916b11e576f4085762ec50db99c5746d5f40e298",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-face-goggles-character.glb": "e1bf2865ea992393f0ae7a5e8716f62d8feab8426a787abbbbbd5fc8cc78ab3b",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-face-goggles.glb": "eff552397b4799730700e004b9176e727faa9841de8191445de98a53f2918bef",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-face-headset-character.glb": "4f770bfa743d763a1d854f454f7e237247cade8dddb3299685025759153769c1",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-face-headset.glb": "a14fc700363226debfd7add70c6f8e253b2098bf8e12f25fdd09128c908f30f7",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-face-raised-goggles.glb": "612cc991a976d12392a73898a23092fbf3fa3aeafb04f2e23600a5ad23f13c76",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-face-refined-character.glb": "37f0da5beb281b322e9ed7441402a3e04949244f3b7aac2a9ed28c23fcfcd725",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-face-sunglasses-character.glb": "092c8a1bd790d26f143ff04222202231a13b97a826829427c8eaeb1cb0c4b613",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-face-sunglasses.glb": "08c031c8a2f6c69e68c82a327421ad2f2f2bebaa1bc6f7d0ea0073ade2114c5b",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-field-kit.glb": "7abcf7578bd092d51f06330591fa2e0c720d779d95a9dbb91cf92b5382438a69",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-headwear-bunny-character.glb": "63402c171b114d7de17766395d591a50a33a6db4d41ac50c019ebb1675df9a79",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-headwear-bunny.glb": "48475d068d6a390d13d3c220b6ecf52e3223f3bfc7c546bcc8dc95a21f461cc0",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-headwear-cap-character.glb": "c6ffa0dfc71aac618667a51076a28b1ac338a2e7a6ddf64de360f0c0af055793",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-headwear-cap.glb": "d97eacf342164c61655c1e62ecd736a50a79768e478bdf49bd724055659ce7f4",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-headwear-flower-character.glb": "b9b506745fc951889ade26293f2f956d8b120431363744c65446450decb3e506",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-headwear-flower.glb": "0e956640d10d1e395130c614a06e863ee06ec70227b27f3a2dd61fae1cfdc847",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-headwear-goggles-character.glb": "0e0f43b1ff7bfb17ba151442e3cab1a612ea2453c27ff043d3943b70cb30e644",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-headwear-goggles.glb": "4ae49052f9bbb08bab9a6f3090762d3437af0e292ed48e3e2233b9b14d60a36d",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-headwear-motorcycle-character.glb": "9f6f0bbb4ff12e68649c1f9dd64e7a01b5fdda141a4752b83d416760e5e45a60",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-headwear-motorcycle.glb": "dcf5ce5b430d243c603bd8d60bbf2d6f8d0a93b83be7b087f254b69982e5e013",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-headwear-nvg-character.glb": "8c966f3a36f5d02edd4738aa4df952df58208b17c977f45c0e6915077bcb824a",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-headwear-nvg.glb": "b85e125712bf928daf10ade89d83fdcc7171142a3667ed310f1dc53d996998af",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-headwear-stripe-character.glb": "d412265415a3f7a5ef350e6ee43e0ffd85086e9d743f35138b555538af449d97",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-headwear-stripe.glb": "bfdab51fee9cd8302596dc7c2d20cfe0b3c32c7bb088fb0b093a25ada2fa481c",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-heavy-helmet.glb": "647fe45a0ce15e6b49bcb6b11ff73812bc921c956c0681c3139367ea0c034ab1",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-heavy-outfit.glb": "775726e3ad0ca58c811b8e65be3fc160f67160e3bb1eb825e39f9b9e3f9cf43c",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-heavy-vest.glb": "ab8822d06519eeaf67c81778721ff2a865b3772fcd40e0c6d73a13d89e5d2451",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-light-helmet.glb": "1f8f67867efc46acf0de519edd065a7e19c4ba733f20931defc4d694d9c7da7c",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-light-outfit.glb": "5d2fc2f9a583d943b736ff6865499d907f20fab301400990a1b2fbb5e4ab6715",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-light-vest.glb": "e8a686211f3c26bb5a810203713b673e52181598f95801bfa047ab136fe023de",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-recon-helmet.glb": "64ed61f673078a364e79e6522f915e624650a6940ed6f3f2b8d92a2746a6197a",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-recon-outfit.glb": "14aef12928b0656a3008022fff74e580c4644a34662a1c747762b8f51ac92e16",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-recon-vest.glb": "a78ee70d0e2f43ea455fe970e9dfd566d11fb269a7c1bc2bdf0187915c87a3ab",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-refined-armor.glb": "555e0c9d122a01429d6d774cd2d45fab94b6a8ed3dd143e4617886ecd6195fa9",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-refined-vest-only.glb": "9d684ac6f37bb3da53a780098d0ee4aeef9d1c92314946f7d1e0773dcf0aabe3",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-workwear-only.glb": "e509e79d9270b44f5d48022f562dc8fee63dd4484647702b7aa7dee5abb08a0b",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-workwear.glb": "c22c783f316946b8df5b949a45f5722aee66f8054616cf55379bea38887bd5f6",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-wrap-armor.glb": "9b9a6295b4828c562dd8d80620052087224483792a2797d627ca9819c5233d83",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\assets\\goose-wrap-vest-only.glb": "c18c08a2fc911862fd08a84f30d5c23dea9effe003ab8058c23f1d18c23089cf",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\source\\goose-face-accessories.blend": "f4aafe657a3f36c9735f72d345d0dd5b91f1cfed3d174c1c3ff5cf6abb34b2fa",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\source\\goose-field-kit.blend": "48460c9358dfe53d67d9721788938d67c1cec3c203af9127bc66148288e0738b",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\source\\goose-headwear-collection.blend": "854af52ce9188a5b2faeca6de61e48ace9d9459c5b07828a0deafd29b249e991",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\source\\goose-outfit-collection.blend": "3d6636e81ad0eb373f2ceb58b483224561bc6186ec99a7d894dc841b36dee6b8",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\source\\goose-refined-armor-mood.blend": "d02ce48210cc32f63b8d0f639b55ff85a51836dc1abdd12c0d94d3fefecff4d1",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\source\\goose-refined-armor.blend": "a92aaae142160d0161f2c350c679bb0c7e9087b17456703555f4990663c7c1e5",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\source\\goose-workwear.blend": "22bb86f17baf11de376f704b7d21f4c4f3a3bfbd5395ec942cb45e98f1f4ae25",
+    "D:\\Project\\Game\\game-hordeshooter\\prototypes\\grounded-art\\source\\goose-wrap-armor.blend": "a0ce80542ff64713aa66c934813f64c43aa168e6ccfaa3ab552339fa1fa7700f",
+    "D:\\Project\\Game\\game-hordeshooter\\game\\assets\\characters\\goose\\goose.glb": "3d2d2a0e85488f77748ffd07f061d1a298bfb20f2fe28279983b1ca9b858b2be",
+    "D:\\Project\\Game\\game-hordeshooter\\game\\assets\\weapons\\m4.glb": "60ea68c033d856ac6d1d3d9236bd192309444507b1bb6370c763b017e667db34"
+  },
+  "preserved_meshes": [
+    "goose_beak_mesh",
+    "goose_leftBrow_mesh",
+    "goose_leftEye_mesh",
+    "goose_rightBrow_mesh",
+    "goose_rightEye_mesh",
+    "goose_leftFoot_mesh",
+    "goose_rightFoot_mesh",
+    "goose_tail_mesh",
+    "goose_torso_mesh",
+    "goose_vest_refined_mesh",
+    "goose_face_aviator_cap_mesh",
+    "goose_face_raised_goggles_mesh"
+  ],
+  "before_wings": {
+    "mesh_objects": 2,
+    "triangles": 272,
+    "bounds_min": [
+      -0.5516014695167542,
+      -0.3467288017272949,
+      0.7337505221366882
+    ],
+    "bounds_max": [
+      0.5499624013900757,
+      -0.05365534871816635,
+      1.0439883470535278
+    ]
+  },
+  "wings": {
+    "mesh_objects": 2,
+    "triangles": 2448,
+    "bounds_min": [
+      -0.5278695821762085,
+      -0.30897000432014465,
+      0.7295693755149841
+    ],
+    "bounds_max": [
+      0.5278695821762085,
+      -0.03345000371336937,
+      1.1384881734848022
+    ]
+  },
+  "character": {
+    "mesh_objects": 14,
+    "triangles": 34298,
+    "bounds_min": [
+      -0.5278695821762085,
+      -0.6790671944618225,
+      0.01599995233118534
+    ],
+    "bounds_max": [
+      0.5278695821762085,
+      0.6898864507675171,
+      2.1610000133514404
+    ]
+  },
+  "before_right_wing": {
+    "mesh_objects": 1,
+    "triangles": 136,
+    "bounds_min": [
+      0.3072855770587921,
+      -0.3467288017272949,
+      0.7337505221366882
+    ],
+    "bounds_max": [
+      0.5499624013900757,
+      -0.05560160428285599,
+      1.043634295463562
+    ]
+  },
+  "after_right_wing": {
+    "mesh_objects": 1,
+    "triangles": 1224,
+    "bounds_min": [
+      0.42297932505607605,
+      -0.30897000432014465,
+      0.7295693755149841
+    ],
+    "bounds_max": [
+      0.5278695821762085,
+      -0.03345000371336937,
+      1.1384881734848022
+    ]
+  },
+  "wing_probes": [
+    {
+      "pose": "idle",
+      "wing": "after_goose_leftArm_mesh",
+      "pairs": 0
+    },
+    {
+      "pose": "idle",
+      "wing": "after_goose_rightArm_mesh",
+      "pairs": 0
+    },
+    {
+      "pose": "forward20",
+      "wing": "after_goose_leftArm_mesh",
+      "pairs": 0
+    },
+    {
+      "pose": "forward20",
+      "wing": "after_goose_rightArm_mesh",
+      "pairs": 0
+    },
+    {
+      "pose": "back15",
+      "wing": "after_goose_leftArm_mesh",
+      "pairs": 0
+    },
+    {
+      "pose": "back15",
+      "wing": "after_goose_rightArm_mesh",
+      "pairs": 0
+    },
+    {
+      "pose": "outward20",
+      "wing": "after_goose_leftArm_mesh",
+      "pairs": 0
+    },
+    {
+      "pose": "outward20",
+      "wing": "after_goose_rightArm_mesh",
+      "pairs": 0
+    },
+    {
+      "pose": "forward20_out15",
+      "wing": "after_goose_leftArm_mesh",
+      "pairs": 0
+    },
+    {
+      "pose": "forward20_out15",
+      "wing": "after_goose_rightArm_mesh",
+      "pairs": 0
+    }
+  ],
+  "axes": "Blender Z up/-Y front, GLB Y up/+Z front",
+  "limitations": [
+    "Discrete poses only; no continuous motion or Godot runtime test.",
+    "Runtime weapon arms are separately generated; held view is an offline design preview."
+  ]
+}

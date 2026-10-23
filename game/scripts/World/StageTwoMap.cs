@@ -43,7 +43,7 @@ public sealed class StageTwoMap : StageMap
     {
         env.BackgroundColor = new Color("5d6b78");
         env.AmbientLightColor = new Color("b9c6d2");
-        env.AmbientLightEnergy = .62f;
+        env.AmbientLightEnergy = .42f;
         env.TonemapExposure = 1.05f;
         env.FogEnabled = true;
         env.FogMode = Godot.Environment.FogModeEnum.Depth;
@@ -53,8 +53,8 @@ public sealed class StageTwoMap : StageMap
         env.FogSkyAffect = 1;
         key.Name = "Sun";
         key.RotationDegrees = new Vector3(-36, -48, 0);
-        key.LightColor = new Color("ffd8a6");
-        key.LightEnergy = 1.05f;
+        key.LightColor = new Color("e5e8d5");
+        key.LightEnergy = 1.2f;
     }
 
     protected override bool IndoorFloor(float x0) => x0 >= 100;
@@ -129,7 +129,9 @@ public sealed class StageTwoMap : StageMap
         Lamp(new Vector3(50.5f, 3.7f, -5.9f), "ffcf8a", 3f, 11, true);
 
         // Rock wall on the far side and a low edge of shrubs and logs on the camera side.
-        for (float x = 21; x < StreamX0; x += 3.7f) Prop("cliff_segment", new Vector3(x, 0, -8.4f - (x % 2) * .3f), (x * 17) % 24 - 12, 1, solid: false);
+        OutdoorEdgeArt.Bank(_stage,20,StreamX0,-7.6f,-1,seed:41);
+        OutdoorEdgeArt.Grove(_stage,20,StreamX0,-7.6f,43);
+        OutdoorEdgeArt.Bank(_stage,20,StreamX0,7.7f,1,low:true,seed:42);
         for (float x = 22; x < StreamX0 - 1; x += 4.6f)
         {
             Prop(((int)x % 3) switch { 0 => "shrub", 1 => "fallen_log", _ => "stump" }, new Vector3(x, 0, 8.2f), x * 23, 1, solid: false);
@@ -154,10 +156,17 @@ public sealed class StageTwoMap : StageMap
         Wall(StreamX1, StreamX1 + .4f, 1.5f, 10, 1f, "", drawWall: false);
         foreach (var (x, z) in new[] { (61.2f, -4.6f), (66.6f, 4.2f), (61f, 5.8f), (66.9f, -6.2f) }) Prop("reeds", new Vector3(x, 0, z), x * 13, 1, solid: false);
         Prop("boulder", new Vector3(60.6f, 0, -9.2f), 60, .8f, solid: false);
+        OutdoorEdgeArt.Bank(_stage,55,StreamX0-.4f,-9,-1,seed:56);
+        OutdoorEdgeArt.Bank(_stage,StreamX1+.4f,74,10,1,low:true,seed:57);
     }
 
     private void BuildYard()
     {
+        // Keep the container/shed gap connected to the route, including navigation padding.
+        WorkshopProp(WorkshopArt.Kind.Generator,new Vector3(80.2f,0,-3.3f));
+        WorkshopProp(WorkshopArt.Kind.CableReel,new Vector3(78.4f,0,-5.3f));
+        WorkshopProp(WorkshopArt.Kind.PipeRack,new Vector3(88.4f,0,-7.3f));
+        WorkshopMounted(WorkshopArt.Kind.SafetyBoard,new Vector3(84.7f,1.15f,-6.22f));
         Floor(StreamX1, 100, -10, 10, "", draw: false);
         Wall(StreamX1, 100, -10.4f, -10, 3f, "", drawWall: false);
         Wall(StreamX1, 100, 10, 10.4f, 1f, "", drawWall: false);
@@ -201,17 +210,22 @@ public sealed class StageTwoMap : StageMap
     private void BuildSafehouse()
     {
         Floor(100, 112, -4, 4, "3f4a3d");
-        Wall(100, 100.4f, -10.4f, -1.3f, 2.6f, "4e5f4b");
-        Wall(100, 100.4f, 1.3f, 10.4f, 2.6f, "4e5f4b");
+        Wall(100, 100.4f, -10.4f, -1.3f, StageOneLayout.TallWall, "4e5f4b");
+        Wall(100, 100.4f, 1.3f, 10.4f, StageOneLayout.TallWall, "4e5f4b");
         Wall(100, 112, -4.4f, -4, StageOneLayout.TallWall, "4e5f4b");
         Wall(100, 112, 4, 4.4f, StageOneLayout.LowWall, "4e5f4b");
-        Wall(112, 112.4f, -4.4f, 4.4f, 2.6f, "4e5f4b");
+        Wall(112, 112.4f, -4.4f, 4.4f, StageOneLayout.TallWall, "4e5f4b");
         _safehouseDoor = Door.Create(_stage, new Vector3(100.2f, 0, 0), new Vector3(.3f, 2.4f, 2.6f), new Color("4f6b4a"), new Vector3(0, 0, 2.5f), open: true);
         _safehouseSwitch = Use(new Vector3(101.4f, 0, 0), "ui_use_close_safehouse", () => _stage.TryCloseSafehouse());
         _safehouseSwitch.Enabled = false;
         Lamp(new Vector3(106, 2.85f, -3.72f), "b5e6c3", 3.6f, 9, false);
         FloorText(new Vector3(106, 0, 2), "ui_floor_safehouse", "c8ffd0");
+        ArchitectureArt.Portal(_stage,100.2f,2.6f,2.65f);
+        ArchitectureArt.FloorApron(_stage,100.2f,2.6f,false);
+        ArchitectureArt.Services(_stage,new Vector3(108,0,-3.96f));
     }
+
+    protected override void DrawWall(Node3D body,Vector3 size) => ArchitectureArt.Wall(body,size,WallFinish.Shelter);
 
     // ---------- ground and backdrop (decoration only) ----------
 
@@ -251,18 +265,25 @@ public sealed class StageTwoMap : StageMap
     /// </summary>
     private void Backdrop()
     {
-        FarGround("5f7349");
+        // The old -0.22m plane covered the -0.38m water across the entire stream.
+        FarGround("465c48",height:-1.1f);
+        OutdoorEdgeArt.Bank(_stage,-1,19,-9.6f,-1,seed:60);
+        OutdoorEdgeArt.Grove(_stage,-1,19,-9.6f,63);
+        OutdoorEdgeArt.Bank(_stage,68,99,-11.5f,-1,seed:61);
+        OutdoorEdgeArt.Grove(_stage,68,99,-11.5f,64);
+        OutdoorEdgeArt.Bank(_stage,100,113,-5.1f,-1,seed:62);
+        ArchitectureArt.FloorApron(_stage,ArrivalHatch.X,2.6f,false);
         const float far = -64, near = 30;
         // Far side (−Z), each zone from just past its own walkable edge.
         DressEdge(new Rect2(-2.4f, far, 22.4f, -9.6f - far), EdgeSide.Far, rocky: true);
         DressEdge(new Rect2(20, far, StreamX0 - 20, -9.6f - far), EdgeSide.Far);
-        DressEdge(new Rect2(StreamX0, far, StreamX1 - StreamX0, -14 - far), EdgeSide.Far);
+        DressEdge(new Rect2(StreamX0, far, StreamX1 - StreamX0, -14 - far), EdgeSide.Far, ground: false);
         DressEdge(new Rect2(StreamX1, far, 100 - StreamX1, -10.6f - far), EdgeSide.Far, rocky: true);
         DressEdge(new Rect2(100, far, 14, -4.6f - far), EdgeSide.Far);
         // Camera side (+Z): low only.
         DressEdge(new Rect2(-2.4f, 9.6f, 22.4f, near - 9.6f), EdgeSide.Near);
         DressEdge(new Rect2(20, 9.2f, StreamX0 - 20, near - 9.2f), EdgeSide.Near);
-        DressEdge(new Rect2(StreamX0, 12, StreamX1 - StreamX0, near - 12), EdgeSide.Near);
+        DressEdge(new Rect2(StreamX0, 12, StreamX1 - StreamX0, near - 12), EdgeSide.Near, ground: false);
         DressEdge(new Rect2(StreamX1, 10.6f, 100 - StreamX1, near - 10.6f), EdgeSide.Near);
         DressEdge(new Rect2(100, 4.6f, 14, near - 4.6f), EdgeSide.Near);
         // Past both ends of the route.

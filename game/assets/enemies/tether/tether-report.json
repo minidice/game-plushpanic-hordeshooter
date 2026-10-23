@@ -1,7 +1,7 @@
 {
   "id": "tether",
   "source_triangles": 10260,
-  "triangles": 3881,
+  "triangles": 3780,
   "meshes": 6,
   "materials": [
     "infected_cloth.002",
@@ -11,7 +11,7 @@
     "infected_skin.002",
     "infected_trim.002"
   ],
-  "bytes": 115248,
+  "bytes": 103192,
   "nodes": [
     "tether_root",
     "Body",
@@ -31,5 +31,7 @@
     "tether_rightArm"
   ],
   "forward": "+Z",
-  "notes": "No bones. Runtime object pivots. Beret included for runtime visibility. Source vertex colors preserved."
+  "notes": "No bones. Runtime object pivots. Beret included for runtime visibility. Source vertex colors preserved.",
+  "source_open_edges": 0,
+  "open_edges": 0
 }
