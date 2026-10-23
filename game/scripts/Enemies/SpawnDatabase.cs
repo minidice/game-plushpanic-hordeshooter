@@ -72,6 +72,30 @@ public sealed class EncounterGroup
     /// <summary>Index into the theme's special pool, or -1 for commons.</summary>
     public int Special { get; init; } = -1;
     public Vector3 At { get; init; }
+    /// <summary>"mission": not placed when the area fills but when the stage's mission ends, on its way back (decisions.md L-27).</summary>
+    public string After { get; init; } = "";
+}
+
+/// <summary>
+/// A mid-stage safe zone (decisions.md L-24): nothing waits within <see cref="NoPlace"/>, no wave appears within
+/// <see cref="NoWave"/>, and timed raids hold while a survivor is within <see cref="Inside"/>. Not a closed room: monsters
+/// already chasing still come in.
+/// </summary>
+public sealed record SafeZone(Vector3 At, float Inside, float NoPlace, float NoWave);
+
+/// <summary>
+/// Timed raids for a long stage (doc/stage2-floorplan.md 6장): mobs and specials on their own intervals, only while the
+/// leader is in one of <see cref="Areas"/>, held at the start, after a crescendo and while anyone is in a safe zone.
+/// </summary>
+public sealed class RaidRules
+{
+    public HashSet<string> Areas { get; } = new();
+    public float MobMin { get; init; } = 90;
+    public float MobMax { get; init; } = 120;
+    public float SpecialMin { get; init; } = 60;
+    public float SpecialMax { get; init; } = 90;
+    public float StartDelay { get; init; } = 60;
+    public float AfterCrescendo { get; init; } = 45;
 }
 
 /// <summary>One stage's encounters (content/data/stages/&lt;stage&gt;_encounters.json).</summary>
@@ -82,6 +106,9 @@ public sealed class EncounterSet
     public List<SpawnEntry> Entries { get; } = new();
     /// <summary>Stair and sewer landings: nothing is placed or spawned near them (decisions.md L-11).</summary>
     public List<Vector3> Protected { get; } = new();
+    public List<SafeZone> SafeZones { get; } = new();
+    /// <summary>Null: the director's own timers (Stage 1 and today's Stage 2).</summary>
+    public RaidRules? Raids { get; set; }
 
     /// <summary>Area holding x (areas run along +X); before the first is 0, past the last is the last.</summary>
     public int AreaIndex(float x)
@@ -124,6 +151,20 @@ public sealed class SpawnDatabase
         }
     }
     public IReadOnlyList<string> Errors => _errors;
+
+    private readonly Dictionary<string, EncounterSet> _byPath = new();
+    /// <summary>Any stage's encounters by file (the size draft's, decisions.md L-29), read once.</summary>
+    public EncounterSet Load(string path)
+    {
+        if (_byPath.TryGetValue(path, out var set)) return set;
+        int before = _errors.Count;
+        string json = Read(path);
+        string file = path.GetFile();
+        if (json.Length == 0) { _errors.Add($"{file}: missing"); set = new EncounterSet(); }
+        else set = ReadEncounters(json, file);
+        for (int i = before; i < _errors.Count; i++) GD.PushError("[spawn] " + _errors[i]);
+        return _byPath[path] = set;
+    }
 
     private static SpawnDatabase? _current;
     public static SpawnDatabase Current
@@ -222,10 +263,12 @@ public sealed class SpawnDatabase
                 if (set.Areas.All(a => a.Id != area)) { _errors.Add($"{where}: area '{area}' is not in areas"); continue; }
                 if (!ParseReaction(j.String("reaction", "dormant"), out var reaction)) { _errors.Add($"{where}: reaction must be dormant, watcher or hunter"); continue; }
                 int special = j.Int("special", -1);
+                string after = j.String("after", "");
+                if (after is not ("" or "mission")) { _errors.Add($"{where}: after must be mission (or left out)"); continue; }
                 if (special >= 0)
                 {
                     if (Pair(g, "at", where) is not { } at) continue;
-                    set.Groups.Add(new EncounterGroup { Area = area, Reaction = reaction, Special = special, At = new Vector3(at[0], 0, at[1]) });
+                    set.Groups.Add(new EncounterGroup { Area = area, Reaction = reaction, Special = special, At = new Vector3(at[0], 0, at[1]), After = after });
                     continue;
                 }
                 if (Numbers(g, "rect", where) is not { } r) continue;
@@ -233,7 +276,7 @@ public sealed class SpawnDatabase
                 int count = j.Int("count", 0);
                 if (count <= 0) { _errors.Add($"{where}: count must be positive"); continue; }
                 if (r[1] <= r[0] || r[3] <= r[2]) { _errors.Add($"{where}: rect is [x0, x1, z0, z1] with x1 > x0 and z1 > z0"); continue; }
-                set.Groups.Add(new EncounterGroup { Area = area, Reaction = reaction, Count = count, Rect = new Rect2(r[0], r[2], r[1] - r[0], r[3] - r[2]) });
+                set.Groups.Add(new EncounterGroup { Area = area, Reaction = reaction, Count = count, Rect = new Rect2(r[0], r[2], r[1] - r[0], r[3] - r[2]), After = after });
             }
 
             i = 0;
@@ -268,11 +311,51 @@ public sealed class SpawnDatabase
                     set.Protected.Add(new Vector3(p[0].GetSingle(), 0, p[1].GetSingle()));
                 else _errors.Add($"{where}: must be [x, z]");
             }
+
+            i = 0;
+            foreach (var z in Array(root, "safe_zones"))
+            {
+                string where = $"{file} safe_zones[{i++}]";
+                var j = new JsonFields(z, where, _errors);
+                if (Pair(z, "at", where) is not { } at) continue;
+                var zone = new SafeZone(new Vector3(at[0], 0, at[1]), j.Float("inside_m", 0), j.Float("no_place_m", 0), j.Float("no_wave_m", 0));
+                if (zone.Inside <= 0 || zone.NoPlace < zone.Inside || zone.NoWave < zone.NoPlace)
+                {
+                    _errors.Add($"{where}: needs 0 < inside_m <= no_place_m <= no_wave_m");
+                    continue;
+                }
+                set.SafeZones.Add(zone);
+            }
+
+            if (root.TryGetProperty("raids", out var raids))
+            {
+                string where = $"{file} raids";
+                var j = new JsonFields(raids, where, _errors);
+                var rules = new RaidRules
+                {
+                    MobMin = j.Float("mob_min_s", 90), MobMax = j.Float("mob_max_s", 120),
+                    SpecialMin = j.Float("special_min_s", 60), SpecialMax = j.Float("special_max_s", 90),
+                    StartDelay = j.Float("start_delay_s", 60), AfterCrescendo = j.Float("after_crescendo_s", 45),
+                };
+                foreach (var a in Array(raids, "areas"))
+                {
+                    string id = a.GetString() ?? "";
+                    if (set.Areas.All(x => x.Id != id)) _errors.Add($"{where}: area '{id}' is not in areas");
+                    else rules.Areas.Add(id);
+                }
+                if (rules.MobMin <= 0 || rules.MobMax < rules.MobMin || rules.SpecialMin <= 0 || rules.SpecialMax < rules.SpecialMin)
+                    _errors.Add($"{where}: intervals need 0 < min <= max");
+                else set.Raids = rules;
+            }
         }
         catch (System.Exception e) { _errors.Add($"{file}: {e.Message}"); }
         foreach (var g in set.Groups.Where(g => g.Special >= 0))
+        {
             if (set.Protected.Any(p => new Vector2(p.X - g.At.X, p.Z - g.At.Z).Length() < Rules.ProtectRadius))
                 _errors.Add($"{file}: the special in '{g.Area}' waits inside a protected landing");
+            if (set.SafeZones.Any(z => new Vector2(z.At.X - g.At.X, z.At.Z - g.At.Z).Length() < z.NoPlace))
+                _errors.Add($"{file}: the special in '{g.Area}' waits inside a safe zone");
+        }
         return set;
     }
 

@@ -123,6 +123,8 @@ public partial class Stage : Node3D
     public HordeDirector Director { get; private set; } = null!;
     public VisionSystem Vision { get; private set; } = null!;
     public FlowField Flow { get; private set; } = null!;
+    /// <summary>Height tiers on the flow field's cells (decisions.md L-15). Flat unless the map paints some.</summary>
+    public TierMap Tiers { get; private set; } = null!;
     public CrowdGrid Crowd { get; } = new();
     /// <summary>Route toward the safehouse: how far along the stage a point is (AI never walks ahead of the leader).</summary>
     public FlowField ExitFlow { get; private set; } = null!;
@@ -189,6 +191,10 @@ public partial class Stage : Node3D
     /// <summary>Loud devices that go off when shot or caught in a blast (spawn-design.md 4장).</summary>
     public List<AlarmCar> AlarmCars { get; } = new();
     public List<Interactable> Interactables { get; } = new();
+    /// <summary>Ladders up tier cliffs (L-16), ziplines and gondolas (L-18).</summary>
+    public List<Ladder> Ladders { get; } = new();
+    public List<Zipline> Ziplines { get; } = new();
+    public List<Gondola> Gondolas { get; } = new();
     public List<OmniLight3D> FlickerLights { get; } = new();
     /// <summary>Common infected (monsters.csv row "plush"); its look is the zombie version of the player species when mirror_player is on.</summary>
     public MonsterDefinition CommonDefinition { get; private set; } = null!;
@@ -237,6 +243,8 @@ public partial class Stage : Node3D
         var map = MapOverride ?? StageMap.Create(Mode, running ? GameSession.ScenarioStage : 1);
         var area = map.Area;
         Flow = new FlowField(area.Position.X, area.Position.Y, area.End.X, area.End.Y);
+        Tiers = new TierMap(Flow);
+        Flow.Tiers = Tiers;
         Sfx = new Sfx();
         AddChild(Sfx);
         Sfx.Bed("ambience_loop", AudioSetup.AmbienceBus);
@@ -279,6 +287,7 @@ public partial class Stage : Node3D
         _enemyRoot = new Node3D { Name = "Enemies" };
         AddChild(_enemyRoot);
         Flow.Update(Player.GlobalPosition);
+        PrepareClimbSteps();
         RefreshRouteFlows();
         // Scenario fills areas ahead and sends waves from the stage's entries; the other modes spawn by their own rules.
         if (Mode == GameMode.Scenario && Map.Encounters is { } encounters) Director.UseEncounters(encounters);
@@ -301,7 +310,7 @@ public partial class Stage : Node3D
 
         Hud = new Hud { Name = "Hud" };
         AddChild(Hud);
-        if (ModeRules == null) ShowNotice(Loc.Text(Objective == Objective.LeaveSafeRoom ? "msg_stage_start" : "msg_stage_route_start"));
+        if (ModeRules == null) ShowNotice(Loc.Text(Objective == Objective.LeaveSafeRoom ? "msg_stage_start" : Map.RouteStartKey));
         // A stage that starts out on the route (no safe-room door to open) wakes the director at once.
         if (ModeRules == null && Objective != Objective.LeaveSafeRoom && DirectorEnabled) Director.Begin();
         if (arriving)
@@ -368,7 +377,7 @@ public partial class Stage : Node3D
             if (!Mathf.IsEqualApprox(party.Damage(monster.Tier), 1)) enemy.ScaleDamage(party.Damage(monster.Tier));
         }
         // Ledge entries start on a wall top; everything else stands on the floor.
-        enemy.Position = new Vector3(at.X, Mathf.Max(at.Y, .05f), at.Z);
+        enemy.Position = new Vector3(at.X, Mathf.Max(at.Y, Tiers.GroundY(at) + .05f), at.Z);
         _enemyRoot.AddChild(enemy);
         if (Player != null) Vision.Apply(enemy);
         Net?.OnEnemySpawned(enemy);
@@ -436,10 +445,13 @@ public partial class Stage : Node3D
     private void RefreshRouteFlows()
     {
         // The route counts doors as open: progress and "forward" must exist before the shutter opens.
-        ExitFlow = Flow.CopyLayout();
+        // After a door the same fields take the new walls and patch their step costs (no new grids to allocate, I-109).
+        if (ExitFlow == null) { ExitFlow = Flow.CopyLayout(); ExitFlow.Riders = true; }
+        else ExitFlow.CopyWallsFrom(Flow);
         Map.ApplyFlow(ExitFlow, doors: false);
         ExitFlow.Update(Map.RouteGoal);
-        LeaderFlow = Flow.CopyLayout();
+        if (LeaderFlow == null) { LeaderFlow = Flow.CopyLayout(); LeaderFlow.Riders = true; }
+        else LeaderFlow.CopyWallsFrom(Flow);
         LeaderFlow.Update(Player.GlobalPosition);
     }
 
@@ -615,10 +627,52 @@ public partial class Stage : Node3D
     public int PendingEnemies => _pending.Count;
     public IEnumerable<Enemy> AllEnemies => System.Linq.Enumerable.Concat(Enemies, _pending);
 
+    private readonly Dictionary<MonsterClimb, FlowField> _climbFlows = new();
+    /// <summary>Step costs for each way of climbing, worked out while the stage loads (I-109); a chase field starts from one.</summary>
+    private readonly Dictionary<MonsterClimb, FlowField> _climbTemplates = new();
+
+    /// <summary>On a map with tiers: the step costs of every way of climbing, so the first leaper or balloon does not stall a frame.</summary>
+    private void PrepareClimbSteps()
+    {
+        if (!Tiers.Any) return;
+        foreach (var climb in new[] { MonsterClimb.Wall, MonsterClimb.Jump, MonsterClimb.Fly })
+        {
+            var template = Flow.CopyLayout();
+            template.Mover = climb;
+            template.PrepareSteps();
+            _climbTemplates[climb] = template;
+        }
+    }
+
+    /// <summary>
+    /// The chase field for a way of climbing (L-16). On a flat map, or for ladder users, it is <see cref="Flow"/>; on a map
+    /// with tiers each other climb gets its own copy toward the same targets, made the first time someone asks.
+    /// </summary>
+    public FlowField FlowFor(MonsterClimb climb)
+    {
+        if (!Tiers.Any || climb == MonsterClimb.Ladder) return Flow;
+        if (!_climbFlows.TryGetValue(climb, out var field))
+        {
+            // The field prepared while loading becomes the chase field; walls changed since (doors) are patched on its first build.
+            if (_climbTemplates.Remove(climb, out var template))
+            {
+                field = template;
+                field.CopyWallsFrom(Flow);
+            }
+            else field = Flow.CopyLayout();
+            field.Mover = climb;
+            if (_flowTargets.Count > 0) field.Update(_flowTargets);
+            _climbFlows[climb] = field;
+        }
+        return field;
+    }
+
     /// <summary>Re-stamp the whole flow grid (doors opening or closing). Layout is null while it is still being built.</summary>
     public void RebuildFlow()
     {
         _map?.ApplyFlow();
+        // Climb fields keep their step costs and patch them around the door (I-109); they rebuild toward the same targets.
+        foreach (var field in _climbFlows.Values) field.CopyWallsFrom(Flow);
         FlowVersion++;
         if (ExitFlow != null) RefreshRouteFlows();
         if (Lure != null && LureFlow != null)
@@ -647,7 +701,11 @@ public partial class Stage : Node3D
         foreach (var p in AlivePlayers) _flowTargets.Add(p.GlobalPosition);
         // Survival: the horde also paths to the base.
         if (ModeRules?.Core is { Alive: true } core && _flowTargets.Count > 0) _flowTargets.Add(core.GlobalPosition);
-        if (_flowTargets.Count > 0) Flow.Update(_flowTargets);
+        if (_flowTargets.Count > 0)
+        {
+            Flow.Update(_flowTargets);
+            foreach (var field in _climbFlows.Values) field.Update(_flowTargets);
+        }
         if (!Player.IsDead)
         {
             LeaderFlow.Update(Player.GlobalPosition);
@@ -773,7 +831,9 @@ public partial class Stage : Node3D
             shutter.SetOpen(true, 1.2f);
         }
         Objective = Objective.ReachSafehouse;
-        ShowNotice(Loc.Text("msg_stage_shutter_open"));
+        ShowNotice(Loc.Text(Map.CrescendoDoneKey));
+        // The way back from the mission fills again (L-27); a stage without such groups places nothing.
+        Director.FillAfterMission();
     }
 
     /// <summary>
@@ -887,7 +947,7 @@ public partial class Stage : Node3D
         Director.Begin();
         Director.StartCrescendo(Map.CrescendoSeconds);
         Cam.AddShake(.3f);
-        ShowNotice(Loc.Text("msg_stage_alarm"));
+        ShowNotice(Loc.Text(Map.CrescendoAlarmKey));
     }
 
     public bool TryCloseSafehouse()
@@ -1167,7 +1227,7 @@ public partial class Stage : Node3D
     public string ObjectiveText => Objective switch
     {
         Objective.LeaveSafeRoom => Loc.Text("ui_objective_leave_saferoom"),
-        Objective.ReachShutter => Loc.Text("ui_objective_reach_shutter"),
+        Objective.ReachShutter => Loc.Text(Map.CrescendoObjectiveKey),
         Objective.HoldOut => Loc.Format("fmt_objective_hold_out", Mathf.CeilToInt(Mathf.Max(0, Director.CrescendoRemaining))),
         Objective.ReachSafehouse => Loc.Text("ui_objective_reach_safehouse"),
         Objective.CloseSafehouse => Loc.Text("ui_objective_close_safehouse"),

@@ -44,7 +44,10 @@ public partial class WeaponPickup : Interactable
 
     private static WeaponPickup Create(Stage stage, Vector3 at, string name, Color color, int netId = 0)
     {
-        var pickup = new WeaponPickup { Name = "Pickup", Position = new Vector3(at.X, 0, at.Z), Radius = 1.5f, NetId = netId };
+        // On the floor: the ground, or on a map with height tiers the floor of the tier under it (a weapon dropped on a
+        // raised tier stays up there, I-112).
+        float floor = stage.Tiers.Any ? stage.Tiers.GroundY(at) : 0;
+        var pickup = new WeaponPickup { Name = "Pickup", Position = new Vector3(at.X, floor, at.Z), Radius = 1.5f, NetId = netId };
         pickup.OnUse = who => stage.PickUp(pickup, who ?? stage.Player);
         stage.AddChild(pickup);
         stage.AddInteractable(pickup);

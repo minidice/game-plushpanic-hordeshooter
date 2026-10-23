@@ -1,17 +1,17 @@
-id,name,behavior,look,mirror_player,hp,move_speed_mps,mass,attack_damage,attack_interval_ms,attack_reach_m,wake_range_m,traits,tier
-#몬스터ID,이름 키,행동(common balloon bull),외형(content/enemies/*.tres),플레이어 종으로 좀비화,체력,이동 속도(m/s),무게(넉백 나눔, 1=보통),공격 대미지,공격 간격(ms),공격 거리(m, 몸끼리),깨어나는 거리(m),고유 행동(; 구분, monster_traits/*.json),등급(common/named/boss; 시체 유지 정책)
-plush,name_monster_plush,common,plush,true,30,4.5,1,4,1000,0.4,6.5,,common
-balloon,name_monster_balloon,balloon,balloon,false,25,2.1,0.7,0,1000,0,6.5,balloon_pop,named
-bull,name_monster_bull,bull,bull,false,260,3.4,5,10,1300,0.4,6.5,bull_charge,named
-humanoid,name_monster_humanoid,common,humanoid,false,38,3.8,1.15,5,1100,0.4,7,,common
-crawler,name_monster_crawler,common,crawler,false,24,5.2,0.65,3,800,0.3,7,,common
-tether,name_monster_tether,tether,tether,false,70,2.8,1.4,3,1400,0.3,10,tether_capture,named
-leaper,name_monster_leaper,leaper,leaper,false,65,4.2,1,4,1200,0.3,10,leaper_capture,named
-spitter,name_monster_spitter,spitter,spitter,false,55,2.8,1.2,8,1500,0.4,12,vomit_shot,named
-wild_animal,name_monster_wild_animal,common,plush,false,32,4.8,0.9,5,900,0.35,8,,common
-armed_animal,name_monster_armed_animal,shooter,plush,false,42,3.4,1,6,1000,0.35,12,animal_shot,common
-armed_veteran,name_monster_armed_veteran,shooter,plush,false,110,3,1.7,10,1000,0.35,14,veteran_shot,named
-boss,name_monster_boss,boss,boss,false,12000,3.2,8,14,1300,0.5,30,boss_charge,boss
-boss_bull_giant,name_monster_boss_bull_giant,boss,bull,false,12000,3.6,8,12,1300,0.5,30,boss_charge,boss
-boss_balloon_king,name_monster_boss_balloon_king,boss,boss_balloon_king,false,12000,2.4,8,10,1300,0.5,30,boss_charge,boss
-boss_spitter_mother,name_monster_boss_spitter_mother,boss,boss_spitter_mother,false,12000,2.8,8,12,1300,0.5,30,boss_charge,boss
+id,name,behavior,look,mirror_player,hp,move_speed_mps,mass,attack_damage,attack_interval_ms,attack_reach_m,wake_range_m,traits,tier,climb
+#몬스터ID,이름 키,행동(common balloon bull),외형(content/enemies/*.tres),플레이어 종으로 좀비화,체력,이동 속도(m/s),무게(넉백 나눔, 1=보통),공격 대미지,공격 간격(ms),공격 거리(m, 몸끼리),깨어나는 거리(m),고유 행동(; 구분, monster_traits/*.json),등급(common/named/boss; 시체 유지 정책),높이 단 오르기(ladder 사다리만 / wall 벽 기어오르기 / jump 점프 / fly 비행; L-16)
+plush,name_monster_plush,common,plush,true,30,4.5,1,4,1000,0.4,6.5,,common,wall
+balloon,name_monster_balloon,balloon,balloon,false,25,2.1,0.7,0,1000,0,6.5,balloon_pop,named,fly
+bull,name_monster_bull,bull,bull,false,260,3.4,5,10,1300,0.4,6.5,bull_charge,named,jump
+humanoid,name_monster_humanoid,common,humanoid,false,38,3.8,1.15,5,1100,0.4,7,,common,wall
+crawler,name_monster_crawler,common,crawler,false,24,5.2,0.65,3,800,0.3,7,,common,wall
+tether,name_monster_tether,tether,tether,false,70,2.8,1.4,3,1400,0.3,10,tether_capture,named,wall
+leaper,name_monster_leaper,leaper,leaper,false,65,4.2,1,4,1200,0.3,10,leaper_capture,named,jump
+spitter,name_monster_spitter,spitter,spitter,false,55,2.8,1.2,8,1500,0.4,12,vomit_shot,named,wall
+wild_animal,name_monster_wild_animal,common,plush,false,32,4.8,0.9,5,900,0.35,8,,common,jump
+armed_animal,name_monster_armed_animal,shooter,plush,false,42,3.4,1,6,1000,0.35,12,animal_shot,common,ladder
+armed_veteran,name_monster_armed_veteran,shooter,plush,false,110,3,1.7,10,1000,0.35,14,veteran_shot,named,ladder
+boss,name_monster_boss,boss,boss,false,12000,3.2,8,14,1300,0.5,30,boss_charge,boss,jump
+boss_bull_giant,name_monster_boss_bull_giant,boss,bull,false,12000,3.6,8,12,1300,0.5,30,boss_charge,boss,jump
+boss_balloon_king,name_monster_boss_balloon_king,boss,boss_balloon_king,false,12000,2.4,8,10,1300,0.5,30,boss_charge,boss,jump
+boss_spitter_mother,name_monster_boss_spitter_mother,boss,boss_spitter_mother,false,12000,2.8,8,12,1300,0.5,30,boss_charge,boss,jump

@@ -133,6 +133,8 @@ public partial class WeaponController : Node
         foreach (var enemy in Stage.Enemies.ToList())
         {
             if (!IsInstanceValid(enemy) || enemy.IsDead) continue;
+            // Height tiers (L-15): like a blast, the honk reaches one tier up or down.
+            if (Stage.Tiers.Any && Mathf.Abs(Stage.Tiers.TierOf(enemy) - Stage.Tiers.TierOf(_player)) > 1) continue;
             var away = enemy.GlobalPosition - center;
             away.Y = 0;
             float d = away.Length();
@@ -279,7 +281,7 @@ public partial class WeaponController : Node
                 return;
             }
             ShowHeldThrowable();
-            _preview?.Show(Loadout.CurrentThrowable, HandPosition(), _player.AimPoint, _player.GlobalPosition, dt);
+            _preview?.Show(Loadout.CurrentThrowable, HandPosition(), _player.AimPoint, _player.GlobalPosition, dt, Stage.Tiers);
             if (pressed) Throw();
             return;
         }
@@ -289,7 +291,7 @@ public partial class WeaponController : Node
         if (AimingLob && _player.IsLocal)
         {
             _preview ??= ThrowPreview.Create(Stage.Effects);
-            _preview.ShowLob(state.Def, MuzzlePosition, LobTarget(state.Def), _player.GlobalPosition, dt);
+            _preview.ShowLob(state.Def, MuzzlePosition, LobTarget(state.Def), _player.GlobalPosition, dt, Stage.Tiers);
         }
         else if (_preview != null)
         {
@@ -448,7 +450,7 @@ public partial class WeaponController : Node
         float dist = Mathf.Clamp(flat.Length(), def.MinRange, def.MaxRange);
         var dir = flat.LengthSquared() > .01f ? flat.Normalized() : _player.AimDirection;
         var target = _player.GlobalPosition + dir * dist;
-        return new Vector3(target.X, 0, target.Z);
+        return new Vector3(target.X, Stage.Tiers.GroundY(target), target.Z);
     }
 
     // ---------- firing ----------
@@ -591,9 +593,33 @@ public partial class WeaponController : Node
         float range = def.MaxRange * rangeScale;
         var end = origin + dir * range;
         var exclude = new List<Rid> { _player.GetRid() };
+        var below = Stage.Tiers.Any ? LowerTierTargets(origin, dir, range) : null;
+        int nextBelow = 0;
         for (int pierced = 0; pierced < def.Pierce; pierced++)
         {
-            if (Rays.Cast(_player, origin, origin + dir * range, Layers.BulletMask, exclude) is not { } hit) break;
+            var hitOrNull = Rays.Cast(_player, origin, origin + dir * range, Layers.BulletMask, exclude);
+            // Height tiers (L-15): enemies on a lower tier sit under the bullet's line, so they are found on the floor plan
+            // instead and are hit when they come before whatever the ray meets at the shooter's height.
+            if (below != null && nextBelow < below.Count)
+            {
+                var (low, along) = below[nextBelow];
+                float block = hitOrNull is { } h ? origin.DistanceTo(h.Position) : range;
+                if (along < block)
+                {
+                    nextBelow++;
+                    // A tall body can reach up into the ray too: whichever finds it first, it is hit once.
+                    if (!IsInstanceValid(low) || low.IsDead || exclude.Contains(low.GetRid())) { pierced--; continue; }
+                    exclude.Add(low.GetRid());
+                    end = low.GlobalPosition + Vector3.Up * Player.AimHeight;
+                    float lowFalloff = def.FalloffAt(along, rangeScale);
+                    bool lowCrit = pierced == 0 && low == _player.FocusTarget && _player.CritReady;
+                    crit |= lowCrit;
+                    low.TakeHit(new HitInfo(damage * lowFalloff * (lowCrit ? def.CritMultiplier * (1 + _player.GatherCrit) : 1f), dir, end, lowCrit, power, _player, def.TypeId));
+                    damage *= .8f;
+                    continue;
+                }
+            }
+            if (hitOrNull is not { } hit) break;
             end = hit.Position;
             float falloff = def.FalloffAt(origin.DistanceTo(end), rangeScale);
             switch (hit.Collider)
@@ -628,6 +654,14 @@ public partial class WeaponController : Node
         return end;
     }
 
+    /// <summary>Living enemies on a tier below the shooter whose body the shot's floor-plan line crosses, nearest first.</summary>
+    private List<(Enemy enemy, float along)> LowerTierTargets(Vector3 origin, Vector3 dir, float range)
+    {
+        var tiers = Stage.Tiers;
+        int shooterTier = tiers.TierOf(_player);
+        return TierMap.Along(Stage.Enemies, e => e.Radius, e => !e.IsDead && tiers.TierOf(e) < shooterTier, origin, dir, range);
+    }
+
     public void CancelMeleeSwing()
     {
         if (_swingState == null) return;
@@ -659,7 +693,7 @@ public partial class WeaponController : Node
             .Where(e => !e.IsDead)
             .Select(e => (e, to: Flat(e.GlobalPosition - origin)))
             .Where(t => t.to.Length() < def.MeleeRange + t.e.Radius && Mathf.RadToDeg(dir.AngleTo(t.to.Normalized())) <= def.MeleeArc * .5f)
-            .Where(t => Mathf.Abs(t.e.GlobalPosition.Y - origin.Y) < 1.5f &&
+            .Where(t => Stage.Tiers.Any ? MeleeReachesAcrossTiers(origin, t.e) : Mathf.Abs(t.e.GlobalPosition.Y - origin.Y) < 1.5f &&
                 Rays.Clear(_player, origin + Vector3.Up * Player.AimHeight,
                     t.e.GlobalPosition + Vector3.Up * Player.AimHeight, Layers.World | Layers.Props))
             .OrderBy(t => t.to.Length())
@@ -687,6 +721,15 @@ public partial class WeaponController : Node
             if (_player.IsLocal) Stage.Cam.AddShake(.12f);
         }
         Stage.Director.MakeNoise(origin, def.Noise);
+    }
+
+    /// <summary>Height tiers (L-15): the same tier keeps the wall check; one tier apart only across the edge between them.</summary>
+    private bool MeleeReachesAcrossTiers(Vector3 origin, Enemy enemy)
+    {
+        var tiers = Stage.Tiers;
+        if (!tiers.MeleeReach(origin, enemy.GlobalPosition)) return false;
+        if (tiers.TierOf(_player) != tiers.TierOf(enemy)) return true;
+        return Rays.Clear(_player, origin + Vector3.Up * Player.AimHeight, enemy.GlobalPosition + Vector3.Up * Player.AimHeight, Layers.World | Layers.Props);
     }
 
     private static Vector3 Flat(Vector3 v) => new(v.X, 0, v.Z);

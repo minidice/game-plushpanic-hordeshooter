@@ -31,16 +31,18 @@ public partial class ThrowPreview : Node3D
         return preview;
     }
 
-    public void Show(ThrowableDefinition def, Vector3 from, Vector3 aim, Vector3 playerFeet, float dt)
+    /// <param name="tiers">Height tiers (L-15): the ring sits on the tier it lands on. Null or flat: on the ground plane.</param>
+    public void Show(ThrowableDefinition def, Vector3 from, Vector3 aim, Vector3 playerFeet, float dt, TierMap? tiers = null)
     {
         _time += dt;
         Target = ThrownItem.ClampTarget(from, aim, def.MaxRange);
+        if (tiers is { Any: true }) Target = Target with { Y = tiers.GroundY(Target) + .2f };
         float radius = Mathf.Max(.6f, def.AimRadius);
-        _landing.GlobalPosition = new Vector3(Target.X, .06f, Target.Z);
+        _landing.GlobalPosition = new Vector3(Target.X, Target.Y - .2f + .06f, Target.Z);
         _landing.Scale = new Vector3(radius, 1, radius) * (1 + .03f * Mathf.Sin(_time * 8));
         var color = KindColor(def.Kind);
         _landingMat.AlbedoColor = new Color(color, .55f + .2f * Mathf.Sin(_time * 8));
-        _reach.GlobalPosition = new Vector3(playerFeet.X, .05f, playerFeet.Z);
+        _reach.GlobalPosition = new Vector3(playerFeet.X, tiers is { Any: true } ? playerFeet.Y + .05f : .05f, playerFeet.Z);
         _reach.Scale = new Vector3(def.MaxRange, 1, def.MaxRange);
 
         float flight = ThrownItem.FlightTime(from, Target);
@@ -52,15 +54,15 @@ public partial class ThrowPreview : Node3D
     }
 
     /// <summary>A lobbed weapon in hand (mortar, decisions.md C-25): same look, sized to its blast and range.</summary>
-    public void ShowLob(WeaponDefinition def, Vector3 from, Vector3 target, Vector3 playerFeet, float dt)
+    public void ShowLob(WeaponDefinition def, Vector3 from, Vector3 target, Vector3 playerFeet, float dt, TierMap? tiers = null)
     {
         _time += dt;
         Target = target;
         float radius = Mathf.Max(.6f, def.ExplosionRadius);
-        _landing.GlobalPosition = new Vector3(target.X, .06f, target.Z);
+        _landing.GlobalPosition = new Vector3(target.X, target.Y + .06f, target.Z);
         _landing.Scale = new Vector3(radius, 1, radius) * (1 + .03f * Mathf.Sin(_time * 8));
         _landingMat.AlbedoColor = new Color(KindColor(ThrowableKind.Frag), .55f + .2f * Mathf.Sin(_time * 8));
-        _reach.GlobalPosition = new Vector3(playerFeet.X, .05f, playerFeet.Z);
+        _reach.GlobalPosition = new Vector3(playerFeet.X, tiers is { Any: true } ? playerFeet.Y + .05f : .05f, playerFeet.Z);
         _reach.Scale = new Vector3(def.MaxRange, 1, def.MaxRange);
         float flight = ThrownItem.FlightTime(from, target);
         for (int i = 0; i < _dots.Count; i++)

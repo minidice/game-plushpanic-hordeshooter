@@ -20,7 +20,7 @@ public partial class MortarShell : Node3D
     /// <param name="by">Who fired it (the blast counts for them, see <see cref="Blast.Explode"/>).</param>
     public static MortarShell Fire(Stage stage, Vector3 from, Vector3 target, WeaponDefinition def, Player? by = null)
     {
-        target.Y = 0;
+        target.Y = stage.Tiers.GroundY(target);
         var shell = new MortarShell
         {
             Name = "MortarShell",

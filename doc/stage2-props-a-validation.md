@@ -1,6 +1,6 @@
 # Stage 2 이동 장치 묶음 A 생성·렌더 검수
 
-2026-10-23. 사용자 후속 요청으로 Codex의 범위를 스크립트 작성에서 **Blender 실행, GLB 생성 및 렌더 검수**까지 확장했다. 게임 연결은 포함하지 않는다. 기준은 원격 작업 브랜치 `9412666`의 [모델 브리프](https://github.com/minidice/game-plushpanic-hordeshooter/blob/9412666/doc/model-briefs/stage2-landmarks.md) 1·2·5장이다. 해당 브리프/높이 단 구현이 없는 현재 `main`에 원격 작업 브랜치를 병합하지 않았다.
+2026-10-23. 사용자 후속 요청으로 Codex의 범위를 스크립트 작성에서 **Blender 실행, GLB 생성 및 렌더 검수**까지 확장했다. 게임 연결은 포함하지 않는다. 기준은 원격 작업 브랜치 `9412666`의 [모델 브리프](https://github.com/minidice/game-plushpanic-hordeshooter/blob/9412666/doc/model-briefs/stage2-landmarks.md) 1·2·5장이다. 최초 제작 때는 해당 브리프/높이 단 구현이 `main`에 없었다. 이후 사용자 병합 요청으로 최신 원격 `main`(`0098738`, PR #5)을 가져와 모델 작업과 합쳤으며, 이제 [브리프](model-briefs/stage2-landmarks.md)·높이 단·연출 이동 코드가 같은 작업 트리에 있다. 모델의 게임 연결은 여전히 별도다.
 
 ## 결과와 자산 계약
 
@@ -44,3 +44,11 @@ python -m py_compile prototypes/outdoor-kit/tools/stage2_props_a.py prototypes/o
 - 객차 바닥판 윗면은 0m다. 기존 게임의 탑승판 그림과 겹치지 않도록 교체해야 한다. 승강장에는 중앙 바닥판을 만들지 않았다.
 - 객차 매달기 팔은 기본 쿼터뷰에서 일부 위치의 인형 머리를 가린다. 숨김 비교는 부위 분리만 확인한 것이며, 실제 게임의 가림 연출·최대 인원 탑승·승하차 경로 검증은 남는다.
 - 실제 캐릭터·맵·Godot 가져오기/전용 장면·이동/충돌/멀티·성능 검사는 실행하지 않았다. C#이나 맵 데이터는 변경하지 않아 `Integration`도 이번에 실행하지 않았다. 자산 렌더 검수와 제품 내 통합 검수를 구분한다.
+
+## 최신 main 병합 검증 (2026-10-23 후속)
+
+- 사용자 요청으로 자산 작업을 `399ea8f`로 커밋하고 원격 `main`의 `0098738`(PR #5)을 로컬 `main`에 병합했다. 충돌 없이 합쳐졌으며 원격의 높이 단/연출 이동/시안 기록과 이 문서의 모델 검수 이력을 함께 보존했다. 브리프·맵 확장 계획의 묶음 A 상태를 자산 생성/렌더 완료·게임 미연결로 정리했다.
+- 위 최초 검수의 Godot 미실행 상태에서 후속 검증을 추가했다. 병합 전 GLB 재가져오기 5종·93개 검사 통과. 병합 트리에서 `game/Start-Game.ps1 -Test`: C# 빌드 경고/오류 0, Godot 가져오기 성공, `Integration` 149개 통과. 별도 `--headless --fixed-fps 60` 실행으로 `ElevationCheck` 76개·`SizeDraftCheck` 74개·`StageTransitionCheck` 164개 통과. 시안 검사의 자동 이동은 2.6분의 시뮬레이션이며 실제 전투 플레이 시간 측정은 아니다.
+- Godot가 새 GLB 5종을 `PackedScene`으로 읽고 내보낸 루트 아래 `Keep`/`Occlude_*` 및 각 메시를 갖는지 별도 보조 검사로 확인했다. 첫 검사에서는 Godot의 최상위 장면 래퍼를 빠뜨려 실패했고 트리 출력으로 `장면 래퍼 → 자산 ID → 부위 → 메시` 구조를 확인해 검사 경로만 수정했다. GLB 수정은 없었다. 재생 가능한 가져오기 설정 `game/assets/stage2-props/*.glb.import` 5개를 보존하며 `.godot/` 캐시는 커밋하지 않는다.
+- 로그는 `game/output/stage2-props-merge-integration.log`, `stage2-props-merge-ElevationCheck.log`, `stage2-props-merge-SizeDraftCheck.log`, `stage2-props-merge-StageTransitionCheck.log`, `stage2-props-merge-import-verified.log`; 초기 보조 검사 실패는 `stage2-props-merge-import-check.log`·`-inspect.log`다. 종료 경고는 통합 ObjectDB 2개·전환 6개이며 객체별 원인을 이번에 식별하지 않아 I-17을 유지한다. 높이 단·시안·최종 가져오기 보조 검사에는 종료 경고가 없었다.
+- 이번 병합에서 새 외형 변경은 없어서 기존 13장 렌더를 재촬영하지 않았다. 모델은 아직 게임의 사다리/짚라인/곤돌라 임시 도형에 연결하지 않았으며 실제 캐릭터 가림·승하차·멀티/성능 검증은 그대로 남는다. 원격 푸시는 하지 않는다.

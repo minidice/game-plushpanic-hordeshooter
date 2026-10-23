@@ -1,0 +1,81 @@
+{
+  "description": "Stage 2 size draft encounters (decisions.md L-29, doc/stage2-floorplan.md 4-6장, map-expansion-plan.md 7.2 step 5). Replaces stage2_encounters.json once the draft replaces today's Stage 2. Areas run along +X (the zones A-G). Entering area N fills area N+1. Hidden entries stand on every tier the route passes, so upper tiers get arrivals too. safe_zones: the forest watch post (L-24) - nothing waits within no_place_m, no wave within no_wave_m, timed raids hold while a person is within inside_m. raids: timed mobs and specials only in the travel zones (stage2-floorplan.md 6장). Groups with after = mission are placed when the bridge comes down, on the way back from the pump (L-27). All counts and radii are [임시] starting values.",
+  "areas": [
+    { "id": "clearing", "x0": -10, "x1": 40 },
+    { "id": "forest", "x0": 40, "x1": 165 },
+    { "id": "canyon", "x0": 165, "x1": 215 },
+    { "id": "rim", "x0": 215, "x1": 255 },
+    { "id": "yard", "x0": 255, "x1": 445 },
+    { "id": "plateau", "x0": 445, "x1": 538 },
+    { "id": "arrival", "x0": 538, "x1": 650 }
+  ],
+  "groups": [
+    { "area": "forest", "reaction": "dormant", "count": 6, "rect": [44, 68, -20, 15] },
+    { "area": "forest", "reaction": "dormant", "count": 6, "rect": [74, 112, -35, 10] },
+    { "area": "forest", "reaction": "watcher", "count": 2, "rect": [80, 112, -45, 0] },
+    { "area": "forest", "reaction": "dormant", "count": 6, "rect": [120, 162, -60, -12] },
+    { "area": "forest", "reaction": "watcher", "count": 3, "rect": [130, 162, -62, -15] },
+    { "area": "forest", "reaction": "dormant", "count": 4, "rect": [107, 125, -69, -63] },
+    { "area": "forest", "reaction": "watcher", "special": 1, "at": [145, -35] },
+
+    { "area": "canyon", "reaction": "dormant", "count": 4, "rect": [167, 183, -70, -50] },
+    { "area": "canyon", "reaction": "dormant", "count": 6, "rect": [190, 212, -30, 25] },
+    { "area": "canyon", "reaction": "dormant", "count": 3, "rect": [190, 212, -90, -55] },
+    { "area": "canyon", "reaction": "watcher", "count": 6, "rect": [166, 183, -42, -14], "after": "mission" },
+    { "area": "canyon", "reaction": "dormant", "count": 3, "rect": [168, 184, -62, -49], "after": "mission" },
+
+    { "area": "rim", "reaction": "dormant", "count": 4, "rect": [240, 254, -74, -62] },
+    { "area": "rim", "reaction": "dormant", "count": 3, "rect": [216, 226, -74, -64] },
+
+    { "area": "yard", "reaction": "dormant", "count": 8, "rect": [262, 318, -95, -10] },
+    { "area": "yard", "reaction": "watcher", "count": 2, "rect": [270, 318, -60, -10] },
+    { "area": "yard", "reaction": "dormant", "count": 8, "rect": [320, 380, -100, -10] },
+    { "area": "yard", "reaction": "watcher", "count": 3, "rect": [330, 380, -70, -10] },
+    { "area": "yard", "reaction": "watcher", "count": 2, "rect": [323, 335, -89, -79] },
+    { "area": "yard", "reaction": "dormant", "count": 8, "rect": [382, 440, -100, -12] },
+    { "area": "yard", "reaction": "watcher", "count": 2, "rect": [390, 440, -80, -45] },
+    { "area": "yard", "reaction": "dormant", "special": 0, "at": [300, -30] },
+    { "area": "yard", "reaction": "watcher", "special": 1, "at": [415, -75] },
+
+    { "area": "plateau", "reaction": "dormant", "count": 5, "rect": [448, 476, -108, -56] },
+    { "area": "plateau", "reaction": "dormant", "count": 4, "rect": [480, 500, -120, -72] },
+    { "area": "plateau", "reaction": "watcher", "count": 2, "rect": [480, 500, -110, -80] },
+    { "area": "plateau", "reaction": "watcher", "count": 4, "rect": [504, 524, -145, -84] }
+  ],
+  "entries": [
+    { "kind": "hidden", "at": [45, -20] }, { "kind": "hidden", "at": [45, 15] }, { "kind": "hidden", "at": [62, -34] },
+    { "kind": "hidden", "at": [66, 17] }, { "kind": "hidden", "at": [76, -40] }, { "kind": "hidden", "at": [80, 12] },
+    { "kind": "hidden", "at": [100, -52] }, { "kind": "hidden", "at": [110, -6] }, { "kind": "hidden", "at": [118, -66] },
+    { "kind": "hidden", "at": [124, -66] }, { "kind": "hidden", "at": [140, -64] }, { "kind": "hidden", "at": [160, -68] },
+    { "kind": "hidden", "at": [160, -15] }, { "kind": "hidden", "at": [140, -10] },
+
+    { "kind": "hidden", "at": [167, -70] }, { "kind": "hidden", "at": [167, -14] }, { "kind": "hidden", "at": [180, -68] },
+    { "kind": "hidden", "at": [190, -92] }, { "kind": "hidden", "at": [212, -92] }, { "kind": "hidden", "at": [190, 32] },
+    { "kind": "hidden", "at": [212, 32] },
+
+    { "kind": "hidden", "at": [217, -74] }, { "kind": "hidden", "at": [253, -73] }, { "kind": "hidden", "at": [253, -27] },
+    { "kind": "hidden", "at": [217, -27] },
+
+    { "kind": "hidden", "at": [258, -98] }, { "kind": "hidden", "at": [258, -7] }, { "kind": "hidden", "at": [300, -100] },
+    { "kind": "hidden", "at": [300, -7] }, { "kind": "hidden", "at": [350, -102] }, { "kind": "hidden", "at": [350, -7] },
+    { "kind": "hidden", "at": [400, -104] }, { "kind": "hidden", "at": [400, -8] }, { "kind": "hidden", "at": [442, -104] },
+    { "kind": "hidden", "at": [442, -42] }, { "kind": "hidden", "at": [279, -78] }, { "kind": "hidden", "at": [329, -84] },
+    { "kind": "hidden", "at": [375, -89] },
+
+    { "kind": "hidden", "at": [448, -110] }, { "kind": "hidden", "at": [448, -53] }, { "kind": "hidden", "at": [476, -110] },
+    { "kind": "hidden", "at": [476, -64] }, { "kind": "hidden", "at": [480, -123] }, { "kind": "hidden", "at": [500, -74] },
+    { "kind": "hidden", "at": [505, -148] }, { "kind": "hidden", "at": [536, -84] }, { "kind": "hidden", "at": [536, -148] },
+
+    { "kind": "hidden", "at": [588, -160] }, { "kind": "hidden", "at": [646, -126] }
+  ],
+  "protected": [[6, -2]],
+  "safe_zones": [
+    { "at": [232, -52], "inside_m": 8, "no_place_m": 15, "no_wave_m": 25 }
+  ],
+  "raids": {
+    "areas": ["forest", "yard", "plateau"],
+    "mob_min_s": 90, "mob_max_s": 120,
+    "special_min_s": 60, "special_max_s": 90,
+    "start_delay_s": 60, "after_crescendo_s": 45
+  }
+}

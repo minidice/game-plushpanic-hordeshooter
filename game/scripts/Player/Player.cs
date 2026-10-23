@@ -319,8 +319,10 @@ public partial class Player : CharacterBody3D
         var camera = GetViewport().GetCamera3D();
         if (camera == null) return;
         var mouse = GetViewport().GetMousePosition();
-        var plane = new Plane(Vector3.Up, GlobalPosition.Y + AimHeight);
-        var hit = plane.IntersectsRay(camera.ProjectRayOrigin(mouse), camera.ProjectRayNormal(mouse));
+        // With height tiers the cursor lands on the tier under it, not on a plane at the survivor's own height (L-15).
+        var hit = Stage.Tiers.Any
+            ? Stage.Tiers.AimPoint(camera.ProjectRayOrigin(mouse), camera.ProjectRayNormal(mouse), AimHeight)
+            : new Plane(Vector3.Up, GlobalPosition.Y + AimHeight).IntersectsRay(camera.ProjectRayOrigin(mouse), camera.ProjectRayNormal(mouse));
         if (hit.HasValue) SetAim(hit.Value);
     }
 
@@ -334,12 +336,26 @@ public partial class Player : CharacterBody3D
         BlindTime = Mathf.Max(0, BlindTime - dt);
         _honkCooldown -= dt;
         UpdateRestraint(dt);
+        // Downed, dead or grabbed on a ladder: let go, and gravity does the rest.
+        if (OnLadder && (IsDead || IsDowned || IsRestrained)) EndLadder(arrived: false);
+        if (OnZipline && (IsDead || IsDowned)) EndZipline();
         if (IsDead) return;
         if (IsDowned) { UpdateDowned(dt); return; }
 
         if (!ManualControl) ReadInput();
         // A client's own presses are kept until its next input message to the host.
         if (IsLocal && Stage.Role == NetRole.Client) RecordNetEdges();
+        if (OnLadder || OnZipline)
+        {
+            // On a ladder or a zipline: no shooting, using or rolling (L-16 · L-18); presses made now are dropped.
+            if (OnLadder) LadderStep(dt);
+            else ZiplineStep(dt);
+            IsAiming = false;
+            _firePressed = _reloadPressed = _healPressed = _throwPressed = _rollPressed = _cancelPressed = false;
+            _cycle = 0;
+            _slotPressed = 0;
+            return;
+        }
         HeliumTime = Mathf.Max(0, HeliumTime - dt);
         RollCooldownLeft = Mathf.Max(0, RollCooldownLeft - dt);
         // A daze (honk beam) holds like a stun but keeps them on their feet.
@@ -372,7 +388,7 @@ public partial class Player : CharacterBody3D
                       MadSpeedScale * (WeakTime > 0 ? 1 - HonkBeamWeakSpeed : 1);
         bool grounded = IsOnFloor() && Velocity.Y <= 0;
         _push = _push.MoveToward(Vector3.Zero, dt * (grounded ? 10f : 1.2f));
-        var horizontal = IsRestrained ? RestraintVelocity() : IsRolling ? _rollDirection * RollSpeed * MadRollScale : move * speed + _push;
+        var horizontal = IsRestrained ? RestraintVelocity() : IsRolling ? KeepOnTier(_rollDirection * RollSpeed * MadRollScale) : KeepOnTier(move * speed) + _push;
         // On the host a remote survivor's reported spot loses to the host's own pull (grab, launch, down).
         if (NetMotion is { } follow && !(Stage.Authoritative && HostMovesMe)) horizontal = FollowVelocity(follow, dt);
         Velocity = new Vector3(horizontal.X, grounded ? -.1f : Velocity.Y - Gravity * dt, horizontal.Z);
@@ -399,6 +415,35 @@ public partial class Player : CharacterBody3D
         _cycle = 0;
         _slotPressed = 0;
         if (GlobalPosition.Y < -10) TakeDamage(9999, Vector3.Up);
+    }
+
+    /// <summary>
+    /// Walking or rolling never takes a survivor off a tier edge except at a drop edge or down a ramp (decisions.md L-16);
+    /// shoves and launches still can, so they are added after this. Slides along the edge when only one axis is blocked.
+    /// </summary>
+    private Vector3 KeepOnTier(Vector3 velocity)
+    {
+        var tiers = Stage.Tiers;
+        if (!tiers.Any || velocity.LengthSquared() < .0001f) return velocity;
+        var here = GlobalPosition;
+        float reach = Definition.ColliderRadius + .15f;
+        // Both sides of a diagonal count too, so a corner over a lower tier is not cut.
+        bool Clear(Vector3 dir) => tiers.CanWalk(here, here + dir * reach);
+        bool Free(Vector3 v)
+        {
+            if (v.LengthSquared() < .0001f) return true;
+            var dir = v.Normalized();
+            if (!Clear(dir)) return false;
+            if (Mathf.Abs(dir.X) > .3f && !Clear(new Vector3(Mathf.Sign(dir.X), 0, 0))) return false;
+            if (Mathf.Abs(dir.Z) > .3f && !Clear(new Vector3(0, 0, Mathf.Sign(dir.Z)))) return false;
+            return true;
+        }
+        if (Free(velocity)) return velocity;
+        var alongX = new Vector3(velocity.X, 0, 0);
+        var alongZ = new Vector3(0, 0, velocity.Z);
+        if (Free(alongX) && Mathf.Abs(velocity.X) > .01f) return alongX;
+        if (Free(alongZ) && Mathf.Abs(velocity.Z) > .01f) return alongZ;
+        return Vector3.Zero;
     }
 
     private void UpdateFocus(float dt)
@@ -572,7 +617,8 @@ public partial class Player : CharacterBody3D
     public void Launch(Vector3 impulse, float stun)
     {
         if (!Stage.Authoritative && !NetApplying) return;
-        if (IsDead || IsDowned || IsRolling) return;
+        // Nothing knocks a survivor off a ladder (L-16).
+        if (IsDead || IsDowned || IsRolling || OnLadder || OnZipline) return;
         _push = new Vector3(impulse.X, 0, impulse.Z);
         Velocity = new Vector3(Velocity.X, impulse.Y, Velocity.Z);
         StunTime = Mathf.Max(StunTime, stun);
@@ -591,6 +637,9 @@ public partial class Player : CharacterBody3D
     /// <summary>Moves the survivor instantly (AI catch-up); clears momentum so it does not slide on arrival.</summary>
     public void TeleportTo(Vector3 at)
     {
+        // A teleport (squad catch-up) takes them off any ladder first, or the climb would pull them back.
+        EndLadder(arrived: false);
+        EndZipline();
         GlobalPosition = at;
         Velocity = Vector3.Zero;
         _push = Vector3.Zero;

@@ -51,6 +51,10 @@ msg_stage_down,You went down...
 ui_use_open_door,Open door
 ui_use_shutter,Open shutter (sets off the alarm!)
 ui_use_close_safehouse,Close door (clear stage)
+ui_use_ladder_up,Climb ladder
+ui_use_ladder_down,Climb down ladder
+ui_use_zipline,Ride the zipline
+ui_use_gondola,Start the gondola
 ui_use_ammo,Refill ammo (weapon 2)
 ui_use_medkit,Pick up medkit
 fmt_use_pickup_weapon,Pick up {0}  (slot {1})
@@ -62,6 +66,7 @@ fmt_pickup_upgraded,{0}!
 msg_pickup_full,You can't carry any more
 msg_pickup_ammo,+Ammo
 msg_pickup_medkit,Got a medkit — heal with [Q]
+msg_gondola_wait,Everyone must be aboard to leave
 msg_pickup_medkit_full,You can only carry one medkit
 msg_refill_no_primary,You have no weapon 2
 fmt_refill_not_refillable,{0} can't be refilled
@@ -262,3 +267,8 @@ msg_stage_exit_open,The safehouse floor hatch is open — on to the next area
 msg_stage_route_start,Out of the bunker — follow the forest road to the safehouse
 ui_transition_stage2,Forest Bunker Road
 ui_transition_stage_number,STAGE {0}
+ui_use_pump,Start the pump (lowers the bridge · sets off the alarm!)
+ui_objective_lower_bridge,Lower the bridge at the canyon pump house  [E]
+msg_stage_bridge_alarm,Pump running! Hold out until the bridge is down
+msg_stage_bridge_down,The bridge is down! Climb the ladder and cross
+msg_stage_draft_start,Out of the bunker — through the forest and lower the canyon bridge

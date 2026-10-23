@@ -16,6 +16,7 @@ Godot **4.7.2 .NET (C#) + Jolt**. 기획 기준은 [`doc/idea.md`](../doc/idea.m
 ./Start-Game.ps1 -NetPair     # 멀티 2인 테스트: 한 PC에서 방장 창 + 참가 창 (Start-Multi-Test.cmd와 같음)
 ./Start-Game.ps1 -NetHost     # 멀티 2인 테스트: 방장 창 (UDP 24680)
 ./Start-Game.ps1 -NetJoin 127.0.0.1  # 멀티 2인 테스트: 파티원 창 (같은 PC면 127.0.0.1)
+./Start-Game.ps1 -Stage2Draft # Stage 2 크기 시안(doc/stage2-floorplan.md 11~12장)으로 시나리오 시작 — 혼자만, 메뉴에서 시나리오 시작
 ./Start-Game.ps1 -GodotDir 'C:/다른/경로'     # Godot 위치가 다를 때
 ./Export-Game.ps1             # 다른 PC용 실행 파일 → ../build/windows/, ../build/HordeShooter-windows.zip (Export-Game.cmd와 같음)
 ```
