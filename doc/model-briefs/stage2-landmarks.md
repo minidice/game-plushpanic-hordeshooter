@@ -1,9 +1,9 @@
 # 모델 지시문: Stage 2 새 지형 · 이동 · 랜드마크 소품 (`stage2-props`)
 
-> **상태**: 2026-10-23 작성/후속 연결. **묶음 A 5종·B 4종은 GLB·원본 blend 생성 및 게임 연결·실제 렌더 검수 완료. 묶음 C는 실행 전.** 사용자 요청으로 로컬 Codex가 생성·렌더·게임 연결까지 수행했다. [A 결과](../stage2-props-a-validation.md#게임-연결-검수-2026-10-23), [B 결과·재생성·제약](../stage2-props-b-validation.md). 적용 대상은 별도 `LayoutMap` 시안이며 정식 Stage 2 교체는 별도다.
+> **상태**: 2026-10-23 작성/후속 연결. **묶음 A 5종·B 4종·C 4종은 GLB·원본 blend 생성 및 게임 연결·실제 렌더 검수 완료.** 사용자 요청으로 로컬 Codex가 생성·렌더·게임 연결까지 수행했다. [A 결과](../stage2-props-a-validation.md#게임-연결-검수-2026-10-23), [B 결과·재생성·제약](../stage2-props-b-validation.md), [C 결과·재생성·제약](../stage2-props-c-validation.md). 적용 대상은 별도 `LayoutMap` 시안이며 정식 Stage 2 교체는 별도다.
 > **왜**: [Stage 2 평면도](../stage2-floorplan.md)의 크기 시안 · 배치(11 · 12장)는 상자로만 지어져 있다. 감시탑 · 펌프장 · 들린 다리 · 사다리 · 짚라인 · 곤돌라 같은 **이 스테이지에만 있는 것**은 지금 키트(`game/assets/outdoor-kit`, `game/assets/stage-props`)에 없다. 나무 · 바위 · 컨테이너 · 철망 · 모래주머니 · 드럼통 · 방벽 · 표지 · 벙커 해치는 있으므로 만들지 않는다.
 > **검토자**: Claude가 Blender를 돌려 GLB를 만들고, `LayoutMap`에 붙여 실제 렌더 · 검사로 확인한다. Codex는 Blender 스크립트(모델 코드)까지만 만든다.
-> **묶음 A·B 후속 승인**: 위 최초 역할 분담의 예외로 사용자가 Codex의 Blender 직접 실행·게임 연결·실제 렌더 검수까지 요청했다. 아래 5·6장의 최초 스크립트 전용 제한보다 이 후속 요청을 우선한다. C는 최초 인계 범위를 유지한다.
+> **묶음 A·B·C 후속 승인**: 위 최초 역할 분담의 예외로 사용자가 Codex의 Blender 직접 실행·게임 연결·실제 렌더 검수까지 요청했다. 아래 5·6장의 최초 스크립트 전용 제한보다 이 후속 요청을 우선한다. C도 후속 사용자 요청으로 같은 실행·연결 범위를 승인받았다.
 > **나눠서 실행**: 한 번에 너무 많으면 품질이 떨어지므로 **묶음 A → B → C를 따로** 실행한다(묶음마다 새 스크립트 하나). 각 실행에는 1장 공통 규칙 + 해당 묶음 절 + 3 · 4 · 5장을 그대로 준다.
 
 ## 1. 공통 규칙 (야외 키트 계약 `plushpanic_outdoor_v1`, [`stage-transition-props.md`](stage-transition-props.md) 1장과 같음)
@@ -86,6 +86,8 @@
 - 콘크리트 벙커 입구: 폭 8 m, 높이 4 m의 두꺼운 문틀(`Concrete`), 닫힌 **두 짝 철문**(`Metal`, `Hazard` 대각 줄무늬), 위에 작은 전등 상자 둘, 양옆 모래주머니 더미. 들어갈 수 없는 배경(정문 뒤는 막힘).
 - 충돌 추천 `box` [8.0, 4.0, 1.4]. 부위: `Keep`(아래 1.2 m), `Occlude_Gate`(나머지). 삼각형 **5,000 미만**.
 
+묶음 C 연결 메모(2026-10-23): 감시탑은 게임 상판만 두께0.3m로 표시하고 기존 높이 단 충돌은 유지한다. 남쪽 난간 X±1.2m를 사다리 입구로 비운다. 지붕 꼭대기7.5m는 유지하되 처마7.15m(밑면7.03m 이상)로 거위2.18m의 머리 공간을 확보한다. 짚라인 시작 `(124,4.8,-76)`에서 동쪽으로 나가는 몸체 전체를 위해 지붕 게임로컬 X3.1..7/Z−2.1..0을 비우고, 동쪽 난간 Z±1.2m를 열며 해당 지붕 기둥은 뒤로 옮긴다. 크레인은 기초2.4×4×2.4m만 충돌한다. 트럭 Red/Hazard 표면은 게임에서 인스턴스별 발광을 연결하고 기존 AlarmCar 사격·폭발/AI 제외/1회성 규칙을 재사용한다. 정문은 닫힌 배경이며 동쪽 우회로와 곤돌라 접근은 열려 있다. 자세한 피벗·실측 치수는 [C 검수](../stage2-props-c-validation.md) 참조.
+
 ## 5. 만들 것 (Codex 작업 범위, 묶음마다)
 
 1. **새 파일** `prototypes/outdoor-kit/tools/stage2_props_<a|b|c>.py` — Blender `bpy` 스크립트. 그 묶음의 모델을 **`game/assets/stage2-props/<id>.glb`**로 내보내고, `game/assets/stage2-props/manifest.json`을 **읽어서 그 묶음 항목만 바꿔** 다시 쓴다(없으면 만든다; revision 1, contract `plushpanic_outdoor_v1`, 항목 형식은 `game/assets/stage-props/manifest.json`과 같음). 원본은 `prototypes/outdoor-kit/source/stage2-props-<a|b|c>.blend`.
@@ -107,5 +109,5 @@
 
 ## 8. 게임 연결 메모 (Claude용, Codex에게 주지 않음)
 
-- `PropLibrary`가 세 번째 manifest(`stage2-props`)를 읽게 하고, `LayoutMap`이 표식 · 연결 위치에 놓는다: 사다리 조각을 단 수만큼 쌓기 + 위 끝, 짚라인 양 끝, 곤돌라 발판 · 객차(연출 중 객차가 가짜 배경 앞에 남아 있게), 다리 조각 5개 + 들린 판(`Door` 슬랩을 이 모델로), 펌프장(밸브 위치에 `ShutterPanel`), 감시소(오두막 벽 그림만 교체, 충돌은 그대로), 감시탑 · 크레인 · 경보 트럭(경보 트럭은 `AlarmCar` 동작 연결 — 아직 시안에 없음) · 벙커 정문.
+- `PropLibrary`가 세 번째 manifest(`stage2-props`)를 읽게 하고, `LayoutMap`이 표식 · 연결 위치에 놓는다: 사다리 조각을 단 수만큼 쌓기 + 위 끝, 짚라인 양 끝, 곤돌라 발판 · 객차(연출 중 객차가 가짜 배경 앞에 남아 있게), 다리 조각 5개 + 들린 판(`Door` 슬랩을 이 모델로), 펌프장(밸브 위치에 `ShutterPanel`), 감시소(오두막 벽 그림만 교체, 충돌은 그대로), 감시탑 · 크레인 · 경보 트럭(경보 트럭은 `AlarmCar` 동작 연결 — C 후속에서 시안 적용 완료) · 벙커 정문.
 - 연결 뒤 확인: `SizeDraftCheck`(동작 그대로), `SizeDraftCapture` 창 모드 렌더(Forward+)로 구역별 사진, 단 높이와 모델 윗면이 맞는지 근접 렌더.

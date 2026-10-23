@@ -10,7 +10,7 @@ namespace HordeShooter;
 /// (doc/map-expansion-plan.md 7.2 step 3). Regions become raised floors per height tier, merged into rectangles on the
 /// 1 m grid; everything outside every region is blocked by tall invisible walls; links become ramps, ladders, drop
 /// edges, ziplines and the gondola; climbable edges are painted for wall climbers. Terrain remains a size draft;
-/// traversal and bridge/pump/watch-post art use Stage 2 GLBs. Not wired into <see cref="StageMap.Create"/> yet:
+/// traversal, bridge/pump/watch-post and landmark art use Stage 2 GLBs. Not wired into <see cref="StageMap.Create"/> yet:
 /// the current Stage 2 stays until this draft is accepted (L-29).
 /// Placement (7.2 step 5) reads two more files: encounters (areas, waiting groups, wave entries, the safe zone, timed
 /// raids, the mission's way back) and supply points. Markers build the beats: the raised bridge ("blocked") is the
@@ -41,6 +41,7 @@ public sealed class LayoutMap : StageMap
     private readonly string? _encountersPath, _suppliesPath;
     private Door? _gate, _safehouseDoor;
     private Interactable? _pump, _safehouseSwitch;
+    private AlarmCar? _alarmTruck;
     private Rect2 _safehouseRoom;
 
     public LayoutMap(string path = Stage2Path, string? encounters = Stage2EncountersPath, string? supplies = Stage2SuppliesPath)
@@ -59,6 +60,7 @@ public sealed class LayoutMap : StageMap
     public override EncounterSet? Encounters => _encountersPath == null ? null : SpawnDatabase.Current.Load(_encountersPath);
     public override IReadOnlyList<Door> Doors => new[] { _gate, _safehouseDoor }.OfType<Door>().ToArray();
     public override Door? Shutter => _gate;
+    public override AlarmCar? AlarmDevice => _alarmTruck;
     public override Interactable? ShutterPanel => _pump;
     public override string CrescendoObjectiveKey => "ui_objective_lower_bridge";
     public override string CrescendoAlarmKey => "msg_stage_bridge_alarm";
@@ -137,12 +139,13 @@ public sealed class LayoutMap : StageMap
         var goal = Layout.FindMarker("safehouse")?.Pos ?? start;
         _goal = FloorAt(goal);
         foreach (var marker in Layout.Markers)
-            if (marker.Type is not ("mission" or "blocked" or "safe_zone")) Post(marker);
+            if (marker.Type is not ("mission" or "blocked" or "safe_zone" or "noise") && marker.Label is not ("크레인" or "벙커 정문")) Post(marker);
         Lamp(PlayerStart + Vector3.Up * 4, "ffe6b0", 3, 24, false);
 
         if (Layout.FindMarker("blocked") is { } blocked && Layout.FindMarker("mission") is { } mission) BuildBridgeMission(blocked.Pos, mission.Pos);
         if (Layout.FindMarker("safe_zone") is { } zone) BuildHut(zone.Pos);
         if (Layout.FindMarker("safehouse") is { } safehouse) BuildSafehouse(safehouse.Pos);
+        BuildLandmarks();
         if (Mode == GameMode.Scenario && _suppliesPath != null) PlaceSupplies(StageSupplies.Load(_suppliesPath));
     }
 
@@ -226,12 +229,42 @@ public sealed class LayoutMap : StageMap
     }
 
     private Rect2? BridgeFootprint()
+        => RegionFootprint("bridge");
+
+    private Rect2? RegionFootprint(string id)
     {
-        var region = Layout.Regions.Find(r => r.Id == "bridge");
+        var region = Layout.Regions.Find(r => r.Id == id);
         if (region == null || region.Poly.Length == 0) return null;
         var rect = new Rect2(region.Poly[0], Vector2.Zero);
         foreach (var point in region.Poly) rect = rect.Expand(point);
         return rect;
+    }
+
+    private void BuildLandmarks()
+    {
+        if (RegionFootprint("watchtower") is { } tower)
+            Landmark("watchtower", new Vector3(tower.GetCenter().X, 0, tower.GetCenter().Y));
+        foreach (var marker in Layout.Markers)
+        {
+            var at = FloorAt(marker.Pos);
+            if (marker.Label == "크레인")
+            {
+                Landmark("crane", at);
+                // Only the base is a walking obstacle; the boom must not block the whole yard.
+                Solid(at + Vector3.Up * 2, new Vector3(2.4f, 4, 2.4f), "", drawCargo: false);
+            }
+            else if (marker.Label == "벙커 정문")
+            {
+                var gate = Prop("bunker_gate", at);
+                if (gate != null) PropOcclusion.Attach(_stage, gate);
+            }
+            else if (marker.Type == "noise")
+            {
+                var size = new Vector3(5.2f, 2, 2.2f);
+                _alarmTruck = AlarmCar.Create(_stage, at + Vector3.Up, size, "c7a35c", PropLibrary.Instance("alarm_truck"));
+                BlockFlow(_alarmTruck.Position, size);
+            }
+        }
     }
 
     // Only art is cut out; Raised() still owns the original deck height, solid volume and flow.
@@ -244,10 +277,11 @@ public sealed class LayoutMap : StageMap
             var center = r.GetCenter();
             var mesh = Mat.Box(_stage, new Vector3(center.X, top - thick / 2, center.Y),
                 new Vector3(r.Size.X, thick, r.Size.Y), Mat.Solid(deck ? "8a6a46" : TierColors[Math.Clamp(tier, 0, TierColors.Length - 1)], .95f));
-            if (deck) mesh.Name = "BridgeDeck";
+            if (deck) mesh.Name = RegionFootprint("watchtower") is { } tower && r.Intersects(tower) ? "WatchtowerDeck" : "BridgeDeck";
         }
-        var span = BridgeFootprint();
-        if (span == null || !rect.Intersects(span.Value)) { Box(rect); return; }
+        var span = new[] { BridgeFootprint(), RegionFootprint("watchtower") }
+            .FirstOrDefault(r => r.HasValue && rect.Intersects(r.Value));
+        if (span == null) { Box(rect); return; }
         var cut = rect.Intersection(span.Value);
         Box(new Rect2(rect.Position, new Vector2(rect.Size.X, cut.Position.Y - rect.Position.Y)));
         Box(new Rect2(rect.Position.X, cut.End.Y, rect.Size.X, rect.End.Y - cut.End.Y));

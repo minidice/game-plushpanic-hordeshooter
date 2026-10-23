@@ -190,6 +190,108 @@
       "bounds_min_y": -0.0,
       "triangles": 4952,
       "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (미검수)"
+    },
+    {
+      "id": "watchtower",
+      "name": "숲 감시탑",
+      "category": "Stage 2 랜드마크",
+      "note": "피벗 바닥중심. 14×10 m, 게임 상판4.8 m(모델에는 없음), 지붕7.5 m/처마7.15 m. 남쪽 사다리 입구 X±1.2 m. 짚라인 기둥 (게임로컬4,4.8,-1)부터 동쪽 출발 경로까지 지붕 홈 X3.1..7 / Z-2.1..0, 동쪽 난간 Z±1.2 m 개방.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [
+        "Occlude_Top"
+      ],
+      "file": "watchtower.glb",
+      "dimensions_m": [
+        14.0,
+        8.2,
+        10.0
+      ],
+      "bounds_min_y": -0.0,
+      "triangles": 3076,
+      "weather": "PBR 원본 / 젖음·적설 미검수"
+    },
+    {
+      "id": "crane",
+      "name": "야적장 크레인",
+      "category": "Stage 2 랜드마크",
+      "note": "탑 바닥중심, 상단14 m. 팔 X-6..12 m, 후면 Y(Blender)+0.5 m. 상부/줄/갈고리는 시각전용. 게임에서 기초2.4×4×2.4 m 충돌만 사용.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [
+        "Occlude_Mast"
+      ],
+      "file": "crane.glb",
+      "dimensions_m": [
+        18.075,
+        14.0,
+        2.4
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 1920,
+      "weather": "PBR 원본 / 젖음·적설 미검수"
+    },
+    {
+      "id": "alarm_truck",
+      "name": "경보 트럭",
+      "category": "Stage 2 랜드마크",
+      "note": "게임길이X5.2 m/폭Z2.2 m/높이2.2 m. 피벗 지면. Red(경광등)/Hazard(램프) 재질은 게임 AlarmCar가 인스턴스별 발광으로 교체. 사격·폭발로 1회 경보.",
+      "collision": {
+        "kind": "box",
+        "size": [
+          5.2,
+          2,
+          2.2
+        ],
+        "center": [
+          0,
+          1,
+          0
+        ]
+      },
+      "occlusion_parts": [],
+      "file": "alarm_truck.glb",
+      "dimensions_m": [
+        5.2,
+        2.2,
+        2.22
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 1536,
+      "weather": "PBR 원본 / 젖음·적설 미검수"
+    },
+    {
+      "id": "bunker_gate",
+      "name": "벙커 고지 정문",
+      "category": "Stage 2 랜드마크",
+      "note": "닫힌 배경정문, 열림 상호작용 없음. 바닥피벗, X8×Y4×Z1.4 m. 하부1.2 m Keep. 문 뒤/통과는 막힌 충돌.",
+      "collision": {
+        "kind": "box",
+        "size": [
+          8,
+          4,
+          1.4
+        ],
+        "center": [
+          0,
+          2,
+          0
+        ]
+      },
+      "occlusion_parts": [
+        "Occlude_Gate"
+      ],
+      "file": "bunker_gate.glb",
+      "dimensions_m": [
+        8.0,
+        4.0,
+        1.4
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 1364,
+      "weather": "PBR 원본 / 젖음·적설 미검수"
     }
   ]
 }
