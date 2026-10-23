@@ -362,7 +362,9 @@ public partial class Enemy : CharacterBody3D
     protected Vector3 ChaseDirection(Vector3 toPlayer, float dist, float dt)
     {
         bool los = HasLineOfSight(dt);
-        if (los && dist < 8f) return toPlayer / Mathf.Max(dist, .001f);
+        // With height tiers the straight line may run off a cliff or into one: only take it on the same tier (L-16).
+        bool straight = !Stage.Tiers.Any || (Target ?? Stage.NearestAlivePlayer(GlobalPosition)) is not { } chased || Stage.Tiers.TierOf(this) == Stage.Tiers.TierOf(chased);
+        if (los && dist < 8f && straight) return toPlayer / Mathf.Max(dist, .001f);
         var flow = Stage.Flow.Direction(GlobalPosition);
         if (flow != Vector3.Zero) return flow;
         return los ? toPlayer / Mathf.Max(dist, .001f) : Vector3.Zero;
@@ -398,7 +400,7 @@ public partial class Enemy : CharacterBody3D
     protected void TryMelee(Player player, Vector3 toPlayer)
     {
         if (AttackCooldown > 0 || IsMeleeAttacking || StunTime > 0 || FlinchTime > 0 || player.IsDead || SpecialAttackActive) return;
-        if (!Rays.Clear(this, GlobalPosition + Vector3.Up * .7f, player.GlobalPosition + Vector3.Up * .7f, Layers.World | Layers.Props)) return;
+        if (!CanReachAcrossTiers(player)) return;
         AttackCooldown = Mathf.Max(AttackInterval, MeleeWindup + MeleeRecovery);
         _meleeTarget = player;
         _meleeTime = 0;
@@ -408,6 +410,21 @@ public partial class Enemy : CharacterBody3D
         toPlayer.Y = 0;
         _meleeDirection = toPlayer.LengthSquared() > .0001f ? toPlayer.Normalized() : Rig.Forward;
         FaceOverride = _meleeDirection;
+    }
+
+    /// <summary>
+    /// The wall check for a melee swing. With height tiers (L-15) only the same tier, or one tier across the edge between
+    /// them, can be reached; across that edge the cliff itself would block the ray, so it is skipped there.
+    /// </summary>
+    private bool CanReachAcrossTiers(Player player)
+    {
+        var tiers = Stage.Tiers;
+        if (tiers.Any)
+        {
+            if (!tiers.MeleeReach(GlobalPosition, player.GlobalPosition)) return false;
+            if (tiers.TierOf(this) != tiers.TierOf(player)) return true;
+        }
+        return Rays.Clear(this, GlobalPosition + Vector3.Up * .7f, player.GlobalPosition + Vector3.Up * .7f, Layers.World | Layers.Props);
     }
 
     private void TickMelee(float dt)
@@ -433,9 +450,9 @@ public partial class Enemy : CharacterBody3D
             float distance = to.Length();
             // Re-evaluate the real target at impact: a dodge, sidestep or new wall makes the swing miss.
             if (!IsDead && StunTime <= 0 && !player.IsDead && !player.IsRolling &&
-                height < 1.1f && distance <= Radius + player.Definition.ColliderRadius + AttackReach &&
+                (Stage.Tiers.Any || height < 1.1f) && distance <= Radius + player.Definition.ColliderRadius + AttackReach &&
                 (distance < .001f || _meleeDirection.Dot(to / distance) >= .55f) &&
-                Rays.Clear(this, GlobalPosition + Vector3.Up * .7f, player.GlobalPosition + Vector3.Up * .7f, Layers.World | Layers.Props))
+                CanReachAcrossTiers(player))
                 player.TakeDamage(AttackDamage, _meleeDirection, 1.2f);
         }
         if (_meleeTime >= MeleeWindup + MeleeRecovery) CancelMelee();

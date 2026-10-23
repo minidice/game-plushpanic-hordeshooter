@@ -64,7 +64,8 @@
 - [x] 타일 바닥, 벽 패널, 선반·보관함·작업대·단말기, 구역 조명
 - [x] 하단 1/2/G/Q 장비 칸, 무기 아이콘, 체력·탄약·도약 대기시간·상호작용 안내
 - [ ] 후속 스테이지별 실제 경로 거리 비율 검수, 최종 소품 아트·LOD·대규모 전투 최적화
-- [ ] 지형 높이 단(2026-10-23 방향만, L-15 · L-16 · L-17): 단 지도 · 단 비교 사격 · 근접 · 투척, 사다리 · 내려가기, 몬스터 이동 유형(사다리 · 기어오르기 · 점프 · 비행), 넉백 낙하, 보스전 평지, 연출 이동(사다리 내리기 빠르게 · 짚라인 · 곤돌라 가짜 배경, L-18) ([규격](elevation-tiers.md), 지금 한계 I-107)
+- [x] 지형 높이 단 1차(2026-10-23, L-15): 단 지도 · 경사로 · 뛰어내리기 · 흐름장 · 걷기 가장자리 · 넉백 낙하 · 단별 조준 · 아래로만 쏘기(즉시 명중) · 근접 경계 띠 · 박격포/투척 착지 높이 · 폭발 한 단. 시험 맵 `ElevationCheck`만, 실제 맵 적용 전 ([규격](elevation-tiers.md) 14장)
+- [ ] 지형 높이 단 나머지(L-15 · L-16 · L-17): 단 지도 · 단 비교 사격 · 근접 · 투척, 사다리 · 내려가기, 몬스터 이동 유형(사다리 · 기어오르기 · 점프 · 비행), 넉백 낙하, 보스전 평지, 연출 이동(사다리 내리기 빠르게 · 짚라인 · 곤돌라 가짜 배경, L-18) ([규격](elevation-tiers.md), 지금 한계 I-107)
 
 ## 캐릭터와 커스터마이징
 
@@ -381,6 +382,14 @@
 - 확인한 수치: 혼자 6마리 웨이브 4번 = 12마리, 6인 5마리 × 4 = 28마리, 시작 구역 채우기 1인 3 / 4인 7 / 6인 9마리, 혼자 일반 몹 체력 24 → 19.2, 황소 260 → 130, 6인 보스 막대 160%.
 - 기존 검사 모두 통과: `SpawnCheck` 41, `ModeCheck` 147, `CombatPacingCheck` 44, `EnemyExpansion` 60, `EnemyAttackCheck` 79, `CardLabCheck` 172, `SquadCheck` 51, `StageTransitionCheck` 164, `NetSyncCheck` 32, `OnslaughtNetCheck` 29, `CorpseTierCheck` 36, `SupplyCheck` 12, `Start-Game.ps1 -Test`(Integration) 149. 검사 장면은 인원을 정하지 않으면 4인 줄이라 기존 수치 검사는 그대로.
 - 종료 경고(I-17): `SpawnCheck` · `CardLabCheck` · `StageTransitionCheck` · `CorpseTierCheck` · `SupplyCheck`에서 ObjectDB 잔존 한 줄씩. 화면 모양은 바뀌지 않아 렌더는 하지 않음. 실제 싱글 플레이의 난이도 변화는 미확인(I-103).
+
+### 이번 변경 확인 기록 — 2026-10-23 (높이 단 1차, L-15)
+
+- 클라우드 세션(Linux, Godot 4.7.2 .NET 헤드리스, .NET 8 SDK)에서 실행. 저장소의 `nuget.config`가 Windows 경로라 복원만 저장소 밖 nuget.org 설정으로 함(저장소 파일 변경 없음). C# 빌드 경고 · 오류 0.
+- 새 `ElevationCheck` 31개 통과(폭발 높이를 바닥 기준으로 고친 뒤 가슴 높이 폭발 검사 1개 추가). 처음엔 검사의 경로 표본(0.5 m씩 따라가기)이 칸 경계를 비스듬히 넘는 오차로 실패해, 흐름장 칸 중심을 따라가게 검사를 고침. 경사로 걷기는 시간이 모자라 프레임을 늘림.
+- 기존 검사 51개 중 46개 통과: `Integration` 149, `MapCheck` 24, `EnvironmentGeometryCheck` 1,067, `StageTransitionCheck` 164, `SquadCheck` 51, `EnemyAttackCheck` 79, `CombatPacingCheck` 44, `SpawnCheck` 41, `SupplyCheck` 12, `CardLabCheck` 172, `VisionTierCheck` 23, `WeaponEffectsCheck` 100, `MonsterDeathCheck` 97, `WorkshopWalkthrough` 68 외 `TailMeleeCheck` · `OnslaughtNetCheck` · `PartyNetCheck` · `PartyScaleCheck` · `CompanionCheck` · `WeaponHandlingCheck` · `RifleEffectsCheck` · `DamageEffectsCheck` · `HitFlashCheck` · `EnemyExpansion` · 시체 검사 5종 · `InventoryCheck` · `WorkshopArtCheck` · `GroundedArtCheck` · `MenuCheck` · `LobbyCheck` · `NetCodecCheck` · `ReloadPoseCheck` · `WeaponGripCheck` · `InfectedAlignmentCheck` · 외형 검사 4종 · `CompanionModelCheck` · `PetModelCheck` · 오디오 2종.
+- 실패 5개는 모두 변경 전 코드(e03b128, 같은 환경)에서도 실패하거나 불안정함 — I-108: `EnvironmentReview`(Stage 2 월드 해시, 계약 덤프 6개는 변경 전후 바이트 동일), `NetSyncCheck`(타이밍, 단독 재실행 시 통과 1 · 실패 1, 변경 전 3회 중 1회 실패), `RoomDirectoryCheck`(`--lobby` 인자 필요), `CharacterSurfaceCheck`(렌더 필요), `ModeCheck`(I-106, 단독 재실행 2회 통과).
+- 종료 경고(I-17) ObjectDB 잔존이 16개 검사에 남음(기존과 같은 종류). 렌더 · 실제 플레이 · 2PC는 하지 않음: 실제 맵에 아직 단차가 없고 시험 맵은 검사 전용.
 
 ### 2026-10-23 Stage 1·2 공간·외곽 2차 검수
 

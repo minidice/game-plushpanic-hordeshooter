@@ -19,6 +19,9 @@ public sealed class FlowField
     public int Width { get; }
     public int Depth { get; }
 
+    /// <summary>Height tiers of the same cells (decisions.md L-15); shared by every copy. Null or flat: no tier rules.</summary>
+    public TierMap? Tiers { get; set; }
+
     private readonly bool[] _blocked;
     private readonly int[] _cost;
     private int[] _targets = System.Array.Empty<int>();
@@ -45,7 +48,7 @@ public sealed class FlowField
     /// <summary>Same walls, independent costs: used for a second target such as the lure.</summary>
     public FlowField CopyLayout()
     {
-        var copy = new FlowField(MinX, MinZ, MinX + Width * Cell, MinZ + Depth * Cell, Cell);
+        var copy = new FlowField(MinX, MinZ, MinX + Width * Cell, MinZ + Depth * Cell, Cell) { Tiers = Tiers };
         System.Array.Copy(_blocked, copy._blocked, _blocked.Length);
         return copy;
     }
@@ -116,6 +119,7 @@ public sealed class FlowField
 
     private void Build(int[] starts)
     {
+        var tiers = Tiers is { Any: true } t ? t : null;
         Array.Fill(_cost, Unreachable);
         var open = new PriorityQueue<int, int>();
         foreach (int start in starts)
@@ -133,6 +137,8 @@ public sealed class FlowField
                 if (!InBounds(nx, nz)) continue;
                 int n = nz * Width + nx;
                 if (_blocked[n] || !CanStep(cx, cz, dx, dz)) continue;
+                // Costs spread from the target outward, so a walker would step from n to current.
+                if (tiers != null && !tiers.CanStep(n, current)) continue;
                 int next = cost + step;
                 if (next >= _cost[n]) continue;
                 _cost[n] = next;
@@ -204,6 +210,7 @@ public sealed class FlowField
             if (!InBounds(nx, nz)) continue;
             int n = nz * Width + nx;
             if (_blocked[n] || (!_blocked[i] && !CanStep(x, z, dx, dz))) continue;
+            if (Tiers is { Any: true } tiers && !tiers.CanStep(i, n)) continue;
             if (_cost[n] < best)
             {
                 best = _cost[n];

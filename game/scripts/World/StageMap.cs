@@ -134,6 +134,53 @@ public abstract partial class StageMap
         _floors.Add((center, size));
     }
 
+    /// <summary>
+    /// A walkable floor whose top is <paramref name="tier"/> × <see cref="TierMap.Height"/> (decisions.md L-15). Its sides
+    /// are the cliff: they stop walkers, and bullets from below. Tier 0 is an ordinary <see cref="Floor"/>.
+    /// </summary>
+    protected void Raised(float x0, float x1, float z0, float z1, int tier, string color, bool draw = true)
+    {
+        _stage.Tiers.PaintTier(x0, x1, z0, z1, tier);
+        if (tier == 0) { Floor(x0, x1, z0, z1, color, draw); return; }
+        float top = tier * TierMap.Height;
+        var center = new Vector3((x0 + x1) / 2, (top - .4f) / 2, (z0 + z1) / 2);
+        var size = new Vector3(x1 - x0, top + .4f, z1 - z0);
+        var body = new StaticBody3D { Name = "Raised", Position = center, CollisionLayer = Layers.World, CollisionMask = 0 };
+        _stage.AddChild(body);
+        body.AddChild(new CollisionShape3D { Shape = new BoxShape3D { Size = size } });
+        if (draw) StageArt.Floor(body, size, IndoorFloor(x0));
+        _floors.Add((center, size));
+    }
+
+    /// <summary>
+    /// A ramp from <paramref name="lowTier"/> up one tier, rising toward <paramref name="up"/> (±X or ±Z). It stands on the
+    /// low tier's floor in front of the cliff, its high end flush with the tier above.
+    /// </summary>
+    protected void Ramp(float x0, float x1, float z0, float z1, int lowTier, Vector3 up, string color)
+    {
+        _stage.Tiers.PaintRamp(x0, x1, z0, z1, lowTier, up);
+        bool alongX = Mathf.Abs(up.X) > .5f;
+        float run = alongX ? x1 - x0 : z1 - z0, across = alongX ? z1 - z0 : x1 - x0;
+        // PrismMesh: a right triangle in XY rising toward +X, extruded along Z; turned to face up.
+        var wedge = new PrismMesh { LeftToRight = 1, Size = new Vector3(run, TierMap.Height, across) };
+        float yaw = alongX ? (up.X > 0 ? 0 : 180) : (up.Z > 0 ? -90 : 90);
+        var body = new StaticBody3D
+        {
+            Name = "Ramp",
+            Position = new Vector3((x0 + x1) / 2, lowTier * TierMap.Height + TierMap.Height / 2, (z0 + z1) / 2),
+            RotationDegrees = new Vector3(0, yaw, 0),
+            CollisionLayer = Layers.World,
+            CollisionMask = 0,
+        };
+        _stage.AddChild(body);
+        body.AddChild(new CollisionShape3D { Shape = wedge.CreateConvexShape() });
+        body.AddChild(new MeshInstance3D { Mesh = wedge, MaterialOverride = Mat.Solid(color, .9f) });
+        _floors.Add((new Vector3((x0 + x1) / 2, 0, (z0 + z1) / 2), new Vector3(x1 - x0, 0, z1 - z0)));
+    }
+
+    /// <summary>Rim cells of a raised floor where anyone may step off and drop down (one way, L-16).</summary>
+    protected void DropEdge(float x0, float x1, float z0, float z1) => _stage.Tiers.PaintDrop(x0, x1, z0, z1);
+
     protected StaticBody3D Wall(float x0, float x1, float z0, float z1, float height, string color, bool drawWall = true)
     {
         var wallSize = new Vector3(x1 - x0, height, z1 - z0);

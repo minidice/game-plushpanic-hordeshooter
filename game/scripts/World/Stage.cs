@@ -123,6 +123,8 @@ public partial class Stage : Node3D
     public HordeDirector Director { get; private set; } = null!;
     public VisionSystem Vision { get; private set; } = null!;
     public FlowField Flow { get; private set; } = null!;
+    /// <summary>Height tiers on the flow field's cells (decisions.md L-15). Flat unless the map paints some.</summary>
+    public TierMap Tiers { get; private set; } = null!;
     public CrowdGrid Crowd { get; } = new();
     /// <summary>Route toward the safehouse: how far along the stage a point is (AI never walks ahead of the leader).</summary>
     public FlowField ExitFlow { get; private set; } = null!;
@@ -237,6 +239,8 @@ public partial class Stage : Node3D
         var map = MapOverride ?? StageMap.Create(Mode, running ? GameSession.ScenarioStage : 1);
         var area = map.Area;
         Flow = new FlowField(area.Position.X, area.Position.Y, area.End.X, area.End.Y);
+        Tiers = new TierMap(Flow);
+        Flow.Tiers = Tiers;
         Sfx = new Sfx();
         AddChild(Sfx);
         Sfx.Bed("ambience_loop", AudioSetup.AmbienceBus);
@@ -368,7 +372,7 @@ public partial class Stage : Node3D
             if (!Mathf.IsEqualApprox(party.Damage(monster.Tier), 1)) enemy.ScaleDamage(party.Damage(monster.Tier));
         }
         // Ledge entries start on a wall top; everything else stands on the floor.
-        enemy.Position = new Vector3(at.X, Mathf.Max(at.Y, .05f), at.Z);
+        enemy.Position = new Vector3(at.X, Mathf.Max(at.Y, Tiers.GroundY(at) + .05f), at.Z);
         _enemyRoot.AddChild(enemy);
         if (Player != null) Vision.Apply(enemy);
         Net?.OnEnemySpawned(enemy);
