@@ -9,8 +9,8 @@ namespace HordeShooter;
 /// A graybox stage built from layout data (decisions.md T-24 option B, L-29): the size draft of the new Stage 2
 /// (doc/map-expansion-plan.md 7.2 step 3). Regions become raised floors per height tier, merged into rectangles on the
 /// 1 m grid; everything outside every region is blocked by tall invisible walls; links become ramps, ladders, drop
-/// edges, ziplines and the gondola; climbable edges are painted for wall climbers. Plain boxes only: the look comes
-/// later from the existing kit and new models (local Codex work). Not wired into <see cref="StageMap.Create"/> yet:
+/// edges, ziplines and the gondola; climbable edges are painted for wall climbers. Terrain remains a size draft;
+/// traversal and bridge/pump/watch-post art use Stage 2 GLBs. Not wired into <see cref="StageMap.Create"/> yet:
 /// the current Stage 2 stays until this draft is accepted (L-29).
 /// Placement (7.2 step 5) reads two more files: encounters (areas, waiting groups, wave entries, the safe zone, timed
 /// raids, the mission's way back) and supply points. Markers build the beats: the raised bridge ("blocked") is the
@@ -107,9 +107,7 @@ public sealed class LayoutMap : StageMap
             {
                 Raised(wx0, wx1, wz0, wz1, value, "", draw: false);
                 float top = value * TierMap.Height;
-                var size = new Vector3(wx1 - wx0, top + .4f, wz1 - wz0);
-                Mat.Box(_stage, new Vector3((wx0 + wx1) / 2, (top - .4f) / 2, (wz0 + wz1) / 2), size,
-                    Mat.Solid(TierColors[Math.Clamp(value, 0, TierColors.Length - 1)], .95f));
+                DrawFloor(new Rect2(wx0, wz0, wx1 - wx0, wz1 - wz0), top, value);
                 FloorRects++;
             }
             else
@@ -138,7 +136,8 @@ public sealed class LayoutMap : StageMap
         PlayerStart = FloorAt(start) + Vector3.Up * .05f;
         var goal = Layout.FindMarker("safehouse")?.Pos ?? start;
         _goal = FloorAt(goal);
-        foreach (var marker in Layout.Markers) Post(marker);
+        foreach (var marker in Layout.Markers)
+            if (marker.Type is not ("mission" or "blocked" or "safe_zone")) Post(marker);
         Lamp(PlayerStart + Vector3.Up * 4, "ffe6b0", 3, 24, false);
 
         if (Layout.FindMarker("blocked") is { } blocked && Layout.FindMarker("mission") is { } mission) BuildBridgeMission(blocked.Pos, mission.Pos);
@@ -154,28 +153,42 @@ public sealed class LayoutMap : StageMap
     private void BuildBridgeMission(Vector2 bridge, Vector2 pump)
     {
         var deck = FloorAt(bridge);
-        _gate = Door.Create(_stage, deck, new Vector3(1.2f, 3.6f, 4.6f), new Color("8a6d3b"), new Vector3(0, -3.9f, 0));
+        if (BridgeFootprint() is { } span)
+            for (float x = span.Position.X + 3; x < span.End.X; x += 6)
+                Landmark("bridge_truss", new Vector3(x, deck.Y, span.GetCenter().Y));
+        var leaf = PropLibrary.Instance("bridge_leaf");
+        if (leaf != null) leaf.RotationDegrees = new Vector3(0, -90, 0);
+        _gate = Door.Create(_stage, deck, new Vector3(1.2f, 3.6f, 4.6f), new Color("8a6d3b"), new Vector3(0, -3.9f, 0), visual: leaf);
+        if (leaf != null) PropOcclusion.Attach(_stage, leaf);
         _gate.Name = "BridgeGate";
         _gate.OpenSeconds = 1.2f;
-        var at = FloorAt(pump);
-        Mat.Box(_stage, at + new Vector3(0, .7f, -1.6f), new Vector3(2.4f, 1.4f, 1.4f), Mat.Solid("5a6f7d", .7f));
-        _pump = Use(at, "ui_use_pump", _stage.StartCrescendo);
+        var at = FloorAt(pump) + new Vector3(0, 0, -2.5f);
+        Landmark("pump_house", at);
+        // Visual-only GLB: explicit walls match its 6 × 5 m footprint and 3 m front opening.
+        foreach (float x in new[] { -2.85f, 2.85f })
+            Solid(at + new Vector3(x, 1.6f, 0), new Vector3(.3f, 3.2f, 5), "", drawCargo: false);
+        Solid(at + new Vector3(0, 1.6f, -2.35f), new Vector3(5.4f, 3.2f, .3f), "", drawCargo: false);
+        foreach (float x in new[] { -2.1f, 2.1f })
+            Solid(at + new Vector3(x, 1.1f, 2.35f), new Vector3(1.2f, 2.2f, .3f), "", drawCargo: false);
+        Solid(at + new Vector3(0, .72f, .55f), new Vector3(1.8f, 1.44f, 1.7f), "", drawCargo: false);
+        _pump = Use(at + new Vector3(0, 1.1f, 1.6f), "ui_use_pump", _stage.StartCrescendo);
         Lamp(at + new Vector3(0, 2.8f, -1), "ffcf8a", 3, 12, true);
     }
 
-    /// <summary>The safe zone's hut (L-24): four low-roofless walls with a doorway at each end along X, never shut.</summary>
+    /// <summary>The safe zone's hut (L-24): modeled half-roof, unchanged wall collision and two always-open X doorways.</summary>
     private void BuildHut(Vector2 center)
     {
         float y = FloorAt(center).Y;
         float x0 = center.X - HutSize.X / 2, x1 = center.X + HutSize.X / 2, z0 = center.Y - HutSize.Y / 2, z1 = center.Y + HutSize.Y / 2;
         float g0 = center.Y - HutDoorway / 2, g1 = center.Y + HutDoorway / 2;
-        RoomWall(x0, x1, z0, z0 + WallThick, y);
-        RoomWall(x0, x1, z1 - WallThick, z1, y);
+        RoomWall(x0, x1, z0, z0 + WallThick, y, draw: false);
+        RoomWall(x0, x1, z1 - WallThick, z1, y, draw: false);
         foreach (float x in new[] { x0, x1 - WallThick })
         {
-            RoomWall(x, x + WallThick, z0, g0, y);
-            RoomWall(x, x + WallThick, g1, z1, y);
+            RoomWall(x, x + WallThick, z0, g0, y, draw: false);
+            RoomWall(x, x + WallThick, g1, z1, y, draw: false);
         }
+        Landmark("watch_post", new Vector3(center.X, y, center.Y));
         Lamp(new Vector3(center.X, y + 2.6f, center.Y), "b5e6c3", 3, 10, false);
     }
 
@@ -198,12 +211,49 @@ public sealed class LayoutMap : StageMap
     }
 
     /// <summary>A plain graybox wall standing on the floor at height <paramref name="y"/>.</summary>
-    private void RoomWall(float x0, float x1, float z0, float z1, float y)
+    private void RoomWall(float x0, float x1, float z0, float z1, float y, bool draw = true)
     {
         var center = new Vector3((x0 + x1) / 2, y + WallHeight / 2, (z0 + z1) / 2);
         var size = new Vector3(x1 - x0, WallHeight, z1 - z0);
         Solid(center, size, "", drawCargo: false);
-        Mat.Box(_stage, center, size, Mat.Solid("6b7a68", .9f));
+        if (draw) Mat.Box(_stage, center, size, Mat.Solid("6b7a68", .9f));
+    }
+
+    private void Landmark(string id, Vector3 at)
+    {
+        var prop = Prop(id, at, solid: false);
+        if (prop != null) PropOcclusion.Attach(_stage, prop);
+    }
+
+    private Rect2? BridgeFootprint()
+    {
+        var region = Layout.Regions.Find(r => r.Id == "bridge");
+        if (region == null || region.Poly.Length == 0) return null;
+        var rect = new Rect2(region.Poly[0], Vector2.Zero);
+        foreach (var point in region.Poly) rect = rect.Expand(point);
+        return rect;
+    }
+
+    // Only art is cut out; Raised() still owns the original deck height, solid volume and flow.
+    private void DrawFloor(Rect2 rect, float top, int tier)
+    {
+        void Box(Rect2 r, bool deck = false)
+        {
+            if (r.Size.X <= 0 || r.Size.Y <= 0) return;
+            float thick = deck ? .3f : top + .4f;
+            var center = r.GetCenter();
+            var mesh = Mat.Box(_stage, new Vector3(center.X, top - thick / 2, center.Y),
+                new Vector3(r.Size.X, thick, r.Size.Y), Mat.Solid(deck ? "8a6a46" : TierColors[Math.Clamp(tier, 0, TierColors.Length - 1)], .95f));
+            if (deck) mesh.Name = "BridgeDeck";
+        }
+        var span = BridgeFootprint();
+        if (span == null || !rect.Intersects(span.Value)) { Box(rect); return; }
+        var cut = rect.Intersection(span.Value);
+        Box(new Rect2(rect.Position, new Vector2(rect.Size.X, cut.Position.Y - rect.Position.Y)));
+        Box(new Rect2(rect.Position.X, cut.End.Y, rect.Size.X, rect.End.Y - cut.End.Y));
+        Box(new Rect2(rect.Position.X, cut.Position.Y, cut.Position.X - rect.Position.X, cut.Size.Y));
+        Box(new Rect2(cut.End.X, cut.Position.Y, rect.End.X - cut.End.X, cut.Size.Y));
+        Box(cut, deck: true);
     }
 
     private Vector3 FloorAt(Vector2 p) => new(p.X, _stage.Tiers.GroundY(new Vector3(p.X, 0, p.Y)), p.Y);

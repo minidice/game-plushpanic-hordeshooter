@@ -14,10 +14,13 @@ public partial class Door : Node3D
     private Stage _stage = null!;
     private StaticBody3D _body = null!;
     private CollisionShape3D _shape = null!;
-    private MeshInstance3D _slab = null!;
+    private Node3D _slab = null!;
     private Vector3 _openOffset;
+    private Vector3 _closedPosition;
+    private bool _hideWhenOpen;
+    private Tween? _motion;
 
-    public static Door Create(Stage stage, Vector3 center, Vector3 size, Color color, Vector3 openOffset, bool open = false)
+    public static Door Create(Stage stage, Vector3 center, Vector3 size, Color color, Vector3 openOffset, bool open = false, Node3D? visual = null)
     {
         var door = new Door { Name = "Door", Position = center, Size = size, _stage = stage, _openOffset = openOffset };
         stage.AddChild(door);
@@ -25,22 +28,32 @@ public partial class Door : Node3D
         door.AddChild(door._body);
         door._shape = new CollisionShape3D { Shape = new BoxShape3D { Size = size }, Position = Vector3.Up * size.Y * .5f };
         door._body.AddChild(door._shape);
-        door._slab = Mat.Box(door, Vector3.Up * size.Y * .5f, size, Mat.Solid(color, .6f));
-        // Hazard stripes so doors read as interactive from above.
-        Mat.Box(door._slab, new Vector3(0, size.Y * .5f + .01f, 0), new Vector3(size.X * 1.02f, .02f, size.Z * .9f), Mat.Solid("d9b23c", .5f));
-        // Raised steel ribs travel with the slab; the jamb remains fixed around the opening.
-        var edge=Mat.Solid("263943",.48f);
-        for(float y=-size.Y*.5f+.18f;y<size.Y*.5f-.08f;y+=.26f)
+        door._closedPosition = visual == null ? Vector3.Up * size.Y * .5f : Vector3.Zero;
+        door._hideWhenOpen = visual != null;
+        if (visual != null)
         {
-            Mat.Box(door._slab,new Vector3(size.X*.5f+.012f,y,0),new Vector3(.025f,.025f,size.Z*.96f),edge);
-            Mat.Box(door._slab,new Vector3(-size.X*.5f-.012f,y,0),new Vector3(.025f,.025f,size.Z*.96f),edge);
+            door._slab = visual;
+            door.AddChild(visual);
         }
-        foreach(float side in new[]{-1f,1f})
+        else
         {
-            Mat.Box(door,new Vector3(0,size.Y*.5f,side*(size.Z*.5f+.06f)),new Vector3(size.X+.14f,size.Y+.16f,.12f),edge);
-            Mat.Box(door,new Vector3(size.X*.5f+.08f,size.Y*.83f,side*(size.Z*.5f+.07f)),new Vector3(.035f,.18f,.07f),Mat.Glow(new Color("f5bf62"),1.4f));
+            door._slab = Mat.Box(door, Vector3.Up * size.Y * .5f, size, Mat.Solid(color, .6f));
+            // Hazard stripes so doors read as interactive from above.
+            Mat.Box(door._slab, new Vector3(0, size.Y * .5f + .01f, 0), new Vector3(size.X * 1.02f, .02f, size.Z * .9f), Mat.Solid("d9b23c", .5f));
+            // Raised steel ribs travel with the slab; the jamb remains fixed around the opening.
+            var edge=Mat.Solid("263943",.48f);
+            for(float y=-size.Y*.5f+.18f;y<size.Y*.5f-.08f;y+=.26f)
+            {
+                Mat.Box(door._slab,new Vector3(size.X*.5f+.012f,y,0),new Vector3(.025f,.025f,size.Z*.96f),edge);
+                Mat.Box(door._slab,new Vector3(-size.X*.5f-.012f,y,0),new Vector3(.025f,.025f,size.Z*.96f),edge);
+            }
+            foreach(float side in new[]{-1f,1f})
+            {
+                Mat.Box(door,new Vector3(0,size.Y*.5f,side*(size.Z*.5f+.06f)),new Vector3(size.X+.14f,size.Y+.16f,.12f),edge);
+                Mat.Box(door,new Vector3(size.X*.5f+.08f,size.Y*.83f,side*(size.Z*.5f+.07f)),new Vector3(.035f,.18f,.07f),Mat.Glow(new Color("f5bf62"),1.4f));
+            }
+            Mat.Box(door,new Vector3(0,size.Y+.08f,0),new Vector3(size.X+.14f,.16f,size.Z+.25f),edge);
         }
-        Mat.Box(door,new Vector3(0,size.Y+.08f,0),new Vector3(size.X+.14f,.16f,size.Z+.25f),edge);
         door.SetOpen(open, 0);
         return door;
     }
@@ -54,9 +67,20 @@ public partial class Door : Node3D
         _body.CollisionLayer = open ? 0 : Layers.World;
         _shape.Disabled = open;
         _stage.RebuildFlow();
-        var target = Vector3.Up * Size.Y * .5f + (open ? _openOffset : Vector3.Zero);
-        if (seconds <= 0) _slab.Position = target;
-        else _slab.CreateTween().TweenProperty(_slab, "position", target, seconds).SetTrans(Tween.TransitionType.Back);
+        _motion?.Kill();
+        _slab.Visible = true;
+        var target = _closedPosition + (open ? _openOffset : Vector3.Zero);
+        if (seconds <= 0)
+        {
+            _slab.Position = target;
+            _slab.Visible = !(_hideWhenOpen && open);
+        }
+        else
+        {
+            _motion = CreateTween();
+            _motion.TweenProperty(_slab, "position", target, seconds).SetTrans(Tween.TransitionType.Back);
+            if (_hideWhenOpen) _motion.TweenCallback(Callable.From(() => _slab.Visible = !IsOpen));
+        }
     }
 
     /// <summary>Stamp this door into the flow field if it is closed (called from a full rebuild).</summary>
@@ -69,6 +93,6 @@ public partial class Door : Node3D
     public void SetProgress(float t)
     {
         if (IsOpen) return;
-        _slab.Position = Vector3.Up * Size.Y * .5f + _openOffset * Mathf.Clamp(t, 0, 1) * .35f;
+        _slab.Position = _closedPosition + _openOffset * Mathf.Clamp(t, 0, 1) * .35f;
     }
 }

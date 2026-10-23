@@ -14,7 +14,7 @@ public sealed record PropInfo(string Id, string File, Vector3 Dimensions, PropCo
 /// integration-guide.md): metres, +Y up, the lowest point at y = 0, <c>Keep</c> parts and <c>Occlude_*</c> parts that may
 /// fade when they hide someone. Five folders follow it: the outdoor kit, the stage transition props (L-14) and
 /// the edge kit for ground nobody can reach (A-23: no collider, no back faces, no fading parts); and the ground bits that
-/// break the painted path edges (A-24), plus the Stage 2 traversal props.
+/// break the painted path edges (A-24), plus the Stage 2 traversal and landmark props.
 /// Each manifest gives a model's size and a recommended collider; models carry no physics of their own.
 /// </summary>
 public static class PropLibrary

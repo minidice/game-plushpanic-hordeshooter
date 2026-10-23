@@ -106,6 +106,90 @@
       "file": "gondola_station.glb",
       "triangles": 1376,
       "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (미검수)"
+    },
+    {
+      "id": "bridge_truss",
+      "name": "다리 트러스",
+      "category": "Stage 2 다리 임무·감시소",
+      "note": "길이 X 6 m, 폭 4 m. 피벗은 상판 윗면. 보행 상판은 게임이 제공. 앞 난간만 Occlude_Rail.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [
+        "Occlude_Rail"
+      ],
+      "file": "bridge_truss.glb",
+      "dimensions_m": [
+        6.0,
+        2.7,
+        4.0
+      ],
+      "bounds_min_y": -1.7,
+      "triangles": 1116,
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (미검수)"
+    },
+    {
+      "id": "bridge_leaf",
+      "name": "들린 다리 판",
+      "category": "Stage 2 다리 임무·감시소",
+      "note": "피벗=경첩 축 아래/상판 높이. 판 4.4×3.6×0.3 m, 경첩 폭 4.6 m. 게임에서 Y -90° 회전(서쪽 진입면에 경고), 개방 시 -3.9 m 내려 숨김. Keep 없음.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [
+        "Occlude_Leaf"
+      ],
+      "file": "bridge_leaf.glb",
+      "dimensions_m": [
+        4.6,
+        3.6,
+        1.424
+      ],
+      "bounds_min_y": -0.0,
+      "triangles": 1692,
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (미검수)"
+    },
+    {
+      "id": "pump_house",
+      "name": "계곡 펌프장",
+      "category": "Stage 2 다리 임무·감시소",
+      "note": "바닥 피벗. 정면은 게임 +Z, 전면 3 m 개구부. 밸브 중심(게임 X/Y/Z m)=[0,1.1,1.6]. 건물 6×5 m, 후면 높이 3.2 m, 전면 처마 2.2 m. 배관 꼭대기 3 m.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [
+        "Occlude_Roof"
+      ],
+      "file": "pump_house.glb",
+      "dimensions_m": [
+        6.0,
+        3.2289,
+        5.1825
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 2720,
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (미검수)"
+    },
+    {
+      "id": "watch_post",
+      "name": "감시소",
+      "category": "Stage 2 다리 임무·감시소",
+      "note": "외곽 12×10 m, 벽 높이 2.6/두께 0.4 m. ±X 입구 중앙 3 m. 기존 벽 충돌 유지. 후면(게임 -Z) 절반 지붕; 후면 창은 시각 전용, 통과 불가. 바닥은 게임 제공.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [
+        "Occlude_Walls"
+      ],
+      "file": "watch_post.glb",
+      "dimensions_m": [
+        12.0,
+        3.1,
+        10.0
+      ],
+      "bounds_min_y": -0.0,
+      "triangles": 4952,
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (미검수)"
     }
   ]
 }

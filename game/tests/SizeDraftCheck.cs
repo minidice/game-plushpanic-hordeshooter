@@ -293,9 +293,12 @@ public partial class SizeDraftCheck : Node
         var toPump = _stage.Flow.CopyLayout();
         toPump.Riders = true;
         toPump.Update(pump);
-        var (down, stuck, _) = await Walk(toPump, pump, 1.2f, 2);
-        Check(!stuck && player.GlobalPosition.DistanceTo(pump) < 1.5f && tiers.TierOf(player) == 0,
-            $"a survivor drops into the canyon and walks to the pump ({down:0} s)");
+        // The modeled valve is 1.1 m above the floor: stop within its actual 3D use radius.
+        var (down, stuck, _) = await Walk(toPump, pump, map.ShutterPanel.Radius - .1f, 2);
+        await Frames(2);
+        Check(!stuck && player.GlobalPosition.DistanceTo(pump) < map.ShutterPanel.Radius && tiers.TierOf(player) == 0
+            && _stage.FocusedInteractable == map.ShutterPanel,
+            $"a survivor drops into the canyon and walks to the pump ({down:0} s; player {player.GlobalPosition}, valve {pump}, stuck {stuck})");
 
         // The pump starts the crescendo; when it ends the bridge comes down and the way back fills (L-27).
         map.ShutterPanel.Use(player);

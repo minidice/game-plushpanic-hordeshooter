@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace HordeShooter;
 
-/// <summary>Only the marked upper parts of traversal props fade; floors and low walls keep their material.</summary>
+/// <summary>Marked Stage 2 prop parts fade (including the complete bridge leaf); Keep meshes stay opaque.</summary>
 public partial class PropOcclusion : Node
 {
     private Stage _stage = null!;

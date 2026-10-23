@@ -56,7 +56,7 @@ public partial class StageTransitionCheck : Node
     private void KitLibrary()
     {
         Check(PropLibrary.Errors.Count == 0, "all prop manifests read without errors: " + string.Join("; ", PropLibrary.Errors));
-        Check(PropLibrary.All.Count == 52, $"32 outdoor kit + 4 transition + 6 edge-kit + 5 ground bits + 5 traversal props are listed ({PropLibrary.All.Count})");
+        Check(PropLibrary.All.Count == 56, $"32 outdoor kit + 4 transition + 6 edge-kit + 5 ground bits + 5 traversal + 4 landmark props are listed ({PropLibrary.All.Count})");
         var edge = PropLibrary.All.Values.Where(p => p.Id.StartsWith("edge_")).ToList();
         Check(edge.Count == 6 && edge.All(p => p.Collision.Kind == "none" && p.OcclusionParts.Length == 0 && p.File.Contains("/edge-kit/")),
             "the edge kit has no colliders and no fading parts (A-23)");
@@ -64,7 +64,8 @@ public partial class StageTransitionCheck : Node
         {
             var model = PropLibrary.Instance(id);
             // Godot wraps the GLB's own root: <file>/<id>/Keep.
-            Check(model?.FindChild("Keep", true, false) != null, $"{id} loads with its Keep part");
+            Check(id == "bridge_leaf" ? model?.FindChild("Keep", true, false) == null && model != null
+                : model?.FindChild("Keep", true, false) != null, $"{id} loads with its specified Keep contract (leaf is entirely occludable)");
             foreach (var part in info.OcclusionParts)
                 Check(model!.FindChild(part, true, false) is Node3D { } p && p.GetChildCount() > 0, $"{id} has the occlusion part {part} its manifest lists");
             model!.Free();
