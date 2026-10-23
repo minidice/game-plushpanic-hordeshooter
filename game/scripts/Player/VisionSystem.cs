@@ -47,11 +47,13 @@ public partial class VisionSystem : Node
     }
 
     /// <summary>In another living survivor's flashlight cone with nothing in between (shared lights, C-23).</summary>
-    public bool LitBySquad(Vector3 point)
+    /// <param name="fromTier">Height tiers (L-21): only lights held on this tier or higher count. Null: any.</param>
+    public bool LitBySquad(Vector3 point, int? fromTier = null)
     {
         foreach (var p in Stage.AlivePlayers)
         {
             if (p == Stage.Player || p.IsDowned) continue;
+            if (fromTier is { } tier && Stage.Tiers.TierOf(p) < tier) continue;
             var to = point - p.GlobalPosition;
             to.Y = 0;
             float dist = to.Length();
@@ -68,6 +70,13 @@ public partial class VisionSystem : Node
         var player = Stage.Player;
         if (player.IsDead) return Visibility.Visible;
         var at = e.GlobalPosition + Vector3.Up * .8f;
+        // Height tiers (L-21): from below, an enemy up on a higher tier is out of sight like one outside the cone —
+        // unless a survivor up there lights it, or it is attacking you.
+        if (Stage.Tiers.Any && Stage.Tiers.TierOf(e) is var enemyTier && enemyTier > Stage.Tiers.TierOf(player))
+        {
+            if (LitBySquad(at, enemyTier)) return Visibility.Visible;
+            return e.RevealTime > 0 || (e is CaptureEnemy held && held.Held == player) ? Visibility.Silhouette : Visibility.Hidden;
+        }
         if (CanSee(at) || LitBySquad(at)) return Visibility.Visible;
         // Whoever is attacking you is never invisible, even outside the cone.
         if (e.RevealTime > 0 || (e is CaptureEnemy captor && captor.Held == player)) return Visibility.Silhouette;

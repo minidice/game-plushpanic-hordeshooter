@@ -391,6 +391,8 @@ public partial class Enemy : CharacterBody3D
         _losTimer = .25f;
         var target = Target ?? Stage.NearestAlivePlayer(GlobalPosition);
         if (target == null) { _los = false; return false; }
+        // Height tiers (L-21): a monster does not see up onto a higher tier, however the line runs over the edge.
+        if (Stage.Tiers.Any && Stage.Tiers.TierOf(target) > Stage.Tiers.TierOf(this)) { _los = false; return false; }
         var from = GlobalPosition + Vector3.Up;
         var to = target.GlobalPosition + Vector3.Up;
         _los = Rays.Clear(this, from, to, Layers.SightMask);

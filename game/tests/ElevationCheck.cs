@@ -62,10 +62,11 @@ public partial class ElevationCheck : Node
         GetTree().Quit(failed ? 1 : 0);
     }
 
-    private async Task<Stage> NewStage(StageMap map)
+    private async Task<Stage> NewStage(StageMap map, int squad = 0)
     {
         if (_stage != null && IsInstanceValid(_stage)) { _stage.QueueFree(); await Frames(2); }
-        _stage = new Stage { CharacterOverride = "goose", ThemeOverride = "zombie", ModeOverride = GameMode.Scenario, MapOverride = map, DirectorEnabled = false };
+        _stage = new Stage { CharacterOverride = "goose", ThemeOverride = "zombie", ModeOverride = GameMode.Scenario, MapOverride = map, DirectorEnabled = false,
+            SquadOverride = squad };
         AddChild(_stage);
         await Frames(3);
         _stage.Player.ManualControl = true;
@@ -249,5 +250,52 @@ public partial class ElevationCheck : Node
         // ---------- spawning ----------
         var lifted = stage.SpawnEnemy<Enemy>(common, new Vector3(15, 0, -10), awake: false);
         Check(lifted.Position.Y >= H, "a monster spawned over a plateau starts on its floor, not inside it");
+
+        await Vision();
+    }
+
+    /// <summary>L-21: from below, enemies up a tier are hidden unless a survivor up there lights them or they attack you.</summary>
+    private async Task Vision()
+    {
+        var stage = await NewStage(new TierTestMap(), squad: 1);
+        var player = stage.Player;
+        var bot = stage.Squad[0].Bot;
+        var vision = stage.Vision;
+        var common = stage.CommonDefinition;
+        bot.Invulnerable = true;
+        await Place(bot, new Vector3(-15, 0, 10), new Vector3(-15, 1, 14));
+
+        var up = stage.SpawnEnemy<Enemy>(common, new Vector3(15, H, -3), awake: false);
+        await Frames(2);
+        await Place(player, new Vector3(15, 0, 2.5f), new Vector3(15, 1, -3));
+        Check(vision.Classify(up) == VisionSystem.Visibility.Hidden, "from the ground a monster up on tier 1 is hidden, even close and in the cone");
+        up.RevealTo(player, .1f);
+        Check(vision.Classify(up) == VisionSystem.Visibility.Silhouette, "while it attacks you it shows as a silhouette");
+        await Frames(20);
+        bot.GlobalPosition = new Vector3(11, H + .05f, -3);
+        bot.SetControls(Vector2.Zero, up.GlobalPosition, false);
+        Check(vision.Classify(up) == VisionSystem.Visibility.Visible, "a squadmate up on tier 1 shining a light on it shows it to you below");
+        bot.GlobalPosition = new Vector3(11, .05f, 2.5f);
+        bot.SetControls(Vector2.Zero, up.GlobalPosition, false);
+        Check(vision.Classify(up) == VisionSystem.Visibility.Hidden, "a light from the ground below does not");
+        await Place(bot, new Vector3(-15, 0, 10), new Vector3(-15, 1, 14));
+
+        var level = stage.SpawnEnemy<Enemy>(common, new Vector3(15, 0, 7), awake: false);
+        await Frames(2);
+        await Place(player, new Vector3(15, 0, 2.5f), new Vector3(15, 1, 7));
+        Check(vision.Classify(level) == VisionSystem.Visibility.Visible, "on the same tier the cone works as before");
+        await Place(player, new Vector3(15, H, -1), new Vector3(15, 1, 7));
+        Check(vision.Classify(level) == VisionSystem.Visibility.Visible, "looking down from tier 1, a monster on the ground is in view");
+
+        foreach (var e in stage.AllEnemies.ToList()) if (IsInstanceValid(e)) e.QueueFree();
+        await Frames(2);
+        var watcher = stage.SpawnEnemy<Enemy>(common, new Vector3(15, 0, 9), awake: false);
+        watcher.Reaction = Reaction.Watcher;
+        await Place(player, new Vector3(15, H, -1.5f), new Vector3(15, 1, 9));
+        await Frames(60);
+        Check(!watcher.Awake, "a watcher below does not see a survivor up on tier 1");
+        await Place(player, new Vector3(6, 0, 1), new Vector3(15, 1, 9));
+        for (int i = 0; i < 90 && !watcher.Awake; i++) await Frames(1);
+        Check(watcher.Awake, "the same watcher sees a survivor on its own tier at that distance");
     }
 }
