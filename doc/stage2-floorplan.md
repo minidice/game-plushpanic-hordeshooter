@@ -5,10 +5,10 @@
 
 ![Stage 2 평면도 초안](images/stage2-floorplan.svg)
 
-그림은 [`tools/floorplan/stage2-layout-draft.json`](../tools/floorplan/stage2-layout-draft.json)에서 [`render_floorplan.py`](../tools/floorplan/render_floorplan.py)로 만든다(파이썬 표준 라이브러리만 사용).
+그림은 [`game/content/data/stages/stage2_layout.json`](../game/content/data/stages/stage2_layout.json)(2026-10-23 `tools/floorplan/stage2-layout-draft.json`에서 옮김 — 게임이 직접 읽는 맵 데이터, T-24)에서 [`render_floorplan.py`](../tools/floorplan/render_floorplan.py)로 만든다(파이썬 표준 라이브러리만 사용).
 
 ```
-python tools/floorplan/render_floorplan.py tools/floorplan/stage2-layout-draft.json doc/images/stage2-floorplan.svg
+python tools/floorplan/render_floorplan.py game/content/data/stages/stage2_layout.json doc/images/stage2-floorplan.svg
 ```
 
 그림 방향: 오른쪽이 월드 +x(화면에서는 우측 상단 30°), 위가 먼 쪽(−z), 아래가 카메라 쪽(+z). 높은 단은 먼 쪽과 진행 방향 쪽에 두고, 카메라 쪽은 낮게 둔다(가림 방지, 높이 단 규격 9장).
@@ -96,7 +96,7 @@ python tools/floorplan/render_floorplan.py tools/floorplan/stage2-layout-draft.j
 
 ## 8. 맵 데이터 형식 초안 (T-24의 B)
 
-초안 JSON이 첫 형식 시험이다. 게임은 아직 읽지 않는다. 최상위 항목:
+초안 JSON이 첫 형식 시험이다. 2026-10-23부터 게임이 읽어 크기 시안을 짓는다(11장). 최상위 항목:
 
 | 키 | 내용 | 게임에서 쓸 곳 |
 |---|---|---|
@@ -113,7 +113,7 @@ python tools/floorplan/render_floorplan.py tools/floorplan/stage2-layout-draft.j
 
 ## 9. 기술 위험과 확인할 것
 
-- **흐름장 크기**: 관리 영역이 지금의 약 50배(1 m 칸 약 14만 칸)이고 이동 유형마다 흐름장이 하나씩 필요하다(높이 단 규격 5.4). 구역 단위 계산(L-7처럼 앞 구역만) 또는 큰 칸 · 계층 방식을 크기 시안에서 측정해 정한다.
+- **흐름장 크기**: 관리 영역이 지금의 약 50배(1 m 칸 약 14만 칸)이고 이동 유형마다 흐름장이 하나씩 필요하다(높이 단 규격 5.4). 구역 단위 계산(L-7처럼 앞 구역만) 또는 큰 칸 · 계층 방식을 크기 시안에서 측정해 정한다. 2026-10-23 측정: 한 번에 20~53 ms로 너무 느림(11장, I-109).
 - **검사 계약**: Stage 2를 갈아엎으므로 `StageTransitionCheck`의 Stage 2 항목과 `EnvironmentReview`의 Stage 2 월드 · 흐름장 해시가 바뀐다. 의도된 변경으로 검토하고 기준을 갱신한다(맵 확장 계획 6장: 무조건 재생성하지 않음).
 - **자산 재사용**: 벙커 해치 · 방벽 · 모래주머니(A), 개울 다리 → 협곡 다리(C), 컨테이너 야적장 · 창고(E), 세이프하우스(G), 숲 · 암반 외곽(A-23)을 옮겨 쓴다.
 - **모드 영향**: 생존(거점)은 Stage 1 지형을 쓰고 시나리오와 지리를 공유하지 않으므로(L-26) 영향이 없다. 난전 들판도 별개.
@@ -129,3 +129,32 @@ python tools/floorplan/render_floorplan.py tools/floorplan/stage2-layout-draft.j
 3. 4~6장 수치(중간 안전 구역 · 보급 · 시간 습격)를 크기 시안의 시작값으로 써도 되는지.
 4. 7장 L-1 측정 범위.
 5. 8장 데이터 형식으로 크기 시안을 짓는 것.
+
+## 11. 크기 시안 결과 — 2026-10-23 (맵 확장 계획 7.2의 3단계)
+
+이 문서의 JSON을 게임이 직접 읽어 그레이박스 맵을 짓는다(T-24의 B). **지금 Stage 2는 그대로이고 시안은 별도 맵**이다(L-29: 확정 뒤 교체). 아직 메뉴 · 시나리오 진행에 연결하지 않았다.
+
+![Stage 2 크기 시안 렌더](images/stage2-sizedraft.webp)
+
+구역 8곳을 기본 카메라로 찍은 그림(`SizeDraftCapture`, 호환 렌더러). 색은 단별(초록 0단 → 모래 1 → 흙 2 → 보라 3 → 파랑 4), 기둥은 표식(빨강 시작 · 막힌 길 · 세이프하우스, 초록 중간 안전 구역, 주황 임무, 보라 소음 장치). 크기 확인용 상자이며 최종 외형이 아니다(7단계 마감은 새 모델이 필요해 로컬 작업).
+
+| 항목 | 내용 | 코드 |
+|---|---|---|
+| 데이터 | `game/content/data/stages/stage2_layout.json`(이 문서 8장 형식, 버전 1). 읽기 오류는 경고로 모으고 짓기는 계속 | `StageLayout.cs` |
+| 바닥 | 1 m 칸마다 마지막으로 덮은 구역의 단을 찍고, 같은 단끼리 큰 직사각형으로 합쳐 단 높이 상자로 지음. 구역 밖은 보이지 않는 8 m 벽 + 어두운 바닥 | `LayoutMap.BuildMap`, `MergeRects` |
+| 연결 | `ramp`(6 m 쐐기, 칸 경계에 맞춤) · `ladder` · `drop` · `zipline` · `gondola`(생존자 흐름장에 탈것으로 연결). 오를 수 있는 가장자리(`climbable`)는 벽 오르기 칸 | `LayoutMap.BuildLink` |
+| 표식 | `markers`마다 색 기둥 + 이름 | `LayoutMap.Post` |
+
+**측정**(`SizeDraftCheck` 28개 통과, Linux 클라우드 헤드리스 `--fixed-fps 60`, 몬스터 없음):
+
+| 측정 | 값 | 판단 |
+|---|---|---|
+| 짓는 시간 | 약 3.1~3.4초, 바닥 상자 149 · 막는 상자 168, 칸 660 × 215 = 141,900 | 로딩 화면 안에서 허용 가능. 단 계산은 매 실행 반복하므로 C(에디터 장면)로 옮기면 줄어듦 |
+| 주 경로 | 걷는 길 620 m(평면도 목표 약 600 m), 순수 걷기 2.3분(4.4 m/s), 탈것 1번(곤돌라 61 m) | 크기는 계획대로. 20분(L-19) 중 약 2.3분이 이동이라 나머지는 조우 · 임무 · 방어 몫 |
+| L-1 비율 | 주 경로 칸 경로 기준 100%(몸 폭 · 실제 조작 전) | L-1(70%) 충족. 실제 플레이 경로로 다시 재야 함 |
+| 걸어서 끝까지 | 시작 해치 → 세이프하우스 2.6분, 끼임 없음, 곤돌라 1번(사다리 · 짚라인은 주 경로에 없어 0번 — 분기용) | 경사로 · 다리 · 곤돌라 연결이 끊긴 곳 없음 |
+| 흐름장 다시 계산 | 이동 유형별 한 번에 약 20~53 ms(사다리 35 · 벽 53 · 점프 26 · 비행 20 ms, 실행마다 차이) | **너무 느림(I-109)**: 네 유형이 한 프레임에 겹치면 100 ms 이상 멈칫. 구역 단위 · 계층 방식이 필요 |
+
+**시안에서 고친 것**(I-110): 대각선 한 칸이 낮은 단 모서리를 가로질러 다리 끝에서 협곡으로 떨어지던 문제, 경사로 옆 칸이 칸 경계와 어긋나 걷는 사람이 절벽에 걸리던 문제.
+
+**다음**: 5단계(배치 — 조우 · 보급 · 중간 안전 구역 규칙 · 다리 임무 · 복귀 재등장)는 이 시안 위에서 클라우드로 진행 가능. 사용자 시각 검수(넓게 느껴지는지 · 이동 피로)는 실제 플레이로 따로 확인해야 한다.

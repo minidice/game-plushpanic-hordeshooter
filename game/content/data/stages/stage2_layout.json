@@ -1,6 +1,6 @@
 {
-  "_comment": "Stage 2 floor plan draft (doc/stage2-floorplan.md). World metres, x east, z toward the camera (+z = camera side, -z = far side). Also the first try at the map data format (decisions.md T-24, option B). The game does not read this file yet.",
-  "version": 0,
+  "_comment": "Stage 2 layout (doc/stage2-floorplan.md, decisions.md L-29). World metres, x east, z toward the camera (+z = camera side, -z = far side). The map data format, first version (T-24 option B): LayoutMap builds the size draft from it; tools/floorplan/render_floorplan.py draws the plan. label/label_at/label_offset are drawing hints only.",
+  "version": 1,
   "stage": 2,
   "tier_height_m": 1.2,
   "bounds": [

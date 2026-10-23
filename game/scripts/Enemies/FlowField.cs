@@ -165,7 +165,10 @@ public sealed class FlowField
     private bool CanStep(int x, int z, int dx, int dz)
     {
         if (dx == 0 || dz == 0) return true;
-        return !_blocked[z * Width + x + dx] && !_blocked[(z + dz) * Width + x];
+        int here = z * Width + x, sideX = z * Width + x + dx, sideZ = (z + dz) * Width + x;
+        if (_blocked[sideX] || _blocked[sideZ]) return false;
+        // Height tiers: nor may they cut a corner over a lower tier (the body would drop off the corner).
+        return Tiers is not { Any: true } tiers || (tiers.StepCost(here, sideX, Mover) == 0 && tiers.StepCost(here, sideZ, Mover) == 0);
     }
 
     /// <summary>

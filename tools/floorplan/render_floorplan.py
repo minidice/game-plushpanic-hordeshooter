@@ -1,6 +1,6 @@
 """Draw a stage floor plan draft (JSON) as SVG and report route lengths and the L-1 ratio.
 
-    python tools/floorplan/render_floorplan.py tools/floorplan/stage2-layout-draft.json doc/images/stage2-floorplan.svg
+    python tools/floorplan/render_floorplan.py game/content/data/stages/stage2_layout.json doc/images/stage2-floorplan.svg
 
 Plan view: x to the right, the far side (-z) up, the camera side (+z) down. Standard library only.
 """
@@ -243,7 +243,7 @@ class Plan:
         d = self.d
         y0 = self.map_h + 4
         x = MARGIN
-        self.text(x, y0 + 14, "Stage 2 평면도 초안 (제안, 미승인) — tools/floorplan/stage2-layout-draft.json에서 생성", size=14, weight="bold", halo=False)
+        self.text(x, y0 + 14, "Stage 2 평면도 (L-29 승인, 수치는 시작값) — game/content/data/stages/stage2_layout.json에서 생성", size=14, weight="bold", halo=False)
         main = d["routes"]["main"] + d["routes"]["main_after_gondola"]
         walk = length(d["routes"]["main"]) + length(d["routes"]["main_after_gondola"])
         share = (up_right_share(d["routes"]["main"]) * length(d["routes"]["main"]) +

@@ -243,7 +243,7 @@
 <rect x="46" y="655.0" width="200" height="26" fill="#f7f5efee" rx="3"/>
 <line x1="50" y1="671.0" x2="200" y2="671.0" stroke="#111" stroke-width="3"/>
 <text x="206.0" y="675.0" font-size="10" fill="#1f1f1f" text-anchor="start" font-weight="normal" >50 m</text>
-<text x="40.0" y="743.0" font-size="14" fill="#1f1f1f" text-anchor="start" font-weight="bold" >Stage 2 평면도 초안 (제안, 미승인) — tools/floorplan/stage2-layout-draft.json에서 생성</text>
+<text x="40.0" y="743.0" font-size="14" fill="#1f1f1f" text-anchor="start" font-weight="bold" >Stage 2 평면도 (L-29 승인, 수치는 시작값) — game/content/data/stages/stage2_layout.json에서 생성</text>
 <text x="40.0" y="763.0" font-size="11" fill="#1f1f1f" text-anchor="start" font-weight="normal" >주 경로 걷는 거리 약 596 m(곤돌라 제외) · 순수 이동 약 2.3분(4.4 m/s) · L-1 우측 상단 비율(그린 경로 기준) 100% · 임무 왕복 약 98 m · 1단 = 1.2 m</text>
 <line x1="40" y1="791.0" x2="74" y2="791.0" stroke="#c8322a" stroke-width="4" />
 <text x="82.0" y="795.0" font-size="11" fill="#1f1f1f" text-anchor="start" font-weight="normal" >주 경로</text>

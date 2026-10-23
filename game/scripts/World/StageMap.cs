@@ -154,7 +154,8 @@ public abstract partial class StageMap
 
     /// <summary>
     /// A ramp from <paramref name="lowTier"/> up one tier, rising toward <paramref name="up"/> (±X or ±Z). It stands on the
-    /// low tier's floor in front of the cliff, its high end flush with the tier above.
+    /// low tier's floor in front of the cliff, its high end flush with the tier above. Give it whole cells (edges on the
+    /// 1 m grid): the cells painted as ramp and the wedge must cover the same ground.
     /// </summary>
     protected void Ramp(float x0, float x1, float z0, float z1, int lowTier, Vector3 up, string color)
     {

@@ -384,6 +384,12 @@
 - 기존 검사 모두 통과: `SpawnCheck` 41, `ModeCheck` 147, `CombatPacingCheck` 44, `EnemyExpansion` 60, `EnemyAttackCheck` 79, `CardLabCheck` 172, `SquadCheck` 51, `StageTransitionCheck` 164, `NetSyncCheck` 32, `OnslaughtNetCheck` 29, `CorpseTierCheck` 36, `SupplyCheck` 12, `Start-Game.ps1 -Test`(Integration) 149. 검사 장면은 인원을 정하지 않으면 4인 줄이라 기존 수치 검사는 그대로.
 - 종료 경고(I-17): `SpawnCheck` · `CardLabCheck` · `StageTransitionCheck` · `CorpseTierCheck` · `SupplyCheck`에서 ObjectDB 잔존 한 줄씩. 화면 모양은 바뀌지 않아 렌더는 하지 않음. 실제 싱글 플레이의 난이도 변화는 미확인(I-103).
 
+### 이번 변경 확인 기록 — 2026-10-23 (Stage 2 크기 시안, L-29)
+
+- 클라우드 세션(Linux, Godot 4.7.2 .NET, .NET 8 SDK). C# 빌드 경고 · 오류 0. 새 `SizeDraftCheck` 28개 통과(`--fixed-fps 60`, 측정은 [평면도](stage2-floorplan.md) 11장). 처음 걷기에서 경사로 옆 끼임 · 다리 끝 추락을 찾아 고침(I-110).
+- 회귀: `ElevationCheck` 76 · `Integration` 149 · `SquadCheck` 51 · `MapCheck` 24 · `StageTransitionCheck` 164 · `EnemyAttackCheck` 79 · `SpawnCheck` 41 통과(종료 경고 I-17만). `EnvironmentReview` 등 I-108 항목은 이 환경에서 원래 실패라 다시 보지 않음.
+- 렌더: xvfb + 호환 렌더러로 구역 8곳(`SizeDraftCapture`) 확인 — 단 색 구분 · 표식이 읽힘. Forward+ · 실제 플레이 · 2PC는 안 함. 흐름장 계산 20~53 ms/회는 I-109.
+
 ### 이번 변경 확인 기록 — 2026-10-23 (높이 단 1차, L-15)
 
 - 클라우드 세션(Linux, Godot 4.7.2 .NET 헤드리스, .NET 8 SDK)에서 실행. 저장소의 `nuget.config`가 Windows 경로라 복원만 저장소 밖 nuget.org 설정으로 함(저장소 파일 변경 없음). C# 빌드 경고 · 오류 0.
@@ -434,5 +440,6 @@
 
 - [x] 시나리오의 넓은 전진 구역/짧은 분기와 두 번째 모드의 넓은 탐색 맵 방향을 문서화.
 - [ ] 목표 시간·크기·구역 배치 및 모드별 맵 공유 범위 결정.
-- [ ] 평면도 → 단순 지형 시안 → 임무/보급/조우 → 이동/성능 검증 → 미술 마감.
+- [x] Stage 2 평면도(L-29) → 크기 시안 1차(2026-10-23): 평면도 JSON을 게임이 읽어 그레이박스 별도 맵을 지음(`LayoutMap`), 주 경로 620 m · 끝까지 걷기 2.6분 · 끼임 없음(`SizeDraftCheck` 28). 지금 Stage 2는 그대로이며 메뉴 · 시나리오 연결 전. 흐름장 계산 시간 I-109 열림. [평면도 11장](stage2-floorplan.md)
+- [ ] 임무/보급/조우 배치 → 이동/성능 검증 → 미술 마감(새 모델은 로컬 작업).
 - 기존 완료된 환경/소품 자산은 재사용한다. 아직 새 맵이나 분기 임무가 구현된 것은 아니다. [맵 확장 계획](map-expansion-plan.md).

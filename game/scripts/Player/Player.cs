@@ -427,7 +427,17 @@ public partial class Player : CharacterBody3D
         if (!tiers.Any || velocity.LengthSquared() < .0001f) return velocity;
         var here = GlobalPosition;
         float reach = Definition.ColliderRadius + .15f;
-        bool Free(Vector3 v) => v.LengthSquared() < .0001f || tiers.CanWalk(here, here + v.Normalized() * reach);
+        // Both sides of a diagonal count too, so a corner over a lower tier is not cut.
+        bool Clear(Vector3 dir) => tiers.CanWalk(here, here + dir * reach);
+        bool Free(Vector3 v)
+        {
+            if (v.LengthSquared() < .0001f) return true;
+            var dir = v.Normalized();
+            if (!Clear(dir)) return false;
+            if (Mathf.Abs(dir.X) > .3f && !Clear(new Vector3(Mathf.Sign(dir.X), 0, 0))) return false;
+            if (Mathf.Abs(dir.Z) > .3f && !Clear(new Vector3(0, 0, Mathf.Sign(dir.Z)))) return false;
+            return true;
+        }
         if (Free(velocity)) return velocity;
         var alongX = new Vector3(velocity.X, 0, 0);
         var alongZ = new Vector3(0, 0, velocity.Z);
