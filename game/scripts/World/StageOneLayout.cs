@@ -112,9 +112,9 @@ public sealed partial class StageOneLayout : StageMap
         Floor(0, 10, -4, 4, "4a4538");
         Wall(0, 10, -4.4f, -4, TallWall, "56604f");
         Wall(0, 10, 4, 4.4f, LowWall, "56604f");
-        Wall(-.4f, 0, -4.4f, 4.4f, 2.4f, "56604f");
-        Wall(10, 10.4f, -6, -1.3f, 2.6f, "56604f");
-        Wall(10, 10.4f, 1.3f, 6, 2.6f, "56604f");
+        Wall(-.4f, 0, -4.4f, 4.4f, TallWall, "56604f");
+        Wall(10, 10.4f, -6, -1.3f, TallWall, "56604f");
+        Wall(10, 10.4f, 1.3f, 6, TallWall, "56604f");
         _startDoor = Door.Create(_stage, new Vector3(10.2f, 0, 0), new Vector3(.3f, 2.4f, 2.6f), new Color("4f6b4a"), new Vector3(0, 0, 2.5f));
         _startDoorSwitch = Use(new Vector3(9.2f, 0, 0), "ui_use_open_door", _stage.LeaveSafeRoom);
 
@@ -159,12 +159,12 @@ public sealed partial class StageOneLayout : StageMap
     private void BuildWarehouse()
     {
         Floor(52, 84.4f, -10, 10, "393c3a");
-        Wall(52, 52.4f, -10, -2.5f, 3.2f, "5e5a50");
-        Wall(52, 52.4f, 2.5f, 10, 3.2f, "5e5a50");
-        Wall(52, 84, -10.4f, -10, 3.8f, "5e5a50");
+        Wall(52, 52.4f, -10, -2.5f, TallWall, "5e5a50");
+        Wall(52, 52.4f, 2.5f, 10, TallWall, "5e5a50");
+        Wall(52, 84, -10.4f, -10, TallWall, "5e5a50");
         Wall(52, 84, 10, 10.4f, LowWall, "5e5a50");
-        Wall(84, 84.4f, -10.4f, -3, 3.8f, "5e5a50");
-        Wall(84, 84.4f, 3, 10.4f, 3.8f, "5e5a50");
+        Wall(84, 84.4f, -10.4f, -3, TallWall, "5e5a50");
+        Wall(84, 84.4f, 3, 10.4f, TallWall, "5e5a50");
         _shutter = Door.Create(_stage, new Vector3(84.2f, 0, 0), new Vector3(.4f, 3.2f, 6f), new Color("6f7468"), new Vector3(0, 3.1f, 0));
         _shutter.OpenSeconds = 1.2f;
 
@@ -205,9 +205,9 @@ public sealed partial class StageOneLayout : StageMap
     private void BuildYard()
     {
         Floor(84.4f, 116, -7, 7, "38372d");
-        Wall(84.4f, 116, -7.4f, -7, 3f, "4a4a3c");
+        Wall(84.4f, 116, -7.4f, -7, TallWall, "4a4a3c");
         Wall(84.4f, 116, 7, 7.4f, LowWall, "4a4a3c");
-        Wall(84.4f, 84.8f, -10, -7, 3f, "4a4a3c");
+        Wall(84.4f, 84.8f, -10, -7, TallWall, "4a4a3c");
 
         Solid(new Vector3(92, 1.3f, -4.4f), new Vector3(6, 2.6f, 2.4f), "7a4a35");
         Solid(new Vector3(100, 1.3f, 3.9f), new Vector3(6, 2.6f, 2.4f), "35587a");
@@ -227,11 +227,11 @@ public sealed partial class StageOneLayout : StageMap
     private void BuildSafehouse()
     {
         Floor(116, 126, -4, 4, "3f4a3d");
-        Wall(116, 116.4f, -7.4f, -1.3f, 2.6f, "4e5f4b");
-        Wall(116, 116.4f, 1.3f, 7.4f, 2.6f, "4e5f4b");
+        Wall(116, 116.4f, -7.4f, -1.3f, TallWall, "4e5f4b");
+        Wall(116, 116.4f, 1.3f, 7.4f, TallWall, "4e5f4b");
         Wall(116, 126, -4.4f, -4, TallWall, "4e5f4b");
         Wall(116, 126, 4, 4.4f, LowWall, "4e5f4b");
-        Wall(126, 126.4f, -4.4f, 4.4f, 2.6f, "4e5f4b");
+        Wall(126, 126.4f, -4.4f, 4.4f, TallWall, "4e5f4b");
         _safehouseDoor = Door.Create(_stage, new Vector3(116.2f, 0, 0), new Vector3(.3f, 2.4f, 2.6f), new Color("4f6b4a"), new Vector3(0, 0, 2.5f), open: true);
         _safehouseSwitch = Use(new Vector3(117.4f, 0, 0), "ui_use_close_safehouse", () => _stage.TryCloseSafehouse());
         _safehouseSwitch.Enabled = false;

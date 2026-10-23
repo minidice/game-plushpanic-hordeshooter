@@ -205,11 +205,11 @@ public sealed class StageTwoMap : StageMap
     private void BuildSafehouse()
     {
         Floor(100, 112, -4, 4, "3f4a3d");
-        Wall(100, 100.4f, -10.4f, -1.3f, 2.6f, "4e5f4b");
-        Wall(100, 100.4f, 1.3f, 10.4f, 2.6f, "4e5f4b");
+        Wall(100, 100.4f, -10.4f, -1.3f, StageOneLayout.TallWall, "4e5f4b");
+        Wall(100, 100.4f, 1.3f, 10.4f, StageOneLayout.TallWall, "4e5f4b");
         Wall(100, 112, -4.4f, -4, StageOneLayout.TallWall, "4e5f4b");
         Wall(100, 112, 4, 4.4f, StageOneLayout.LowWall, "4e5f4b");
-        Wall(112, 112.4f, -4.4f, 4.4f, 2.6f, "4e5f4b");
+        Wall(112, 112.4f, -4.4f, 4.4f, StageOneLayout.TallWall, "4e5f4b");
         _safehouseDoor = Door.Create(_stage, new Vector3(100.2f, 0, 0), new Vector3(.3f, 2.4f, 2.6f), new Color("4f6b4a"), new Vector3(0, 0, 2.5f), open: true);
         _safehouseSwitch = Use(new Vector3(101.4f, 0, 0), "ui_use_close_safehouse", () => _stage.TryCloseSafehouse());
         _safehouseSwitch.Enabled = false;

@@ -20,6 +20,7 @@ public partial class EnvironmentReview : Node
     private readonly List<object> _metrics = new();
     private bool Windowed => DisplayServer.GetName() != "headless";
     private string _tag = "after";
+    private bool _wallHeightsValid = true;
     private void Check(bool ok, string why) { if (!ok) throw new Exception(why); _checks++; GD.Print("PASS: " + why); }
     private async Task Frames(int n) { for (int i = 0; i < n; i++) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame); }
     private static IEnumerable<Node> Walk(Node n) { foreach (Node c in n.GetChildren()) { yield return c; foreach (var d in Walk(c)) yield return d; } }
@@ -38,6 +39,9 @@ public partial class EnvironmentReview : Node
             await Review(1, GameMode.Scenario);
             await Review(2, GameMode.Scenario);
             await Review(1, GameMode.Survival);
+            System.IO.File.WriteAllText(ProjectSettings.GlobalizePath($"res://output/environment-{_tag}-contracts.json"),
+                JsonSerializer.Serialize(_contracts, new JsonSerializerOptions { WriteIndented = true }));
+            Check(_wallHeightsValid, "all full-height architectural walls share the 3.4m structural top");
             string contractPath = ProjectSettings.GlobalizePath("res://tests/environment-contracts.json");
             if (args.Contains("--baseline"))
             {
@@ -47,7 +51,7 @@ public partial class EnvironmentReview : Node
             else
             {
                 var expected = JsonSerializer.Deserialize<Dictionary<string, string>>(System.IO.File.ReadAllText(contractPath))!;
-                foreach (var (key, value) in expected) Check(_contracts.GetValueOrDefault(key) == value, key + " remains identical to the pre-art gameplay contract");
+                foreach (var (key, value) in expected) Check(_contracts.GetValueOrDefault(key) == value, key + " matches the recorded gameplay contract");
             }
             System.IO.File.WriteAllText(ProjectSettings.GlobalizePath($"res://output/environment-{_tag}-metrics.json"),
                 JsonSerializer.Serialize(_metrics, new JsonSerializerOptions { WriteIndented = true }));
@@ -81,7 +85,38 @@ public partial class EnvironmentReview : Node
             .Select(c => $"{b.GlobalTransform}|{c.Transform}|{c.Shape.GetClass()}|" + (c.Shape is BoxShape3D box ? box.Size.ToString() : c.Shape is CylinderShape3D cy ? $"{cy.Radius},{cy.Height}" : "other")))
             .OrderBy(s => s, StringComparer.Ordinal).ToArray();
         _contracts[prefix + "-world"] = Hash(string.Join("\n", shapes));
+        System.IO.File.WriteAllLines(ProjectSettings.GlobalizePath($"res://output/environment-{_tag}-{prefix}-shapes.txt"), shapes);
+        foreach(var art in Walk(_stage).OfType<Node3D>().Where(n=>n.Name=="ArchitectureWall"))
+        {
+            var body=(Node3D)art.GetParent();
+            var shape=body.GetChildren().OfType<CollisionShape3D>().Single(c=>c.Position==Vector3.Zero);
+            var box=(BoxShape3D)shape.Shape;
+            var meshes=Walk(art).OfType<MeshInstance3D>().ToArray();
+            if(!body.HasMeta("art_fence"))
+                Check(Mathf.Abs(meshes.Max(m=>(m.GlobalTransform*m.GetAabb()).End.Y)
+                    -(body.GlobalPosition.Y+box.Size.Y/2-.09f))<.002f,
+                    prefix+" wall surface meets its coping without a height gap");
+            if(box.Size.Y<=1.3f)continue; // Intentional camera-side cutaways and fences.
+            if(!Mathf.IsEqualApprox(box.Size.Y,StageOneLayout.TallWall) ||
+                !Mathf.IsEqualApprox(body.GlobalPosition.Y+box.Size.Y/2,StageOneLayout.TallWall))
+            {
+                _wallHeightsValid=false;
+                GD.Print($"WALL_HEIGHT_MISMATCH {prefix}: {body.Position}, size={box.Size}");
+            }
+        }
         Check(shapes.Length > 0, prefix + " has world collisions");
+        if(_stage.Map.Encounters is { } encounters)
+            foreach(var entry in encounters.Entries.Where(e=>e.Kind==EntryKind.Ledge))
+            {
+                bool onTop=bodies.Any(b=>b.GetChildren().OfType<CollisionShape3D>().Any(c=>
+                {
+                    if(c.Shape is not BoxShape3D box)return false;
+                    var bounds=b.GlobalTransform*c.Transform*new Aabb(-box.Size/2,box.Size);
+                    return new Rect2(bounds.Position.X,bounds.Position.Z,bounds.Size.X,bounds.Size.Z)
+                        .HasPoint(new Vector2(entry.At.X,entry.At.Z)) && Mathf.Abs(bounds.End.Y-entry.At.Y)<.002f;
+                }));
+                Check(onTop,prefix+" ledge spawn starts at the actual wall top: "+entry.At);
+            }
         if (number == 2)
         {
             var river = new Rect2(60.3f,-28,7.4f,56);

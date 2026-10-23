@@ -17,6 +17,12 @@
 
 ## 1. 열림 · 제약
 
+### 2026-10-23 벽 높이 회귀 중 발견한 검사 오류
+
+| ID | 증상 | 원인 / 메모 | 상태 | 날짜 | 관련 |
+|---|---|---|---|---|---|
+| I-106 | `ModeCheck`가 서바이버 특수 카드 투표 결과에서 `Requested value '?' was not found`로 실패 | `ModeCheck.Survivor`가 `won.Id`를 바로 `Enum.Parse<LabSpecial>`에 전달한다. `?` 카드의 실제 카드는 `Inner`에 있어 검사 코드가 이 경우를 처리하지 못함. 벽 수정 코드와 관계없는 검사 경로이며 제품 카드 동작의 실패로 확정하지 않음. 이번에는 관련 없는 카드 코드를 수정하지 않았다. 재발 방지: 일반/물음표 선택지를 각각 확정한 투표 검사, 공개된 내부 카드로 적용 상태 확인 필요 | 열림 | 2026-10-23 | `../game/tests/ModeCheck.cs:537`, `../game/scripts/UI/VoteWindow.cs`, 로컬 `output/wall-height-ModeCheck.log` |
+
 | ID | 증상 | 원인 / 메모 | 상태 | 날짜 | 관련 |
 |---|---|---|---|---|---|
 | I-17 | 일부 단독 헤드리스 검사가 끝날 때 `ObjectDB instances were leaked at exit` 경고 | 정확한 잔존 객체/원인은 미확인. 최근 `TailMeleeCheck`·`HitFlashCheck` 로그에도 종료 경고가 남음. 기능 검사는 통과했지만, 이것만으로 런타임 자원 누수가 없다고 결론 내리지 않음. `--verbose`로 객체를 식별해 재검증 필요. 2026-10-20 메뉴 작업 중 `Integration` 4회 중 3회에서 "4 ObjectDB instances were leaked" 발생, `--verbose`로 객체 식별: **`AudioStreamWAV` 2개 + `AudioStreamPlaybackWAV` 2개**(참조 1), 고아 StringName `SFX`·`Ambience`. 종료 순간 아직 재생 중인 소리 2개가 오디오 서버에 남는 것으로 보임(추정: 합성음 스트림을 실행 단위로 공유하는 캐시 + 재생 중 종료). 소리가 끝나기 전에 끝나는지에 따라 나와서 간헐적. 메뉴 변경은 Integration 경로의 오디오를 바꾸지 않음(볼륨 dB 설정만 추가). 2026-10-20 장전 모션 검사에서도 종료 경고 재현: `ReloadPoseCheck --verbose`는 AudioStreamWAV 3개 + AudioStreamPlaybackWAV 3개, `Integration`은 2개 잔존 경고. 손/총 렌더 캡처는 종료 경고 없음. 후보 해결: `QuitHygiene`에서 재생기 정지·합성 캐시 비우기. 2026-10-21 `ModeCheck` 헤드리스에서도 같은 형태(AudioStreamWAV 3 + AudioStreamPlaybackWAV 3, `--verbose` 2회 동일), `Integration`·`MenuCheck`·`NetSyncCheck`에서 각 1회 2·4·12개 경고, `NetSyncCheck` `--verbose` 재실행은 경고 없음. 2026-10-20 `SpawnCheck` 헤드리스 실행 일부에서도 같은 경고(2~7개)가 남음. 같은 검사의 다른 실행에는 없어 실행마다 다름. 2026-10-22 I-94 정리 검증 중 main · PR 양쪽에서 `CardLabCheck` 16개 · `SpawnCheck` 7~9개 · `CorpseTierCheck` 11개가 실행마다 나왔다 안 나왔다 함(원인 미확인, 검사는 모두 통과)  2026-10-23 아트 적용 검증: ReloadPoseCheck 종료 잔존 6개를 verbose로 AudioStreamWAV 3개와 AudioStreamPlaybackWAV 3개로 확인. TailMeleeCheck·RifleEffectsCheck·Integration 각2, VisionTierCheck 4, WeaponHandlingCheck 8, NetSyncCheck 12개 경고도 관측했으나 해당 실행의 객체 종류는 별도 식별하지 않음. 기능 통과와 종료 경고를 구분하며 미해결 유지.| 열림 | 2026-10-20 | `feature-checklist.md`, `../game/output/TailMeleeCheck-polish-final.log`, I-1·I-2와 구분 |
@@ -91,6 +97,7 @@
 
 | ID | 증상 | 원인 | 해결 | 날짜 | 검사 |
 |---|---|---|---|---|---|
+| I-105 | 이어진 일반 벽끼리 높이가 맞지 않아 상단에 단차가 생김(사용자 보고) | Stage 1 일반 벽 높이 2.4/2.6/3.0/3.2/3.4/3.8m, Stage 2 거점 2.6/3.4m 혼용. 공유 접합부는 각 높이를 그대로 보존해 높이 불일치를 해결하지 못했음 | 일반 벽을 공통 3.4m로 통일해 메시·충돌·기둥·상단 마감을 일치. Stage 1 13개·Stage 2 3개 벽 수정, 벽 위 등장 4곳도 동기화. 1.1m 시야용 낮은 벽/펜스와 문/셔터는 유지 | 2026-10-23 | 실제 맵 높이 검사 실패→수정 후 통과. 벽 표면/상단 마감 접촉 및 ledge 데이터/충돌 상단 검사, 전체 고정 시점 렌더. 평면·두께·다른 도형 불변 대조 후 월드 해시만 의도적으로 갱신. 자유 조준/수동 벽 근접 시야 검수는 남음. [기록](environment-quality-plan.md#wall-height-alignment) |
 | I-104 | Stage 2 개울이 물 대신 배경 바닥색으로 보임 | 기존 `FarGround` -0.22m가 수면 -0.38m보다 높음. 후속 식생 개발 중에도 `WoodlandGround`가 하천 배경 구간을 덮는 회귀를 독립 리뷰/렌더로 확인 | Stage 2 `FarGround` -1.1m 유지. 새 식생 지면은 하천 띠에서 생성하지 않음. 기존 흙판(-0.03m) 아래 묻히던 연결 지면은 -0.025m로 조정하며 플레이 바닥(0m) 아래 유지. 물 셰이더·충돌은 변경 없음 | 2026-10-23 | 높이 및 하천 사각형 겹침 검사 실패 → 수정 후 통과, 실제 다리/개울 렌더. `EnvironmentReview`는 배경 지면 전체를 검사. 남은 외형·성능 제약 I-92 |
 
 ### 2.1 엔진 · 크래시

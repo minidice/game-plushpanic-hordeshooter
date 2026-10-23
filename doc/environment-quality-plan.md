@@ -2,7 +2,7 @@
 
 > 2026-10-23. 사용자가 대화에서 수정한 범위와 단계별 실행을 승인했다. 이 문서는 실행 순서와 검수 기록이며, 예술적 최종 승인을 의미하지 않는다.
 > 실행: `superpowers:executing-plans`에 따라 현재 세션에서 직접 구현한다.
-> **최신 상태 — 2026-10-23 추가 참조안 구현:** 식생·접합부 재설계 이후 사용자 승인에 따라 나무 잎 끝/층간 명암, 외곽 풀·지면 연결, 군집 재배치와 경계 깊이별 감량 메시를 적용했다. 문서 끝 「추가 참조안 적용 결과」와 「최종 검증」이 현재 상태다. 앞의 체크 항목은 단계별 이력이며 최종 미술 평가·목표 사양 성능은 남아 있다.
+> **최신 상태 — 2026-10-23 연결 벽 높이 수정:** 추가 참조안 식생 개선 후, 이어진 일반 벽의 높이를 3.4m로 통일했다. 문서 끝 「연결 벽 높이 수정」이 최신 작업이다. 앞의 체크 항목은 단계별 이력이며 최종 미술 평가·목표 사양 성능은 남아 있다.
 
 **목표:** 실내 벽·출입구·파티션·갈 수 없는 설비 공간과 야외 바위·숲·물가를 개선하고 중앙의 작은 장식 소품은 후순위로 둔다.
 
@@ -241,3 +241,30 @@ dotnet build game/HordeShooter.csproj
 - 프레임 간격 중앙값은 변경 전 1.104~2.936ms, 변경 후 1.135~1.303ms. 시점당 20프레임의 짧은 측정이며 GPU 비용 분리/장시간 부하/목표 사양 테스트가 아니므로 안정 FPS나 성능 향상 판정에 사용하지 않는다.
 - 로컬 재현 산출물: `game/output/canopy2-verified-*.log`, `canopy2-import.log`, `canopy2-study-{lit,silhouette}.png`, `environment-canopy-{before,final}-metrics.json`, `environment-canopy-final-*.png`, `environment-canopy-full-*.png`. `output/`은 버전 관리하지 않으며 재실행으로 생성한다. 이전 메시 `.tres`와 before 캡처는 이번 작업 시작 시 저장한 로컬 비교 자료다.
 - 재현 명령: Godot에 `--path game --headless res://tests/<검사명>.tscn`을 전달해 각 검사 실행. 창 렌더는 `--path game --disable-vsync --resolution 1600x900 res://tests/EnvironmentReview.tscn -- --tag=canopy-final --foliage --uncapped`; 전체 28장은 `--foliage`를 빼고 `--tag=canopy-full`. 단독 모델은 창 모드로 `res://tests/FoliageStudy.tscn` 실행.
+
+<a id="wall-height-alignment"></a>
+## 연결 벽 높이 수정 (2026-10-23, A-7 / I-105)
+
+- 사용자 요청: 이어지는 벽끼리 높이가 다른 문제 수정. 원인: 일반 벽 배치의 높이가 2.4/2.6/3.0/3.2/3.4/3.8m로 혼용됐고, `JoinWalls`는 그 단차를 그대로 연결했다. 기존 합집합 기하 검사는 겹침/면 누락만 검사해 실제 맵 높이 불일치를 잡지 못했다.
+- 적용: Stage 1 일반 벽 13개와 Stage 2 거점 3개를 기존 공통 `TallWall=3.4m`에 맞췄다. 메시와 충돌이 동일한 입력을 사용하므로 벽 몸체·기둥·상단 마감·충돌이 함께 정렬된다. 1.1m 카메라 쪽 낮은 벽/펜스, 별도 문틀·셔터 구동부, Stage 2 보이지 않는 암반/울타리 충돌은 유지했다. 일반 벽과 낮은 경계의 높이 차이는 의도된 시야 확보 구조다.
+- 높이 변경의 연동: Stage 1 창고 2곳/야적장 2곳의 `ledge.height`도 3.4m로 맞췄다. 등장 수·방향·평면 위치와 문 동작은 유지한다. 높이를 바꿨으므로 해당 벽 상부의 사격/투척·낙하 충돌은 새 높이를 따른다.
+- 실패 재현: `wall-height-red.log`는 실제 Stage 1·2 높이 불일치를 출력한 뒤 실패. 벽 수정 후에는 높이 검사가 통과하고 기존 월드 해시가 변경되어 계약 검사에서 실패했다. 등장 위치 검사 추가 시 기존 (63,3.8,-10.2)가 새 상단과 불일치해 실패(`wall-height-ledge-red.log`); 데이터 동기화 후 통과했다.
+- 계약 변경 감사: 변경 전/후 전체 충돌 도형을 덤프해 비교했다. Stage 1 시나리오/난전 각 13개, Stage 2 3개만 바뀌며 해당 도형의 원점 Y가 새 높이의 절반으로, 크기 Y가 3.4m로 바뀌었다. X/Z·벽 두께·바닥 높이·다른 도형은 동일(`wall-height-shape-audit.log`). 플로 해시 3개는 그대로 유지. 기존 계약을 무조건 재생성하지 않고 이 검토 후 월드 해시 3개만 갱신했다.
+
+| 월드 계약 | 변경 전 | 변경 후 |
+|---|---|---|
+| Stage 1 시나리오 | `7B5F636238CF32A0520D525C7CF2C80E85C7EE61B6314614B8807C36697F1359` | `A44F934B2405DF373FDB7A7F4F90831165B17F7539A05A2C1E01980AD76F8AA7` |
+| Stage 2 시나리오 | `A86CC00AA2F43110EA4414154254434CE21A01C856F01CD721DAAC258B7F3C5C` | `E955845FE0936F79104DD87F1B6B1815B1C5CEFA0F9F8A493FE84D31FE220750` |
+| Stage 1 난전 | `7F4E4F4FB683BA298994E60351F29D0D2C1158552908F17E7DF1893E0B4DB708` | `2FECA7051B3A2D6C54694C7C0A2A2647043452875E64990FA7C1549EACDD1A90` |
+
+- 재발 방지: `EnvironmentReview`가 실제 맵의 일반 벽 상단 3.4m, 몸체와 9cm 상단 마감의 접촉, 모든 ledge 지점과 실제 충돌 상단의 일치를 확인한다. `EnvironmentGeometryCheck`의 직선/L/T/명시적 높이 차 합집합 검사는 유지한다.
+- 한계: 모든 자유 조준/벽 근접 플레이 시야는 별도 검수 대상. `ModeCheck`는 카드 투표 검사에서 `?` ID를 enum으로 읽어 실패(I-106); 벽 검증과 분리하며 전체 회귀 통과로 표현하지 않는다.
+
+### 연결 벽 수정 검증 결과
+
+- 빌드: `dotnet build game/HordeShooter.csproj --nologo -v q`, 경고 0/오류 0.
+- 통과: `EnvironmentReview` 헤드리스 106/창 모드 301, `EnvironmentGeometryCheck` 1,067, `StageTransitionCheck` 164, `MapCheck` 24, `SpawnCheck` 41, `Integration` 149. 각 전용 장면을 별도로 실행했다.
+- 실제 Forward+ 1600×900 기본/확대 28장 생성. Stage 1 해치 거점·창고 셔터/야적장 접점과 Stage 2 세이프하우스 모서리에서 일반 벽의 연속된 상단, 문 통로와 캐릭터 가독성을 확인했다. 변경 전 비교는 직전 `environment-canopy-full-*` 캡처를 사용했다.
+- 실패: `ModeCheck`는 `?` 카드 ID 파싱 오류로 중단(I-106). 전체 모드 회귀가 통과했다고 보지 않는다. 해당 로그의 ObjectDB 12개 종료 경고는 실패와 별개다.
+- 통과한 검사 중 종료 ObjectDB 잔존 경고: 환경 헤드리스 2개, 전환 6개, 맵 4개, 등장 7개(I-17). 기하·최종 통합·실제 환경 렌더는 오류/종료 경고 없음. 이번 변경은 종료 객체 정리를 수정하지 않는다.
+- 재현: Godot `--path game --headless res://tests/<검사명>.tscn`; 렌더는 `--path game --disable-vsync --resolution 1600x900 res://tests/EnvironmentReview.tscn -- --tag=wall-height-final --uncapped`. 로그 `game/output/wall-height-*.log`, 이미지 `game/output/environment-wall-height-final-*.png`, 비교 도형 `game/output/environment-wall-height-{before,after}-*-shapes.txt`. 로컬 산출물은 커밋하지 않는다.

@@ -29,10 +29,10 @@
     { "kind": "ledge", "at": [22, -6.2], "height": 3.4, "dir": [0, 1] },
     { "kind": "ledge", "at": [37, -6.2], "height": 3.4, "dir": [0, 1] },
     { "kind": "ledge", "at": [49, -6.2], "height": 3.4, "dir": [0, 1] },
-    { "kind": "ledge", "at": [63, -10.2], "height": 3.8, "dir": [0, 1] },
-    { "kind": "ledge", "at": [75, -10.2], "height": 3.8, "dir": [0, 1] },
-    { "kind": "ledge", "at": [97, -7.2], "height": 3.0, "dir": [0, 1] },
-    { "kind": "ledge", "at": [102, -7.2], "height": 3.0, "dir": [0, 1] }
+    { "kind": "ledge", "at": [63, -10.2], "height": 3.4, "dir": [0, 1] },
+    { "kind": "ledge", "at": [75, -10.2], "height": 3.4, "dir": [0, 1] },
+    { "kind": "ledge", "at": [97, -7.2], "height": 3.4, "dir": [0, 1] },
+    { "kind": "ledge", "at": [102, -7.2], "height": 3.4, "dir": [0, 1] }
   ],
   "protected": []
 }
