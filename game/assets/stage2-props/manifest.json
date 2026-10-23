@@ -1,0 +1,111 @@
+{
+  "revision": 1,
+  "contract": "plushpanic_outdoor_v1",
+  "date": "2026-10-23",
+  "units": "metres",
+  "up_axis": "+Y",
+  "status": "Stage 2 prop assets; game integration pending",
+  "assets": [
+    {
+      "id": "ladder_section",
+      "name": "사다리 한 단",
+      "category": "Stage 2 이동 장치",
+      "note": "1.2 m 간격으로 쌓기. 레일 중심 X=±0.275, Blender Y=-0.025. 가로대 높이 0.15/0.45/0.75/1.05 m. 게임 +Z 쪽에서 오름.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        0.62,
+        1.2,
+        0.12
+      ],
+      "bounds_min_y": 0.0,
+      "file": "ladder_section.glb",
+      "triangles": 256,
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (미검수)"
+    },
+    {
+      "id": "ladder_top",
+      "name": "사다리 위 손잡이",
+      "category": "Stage 2 이동 장치",
+      "note": "피벗=윗단 가장자리. 바닥 0, 하단 -0.15, 최고 0.9 m. 레일 중심은 section과 동일. 아치는 뒤(Blender +Y)로 0.56 m 휨.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        0.626,
+        1.05,
+        0.636
+      ],
+      "bounds_min_y": -0.15,
+      "file": "ladder_top.glb",
+      "triangles": 360,
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (미검수)"
+    },
+    {
+      "id": "zipline_anchor",
+      "name": "짚라인 고정 기둥",
+      "category": "Stage 2 이동 장치",
+      "note": "양 끝 공용. 발판 윗면 0.4 m. 도르래 중심 높이 3.0 m. 기존 Zipline.BuildLook 줄 높이 2.8 m와 차이: 연결 시 조정 필요. 줄/도르래 기준점(게임 X/Y/Z m)=[0.0, 3.0, -0.4].",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [
+        "Occlude_Pole"
+      ],
+      "dimensions_m": [
+        0.6,
+        3.2,
+        1.05
+      ],
+      "bounds_min_y": 0.0,
+      "file": "zipline_anchor.glb",
+      "triangles": 668,
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (미검수)"
+    },
+    {
+      "id": "gondola_cabin",
+      "name": "개방형 곤돌라 객차",
+      "category": "Stage 2 이동 장치",
+      "note": "피벗=4×4 m 바닥 윗면, 바닥판 -0.15…0 m. 앞벽 0.6 m, 나머지 1 m. 모서리 기둥 2.4 m, 바퀴 중심 높이 3.4 m. 기존 탑승판 그림 교체용; 진입/퇴장 경로와 기둥 가림은 후속 게임 렌더 검수. 줄/도르래 기준점(게임 X/Y/Z m)=[0.0, 3.4, -0.0].",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [
+        "Occlude_Frame"
+      ],
+      "dimensions_m": [
+        4.0,
+        3.73,
+        4.006
+      ],
+      "bounds_min_y": -0.15,
+      "file": "gondola_cabin.glb",
+      "triangles": 1284,
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (미검수)"
+    },
+    {
+      "id": "gondola_station",
+      "name": "곤돌라 승강장",
+      "category": "Stage 2 이동 장치",
+      "note": "피벗=4×4 m 탑승 영역 중심 바닥. 중앙 바닥 없음; 테두리만 z=0 아래 면부터. 뒤 탑 X=-2…2, Blender Y=2…3.2, 높이 5 m. 바퀴 지름 1.2 m, +X 출선 팔. 앞왼쪽 빨간 레버. 줄/도르래 기준점(게임 X/Y/Z m)=[0.0, 5.0, -2.6].",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [
+        "Occlude_Tower"
+      ],
+      "dimensions_m": [
+        4.85,
+        5.6,
+        5.2
+      ],
+      "bounds_min_y": 0.0,
+      "file": "gondola_station.glb",
+      "triangles": 1376,
+      "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (미검수)"
+    }
+  ]
+}
