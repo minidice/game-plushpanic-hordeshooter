@@ -8,8 +8,9 @@ namespace HordeShooter;
 /// </summary>
 public partial class Zipline : Node3D
 {
-    /// <summary>Riding speed along the cable (`[임시]`).</summary>
-    public const float Speed = 12f;
+    /// <summary>Acceleration profile in metres/seconds (`[임시]`).</summary>
+    public const float StartSpeed = 5f, Acceleration = 12f, MaxSpeed = 24f;
+    public const float ReleaseProgress = .97f, DismountSeconds = .45f;
     /// <summary>Where a rider hangs below the cable.</summary>
     public const float Hang = 2.1f;
     public const float CableHeight = 3f;
@@ -17,7 +18,22 @@ public partial class Zipline : Node3D
 
     public Vector3 Start { get; private set; }
     public Vector3 End { get; private set; }
-    public float Seconds => Start.DistanceTo(End) / Speed;
+    /// <summary>Step off beside the end post, instead of jumping through its centre.</summary>
+    public Vector3 Landing { get; private set; }
+    private float RideDistance => Start.DistanceTo(End) * ReleaseProgress;
+    private static float AccelerationSeconds => (MaxSpeed-StartSpeed)/Acceleration;
+    private static float AccelerationDistance => (StartSpeed+MaxSpeed)*.5f*AccelerationSeconds;
+    public float TravelSeconds => RideDistance<=AccelerationDistance
+        ? (Mathf.Sqrt(StartSpeed*StartSpeed+2*Acceleration*RideDistance)-StartSpeed)/Acceleration
+        : AccelerationSeconds+(RideDistance-AccelerationDistance)/MaxSpeed;
+    public float Seconds => TravelSeconds+DismountSeconds;
+    public float SpeedAt(float seconds) => Mathf.Min(MaxSpeed,StartSpeed+Acceleration*Mathf.Max(0,seconds));
+    public float ProgressAt(float seconds)
+    {
+        float t=Mathf.Max(0,seconds), a=Mathf.Min(t,AccelerationSeconds);
+        float distance=StartSpeed*a+.5f*Acceleration*a*a+MaxSpeed*Mathf.Max(0,t-a);
+        return RideDistance<.001f?1:Mathf.Clamp(distance/RideDistance,0,1);
+    }
     public int StartCell { get; private set; }
     public int EndCell { get; private set; }
 
@@ -32,6 +48,16 @@ public partial class Zipline : Node3D
             StartCell = tiers.Index(start),
             EndCell = tiers.Index(end),
         };
+        line.Landing=line.End;
+        var side=((line.End-line.Start) with {Y=0}).Normalized().Cross(Vector3.Up);
+        foreach(float sign in new[]{1f,-1f})
+        {
+            var candidate=line.End+side*(1.25f*sign);
+            bool clear=true;
+            foreach(var offset in new[]{Vector3.Zero,Vector3.Right*.55f,Vector3.Left*.55f,Vector3.Forward*.55f,Vector3.Back*.55f})
+                clear &= !stage.Flow.IsBlocked(candidate+offset) && Mathf.Abs(tiers.GroundY(candidate+offset)-line.End.Y)<.1f;
+            if(clear) { line.Landing=candidate; break; }
+        }
         tiers.AddRide(start, end, line.Seconds);
         stage.AddChild(line);
         line.BuildLook(stage);

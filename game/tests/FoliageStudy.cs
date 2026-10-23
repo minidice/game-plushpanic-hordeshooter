@@ -44,11 +44,6 @@ public partial class FoliageStudy : Node3D
                 Check(vertices.All(p=>p.IsFinite())&&grass.GetAabb().End.Y<.8f,"grass stays below character-height sightlines");
                 Check(grass.SurfaceGetArrays(0)[(int)Mesh.ArrayType.Index].AsInt32Array().Length/3<64,"grass cluster has a bounded opaque geometry cost");
             }
-            if(OS.GetCmdlineUserArgs().Contains("--baseline"))
-            {
-                DirAccess.MakeDirRecursiveAbsolute(ProjectSettings.GlobalizePath("res://output"));
-                foreach(var kind in Enum.GetValues<FoliageArt.Kind>()) ResourceSaver.Save(FoliageArt.Mesh(kind),$"res://output/foliage-baseline-{kind}.tres");
-            }
             if(DisplayServer.GetName()!="headless")
             {
                 OS.LowProcessorUsageMode=false;Engine.MaxFps=120;DisplayServer.WindowMoveToForeground();
@@ -64,15 +59,13 @@ public partial class FoliageStudy : Node3D
                 {
                     bool pine=i>=2;bool revised=i%2==1;
                     var model=PropLibrary.Instance(pine?"pine_tall":"broadleaf")!;
-                    bool baseline=ResourceLoader.Exists($"res://output/foliage-baseline-{(pine?"Pine":"Broadleaf")}.tres");
-                    if(revised)FoliageArt.ReplaceTree(model,pine?"pine_tall":"broadleaf");
-                    else if(baseline)
+                    if(revised)
                     {
                         foreach(Node child in model.GetChildren())child.Free();
-                        model.AddChild(new MeshInstance3D { Mesh=GD.Load<ArrayMesh>($"res://output/foliage-baseline-{(pine?"Pine":"Broadleaf")}.tres") });
+                        model.AddChild(new MeshInstance3D { Mesh=FoliageArt.Mesh(pine?FoliageArt.Kind.Pine:FoliageArt.Kind.Broadleaf) });
                     }
                     model.Position=new Vector3(-6+i*4,0,0);AddChild(model);models.Add(model);
-                    AddChild(new Label3D { Text=(revised?"NEW ":baseline?"PREVIOUS ":"GLB ")+(pine?"PINE":"CANOPY"),Position=model.Position+new Vector3(0,.1f,2),
+                    AddChild(new Label3D { Text=(revised?"PROCEDURAL ":"CANONICAL GLB ")+(pine?"PINE":"CANOPY"),Position=model.Position+new Vector3(0,.1f,2),
                         Billboard=BaseMaterial3D.BillboardModeEnum.Enabled,FontSize=48,PixelSize=.006f,NoDepthTest=true });
                 }
                 DirAccess.MakeDirRecursiveAbsolute(ProjectSettings.GlobalizePath("res://output"));

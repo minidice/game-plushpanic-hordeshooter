@@ -125,7 +125,7 @@ public partial class Enemy : CharacterBody3D
     public override void _Ready()
     {
         CollisionLayer = Layers.Enemy;
-        CollisionMask = Layers.World | Layers.Player | Layers.Props;
+        CollisionMask = Layers.MovementWorld | Layers.Player | Layers.Props;
         FloorSnapLength = .3f;
         float bodyHeight = Mathf.Max(Mathf.Max(Definition.ColliderHeight, MinHitHeight), Radius * 2.05f);
         Shape = new CollisionShape3D
@@ -437,7 +437,7 @@ public partial class Enemy : CharacterBody3D
             if (!tiers.MeleeReach(GlobalPosition, player.GlobalPosition)) return false;
             if (tiers.TierOf(this) != tiers.TierOf(player)) return true;
         }
-        return Rays.Clear(this, GlobalPosition + Vector3.Up * .7f, player.GlobalPosition + Vector3.Up * .7f, Layers.World | Layers.Props);
+        return Rays.Clear(this, GlobalPosition + Vector3.Up * .7f, player.GlobalPosition + Vector3.Up * .7f, Layers.MovementWorld | Layers.Props);
     }
 
     private void TickMelee(float dt)

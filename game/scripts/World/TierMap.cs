@@ -45,6 +45,7 @@ public sealed class TierMap
     private readonly sbyte[] _tier;
     private readonly float[] _ground;
     private readonly CellFlag[] _flags;
+    private readonly Dictionary<int, (Rect2 bounds, int low, Vector3 up)> _smoothRamps = new();
     /// <summary>Ladder ends: each cell maps to the cell at the ladder's other end.</summary>
     private readonly Dictionary<int, int> _ladders = new();
     /// <summary>One-way rides for survivors only (ziplines, L-18): out of a cell, and into a cell, with their flow cost.</summary>
@@ -91,7 +92,22 @@ public sealed class TierMap
     public float GroundY(Vector3 p)
     {
         int i = Index(p);
+        if (_smoothRamps.TryGetValue(i, out var ramp))
+        {
+            float t = ramp.up.X > .5f ? (p.X-ramp.bounds.Position.X)/ramp.bounds.Size.X
+                : ramp.up.X < -.5f ? (ramp.bounds.End.X-p.X)/ramp.bounds.Size.X
+                : ramp.up.Z > .5f ? (p.Z-ramp.bounds.Position.Y)/ramp.bounds.Size.Y : (ramp.bounds.End.Y-p.Z)/ramp.bounds.Size.Y;
+            return (ramp.low + TerrainRampProfile(t)) * Height;
+        }
         return i < 0 ? 0 : _ground[i];
+    }
+
+    /// <summary>Shared by rendered terrain, triangle collision and exact-height queries. Twenty-four linear spans approximate a smoothstep.</summary>
+    public static float TerrainRampProfile(float t)
+    {
+        float sample=Mathf.Clamp(t,0,1)*24;int i=Mathf.Min(23,(int)sample);
+        static float Curve(float x)=>x*x*(3-2*x);
+        return Mathf.Lerp(Curve(i/24f),Curve((i+1)/24f),sample-i);
     }
 
     /// <summary>The tier a body stands on, from its height (falling bodies count where they are).</summary>
@@ -129,6 +145,7 @@ public sealed class TierMap
             _tier[i] = (sbyte)tier;
             _ground[i] = tier * Height;
             _flags[i] = CellFlag.None;
+            _smoothRamps.Remove(i);
         });
     }
 
@@ -136,7 +153,7 @@ public sealed class TierMap
     /// A ramp from <paramref name="lowTier"/> up one tier, rising along <paramref name="up"/> (a unit X or Z direction).
     /// Its cells belong to the low tier and connect to the tier above at the high end.
     /// </summary>
-    public void PaintRamp(float x0, float x1, float z0, float z1, int lowTier, Vector3 up)
+    public void PaintRamp(float x0, float x1, float z0, float z1, int lowTier, Vector3 up, bool smooth = false)
     {
         Touch(lowTier);
         Touch(lowTier + 1);
@@ -146,8 +163,10 @@ public sealed class TierMap
             float t = up.X > .5f ? (cx - x0) / (x1 - x0) : up.X < -.5f ? (x1 - cx) / (x1 - x0)
                 : up.Z > .5f ? (cz - z0) / (z1 - z0) : (z1 - cz) / (z1 - z0);
             _tier[i] = (sbyte)lowTier;
-            _ground[i] = (lowTier + Mathf.Clamp(t, 0, 1)) * Height;
+            _ground[i] = (lowTier + (smooth ? TerrainRampProfile(t) : Mathf.Clamp(t, 0, 1))) * Height;
             _flags[i] = CellFlag.Ramp;
+            if(smooth)_smoothRamps[i]=(new Rect2(x0,z0,x1-x0,z1-z0),lowTier,up);
+            else _smoothRamps.Remove(i);
         });
     }
 

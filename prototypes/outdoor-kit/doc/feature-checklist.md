@@ -15,4 +15,4 @@
 | 차량 탑승/운전 | 후속 계약 기록 | 미구현 |
 | 6인·호드·저사양 성능 | 미측정 | 별도 검증 필요 |
 
-모델 구성: 식생 10, 지형 10, 구조물 7, 소품 5. 실제 수량은 [manifest](../pack/manifest.json)과 [HTML](../gallery/index.html)을 기준으로 한다.
+모델 구성: 식생 10, 지형 10, 구조물 7, 소품 5. 실제 수량은 [manifest](../../../game/assets/outdoor-kit/manifest.json)과 [HTML](../gallery/index.html)을 기준으로 한다.

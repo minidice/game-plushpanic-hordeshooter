@@ -5,4 +5,8 @@
     <Nullable>enable</Nullable>
     <RootNamespace>HordeShooter</RootNamespace>
   </PropertyGroup>
+  <!-- Local Studio bridge is absent from exported .NET assemblies, including debug exports. -->
+  <ItemGroup Condition="'$(Configuration)' != 'Debug'">
+    <Compile Remove="tests/Studio*.cs" />
+  </ItemGroup>
 </Project>

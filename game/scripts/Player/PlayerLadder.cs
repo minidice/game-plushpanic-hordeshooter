@@ -24,8 +24,9 @@ public partial class Player
     /// <summary>Gets on <paramref name="ladder"/> at the bottom (<paramref name="up"/>) or the top. False if it cannot now.</summary>
     public bool ClimbLadder(Ladder ladder, bool up)
     {
-        if (OnLadder || IsDead || IsDowned || IsRestrained || IsRolling) return false;
+        if (OnGondola || OnZipline || OnLadder || IsDead || IsDowned || IsRestrained || IsRolling) return false;
         _ladder = ladder;
+        IsAiming=false; AimBlend=0; _aimHeld=false;
         _ladderUp = up;
         _ladderFrom = GlobalPosition;
         _ladderT = 0;
@@ -72,8 +73,9 @@ public partial class Player
     /// <summary>Hooks onto <paramref name="line"/> at its top: down to its foot, no shooting on the way.</summary>
     public bool RideZipline(Zipline line)
     {
-        if (OnLadder || OnZipline || IsDead || IsDowned || IsRestrained || IsRolling) return false;
+        if (OnGondola || OnLadder || OnZipline || IsDead || IsDowned || IsRestrained || IsRolling) return false;
         _zipline = line;
+        IsAiming=false; AimBlend=0; _aimHeld=false;
         _zipT = 0;
         Velocity = Vector3.Zero;
         _push = Vector3.Zero;
@@ -89,6 +91,7 @@ public partial class Player
     {
         if (_zipline == null) return;
         _zipline = null;
+        Rig.EndZiplinePose();
         CollisionMask = _maskBeforeLadder;
         Velocity = Vector3.Zero;
     }
@@ -96,14 +99,19 @@ public partial class Player
     private void ZiplineStep(float dt)
     {
         var line = _zipline!;
-        _zipT += dt / Mathf.Max(.1f, line.Seconds);
-        float t = Mathf.Clamp(_zipT, 0, 1);
-        GlobalPosition = t < 1 ? line.RidePoint(t) : line.End + Vector3.Up * .05f;
+        _zipT += dt;
+        float t = line.ProgressAt(_zipT);
+        bool releasing=_zipT>=line.TravelSeconds;
+        float hop=Mathf.Clamp((_zipT-line.TravelSeconds)/Zipline.DismountSeconds,0,1);
+        GlobalPosition = releasing
+            ? line.RidePoint(Zipline.ReleaseProgress).Lerp(line.Landing+Vector3.Up*.05f,hop)+Vector3.Up*(.3f*Mathf.Sin(hop*Mathf.Pi))
+            : line.RidePoint(t*Zipline.ReleaseProgress);
         Velocity = Vector3.Zero;
         var face = (line.End - line.Start) with { Y = 0 };
         if (face.LengthSquared() > .001f) Rig.Face(face);
-        Rig.Animate(dt, .2f, 0, _hurt, Vector3.Zero);
-        if (t >= 1) EndZipline();
+        Rig.Animate(dt, 0, 0, _hurt, Vector3.Zero);
+        Rig.ZiplinePose(releasing,hop,line.SpeedAt(_zipT)/Zipline.MaxSpeed);
+        if (_zipT >= line.Seconds) EndZipline();
     }
 
     private void LadderStep(float dt)
@@ -135,7 +143,7 @@ public partial class Player
         GlobalPosition = p;
         Velocity = Vector3.Zero;
         var face = (ladder.Top - ladder.Bottom) with { Y = 0 };
-        if (face.LengthSquared() > .001f) Rig.Face(_ladderUp ? face : -face);
+        if (face.LengthSquared() > .001f) Rig.Face(face);
         Rig.Animate(dt, .7f, 0, _hurt, Vector3.Zero);
         if (t >= 1) EndLadder();
     }

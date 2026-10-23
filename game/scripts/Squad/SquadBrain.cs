@@ -455,7 +455,7 @@ public partial class SquadBrain : Node
         var dir = goal - Bot.GlobalPosition; dir.Y = 0;
         var side = dir.LengthSquared() > .0001f ? dir.Normalized().Cross(Vector3.Up) * (Bot.Definition.ColliderRadius + .05f) : Vector3.Zero;
         foreach (var offset in new[] { Vector3.Zero, side, -side })
-            if (!Rays.Clear(Bot, Bot.GlobalPosition + knee + offset, goal + knee + offset, Layers.World | Layers.Props)) return false;
+            if (!Rays.Clear(Bot, Bot.GlobalPosition + knee + offset, goal + knee + offset, Layers.MovementWorld | Layers.Props)) return false;
         return true;
     }
 

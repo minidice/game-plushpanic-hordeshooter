@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://cmn4ainahvqqx"
-path="res://.godot/imported/edge_forest_low.glb-f375b0e9f013f706598d1e4c9c657df0.scn"
+uid="uid://cjk3m1tf5n1hx"
+path="res://.godot/imported/forest_grass_b.glb-9fa46f0b682eb6519911700e171b6ae0.scn"
 
 [deps]
 
-source_file="res://assets/edge-kit/edge_forest_low.glb"
-dest_files=["res://.godot/imported/edge_forest_low.glb-f375b0e9f013f706598d1e4c9c657df0.scn"]
+source_file="res://assets/stage2-props/forest_grass_b.glb"
+dest_files=["res://.godot/imported/forest_grass_b.glb-9fa46f0b682eb6519911700e171b6ae0.scn"]
 
 [params]
 
@@ -35,7 +35,7 @@ animation/fps=30
 animation/trimming=false
 animation/remove_immutable_tracks=true
 animation/import_rest_as_RESET=false
-import_script/path=""
+import_script/path="res://assets/stage2-props/forest_material_import.gd"
 materials/extract=0
 materials/extract_format=0
 materials/extract_path=""

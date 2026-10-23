@@ -96,7 +96,7 @@ public partial class BullEnemy : Enemy
         HitPlayerThisCharge = false;
         _bowled.Clear();
         // Pass through the player body; the hit is resolved by distance so the bull keeps its momentum.
-        CollisionMask = Layers.World | Layers.Props;
+        CollisionMask = Layers.MovementWorld | Layers.Props;
         HideTelegraph();
         Stage.Cam.AddShake(.12f);
     }
@@ -104,7 +104,7 @@ public partial class BullEnemy : Enemy
     private void EndCharge(bool wall)
     {
         Stage.Net?.OnEnemyAttackEnd(this);
-        CollisionMask = Layers.World | Layers.Player | Layers.Props;
+        CollisionMask = Layers.MovementWorld | Layers.Player | Layers.Props;
         _cooldown = Charge.Cooldown;
         if (!wall)
         {

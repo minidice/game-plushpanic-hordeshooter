@@ -9,14 +9,14 @@ namespace HordeShooter;
 /// A graybox stage built from layout data (decisions.md T-24 option B, L-29): the size draft of the new Stage 2
 /// (doc/map-expansion-plan.md 7.2 step 3). Regions become raised floors per height tier, merged into rectangles on the
 /// 1 m grid; everything outside every region is blocked by tall invisible walls; links become ramps, ladders, drop
-/// edges, ziplines and the gondola; climbable edges are painted for wall climbers. Terrain remains a size draft;
-/// traversal, bridge/pump/watch-post and landmark art use Stage 2 GLBs. Not wired into <see cref="StageMap.Create"/> yet:
+/// edges, ziplines and the gondola; climbable edges are painted for wall climbers. The size draft now has a first
+/// environment pass and Stage 2 landmark GLBs. Not the default in <see cref="StageMap.Create"/> yet:
 /// the current Stage 2 stays until this draft is accepted (L-29).
 /// Placement (7.2 step 5) reads two more files: encounters (areas, waiting groups, wave entries, the safe zone, timed
 /// raids, the mission's way back) and supply points. Markers build the beats: the raised bridge ("blocked") is the
 /// crescendo's door, the pump ("mission") its panel, a hut stands on the safe zone and the safehouse on its marker.
 /// </summary>
-public sealed class LayoutMap : StageMap
+public sealed partial class LayoutMap : StageMap
 {
     public const string Stage2Path = "res://content/data/stages/stage2_layout.json";
     public const string Stage2EncountersPath = "res://content/data/stages/stage2_draft_encounters.json";
@@ -29,8 +29,9 @@ public sealed class LayoutMap : StageMap
     private const float WallHeight = 2.6f, WallThick = .4f;
     /// <summary>Ramp length along its slope (`[임시]`): 6 m per tier, about 11°.</summary>
     public const float RampLength = 6f;
-    // Strong steps between tiers so a graybox reads at a glance (green ground, then sand, clay, slate, steel blue).
-    private static readonly string[] TierColors = { "4f6b45", "9a8f5e", "a8704a", "6f6488", "557d9c", "8fb0c4" };
+    private static readonly string[] TierColors = { "697350", "697350", "697350", "777765", "777765", "777765" };
+    private ShaderMaterial? _groundMaterial;
+    private ShaderMaterial GroundMaterial => _groundMaterial ??= ForestMaterial("res://shaders/stage2_ground.gdshader");
 
     public StageLayout Layout { get; }
     /// <summary>Floor and blocker rectangles the grid was merged into (checks).</summary>
@@ -117,7 +118,7 @@ public sealed class LayoutMap : StageMap
             {
                 // Off the map: a tall invisible wall, and a dark floor so the edge reads as "nowhere to go".
                 Solid(new Vector3((wx0 + wx1) / 2, 4, (wz0 + wz1) / 2), new Vector3(wx1 - wx0, 8, wz1 - wz0), "", drawCargo: false);
-                Mat.Box(_stage, new Vector3((wx0 + wx1) / 2, -.05f, (wz0 + wz1) / 2), new Vector3(wx1 - wx0, .1f, wz1 - wz0), Mat.Solid("27332b", 1f));
+                Mat.Box(_stage, new Vector3((wx0 + wx1) / 2, -.05f, (wz0 + wz1) / 2), new Vector3(wx1 - wx0, .1f, wz1 - wz0), GroundMaterial);
                 VoidRects++;
             }
         }
@@ -139,14 +140,14 @@ public sealed class LayoutMap : StageMap
         PlayerStart = FloorAt(start) + Vector3.Up * .05f;
         var goal = Layout.FindMarker("safehouse")?.Pos ?? start;
         _goal = FloorAt(goal);
-        foreach (var marker in Layout.Markers)
-            if (marker.Type is not ("mission" or "blocked" or "safe_zone" or "noise" or "safehouse") && marker.Label is not ("크레인" or "벙커 정문")) Post(marker);
+        Landmark("floor_hatch", FloorAt(start));
         Lamp(PlayerStart + Vector3.Up * 4, "ffe6b0", 3, 24, false);
 
         if (Layout.FindMarker("blocked") is { } blocked && Layout.FindMarker("mission") is { } mission) BuildBridgeMission(blocked.Pos, mission.Pos);
         if (Layout.FindMarker("safe_zone") is { } zone) BuildHut(zone.Pos);
         if (Layout.FindMarker("safehouse") is { } safehouse) BuildSafehouse(safehouse.Pos);
         BuildLandmarks();
+        BuildEnvironment();
         if (Mode == GameMode.Scenario && _suppliesPath != null) PlaceSupplies(StageSupplies.Load(_suppliesPath));
     }
 
@@ -278,13 +279,14 @@ public sealed class LayoutMap : StageMap
         void Box(Rect2 r, bool deck = false)
         {
             if (r.Size.X <= 0 || r.Size.Y <= 0) return;
-            float thick = deck ? .3f : top + .4f;
+            bool container=deck && tier==3;
+            float thick = container ? .04f : deck ? .3f : top + .4f;
             var center = r.GetCenter();
             var mesh = Mat.Box(_stage, new Vector3(center.X, top - thick / 2, center.Y),
-                new Vector3(r.Size.X, thick, r.Size.Y), Mat.Solid(deck ? "8a6a46" : TierColors[Math.Clamp(tier, 0, TierColors.Length - 1)], .95f));
-            if (deck) mesh.Name = RegionFootprint("watchtower") is { } tower && r.Intersects(tower) ? "WatchtowerDeck" : "BridgeDeck";
+                new Vector3(r.Size.X, thick, r.Size.Y), deck && !container ? Mat.Solid("8a6a46", .95f) : GroundMaterial);
+            if (deck) mesh.Name = container ? "ContainerRoof" : RegionFootprint("watchtower") is { } tower && r.Intersects(tower) ? "WatchtowerDeck" : "BridgeDeck";
         }
-        var span = new[] { BridgeFootprint(), RegionFootprint("watchtower") }
+        var span = new[] { BridgeFootprint(), RegionFootprint("watchtower"),RegionFootprint("stack_1"),RegionFootprint("stack_2"),RegionFootprint("stack_3") }
             .FirstOrDefault(r => r.HasValue && rect.Intersects(r.Value));
         if (span == null) { Box(rect); return; }
         var cut = rect.Intersection(span.Value);
@@ -311,12 +313,12 @@ public sealed class LayoutMap : StageMap
                 if (alongX)
                 {
                     float x0 = c.Up.X > 0 ? c.Edge.X - RampLength : c.Edge.X, x1 = c.Up.X > 0 ? c.Edge.X : c.Edge.X + RampLength;
-                    Ramp(x0, x1, side0, side1, c.Low, c.Up, TierColors[Math.Clamp(c.Low, 0, TierColors.Length - 1)]);
+                    Ramp(x0, x1, side0, side1, c.Low, c.Up, TierColors[Math.Clamp(c.Low, 0, TierColors.Length - 1)], smooth:true);
                 }
                 else
                 {
                     float z0 = c.Up.Z > 0 ? c.Edge.Y - RampLength : c.Edge.Y, z1 = c.Up.Z > 0 ? c.Edge.Y : c.Edge.Y + RampLength;
-                    Ramp(side0, side1, z0, z1, c.Low, c.Up, TierColors[Math.Clamp(c.Low, 0, TierColors.Length - 1)]);
+                    Ramp(side0, side1, z0, z1, c.Low, c.Up, TierColors[Math.Clamp(c.Low, 0, TierColors.Length - 1)], smooth:true);
                 }
                 break;
             }
@@ -344,7 +346,7 @@ public sealed class LayoutMap : StageMap
             {
                 var from = FloorAt(link.From);
                 var to = FloorAt(link.To);
-                GondolaStation = Gondola(new Rect2(link.From.X - 2, link.From.Y - 2, 4, 4), from.Y, to, to - from);
+                GondolaStation = Gondola(new Rect2(link.From.X - 3, link.From.Y - 2.5f, 6, 5), from.Y, to, to - from);
                 // The route crosses the gorge by the gondola (survivors only, like a zipline).
                 _stage.Tiers.AddRide(from, to, GondolaStation.RideSeconds);
                 break;
@@ -379,27 +381,6 @@ public sealed class LayoutMap : StageMap
         var toHigh = (tb > ta ? d : -d);
         var up = alongX ? new Vector3(Mathf.Sign(toHigh.X), 0, 0) : new Vector3(0, 0, Mathf.Sign(toHigh.Y));
         return (edge, Math.Min(ta, tb), up);
-    }
-
-    /// <summary>A tall coloured post with a label where the layout marks something (graybox orientation only).</summary>
-    private void Post(StageLayout.Marker marker)
-    {
-        string color = marker.Type switch
-        {
-            "start" => "e04a3a", "safehouse" => "e04a3a", "safe_zone" => "3fbf6a", "mission" => "f08a24",
-            "blocked" => "e04a3a", "noise" => "c63dbf", _ => "dddddd",
-        };
-        var at = FloorAt(marker.Pos);
-        Mat.Box(_stage, at + Vector3.Up * 1.5f, new Vector3(.3f, 3, .3f), Mat.Glow(new Color(color), 1.2f));
-        _stage.AddChild(new Label3D
-        {
-            Text = marker.Label,
-            Position = at + Vector3.Up * 3.4f,
-            Billboard = BaseMaterial3D.BillboardModeEnum.Enabled,
-            FontSize = 48,
-            PixelSize = .01f,
-            Modulate = new Color(color),
-        });
     }
 
     /// <summary>Greedy rectangles of equal values on the grid: (x0, z0, x1, z1) in cells, end exclusive.</summary>

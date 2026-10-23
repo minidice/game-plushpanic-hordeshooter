@@ -1,4 +1,4 @@
-"""Six camera-facing outdoor edge masses; Blender Z-up, metres.
+"""Two retained camera-facing outdoor edge masses; Blender Z-up, metres.
 
 Authoring only: the reviewer runs Blender and inspects the exported assets.
 Run: blender --background --python prototypes/outdoor-kit/tools/edge_kit.py
@@ -20,14 +20,10 @@ PACK = REPO / 'game' / 'assets' / 'edge-kit'
 CONTRACT = 'plushpanic_outdoor_v1'
 # Authoring order X/Y/Z. Manifest dimensions follow the existing game X/Y/Z.
 EXPECTED = {
-    'edge_forest_pine': (8, 4, 7),
-    'edge_forest_round': (6, 4, 5.5),
-    'edge_forest_low': (7, 3.5, 3.6),
-    'edge_backdrop': (12, 3, 9),
     'edge_shrub_band': (5, 1.4, 1),
     'edge_rock_wall': (6, 2.5, 2.6),
 }
-BUDGET = dict(zip(EXPECTED, (2500, 2500, 2000, 600, 900, 1500)))
+BUDGET = dict(zip(EXPECTED, (900, 1500)))
 PALETTE = {
     'PineDark': ('37594d', .90), 'Pine': ('4f7b57', .88),
     'LeafTip': ('7e985b', .86), 'Leaf': ('668a59', .90),
@@ -140,64 +136,6 @@ def band(parent, width, depth, height, material, stations=10):
     return mesh(parent, 'ContinuousBand', vertices, faces, material)
 
 
-def pine(parent, x, y, height, radius, shades, trunk=False):
-    if trunk:
-        # Pine already uses four leaf materials: reuse its shadow for short stems.
-        # Front-offset stems peek above the recessed band's rounded shoulder and
-        # intersect the lower bough; a stem at the tree centre would be buried.
-        cyl(parent, 'ShortStem', (x, y-radius*.65, .95), .15, 1.9, 'PineDark', .11, 8)
-    for bottom, top, spread, shade in zip(
-            (.16, .40, .64), (.65, .84, 1), (1, .79, .55), shades):
-        cyl(parent, 'NeedleTier', (x, y, (bottom+top)*height/2),
-            radius*spread, (top-bottom)*height, shade, .055, 10)
-
-
-def forest_pine(k):
-    band(k, 8, 4, 1.76, 'Leaf')
-    for x, y, h, rad in ((-2.65, -.65, 5.4, 1.30), (-.88, -.8, 5.9, 1.36),
-                          (.94, -.65, 5.3, 1.30), (2.65, -.6, 5.7, 1.32),
-                          (-2.1, .65, 6.5, 1.37), (0, .65, 7, 1.40),
-                          (2.15, .65, 6.6, 1.35)):
-        pine(k, x, y, h, rad, ('PineDark', 'Pine', 'LeafTip'), y < 0)
-    for i in range(8):
-        lobe(k, (-3.4+i*.97, -1.05, .40), (.65, .8, 1.55), 'Leaf', 8)
-
-
-def forest_round(k):
-    band(k, 6, 4, 1.76, 'Leaf')
-    for x in (-1.1, 1.15):
-        cyl(k, 'ShortStem', (x, -1.45, 1.15), .20, 2.3, 'Bark', .13, 8)
-    for i, (x, y, z, sx, sy, h) in enumerate((
-            (-1.65, -.25, 1.35, 1.35, 1.55, 3.6),
-            (-.55, .45, 1.65, 1.60, 1.50, 3.85),
-            (.85, -.3, 1.45, 1.50, 1.65, 3.65),
-            (1.7, .45, 1.4, 1.30, 1.5, 3.65))):
-        lobe(k, (x, y, z), (sx, sy, h), ('Leaf', 'LeafTip', 'LeafLight', 'Leaf')[i])
-    for i in range(7):
-        lobe(k, (-2.5+i*.83, -1.10, .5), (.68, .76, 1.45),
-             'LeafLight' if i % 3 == 1 else 'Leaf', 8)
-
-
-def forest_low(k):
-    band(k, 7, 3.5, 1.72, 'Leaf')
-    for i, h in enumerate((3.1, 3.4, 3.2, 3.6, 3.25, 3.4)):
-        pine(k, -2.55+i*1.02, .25 if i % 2 else -.25, h, .94,
-             ('PineDark', 'Pine', 'LeafTip'))
-    for i in range(7):
-        lobe(k, (-2.85+i*.95, -.60, .55), (.78, 1.05, 2.05+i % 2*.12), 'Leaf', 8)
-
-
-def backdrop(k):
-    band(k, 12, 3, 1.85, 'PineDark', 6)
-    heights = (6.8, 8.2, 7.1, 9, 7.4, 8.4, 6.6, 8.7, 7.6, 8.8, 7, 8)
-    for i, h in enumerate(heights):
-        x, y = -5.28+i*.96, .10 if i % 2 else -.10
-        # Two collinear frusta form a single silhouette with a tiny light tip.
-        radius, tip_z, tip_r = .76, h*.83, .76*.17
-        cyl(k, 'DarkSpire', (x, y, tip_z/2), radius, tip_z, 'PineDark', tip_r, 8)
-        cyl(k, 'SpireTip', (x, y, (tip_z+h)/2), tip_r, h-tip_z, 'Pine', 0, 8)
-
-
 def shrub_band(k):
     band(k, 5, 1.4, .93, 'Leaf', 10)
     for i in range(8):
@@ -227,11 +165,6 @@ def rock_wall(k):
 
 
 BUILDERS = (
-    ('edge_forest_pine', '외곽 침엽수 숲', forest_pine,
-     '엇갈린 7그루·3층 잎·발치 덤불. 재질 상한을 위해 짧은 줄기는 PineDark 재사용.'),
-    ('edge_forest_round', '외곽 활엽수 숲', forest_round, '수관 4개·줄기 2개·발치 덤불.'),
-    ('edge_forest_low', '카메라 쪽 낮은 숲', forest_low, '낮은 침엽수 6그루·넓은 관목 지붕.'),
-    ('edge_backdrop', '먼 숲 실루엣', backdrop, '6.6~9m 침엽 실루엣 12개·2재질.'),
     ('edge_shrub_band', '외곽 덤불 띠', shrub_band, '덤불 8개·풀 6다발·작은 돌 3개.'),
     ('edge_rock_wall', '외곽 이끼 바위벽', rock_wall, '바위 5개·연결 벽·표면 이끼.'),
 )
@@ -422,18 +355,20 @@ def main():
         finish_asset(root, keep, data)
         assets.append(data)
         roots.append(root)
-    assert len(assets) == 6 and {asset['id'] for asset in assets} == set(EXPECTED)
+    assert len(assets) == 2 and {asset['id'] for asset in assets} == set(EXPECTED)
     manifest = dict(revision=1, contract=CONTRACT, date='2026-10-22', units='metres',
                     up_axis='+Y', status='edge-only art; not integrated or render-reviewed', assets=assets)
     (PACK/'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8')
     # Library layout is applied after export, never to GLB pivots or measurements.
     for i, root in enumerate(roots):
         root.location = ((i % 3)*15, (i//3)*12, 0)
+    bpy.data.orphans_purge(do_recursive=True)
+    bpy.context.preferences.filepaths.save_version = 0
     result = bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/'source'/'edge-kit.blend'))
     assert result == {'FINISHED'}, ('blend save failed', result)
     for asset in assets:
         print('EDGE_KIT_READY', asset['id'], asset['triangles'])
-    print('EDGE_KIT_BUILT 6')
+    print('EDGE_KIT_BUILT 2')
 
 
 if __name__ == '__main__':

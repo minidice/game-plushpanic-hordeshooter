@@ -287,3 +287,8 @@ node prototypes/character-lab/tools/validate-game-roster.mjs
 ## 10. 드론·부사수 모델 (2026-10-22, A-21)
 
 드론4종은 별도 비행 모델과 하부 공용 장비를 쓴다. 부사수4종은 기존 goose/duck/raccoon/redpanda CharacterRig를 시각 루트에서0.60배로 줄이고 전용 외형 프리셋을 적용한다. 원본 정의·플레이어 외형은 변경하지 않고 총/손/총구도 함께 축소한다. 충돌 참고 치수만 제공하며 물리 바디/AI는 후속. 품질 설정은 드론의 별도 메시와 부사수 자동LOD에 적용한다. [전체 계약·검사](companion-model-spec.md).
+
+
+## 로컬 웹 검수 시제품 (2026-10-24, T-25)
+
+[`studio/`](../studio/)에서 현재 게임의 `AppearanceEditor` 선택지/범위와 `CharacterRig`·`AppearanceProfile`을 사용한다. 웹은 편집 UI만 제공하며 실제 Forward+ 셰이더로 900×900 정지 이미지를 만든다. 임시 조합은 저장하지 않으며 기존 인게임 저장 규칙과 모델/색/체형 수치를 변경하지 않는다. 조명은 게임 메뉴의 커스터마이징 기준이며 전투 맵별 조명은 별도다. [실행·데이터 계약·검증·제약](studio-prototype.md).

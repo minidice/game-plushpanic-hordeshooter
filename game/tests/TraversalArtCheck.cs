@@ -56,8 +56,8 @@ public partial class TraversalArtCheck : Node
             {
                 var box = new Aabb(inverse * mesh.ToGlobal(faces[i]), Vector3.Zero)
                     .Expand(inverse * mesh.ToGlobal(faces[i + 1])).Expand(inverse * mesh.ToGlobal(faces[i + 2]));
-                foreach (float x in new[] { -1.92f, 1.92f })
-                    if (box.Intersects(new Aabb(new Vector3(x - .12f, .15f, -.7f), new Vector3(.24f, 1.65f, 1.4f)))) intrusions++;
+                foreach (float x in new[] { -2.92f, 2.92f })
+                    if (box.Intersects(new Aabb(new Vector3(x - .12f, .15f, -1.15f), new Vector3(.24f, 1.65f, 2.3f)))) intrusions++;
             }
         }
         Check(intrusions == 0, "both cabin entrances are clear in the actual GLB triangles (not only collision-free)");
@@ -126,7 +126,7 @@ public partial class TraversalArtCheck : Node
         await Frames(90);
         await Shot("zipline-middle");
         for (int i = 0; i < 600 && p.OnZipline; i++) await Frames(1);
-        Check(!p.OnZipline && p.GlobalPosition.DistanceTo(line.End) < .2f, "zipline arrives at the lower ground");
+        Check(!p.OnZipline && p.GlobalPosition.DistanceTo(line.Landing) < .2f, "zipline arrives beside the end post on the lower ground");
         await Frames(20);
         await Shot("zipline-end");
         var gondola = _stage.Gondolas.Single();
@@ -136,7 +136,7 @@ public partial class TraversalArtCheck : Node
         var center = gondola.GlobalPosition;
         p.TeleportTo(center + Vector3.Up * 1.2f);
         Check(!gondola.Aboard(p), "standing one tier above the platform does not count as aboard");
-        p.TeleportTo(center + Vector3.Right * 2.2f);
+        p.TeleportTo(center + Vector3.Right * 3.2f);
         Check(!gondola.Aboard(p), "standing outside the cabin does not count as aboard");
         p.TeleportTo(center + Vector3.Forward * 5 + Vector3.Up * .05f);
         p.SetControls(Vector2.Zero, p.GlobalPosition + Vector3.Right * 2 + Vector3.Up, false);
@@ -180,18 +180,24 @@ public partial class TraversalArtCheck : Node
         await Shot("gondola-six-wide");
         var before = passengers.Select(r => r.GlobalPosition).ToArray();
         var terrain = _stage.GetChildren().OfType<MeshInstance3D>().First(m => m.Visible);
+        var worldLamps=_stage.GetChildren().OfType<OmniLight3D>().Where(l=>l.Visible).ToArray();
         var alreadyHidden = new Node3D { Name = "AlreadyHidden", Visible = false };
         _stage.AddChild(alreadyHidden);
         Check(gondola.TryDepart() && _stage.AllStopped, "all six depart together and the world pauses");
         await Frames(100);
         Check(gondola.Riding && gondola.BackdropTravel > 0, "fake background moves during the ride");
+        var backdrop=gondola.GetNode<Node3D>("GondolaBackdrop");
+        Check(backdrop.FindChildren("*",nameof(MultiMeshInstance3D),true,false).Count>0,
+            "ride backdrop reuses woodland meshes instead of graybox blocks");
         Check(passengers.Select((r, i) => r.GlobalPosition.DistanceTo(before[i]) < .01f).All(v => v), "all six riders stay fixed during the ride");
         Check(!terrain.IsVisibleInTree(), "real terrain no longer covers the fake gorge during the ride");
+        Check(worldLamps.All(l=>!l.IsVisibleInTree()),"real lamp fixtures do not float over the gorge backdrop");
         await Shot("gondola-riding");
         for (int i = 0; i < 1800 && gondola.Riding; i++) await Frames(1);
         Check(gondola.Completed && !_stage.AllStopped, "arrival resumes the world");
         Check(cabin.GlobalPosition.DistanceTo(gondola.Arrival) < .02f, "cabin is at the arrival station with its passengers");
         Check(terrain.IsVisibleInTree(), "arrival restores the real terrain");
+        Check(worldLamps.All(l=>l.Visible),"arrival restores original world lamps");
         Check(!alreadyHidden.Visible, "arrival leaves originally hidden roots hidden");
         Check(passengers.All(r => r.GlobalPosition.DistanceTo(gondola.Arrival) < 2.5f), "all six arrive inside the destination cabin");
         Check(!gondola.TryDepart(), "a completed one-way ride cannot depart from the old station again");
@@ -209,7 +215,7 @@ public partial class TraversalArtCheck : Node
         await Shot("gondola-disembarked");
         // Removing a ride (for example while leaving a scene) must not strand the shared tree in pause.
         var arrival = gondola.Arrival;
-        var interrupted = Gondola.Create(_stage, new Rect2(arrival.X - 2, arrival.Z - 2, 4, 4), arrival.Y,
+        var interrupted = Gondola.Create(_stage, new Rect2(arrival.X - 3, arrival.Z - 2.5f, 6, 5), arrival.Y,
             arrival + Vector3.Right * 10, Vector3.Right, 12);
         for (int i = 0; i < passengers.Count; i++)
             passengers[i].TeleportTo(arrival + new Vector3((i % 3 - 1) * 1.1f, .05f, (i / 3 - .5f) * 1.1f));

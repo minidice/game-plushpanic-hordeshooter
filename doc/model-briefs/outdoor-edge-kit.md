@@ -1,3 +1,5 @@
+> 2026-10-24: 아래 6종은 최초 제작 이력입니다. 사용하지 않는 `edge_forest_pine`, `edge_forest_round`, `edge_forest_low`, `edge_backdrop` 원본·등록·생성 코드를 제거했습니다. 현재 팩은 `edge_shrub_band`와 `edge_rock_wall` 2종입니다. 나무/외곽 숲은 [공통 나무 원형](../tree-asset-replacement.md)을 사용합니다.
+
 # 모델 지시문: 야외 외곽 전용 세트 (`edge-kit`) — 갈 수 없는 곳을 빽빽하게 채우는 배경
 
 > **상태**: 2026-10-22 작성. Codex CLI(`codex exec -s workspace-write`)에 맡기는 정적 배경 모델 작업(decisions.md A-22 · L-14, 이번 결정 A-23). 한 번의 Codex 실행에서 여섯 모델을 **한 스크립트로** 만든다.

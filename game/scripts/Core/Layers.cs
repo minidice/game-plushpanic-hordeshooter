@@ -8,6 +8,8 @@ public static class Layers
     public const uint Enemy = 4;
     public const uint Props = 8;
     public const uint Corpse = 16;
+    public const uint MovementOnly = 32;
+    public const uint MovementWorld = World | MovementOnly;
 
     public const uint BulletMask = World | Enemy | Props;
     public const uint SightMask = World;

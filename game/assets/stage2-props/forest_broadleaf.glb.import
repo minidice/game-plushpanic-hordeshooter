@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://cr0vheji8dd3u"
-path="res://.godot/imported/edge_forest_pine.glb-b0e89416e42f83d100b781daec5c6191.scn"
+uid="uid://do6slj6bxboyk"
+path="res://.godot/imported/forest_broadleaf.glb-52ac5eb33b0a0e82783cb27fe675fbdd.scn"
 
 [deps]
 
-source_file="res://assets/edge-kit/edge_forest_pine.glb"
-dest_files=["res://.godot/imported/edge_forest_pine.glb-b0e89416e42f83d100b781daec5c6191.scn"]
+source_file="res://assets/stage2-props/forest_broadleaf.glb"
+dest_files=["res://.godot/imported/forest_broadleaf.glb-52ac5eb33b0a0e82783cb27fe675fbdd.scn"]
 
 [params]
 
@@ -35,7 +35,7 @@ animation/fps=30
 animation/trimming=false
 animation/remove_immutable_tracks=true
 animation/import_rest_as_RESET=false
-import_script/path=""
+import_script/path="res://assets/stage2-props/forest_material_import.gd"
 materials/extract=0
 materials/extract_format=0
 materials/extract_path=""

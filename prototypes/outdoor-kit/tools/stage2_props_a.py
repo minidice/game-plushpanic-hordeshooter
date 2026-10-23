@@ -11,12 +11,15 @@ Reviewer command:
 Outputs: game/assets/stage2-props/{five GLBs,manifest.json} and
   prototypes/outdoor-kit/source/stage2-props-a.blend
 The manifest merge preserves other bundles and all unrelated top-level metadata.
+Append -- followed by asset IDs to export/replace only those records. The blend
+library is always rebuilt in full; omitted GLBs and manifest records stay intact.
 The cabin slab is the explicit brief exception to the no-walking-surface rule;
 the station only has a perimeter. Replace the game's placeholder cabin floor.
 """
 
 import json
 import math
+import sys
 from pathlib import Path
 
 import bpy
@@ -30,10 +33,10 @@ CONTRACT = 'plushpanic_outdoor_v1'
 BUDGET = dict(ladder_section=600, ladder_top=500, zipline_anchor=1500,
               gondola_cabin=3000, gondola_station=3000)
 # Overall extents in exported X/Y/Z order, including projecting fittings.
-EXPECTED = dict(ladder_section=(.62, 1.2, .12), ladder_top=(.626, 1.05, .636),
+EXPECTED = dict(ladder_section=(.95, 1.2, .20), ladder_top=(.95, 1.05, .71),
                 zipline_anchor=(.60, 3.20, 1.00),
-                gondola_cabin=(4.0, 3.73, 4.0),
-                gondola_station=(4.8, 5.6, 5.2))
+                gondola_cabin=(6.0, 3.73, 5.0),
+                gondola_station=(6.8, 5.6, 6.2))
 PALETTE = dict(Concrete='a4aaa1', Metal='56636a', MetalLight='a8b7b1',
                Rust='98674f', WoodDark='5e4632', Ochre='c7a35c',
                Red='b96551', Hazard='e2b84a', Ink='2a2a2a')
@@ -116,16 +119,21 @@ def rail(parent, name, x, y, bottom, top, color, width=.07):
 
 
 def tube_path(parent, name, points, radius, color):
-    """Continuous capped eight-sided tube for a path in a YZ plane."""
+    """Continuous chamfered-square handrail, matching the straight rails."""
     points = [Vector(p) for p in points]
     vertices, faces = [], []
     for i, point in enumerate(points):
         tangent = (points[min(i + 1, len(points) - 1)] - points[max(i - 1, 0)]).normalized()
         side = Vector((1, 0, 0))
         other = tangent.cross(side).normalized()
-        for j in range(8):
-            angle = j * math.tau / 8
-            vertices.append(point + radius * (math.cos(angle) * side + math.sin(angle) * other))
+        # The first 0.15 m is an inserted tongue inside the final section.
+        # Insetting its bottom prevents coincident side faces in the assembly.
+        h = radius * (.94 if i == 0 else 1)
+        cut = h * .34
+        outline = [(-h + cut, -h), (h - cut, -h), (h, -h + cut), (h, h - cut),
+                   (h - cut, h), (-h + cut, h), (-h, h - cut), (-h, -h + cut)]
+        for u, v in outline:
+            vertices.append(point + u * side + v * other)
     for i in range(len(points) - 1):
         for j in range(8):
             a, b = i * 8 + j, i * 8 + (j + 1) % 8
@@ -183,13 +191,13 @@ def start(asset_id, name, note, occlusion=None):
 
 def ladder_section():
     root, keep, _, data = start('ladder_section', '사다리 한 단',
-        '1.2 m 간격으로 쌓기. 레일 중심 X=±0.275, Blender Y=-0.025. '
+        '1.2 m 간격으로 쌓기. 폭 0.95 m, 적갈색 사각 레일 0.15 m, 중심 X=±0.4, Blender Y=-0.025. '
         '가로대 높이 0.15/0.45/0.75/1.05 m. 게임 +Z 쪽에서 오름.')
-    for x in (-.275, .275):
-        rail(keep, 'ContinuousRail', x, -.025, 0, 1.2, 'MetalLight')
-        box(keep, 'WallBracket', (x, .035, .6), (.07, .05, .09), 'Metal', .008)
+    for x in (-.4, .4):
+        rail(keep, 'ContinuousRail', x, -.025, 0, 1.2, 'Red', .15)
+        box(keep, 'WallBracket', (x, .075, .6), (.12, .05, .14), 'Metal', .008)
     for z in (.15, .45, .75, 1.05):
-        beam(keep, 'Rung', (-.275, -.025, z), (.275, -.025, z), .0225, 'MetalLight')
+        box(keep, 'BroadTread', (0, -.005, z), (.80, .18, .11), 'Ochre', .012)
     return root, data, {}
 
 
@@ -197,16 +205,16 @@ def ladder_top():
     root, keep, _, data = start('ladder_top', '사다리 위 손잡이',
         '피벗=윗단 가장자리. 바닥 0, 하단 -0.15, 최고 0.9 m. '
         '레일 중심은 section과 동일. 아치는 뒤(Blender +Y)로 0.56 m 휨.')
-    for x in (-.275, .275):
-        points = [(x, -.025, -.15), (x, -.025, .585)]
+    for x in (-.4, .4):
+        points = [(x, -.025, -.15), (x, -.025, 0), (x, -.025, .545)]
         for i in range(1, 7):
             angle = math.pi * i / 6
-            points.append((x, -.025 + .28 * (1 - math.cos(angle)), .585 + .28 * math.sin(angle)))
+            points.append((x, -.025 + .28 * (1 - math.cos(angle)), .545 + .28 * math.sin(angle)))
         points.append((x, .535, .42))
-        tube_path(keep, 'ArchGrip', points, .035, 'MetalLight')
-        rail(keep, 'YellowBand', x, -.025, .49, .57, 'Hazard', .076)
+        tube_path(keep, 'ArchGrip', points, .075, 'Red')
+        box(keep, 'YellowBand', (x, -.103, .45), (.132, .006, .08), 'Hazard', 0)
         # Black inset stripe is raised on the camera-facing surface, not coplanar.
-        box(keep, 'DarkStripe', (x, -.064, .53), (.06, .004, .025), 'Ink', 0)
+        box(keep, 'DarkStripe', (x, -.108, .45), (.11, .004, .025), 'Ink', 0)
     return root, data, {}
 
 
@@ -231,65 +239,65 @@ def zipline_anchor():
 
 def gondola_cabin():
     root, keep, upper, data = start('gondola_cabin', '개방형 곤돌라 객차',
-        '피벗=4×4 m 바닥 윗면, 바닥판 -0.15…0 m. 앞벽 0.6 m, 나머지 1 m. '
+        '피벗=6×5 m 바닥 윗면, 바닥판 -0.15…0 m. 앞벽 0.6 m, 나머지 1 m. '
         '모서리 기둥 2.4 m, 바퀴 중심 높이 3.4 m. 기존 탑승판 그림 교체용; '
-        '양옆 ±X 중앙 폭 1.6 m 출입구. 기둥 가림은 게임 Occlude_Frame 처리.', 'Frame')
-    floor = box(keep, 'Floor', (0, 0, -.075), (4, 4, .15), 'Metal', .025)
-    box(keep, 'FrontWall', (0, -1.92, .30), (4, .16, .60), 'Ochre', .035)
-    box(keep, 'RearWall', (0, 1.92, .50), (4, .16, 1.0), 'Ochre', .035)
-    for x in (-1.92, 1.92):
+        '양옆 ±X 중앙 폭 2.4 m 출입구. 기둥 가림은 게임 Occlude_Frame 처리.', 'Frame')
+    floor = box(keep, 'Floor', (0, 0, -.075), (6, 5, .15), 'Metal', .025)
+    box(keep, 'FrontWall', (0, -2.42, .30), (6, .16, .60), 'Ochre', .035)
+    box(keep, 'RearWall', (0, 2.42, .50), (6, .16, 1.0), 'Ochre', .035)
+    for x in (-2.92, 2.92):
         # Walk through the actual opening rather than a decorative solid wall.
         for sign in (-1, 1):
-            box(keep, 'SideWall', (x, sign * 1.32, .50), (.16, 1.04, 1.0), 'Ochre', .035)
-            beam(keep, 'SideRail', (x, sign * .8, 1.0), (x, sign * 1.88, 1.0), .055, 'Metal')
-        for y in (-1.92, 1.92):
+            box(keep, 'SideWall', (x, sign * 1.77, .50), (.16, 1.14, 1.0), 'Ochre', .035)
+            beam(keep, 'SideRail', (x, sign * 1.2, 1.0), (x, sign * 2.38, 1.0), .055, 'Metal')
+        for y in (-2.42, 2.42):
             beam(upper, 'CornerPost', (x, y, .55), (x, y, 2.4), .075, 'Metal')
             beam(upper, 'HangerArm', (x, y, 2.4), (0, 0, 3.23), .07, 'Metal')
-    beam(keep, 'FrontRail', (-1.94, -1.92, .555), (1.94, -1.92, .555), .045, 'Metal')
+    beam(keep, 'FrontRail', (-2.94, -2.42, .555), (2.94, -2.42, .555), .045, 'Metal')
     # A rear crossbar stiffens the frame without covering the overhead opening.
-    beam(upper, 'RearCrossbar', (-1.92, 1.92, 2.32), (1.92, 1.92, 2.32), .065, 'Metal')
+    beam(upper, 'RearCrossbar', (-2.92, 2.42, 2.32), (2.92, 2.42, 2.32), .065, 'Metal')
     box(upper, 'WheelCarrier', (0, 0, 3.22), (1.05, .18, .12), 'Metal', .025)
     for x in (-.34, .34):
         pulley(upper, 'TravelWheel', (x, 0, 3.4), .18, .12, axis='Y')
     for x, z, width in ((-1.3, .18, .25), (.85, .36, .19), (1.45, .23, .12)):
-        box(keep, 'RustPatch', (x, -2.002, z), (width, .008, .09), 'Rust', .01)
+        box(keep, 'RustPatch', (x, -2.502, z), (width, .008, .09), 'Rust', .01)
     return root, data, {'floor': floor, 'cable_center': Vector((0, 0, 3.4))}
 
 
 def gondola_station():
     root, keep, upper, data = start('gondola_station', '곤돌라 승강장',
-        '피벗=4×4 m 탑승 영역 중심 바닥. 중앙 바닥 없음; 테두리만 z=0 아래 면부터. '
-        '뒤 탑 X=-2…2, Blender Y=2…3.2, 높이 5 m. '
-        '바퀴 지름 1.2 m, +X 출선 팔. 앞왼쪽 빨간 레버.', 'Tower')
+        '피벗=6×5 m 탑승 영역 중심 바닥. 중앙 바닥 없음; 테두리만 z=0 아래 면부터. '
+        '뒤 탑 X=-3…3, Blender Y=2.5…3.7, 높이 5 m. '
+        '바퀴 지름 1.2 m, +X 출선 팔. 앞왼쪽 레버 게임(-2.65,1.05,2.28).', 'Tower')
     # A thin perimeter only; the game owns the actual walkable ground.
-    for y in (-1.95, 1.95):
-        box(keep, 'PlatformEdge', (0, y, .06), (4, .10, .12), 'Metal', .018)
-    for x in (-1.95, 1.95):
-        box(keep, 'PlatformEdge', (x, 0, .06), (.10, 3.8, .12), 'Metal', .018)
+    for y in (-2.45, 2.45):
+        box(keep, 'PlatformEdge', (0, y, .06), (6, .10, .12), 'Metal', .018)
+    for x in (-2.95, 2.95):
+        box(keep, 'PlatformEdge', (x, 0, .06), (.10, 4.8, .12), 'Metal', .018)
     tower_parts = []
-    for x in (-1.88, 1.88):
-        for y in (2.12, 3.08):
+    for x in (-2.88, 2.88):
+        for y in (2.62, 3.58):
             # Ends sit inside the crossbar, with narrower sides. Matching the
             # beam's top/side planes produces coplanar black patches on export.
             tower_parts.append(box(upper, 'TowerLeg', (x, y, 2.42), (.22, .22, 4.84), 'Metal', .03))
             box(keep, 'TowerFoot', (x, y, .10), (.34, .24, .20), 'Concrete', .02)
-        for a, b in (((x, 2.12, .35), (x, 3.08, 4.75)),
-                     ((x, 3.08, .35), (x, 2.12, 4.75))):
+        for a, b in (((x, 2.62, .35), (x, 3.58, 4.75)),
+                     ((x, 3.58, .35), (x, 2.62, 4.75))):
             beam(upper, 'SideBrace', a, b, .055, 'Metal')
-    for a, b in (((-1.88, 3.08, .35), (1.88, 3.08, 4.75)),
-                 ((1.88, 3.08, .35), (-1.88, 3.08, 4.75))):
+    for a, b in (((-2.88, 3.58, .35), (2.88, 3.58, 4.75)),
+                 ((2.88, 3.58, .35), (-2.88, 3.58, 4.75))):
         beam(upper, 'BackXBrace', a, b, .075, 'Metal')
-    for y in (2.12, 3.08):
-        tower_parts.append(box(upper, 'TopCrossbar', (0, y, 4.86), (4, .24, .28), 'Metal', .035))
-    beam(upper, 'WheelAxle', (0, 2.12, 5.0), (0, 3.08, 5.0), .12, 'MetalLight', 12)
-    pulley(upper, 'StationWheel', (0, 2.6, 5.0), .6, .22, axis='Y', segments=16)
-    box(upper, 'CableArm', (1.35, 2.6, 4.74), (2.90, .22, .22), 'Metal', .035)
-    beam(upper, 'ArmBrace', (1.88, 2.6, 3.9), (2.72, 2.6, 4.73), .065, 'Metal')
-    box(keep, 'LeverFoot', (-1.65, -1.6, .08), (.38, .38, .16), 'Concrete', .025)
-    box(keep, 'LeverPost', (-1.65, -1.6, .56), (.16, .16, 1.08), 'Metal', .025)
-    beam(keep, 'LeverStem', (-1.65, -1.6, .90), (-1.65, -1.78, 1.04), .035, 'MetalLight')
-    beam(keep, 'RedHandle', (-1.83, -1.78, 1.05), (-1.47, -1.78, 1.05), .05, 'Red')
-    return root, data, {'tower': tower_parts, 'cable_center': Vector((0, 2.6, 5.0))}
+    for y in (2.62, 3.58):
+        tower_parts.append(box(upper, 'TopCrossbar', (0, y, 4.86), (6, .24, .28), 'Metal', .035))
+    beam(upper, 'WheelAxle', (0, 2.62, 5.0), (0, 3.58, 5.0), .12, 'MetalLight', 12)
+    pulley(upper, 'StationWheel', (0, 3.1, 5.0), .6, .22, axis='Y', segments=16)
+    box(upper, 'CableArm', (1.85, 3.1, 4.74), (3.90, .22, .22), 'Metal', .035)
+    beam(upper, 'ArmBrace', (2.88, 3.1, 3.9), (3.72, 3.1, 4.73), .065, 'Metal')
+    box(keep, 'LeverFoot', (-2.65, -2.1, .08), (.38, .38, .16), 'Concrete', .025)
+    box(keep, 'LeverPost', (-2.65, -2.1, .56), (.16, .16, 1.08), 'Metal', .025)
+    beam(keep, 'LeverStem', (-2.65, -2.1, .90), (-2.65, -2.28, 1.04), .035, 'MetalLight')
+    beam(keep, 'RedHandle', (-2.83, -2.28, 1.05), (-2.47, -2.28, 1.05), .05, 'Red')
+    return root, data, {'tower': tower_parts, 'cable_center': Vector((0, 3.1, 5.0))}
 
 
 def vertices(objects):
@@ -343,10 +351,10 @@ def prepare(root, data, probes):
     if 'floor' in probes:
         lo, hi = bounds(vertices([probes['floor']]))
         assert abs(hi.z) <= .02 and abs(lo.z + .15) <= .002, 'cabin floor plane'
-        assert abs(hi.x - lo.x - 4) <= .02 and abs(hi.y - lo.y - 4) <= .02
+        assert abs(hi.x - lo.x - 6) <= .02 and abs(hi.y - lo.y - 5) <= .02
     if 'tower' in probes:
         lo, hi = bounds(vertices(probes['tower']))
-        for actual, expected in zip(hi - lo, (4, 1.2, 5)):
+        for actual, expected in zip(hi - lo, (6, 1.2, 5)):
             assert abs(actual - expected) <= .02, ('tower frame', actual, expected)
     if 'cable_center' in probes:
         point = probes['cable_center'] - shift
@@ -404,7 +412,9 @@ def read_manifest():
                 up_axis='+Y', status='Stage 2 prop assets; game integration pending', assets=[])
 
 
-def main():
+def main(selected=None):
+    selected = set(BUDGET) if selected is None else set(selected)
+    assert selected and selected <= set(BUDGET), 'unknown or empty asset selection'
     manifest = read_manifest()  # Fail before touching outputs on an incompatible pack.
     bpy.ops.object.select_all(action='SELECT')
     bpy.ops.object.delete(use_global=False)
@@ -423,6 +433,8 @@ def main():
     PACK.mkdir(parents=True, exist_ok=True)
     SOURCE.parent.mkdir(parents=True, exist_ok=True)
     for root, data in prepared:
+        if data['id'] not in selected:
+            continue
         objects = [root] + list(root.children_recursive)
         for obj in objects[1:]:
             obj.name = obj['contract_name']
@@ -440,7 +452,7 @@ def main():
         for obj in objects[1:]:
             obj.name = data['id'] + '__' + obj['contract_name']
     # Preserve ordering, other bundles and their custom fields without regenerating them.
-    replacements = {data['id']: data for _, data in prepared}
+    replacements = {data['id']: data for _, data in prepared if data['id'] in selected}
     manifest['assets'] = [replacements.pop(old['id'], old) for old in manifest['assets']]
     manifest['assets'].extend(replacements.values())
     # Library staging happens after origin-centered GLB export; names remain recoverable.
@@ -452,9 +464,11 @@ def main():
     temporary.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     temporary.replace(PACK / 'manifest.json')
     for _, data in prepared:
-        print('STAGE2_PROP_READY', data['id'], data['triangles'])
-    print('STAGE2_PROPS_BUILT A', len(prepared))
+        if data['id'] in selected:
+            print('STAGE2_PROP_READY', data['id'], data['triangles'])
+    print('STAGE2_PROPS_BUILT A', len(selected))
 
 
 if __name__ == '__main__':
-    main()
+    args = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
+    main(args or None)

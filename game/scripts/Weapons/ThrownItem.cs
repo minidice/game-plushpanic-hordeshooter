@@ -72,7 +72,7 @@ public partial class ThrownItem : RigidBody3D
             ContactMonitor = true,
             MaxContactsReported = 2,
             CollisionLayer = 0,
-            CollisionMask = Layers.World | Layers.Props,
+            CollisionMask = Layers.MovementWorld | Layers.Props,
             PhysicsMaterialOverride = new PhysicsMaterial { Bounce = def.DetonateOnImpact ? 0 : .35f, Friction = .8f },
             LinearDamp = .2f,
             AngularDamp = .5f,

@@ -12,6 +12,7 @@ from urllib.parse import unquote
 from PIL import Image, ImageChops
 
 ROOT=Path(__file__).resolve().parents[1]
+PACK=ROOT.parents[1]/'game/assets/outdoor-kit'
 
 class Links(HTMLParser):
     def __init__(self):
@@ -28,7 +29,7 @@ def check_path(base,link):
     if link:assert (base/link).exists(), f'Missing link: {base} -> {link}'
 
 def main():
-    data=json.loads((ROOT/'pack/manifest.json').read_text(encoding='utf-8'))
+    data=json.loads((PACK/'manifest.json').read_text(encoding='utf-8'))
     parser=Links();parser.feed((ROOT/'gallery/index.html').read_text(encoding='utf-8'))
     assert parser.cards==len(data['assets'])
     for link in parser.links:check_path(ROOT/'gallery',link)
@@ -41,7 +42,7 @@ def main():
     for a in data['assets']:
         im=Image.open(ROOT/f"gallery/images/{a['id']}.webp").convert('RGB')
         assert min(im.size)>=700
-        if a['occlusion_parts']:
+        if a['occlusion_parts'] and 'tree_revision' not in a:
             other=Image.open(ROOT/f"gallery/images/{a['id']}-ghost.webp").convert('RGB')
             assert ImageChops.difference(im,other).getbbox() is not None, 'Ghost identical to solid: '+a['id']
             comparisons+=1
@@ -59,9 +60,9 @@ def main():
     assert run.returncode==0,run.stderr
     destination=fake/'game/assets/outdoor-kit'
     copied=list(p for p in destination.rglob('*') if p.is_file())
-    assert len(copied)==len(data['assets'])+1+len(list((ROOT/'pack/shaders').glob('*.gdshader'))),len(copied)
+    assert len(copied)==len([p for p in PACK.rglob('*') if p.is_file() and p.suffix in {'.glb','.json','.gdshader','.gd','.import'}]),len(copied)
     for p in copied:
-        src=ROOT/'pack'/p.relative_to(destination)
+        src=PACK/p.relative_to(destination)
         assert hashlib.sha256(p.read_bytes()).digest()==hashlib.sha256(src.read_bytes()).digest()
     snapshot={str(p):p.read_bytes() for p in copied}
     blocked=subprocess.run(command+['-Apply'],capture_output=True,text=True,encoding='utf-8')

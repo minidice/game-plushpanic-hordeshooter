@@ -12,8 +12,8 @@ $destination = [IO.Path]::GetFullPath((Join-Path $repo 'game/assets/outdoor-kit'
 if (Test-Path -LiteralPath $destination) {
     throw "Destination already exists. Nothing overwritten: $destination"
 }
-$source = Join-Path $PSScriptRoot 'pack'
-$files = Get-ChildItem -LiteralPath $source -Recurse -File | Where-Object { $_.Extension -in '.glb', '.json', '.gdshader' }
+$source = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../game/assets/outdoor-kit'))
+$files = Get-ChildItem -LiteralPath $source -Recurse -File | Where-Object { $_.Extension -in '.glb', '.json', '.gdshader', '.gd', '.import' }
 $manifest = Get-Content -LiteralPath (Join-Path $source 'manifest.json') -Raw | ConvertFrom-Json
 if (($files | Where-Object Extension -eq '.glb').Count -ne $manifest.assets.Count) { throw 'GLB count does not match manifest.' }
 Write-Output "Source: $source"

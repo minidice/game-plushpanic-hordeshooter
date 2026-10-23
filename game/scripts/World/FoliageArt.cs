@@ -146,12 +146,4 @@ internal static class FoliageArt
         parent.AddChild(new MultiMeshInstance3D { Name=name,Multimesh=multi,CastShadow=shadows?GeometryInstance3D.ShadowCastingSetting.On:GeometryInstance3D.ShadowCastingSetting.Off },true);
     }
 
-    public static bool ReplaceTree(Node3D model,string id)
-    {
-        if(id is not ("pine_tall" or "pine_small" or "broadleaf" or "round_oak" or "round_linden"))return false;
-        foreach(Node child in model.GetChildren())child.Free();
-        bool pine=id.StartsWith("pine");float scale=id=="pine_small"?.68f:id=="round_linden"?.8f:1;
-        model.AddChild(new MeshInstance3D { Name="UnifiedCanopy",Mesh=Mesh(pine?Kind.Pine:Kind.Broadleaf,id=="round_oak"?2:0),Scale=Vector3.One*scale });
-        return true;
-    }
 }

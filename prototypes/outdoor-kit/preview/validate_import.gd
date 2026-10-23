@@ -1,19 +1,19 @@
 extends SceneTree
+const ASSETS = preload("res://preview/canonical_assets.gd")
 
 func _initialize() -> void:
     call_deferred("run_checks")
 
 func run_checks() -> void:
-    var manifest: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://pack/manifest.json"))
+    var manifest: Dictionary = ASSETS.manifest()
     var checked := 0
     var river_section: Array[String] = []
     for a in manifest.assets:
-        var scene := load("res://pack/"+a.file) as PackedScene
-        if scene == null:
+        var instance := ASSETS.model(a.file)
+        if instance == null:
             push_error("Cannot load "+a.id)
             quit(2)
             return
-        var instance := scene.instantiate() as Node3D
         root.add_child(instance)
         if instance.find_child("Keep",true,false) == null:
             push_error("Missing Keep: "+a.id)

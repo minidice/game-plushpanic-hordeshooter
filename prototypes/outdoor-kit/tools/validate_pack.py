@@ -7,7 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 def main():
-    manifest_path = ROOT / 'pack/manifest.json'
+    manifest_path = ROOT.parents[1] / 'game/assets/outdoor-kit/manifest.json'
     assert manifest_path.exists(), 'Model pack has not been generated: pack/manifest.json missing'
     data = json.loads(manifest_path.read_text(encoding='utf-8'))
     assert len(data['assets']) == 32
@@ -22,7 +22,7 @@ def main():
     for a in data['assets']:
         assert a['id'] not in ids
         ids.add(a['id'])
-        path = ROOT / 'pack' / a['file']
+        path = ROOT.parents[1] / 'game/assets/outdoor-kit' / a['file']
         raw = path.read_bytes()
         magic, version, length = struct.unpack_from('<4sII', raw)
         assert (magic, version, length) == (b'glTF', 2, len(raw)), path

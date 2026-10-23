@@ -1,6 +1,6 @@
 """Original stylized outdoor library. Blender 5.2, no external assets/dependencies.
 Coordinates here are Blender Z-up; GLB export converts to game Y-up metres.
-Run: blender --background --python tools/build_models.py
+Run: blender --background --python tools/build_models.py [-- --trees-only]
 """
 import bpy
 import math
@@ -14,11 +14,20 @@ sys.path.insert(0,str(Path(__file__).resolve().parent))
 from nature_shapes import build_trees, build_rocks, build_streams
 
 ROOT = Path(__file__).resolve().parents[1]
-PACK = ROOT / 'pack'
+PACK = ROOT.parents[1] / 'game/assets/outdoor-kit'
+TREES_ONLY = '--trees-only' in sys.argv
 (PACK / 'models').mkdir(parents=True, exist_ok=True)
 (ROOT / 'source').mkdir(exist_ok=True)
-bpy.ops.object.select_all(action='SELECT')
-bpy.ops.object.delete(use_global=False)
+if TREES_ONLY:
+    bpy.ops.wm.open_mainfile(filepath=str(ROOT / 'source/outdoor-library.blend'))
+    for tree_id in ['pine_tall', 'pine_small', 'broadleaf', 'round_oak', 'round_linden']:
+        tree = bpy.data.objects.get(tree_id)
+        if tree:
+            for obj in list(tree.children_recursive) + [tree]:
+                bpy.data.objects.remove(obj, do_unlink=True)
+else:
+    bpy.ops.object.select_all(action='SELECT')
+    bpy.ops.object.delete(use_global=False)
 random.seed(22)
 
 def mat(name, color, rough=.78, metal=0):
@@ -132,6 +141,19 @@ def coll(kind,**kw):return dict(kind=kind,**kw)
 
 nature_api=SimpleNamespace(**{name:globals()[name] for name in ['mat','M','start','occ','coll','finish_asset','empty','mesh','ico','beam','cyl','box']})
 build_trees(nature_api)
+
+if TREES_ONLY:
+    manifest = json.loads((PACK/'manifest.json').read_text(encoding='utf-8'))
+    replacements = {a['id']: a for a in assets}
+    manifest['assets'] = [replacements.get(a['id'], a) for a in manifest['assets']]
+    manifest['tree_revision'] = 'foliage-art-2026-10-24'
+    (PACK/'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
+    for i, root in enumerate(roots): root.location = (i*8, 0, 0)
+    bpy.data.orphans_purge(do_recursive=True)
+    bpy.context.preferences.filepaths.save_version = 0
+    bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/'source/outdoor-library.blend'))
+    print('REPLACED', len(assets), 'CANONICAL TREES')
+    sys.exit(0)
 
 r,k,d=start('stump','나무 그루터기','식생','낮은 장식/소형 장애물. 절단면 연륜.',coll('cylinder',radius=.42,height=.6))
 cyl(k,'Bark',(0,0,.3),.46,.6,'Bark',.34)
@@ -314,12 +336,13 @@ finish_asset(r,d)
 
 build_streams(nature_api)
 
-manifest=dict(revision=2,contract='plushpanic_outdoor_v1',date='2026-10-22',units='metres',up_axis='+Y',status='standalone art kit; not integrated',assets=assets)
+manifest=dict(revision=2,tree_revision='foliage-art-2026-10-24',contract='plushpanic_outdoor_v1',date='2026-10-24',units='metres',up_axis='+Y',status='integrated canonical art kit',assets=assets)
 (PACK/'manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8')
 # Source library is laid out for easy Blender inspection. Exported files remain at zero.
 for i,r in enumerate(roots):r.location=(i%7*8,i//7*7,0)
 # Drop unused Blender startup brush materials so source has no linked brush assets.
 for material in list(bpy.data.materials):
     if material not in M.values():bpy.data.materials.remove(material,do_unlink=True)
+bpy.context.preferences.filepaths.save_version = 0
 bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/'source/outdoor-library.blend'))
 print('BUILT',len(assets),'ASSETS')

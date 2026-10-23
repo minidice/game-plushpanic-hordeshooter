@@ -120,7 +120,9 @@ public partial class LandmarkCArtCheck : Node
         await Frames(50);
         await Shot("tower-departure");
         for (int i = 0; i < 600 && p.OnZipline; i++) await Frames(1);
-        Check(!p.OnZipline && p.GlobalPosition.DistanceTo(line.End) < .2f, "tower zipline lands on lower tier");
+        Check(!p.OnZipline && p.GlobalPosition.DistanceTo(line.Landing) < .2f &&
+            Mathf.Abs(p.GlobalPosition.Y-_stage.Tiers.GroundY(line.End))<.15f,
+            "tower zipline lands beside the end post on the lower tier");
 
         var crane = Models(_stage, "crane").Single();
         Check(Mathf.Abs(crane.GlobalPosition.Y - 1.2f) < .01f, "crane base matches yard tier");

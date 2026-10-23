@@ -10,7 +10,7 @@
 | OUT-A4 | 낮밤 색은 굽지 않음. wetness/snow 표면 샘플만 제공 | 향후 시간/눈비/석양 요구. 모델 단계에서 대응 여지 확보 | 구조 준비/샘플 구현. 날씨 게임 시스템 아님 |
 | OUT-A5 | 차량은 향후 탑승/운전 고려 사항만 기록 | 사용자 “당장은 아님” | 미구현. 차량 모델/주행로 규격 확정 없음 |
 
-근거: [제작 규격](outdoor-kit-spec.md), [모델 데이터](../pack/manifest.json), [생성 도구](../tools/build_models.py), [검수](../preview/preview.gd), [인계](integration-guide.md).
+근거: [제작 규격](outdoor-kit-spec.md), [모델 데이터](../../../game/assets/outdoor-kit/manifest.json), [생성 도구](../tools/build_models.py), [검수](../preview/preview.gd), [인계](integration-guide.md).
 
 기존 결정 검토: A-7 임시 환경 아트·L-13 맵 인터페이스·C-23 적 시야는 2026-10-22 읽고 유지했다. 이번 작업은 원 게임을 변경하지 않으므로 현재 구현 상태를 올리거나 기존 결정을 대체하지 않는다. I-80 나무 가림 제약도 실제 맵 통합 전 해결 처리하지 않는다.
 
@@ -18,5 +18,5 @@
 
 2026-10-22 OUT-A3: 28종 1차 조형 → 32종 2차 조형. 사용자 피드백에 따라 기존 나무/바위의 디테일을 개선하고 round_oak, round_linden, stream_straight, stream_curve를 추가했다. 별도 폴더와 Keep/Occlude 구조, 일부만 옅게 남기는 OUT-A1/A2는 재검토 후 유지했다.
 
-하천은 모델 단계에서 검토할 수 있도록 불규칙 경사 둑·젖은 경계·정점색 수면·부분 포말로 제작한다. 양 끝 연결점과 단면은 맞추되 외곽 둑은 레벨에서 주변 지형과 연결한다. 잔물결은 수동 검수용 시각 샘플이며 수심/물리/날씨 통합 구현이나 사용자 최종 아트 승인을 의미하지 않는다. 근거: [보완 규격](nature-revision-spec.md), [생성 도구](../tools/nature_shapes.py), [물 재질](../pack/shaders/water_preview.gdshader).
+하천은 모델 단계에서 검토할 수 있도록 불규칙 경사 둑·젖은 경계·정점색 수면·부분 포말로 제작한다. 양 끝 연결점과 단면은 맞추되 외곽 둑은 레벨에서 주변 지형과 연결한다. 잔물결은 수동 검수용 시각 샘플이며 수심/물리/날씨 통합 구현이나 사용자 최종 아트 승인을 의미하지 않는다. 근거: [보완 규격](nature-revision-spec.md), [생성 도구](../tools/nature_shapes.py), [물 재질](../../../game/assets/outdoor-kit/shaders/water_preview.gdshader).
 

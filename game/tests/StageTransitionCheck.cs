@@ -56,9 +56,9 @@ public partial class StageTransitionCheck : Node
     private void KitLibrary()
     {
         Check(PropLibrary.Errors.Count == 0, "all prop manifests read without errors: " + string.Join("; ", PropLibrary.Errors));
-        Check(PropLibrary.All.Count == 62, $"32 outdoor kit + 4 transition + 6 edge-kit + 5 ground bits + 15 Stage 2 props are listed ({PropLibrary.All.Count})");
+        Check(PropLibrary.All.Count == 67, $"32 outdoor kit + 4 transition + 2 edge-kit + 5 ground bits + 24 Stage 2 props are listed ({PropLibrary.All.Count})");
         var edge = PropLibrary.All.Values.Where(p => p.Id.StartsWith("edge_")).ToList();
-        Check(edge.Count == 6 && edge.All(p => p.Collision.Kind == "none" && p.OcclusionParts.Length == 0 && p.File.Contains("/edge-kit/")),
+        Check(edge.Count == 2 && edge.All(p => p.Collision.Kind == "none" && p.OcclusionParts.Length == 0 && p.File.Contains("/edge-kit/")),
             "the edge kit has no colliders and no fading parts (A-23)");
         foreach (var (id, info) in PropLibrary.All)
         {

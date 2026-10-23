@@ -1,0 +1,10 @@
+{
+  "default_solid_profile": "structure",
+  "profiles": {
+    "structure": { "blocks_movement": true, "blocks_projectiles": true },
+    "wire_fence": { "blocks_movement": true, "blocks_projectiles": false }
+  },
+  "objects": {
+    "wire_fence": "wire_fence"
+  }
+}

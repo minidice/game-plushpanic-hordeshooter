@@ -1,3 +1,5 @@
+> 2026-10-24 나무 원본 교체: 현재 모델은 `../../game/assets/outdoor-kit` 한 곳에 있습니다. 나무 5종 GLB·Blender 원본·도감 개별 이미지를 새 수관으로 교체했고, 미리보기와 복사/생성 도구는 같은 파일을 사용합니다. 이전 제작 이력/풍경 이미지는 아래에 보존합니다. [현행 계약·검증](../../doc/tree-asset-replacement.md).
+
 # Plush Panic 야외 모델 팩
 
 **2026-10-22 게임에 통합됨**(decisions.md A-22): 모델은 `game/assets/outdoor-kit`(이 폴더의 `pack`과 같은 파일, `Copy-OutdoorKit.ps1 -Apply`로 복사), 배치는 시나리오 Stage 2(`game/scripts/World/StageTwoMap.cs`, L-14). 이 폴더는 원본 도구·Blender 원본·검수 장면·도감·문서의 보존본입니다. 아래 원래 안내의 "미적용" 표현과 `doc/`의 OUT-* 기록은 패키지 당시 상태입니다.
@@ -7,7 +9,7 @@
 `tools/build_models.py`는 자기 폴더의 `pack/`에 씁니다. 다시 만든 뒤에는 `pack/models`와 `manifest.json`을 `game/assets/outdoor-kit`에 옮기고 `StageTransitionCheck`로 확인합니다.
 
 - [이미지 도감](gallery/index.html): 더블클릭으로 오프라인 열기. 32종 검색·분류·목록·이미지 확대, 가림 상태, 시간대/날씨 샘플.
-- [모델 목록 데이터](pack/manifest.json): GLB 경로, 실제 크기, 삼각형, 독립 가림 부위, 충돌 추천값.
+- [모델 목록 데이터](../../game/assets/outdoor-kit/manifest.json): GLB 경로, 실제 크기, 삼각형, 독립 가림 부위, 충돌 추천값.
 - [Blender 조형 원본](source/outdoor-library.blend) / [재생성 도구](tools/build_models.py).
 - [적용 안내](doc/integration-guide.md) / [결정 기록](doc/decisions.md) / [검증과 제약](doc/issues.md).
 

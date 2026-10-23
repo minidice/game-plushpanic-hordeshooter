@@ -5,7 +5,7 @@ namespace HordeShooter;
 /// <summary>Cosmetic physics: common bodies sleep naturally and can wake; named visuals stay fixed.</summary>
 public partial class Corpse : RigidBody3D
 {
-    public const uint SceneryCollisionMask = Layers.World | Layers.Corpse;
+    public const uint SceneryCollisionMask = Layers.MovementWorld | Layers.Corpse;
     /// <summary>
     /// Assisted sleep (I-71): bodies in a dense pile keep nudging each other and never reach the engine's own sleep
     /// threshold, and Jolt only lets a pile sleep when every body in it can. A body that has stayed this slow for

@@ -164,13 +164,14 @@ public abstract partial class StageMap
     /// low tier's floor in front of the cliff, its high end flush with the tier above. Give it whole cells (edges on the
     /// 1 m grid): the cells painted as ramp and the wedge must cover the same ground.
     /// </summary>
-    protected void Ramp(float x0, float x1, float z0, float z1, int lowTier, Vector3 up, string color)
+    protected void Ramp(float x0, float x1, float z0, float z1, int lowTier, Vector3 up, string color, bool smooth = false)
     {
-        _stage.Tiers.PaintRamp(x0, x1, z0, z1, lowTier, up);
+        _stage.Tiers.PaintRamp(x0, x1, z0, z1, lowTier, up, smooth);
         bool alongX = Mathf.Abs(up.X) > .5f;
         float run = alongX ? x1 - x0 : z1 - z0, across = alongX ? z1 - z0 : x1 - x0;
         // PrismMesh: a right triangle in XY rising toward +X, extruded along Z; turned to face up.
-        var wedge = new PrismMesh { LeftToRight = 1, Size = new Vector3(run, TierMap.Height, across) };
+        Mesh wedge = smooth ? TerrainEdgeArt.Ramp(run,across)
+            : new PrismMesh { LeftToRight = 1, Size = new Vector3(run, TierMap.Height, across) };
         float yaw = alongX ? (up.X > 0 ? 0 : 180) : (up.Z > 0 ? -90 : 90);
         var body = new StaticBody3D
         {
@@ -181,7 +182,8 @@ public abstract partial class StageMap
             CollisionMask = 0,
         };
         _stage.AddChild(body);
-        body.AddChild(new CollisionShape3D { Shape = wedge.CreateConvexShape() });
+        if(smooth)body.SetMeta("smooth_terrain_ramp",true);
+        body.AddChild(new CollisionShape3D { Shape = smooth ? wedge.CreateTrimeshShape() : wedge.CreateConvexShape() });
         body.AddChild(new MeshInstance3D { Mesh = wedge, MaterialOverride = Mat.Solid(color, .9f) });
         _floors.Add((new Vector3((x0 + x1) / 2, 0, (z0 + z1) / 2), new Vector3(x1 - x0, 0, z1 - z0)));
     }
@@ -202,10 +204,10 @@ public abstract partial class StageMap
     /// <summary>Rim cells of a raised floor where anyone may step off and drop down (one way, L-16).</summary>
     protected void DropEdge(float x0, float x1, float z0, float z1) => _stage.Tiers.PaintDrop(x0, x1, z0, z1);
 
-    protected StaticBody3D Wall(float x0, float x1, float z0, float z1, float height, string color, bool drawWall = true)
+    protected StaticBody3D Wall(float x0, float x1, float z0, float z1, float height, string color, bool drawWall = true, ObjectInteraction? interaction = null)
     {
         var wallSize = new Vector3(x1 - x0, height, z1 - z0);
-        var body = Solid(new Vector3((x0 + x1) / 2, height / 2, (z0 + z1) / 2), wallSize, color, false);
+        var body = Solid(new Vector3((x0 + x1) / 2, height / 2, (z0 + z1) / 2), wallSize, color, false, interaction);
         if (drawWall) ArtWalls.Add((body,wallSize));
         // Low camera-side fences get an invisible tall collider so nobody gets launched out of the map.
         if (height < 2f)
@@ -233,13 +235,14 @@ public abstract partial class StageMap
         WorkshopArt.Create(root,kind);
     }
 
-    protected StaticBody3D Solid(Vector3 center, Vector3 size, string color, bool drawCargo = true)
+    protected StaticBody3D Solid(Vector3 center, Vector3 size, string color, bool drawCargo = true, ObjectInteraction? interaction = null)
     {
-        var body = new StaticBody3D { Name = "Solid", Position = center, CollisionLayer = Layers.World, CollisionMask = 0 };
+        var rule = interaction ?? ObjectInteractions.Current.DefaultSolid;
+        var body = new StaticBody3D { Name = "Solid", Position = center, CollisionLayer = rule.CollisionLayer, CollisionMask = 0 };
         _stage.AddChild(body);
         body.AddChild(new CollisionShape3D { Shape = new BoxShape3D { Size = size } });
         if (drawCargo) StageArt.Cargo(body, size, color);
-        _solids.Add((center, size));
+        if (rule.BlocksMovement) _solids.Add((center, size));
         return body;
     }
 
@@ -247,7 +250,7 @@ public abstract partial class StageMap
 
     /// <summary>
     /// A kit model (<see cref="PropLibrary"/>) turned <paramref name="yaw"/> degrees about Y. With <paramref name="solid"/>
-    /// its manifest collider (box or cylinder, as a box for the flow field) blocks bullets, survivors and the flow field;
+    /// its manifest collider uses ObjectInteractions for movement/bullet blocking and flow stamping;
     /// "none" and "compound" colliders stay decoration, the map adds what it needs.
     /// </summary>
     protected Node3D? Prop(string id, Vector3 at, float yaw = 0, float scale = 1, bool solid = true)
@@ -256,19 +259,20 @@ public abstract partial class StageMap
         var info = PropLibrary.Find(id)!;
         var basis = new Basis(Vector3.Up, Mathf.DegToRad(yaw));
         var c = info.Collision;
+        var rule = ObjectInteractions.Current.ForProp(info);
         Node3D holder;
-        if (solid && c.Kind is "box" or "cylinder")
+        if (solid && rule != null && c.Kind is "box" or "cylinder")
         {
             var size = (c.Kind == "box" ? c.Size : new Vector3(c.Radius * 2, c.Height, c.Radius * 2)) * scale;
             var center = c.Kind == "box" ? c.Center * scale : new Vector3(0, c.Height / 2 * scale, 0);
-            var body = new StaticBody3D { Name = id, Position = at, Basis = basis, CollisionLayer = Layers.World, CollisionMask = 0 };
+            var body = new StaticBody3D { Name = id, Position = at, Basis = basis, CollisionLayer = rule.CollisionLayer, CollisionMask = 0 };
             _stage.AddChild(body);
             Shape3D shape = c.Kind == "box" ? new BoxShape3D { Size = size } : new CylinderShape3D { Radius = c.Radius * scale, Height = c.Height * scale };
             body.AddChild(new CollisionShape3D { Shape = shape, Position = center });
             // The flow field is axis aligned: a turned box blocks its turned footprint's bounds.
             var world = basis * center + at;
             var foot = (basis * new Vector3(size.X, 0, 0)).Abs() + (basis * new Vector3(0, 0, size.Z)).Abs();
-            _solids.Add((world, new Vector3(foot.X, size.Y, foot.Z)));
+            if (rule.BlocksMovement) _solids.Add((world, new Vector3(foot.X, size.Y, foot.Z)));
             holder = body;
         }
         else
@@ -277,7 +281,6 @@ public abstract partial class StageMap
             _stage.AddChild(holder);
         }
         model.Scale = Vector3.One * scale;
-        if (this is StageTwoMap) FoliageArt.ReplaceTree(model,id);
         holder.AddChild(model);
         KitProps.Add(holder);
         return holder;
@@ -327,7 +330,7 @@ public abstract partial class StageMap
                 Mass = .6f,
                 Position = at + new Vector3(i * .75f, .3f + (i == 2 ? .62f : 0), i == 2 ? 0 : _rng.RandfRange(-.2f, .2f)),
                 CollisionLayer = Layers.Props,
-                CollisionMask = Layers.World | Layers.Props | Layers.Player | Layers.Enemy,
+                CollisionMask = Layers.MovementWorld | Layers.Props | Layers.Player | Layers.Enemy,
             };
             box.AddChild(new CollisionShape3D { Shape = new BoxShape3D { Size = Vector3.One * .6f } });
             StageArt.Carton(box, Vector3.Zero, Vector3.One * .6f);

@@ -4,13 +4,13 @@
   "date": "2026-10-22",
   "units": "metres",
   "up_axis": "+Y",
-  "status": "standalone art kit; not integrated",
+  "status": "integrated canonical art kit",
   "assets": [
     {
       "id": "pine_tall",
       "name": "겹잎 침엽수 · 대",
       "category": "식생",
-      "note": "겹친 가지·잎 묶음 5층, 수관 4구역. 줄기/뿌리는 유지.",
+      "note": "승인된 둥근 가지층/수관. FoliageArt 원형, 줄기와 수관 4구역 분리.",
       "collision": {
         "kind": "cylinder",
         "radius": 0.32,
@@ -22,13 +22,14 @@
         "Occlude_Canopy_SW",
         "Occlude_Canopy_SE"
       ],
+      "tree_revision": "foliage-art-2026-10-24",
       "dimensions_m": [
-        2.761,
-        3.979,
-        2.751
+        2.693,
+        3.911,
+        2.588
       ],
       "bounds_min_y": 0,
-      "triangles": 8692,
+      "triangles": 2384,
       "file": "models/pine_tall.glb",
       "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
     },
@@ -36,10 +37,10 @@
       "id": "pine_small",
       "name": "겹잎 침엽수 · 소",
       "category": "식생",
-      "note": "겹친 가지·잎 묶음 5층, 수관 4구역. 줄기/뿌리는 유지.",
+      "note": "승인된 둥근 가지층/수관. FoliageArt 원형, 줄기와 수관 4구역 분리.",
       "collision": {
         "kind": "cylinder",
-        "radius": 0.21760000000000002,
+        "radius": 0.2176,
         "height": 1.02
       },
       "occlusion_parts": [
@@ -48,13 +49,14 @@
         "Occlude_Canopy_SW",
         "Occlude_Canopy_SE"
       ],
+      "tree_revision": "foliage-art-2026-10-24",
       "dimensions_m": [
-        1.878,
-        2.706,
-        1.871
+        1.831,
+        2.66,
+        1.76
       ],
       "bounds_min_y": 0,
-      "triangles": 8692,
+      "triangles": 2384,
       "file": "models/pine_small.glb",
       "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
     },
@@ -62,7 +64,7 @@
       "id": "broadleaf",
       "name": "겹잎 활엽수",
       "category": "식생",
-      "note": "둥근 잎 덩어리와 겹친 잎판. 수관 4구역 독립, 줄기/큰 가지 유지.",
+      "note": "승인된 둥근 가지층/수관. FoliageArt 원형, 줄기와 수관 4구역 분리.",
       "collision": {
         "kind": "cylinder",
         "radius": 0.36,
@@ -74,13 +76,14 @@
         "Occlude_Canopy_2",
         "Occlude_Canopy_3"
       ],
+      "tree_revision": "foliage-art-2026-10-24",
       "dimensions_m": [
-        3.935,
-        4.022,
-        3.94
+        3.293,
+        3.678,
+        3.28
       ],
       "bounds_min_y": 0,
-      "triangles": 11868,
+      "triangles": 2600,
       "file": "models/broadleaf.glb",
       "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
     },
@@ -88,7 +91,7 @@
       "id": "round_oak",
       "name": "둥근 참나무 · 넓은 수관",
       "category": "식생",
-      "note": "둥근 잎 덩어리와 겹친 잎판. 수관 4구역 독립, 줄기/큰 가지 유지.",
+      "note": "승인된 둥근 가지층/수관. FoliageArt 원형, 줄기와 수관 4구역 분리.",
       "collision": {
         "kind": "cylinder",
         "radius": 0.4392,
@@ -100,13 +103,14 @@
         "Occlude_Canopy_2",
         "Occlude_Canopy_3"
       ],
+      "tree_revision": "foliage-art-2026-10-24",
       "dimensions_m": [
-        4.802,
-        3.987,
-        4.805
+        2.787,
+        4.046,
+        2.914
       ],
       "bounds_min_y": 0,
-      "triangles": 11868,
+      "triangles": 2600,
       "file": "models/round_oak.glb",
       "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
     },
@@ -114,7 +118,7 @@
       "id": "round_linden",
       "name": "둥근 피나무 · 작은 수관",
       "category": "식생",
-      "note": "둥근 잎 덩어리와 겹친 잎판. 수관 4구역 독립, 줄기/큰 가지 유지.",
+      "note": "승인된 둥근 가지층/수관. FoliageArt 원형, 줄기와 수관 4구역 분리.",
       "collision": {
         "kind": "cylinder",
         "radius": 0.288,
@@ -126,13 +130,14 @@
         "Occlude_Canopy_2",
         "Occlude_Canopy_3"
       ],
+      "tree_revision": "foliage-art-2026-10-24",
       "dimensions_m": [
-        3.147,
-        3.772,
-        3.154
+        2.635,
+        2.943,
+        2.624
       ],
       "bounds_min_y": 0,
-      "triangles": 11868,
+      "triangles": 2600,
       "file": "models/round_linden.glb",
       "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
     },
@@ -868,5 +873,6 @@
       "file": "models/stream_curve.glb",
       "weather": "PBR 원본 / 젖음·상향면 적설 재질 교체 가능 (검수 샘플)"
     }
-  ]
+  ],
+  "tree_revision": "foliage-art-2026-10-24"
 }

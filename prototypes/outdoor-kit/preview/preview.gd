@@ -1,7 +1,8 @@
 extends Node3D
 
-const SURFACE = preload("res://pack/shaders/outdoor_preview.gdshader")
-const WATER = preload("res://pack/shaders/water_preview.gdshader")
+const ASSETS = preload("res://preview/canonical_assets.gd")
+var SURFACE := ASSETS.shader("outdoor_preview.gdshader")
+var WATER := ASSETS.shader("water_preview.gdshader")
 var elapsed := 0.0
 var manifest: Dictionary
 var stage: Node3D
@@ -15,7 +16,7 @@ var preset := "day"
 var heading: Label
 
 func _ready() -> void:
-    manifest = JSON.parse_string(FileAccess.get_file_as_string("res://pack/manifest.json"))
+    manifest = ASSETS.manifest()
     setup()
     if "--validate-preview" in OS.get_cmdline_user_args():
         validate_material_contract()
@@ -64,8 +65,7 @@ func frame(center: Vector3, size: float) -> void:
     camera.look_at(center)
 
 func asset(id: String, pos := Vector3.ZERO, yaw := 0.0) -> Node3D:
-    var scene := load("res://pack/models/"+id+".glb") as PackedScene
-    var model := scene.instantiate() as Node3D
+    var model := ASSETS.model("models/"+id+".glb")
     stage.add_child(model)
     model.position = pos
     model.rotation_degrees.y = yaw

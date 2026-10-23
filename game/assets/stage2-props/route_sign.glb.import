@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://bmljyjpn6wn8m"
-path="res://.godot/imported/edge_forest_round.glb-a9e955486bf8a4af04bd0817886330a8.scn"
+uid="uid://fw5likd417r1"
+path="res://.godot/imported/route_sign.glb-c24b49fa538ff4f15ac7cbd44a8759ab.scn"
 
 [deps]
 
-source_file="res://assets/edge-kit/edge_forest_round.glb"
-dest_files=["res://.godot/imported/edge_forest_round.glb-a9e955486bf8a4af04bd0817886330a8.scn"]
+source_file="res://assets/stage2-props/route_sign.glb"
+dest_files=["res://.godot/imported/route_sign.glb-c24b49fa538ff4f15ac7cbd44a8759ab.scn"]
 
 [params]
 

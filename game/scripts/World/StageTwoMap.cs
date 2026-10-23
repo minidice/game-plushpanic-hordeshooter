@@ -15,6 +15,7 @@ namespace HordeShooter;
 /// </summary>
 public sealed class StageTwoMap : StageMap
 {
+    private static ObjectInteraction WireFenceRule => ObjectInteractions.Current.ForProp(PropLibrary.Find("wire_fence")!)!;
     public const float StreamX0 = 60.3f, StreamX1 = 67.7f;
     /// <summary>The bunker hatch the survivors climb out of; nothing spawns near it (L-11).</summary>
     public static readonly Vector3 ArrivalHatch = new(6, 0, -1.6f);
@@ -79,7 +80,7 @@ public sealed class StageTwoMap : StageMap
         Floor(-2, 20, -9, 9, "", draw: false);
         Wall(-2.4f, -2, -9.4f, 9.4f, 3f, "", drawWall: false);
         Wall(-2.4f, 20, -9.4f, -9, 3.4f, "", drawWall: false);
-        Wall(-2.4f, 20, 9, 9.4f, 1f, "", drawWall: false);
+        Wall(-2.4f, 20, 9, 9.4f, 1f, "", drawWall: false, interaction: WireFenceRule);
         // The step from the clearing's width to the road's.
         Wall(20, 20.4f, -9.4f, -7, 3.4f, "", drawWall: false);
         Wall(20, 20.4f, 7, 9.4f, 1f, "", drawWall: false);
@@ -99,7 +100,7 @@ public sealed class StageTwoMap : StageMap
             Prop("barrel", at, at.X * 37);
         Barrel(new Vector3(11.4f, 0, -7.2f));
         // Camera-side wire fence: see-through, it frames the clearing like the clip's foreground fence.
-        for (float x = 0; x < 19; x += 3.1f) Prop("wire_fence", new Vector3(x + 1.5f, 0, 9.5f), 0, 1, solid: false);
+        for (float x = 0; x < 19; x += 3.1f) Prop("wire_fence", new Vector3(x + 1.5f, 0, 9.5f));
         Prop("streetlamp", new Vector3(10.2f, 0, -8.4f));
         Lamp(new Vector3(10.2f, 3.7f, -7.7f), "ffcf8a", 3.4f, 12, false);
         Lamp(new Vector3(6.4f, 4.4f, 1.4f), "ffe2b0", 2.4f, 10, false);
@@ -169,7 +170,7 @@ public sealed class StageTwoMap : StageMap
         WorkshopMounted(WorkshopArt.Kind.SafetyBoard,new Vector3(84.7f,1.15f,-6.22f));
         Floor(StreamX1, 100, -10, 10, "", draw: false);
         Wall(StreamX1, 100, -10.4f, -10, 3f, "", drawWall: false);
-        Wall(StreamX1, 100, 10, 10.4f, 1f, "", drawWall: false);
+        Wall(StreamX1, 100, 10, 10.4f, 1f, "", drawWall: false, interaction: WireFenceRule);
 
         // A checkpoint: barriers make a chicane, containers and a shed line the edges.
         Prop("concrete_barrier", new Vector3(75.5f, 0, -3.6f), 0);
@@ -196,8 +197,8 @@ public sealed class StageTwoMap : StageMap
 
         for (float x = StreamX1 + 1.6f; x < 99; x += 3.1f)
         {
-            Prop("corrugated_fence", new Vector3(x, 0, -10.6f), 0, 1, solid: false);
-            Prop("wire_fence", new Vector3(x, 0, 10.6f), 0, 1, solid: false);
+            Prop("corrugated_fence", new Vector3(x, 0, -10.6f));
+            Prop("wire_fence", new Vector3(x, 0, 10.6f));
         }
         Prop("streetlamp", new Vector3(71.5f, 0, -9.4f));
         Lamp(new Vector3(71.5f, 3.7f, -8.7f), "ffcf8a", 3.4f, 12, false);

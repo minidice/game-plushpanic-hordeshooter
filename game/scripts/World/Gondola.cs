@@ -30,6 +30,7 @@ public partial class Gondola : Node3D
     // A small visual offset prevents the imported floor fighting the terrain's existing walkable surface.
     private const float FloorClearance = .012f;
     private readonly List<Node3D> _hiddenWorld = new();
+    private readonly List<Player> _passengers = new();
     private Interactable _use = null!;
     private readonly List<(Node3D layer, float depth)> _layers = new();
 
@@ -74,6 +75,8 @@ public partial class Gondola : Node3D
             return false;
         }
         Riding = true;
+        _passengers.AddRange(passengers);
+        foreach (var passenger in _passengers) passenger.BeginGondolaRide(this);
         _use.Enabled = false;
         Progress = 0;
         BackdropTravel = 0;
@@ -86,6 +89,8 @@ public partial class Gondola : Node3D
     public override void _Process(double delta)
     {
         if (!Riding) return;
+        foreach (var passenger in _passengers)
+            if (IsInstanceValid(passenger)) passenger.HoldGondolaPosition();
         float dt = (float)delta;
         Progress += dt / RideSeconds;
         BackdropTravel += dt * 6f;
@@ -112,12 +117,15 @@ public partial class Gondola : Node3D
         RestoreWorld();
         if (_cabin != null) _cabin.GlobalPosition = Arrival + Vector3.Up * FloorClearance;
         int i = 0;
-        foreach (var p in _stage.AlivePlayers.ToList())
+        foreach (var p in _passengers)
         {
+            if (!IsInstanceValid(p)) continue;
+            p.EndGondolaRide(this);
             var side = _travel.Cross(Vector3.Up) * ((i % 3) - 1) * 1.1f - _travel * (i / 3) * 1.1f;
             p.TeleportTo(Arrival + side + Vector3.Up * .05f);
             i++;
         }
+        _passengers.Clear();
         _stage.SetAllStop(false);
         _stage.Cam.SnapTo(_stage.Player.GlobalPosition + Vector3.Up * .8f);
     }
@@ -143,7 +151,9 @@ public partial class Gondola : Node3D
         // Collision and flow stay intact. Only rendering is suspended; remember exactly which roots were visible.
         foreach (var node in _stage.GetChildren().OfType<Node3D>())
         {
-            if (node == this || node is Player or Camera3D or Light3D || !node.Visible) continue;
+            // Keep sunlight and rider-attached lights. World lamps carry fixture meshes, so leaving
+            // those visible would make streetlamp heads float in the scrolling gorge.
+            if (node == this || node is Player or Camera3D or DirectionalLight3D || !node.Visible) continue;
             _hiddenWorld.Add(node);
             node.Visible = false;
         }
@@ -161,6 +171,9 @@ public partial class Gondola : Node3D
     public override void _ExitTree()
     {
         if (!Riding) return;
+        foreach (var passenger in _passengers)
+            if (IsInstanceValid(passenger)) passenger.EndGondolaRide(this);
+        _passengers.Clear();
         RestoreWorld();
         if (IsInstanceValid(_stage) && _stage.IsInsideTree()) _stage.SetAllStop(false);
     }
@@ -171,19 +184,31 @@ public partial class Gondola : Node3D
         AddChild(_backdrop);
         // The cabin wheels run along local X. This short visual span disappears with the ride backdrop.
         Mat.Box(_backdrop, Vector3.Up * (3.4f + FloorClearance), new Vector3(100, .04f, .04f), Mat.Solid("8d9298", .4f));
-        var colors = new[] { ("2f4a3a", 4f), ("3d5c46", 2.5f), ("51704f", 1.6f), ("6d8a69", 1.1f) };
         var rng = new RandomNumberGenerator { Seed = 7 };
-        foreach (var (color, depth) in colors)
+        foreach (float depth in new[] { 4f, 2.5f, 1.6f, 1.1f })
         {
             var layer = new Node3D { Name = "Layer" };
             _backdrop.AddChild(layer);
-            var mat = Mat.Solid(color, .95f);
+            if(depth==4)
+            {
+                layer.AddChild(new MeshInstance3D { Name="GorgeFloor",Position=Vector3.Down*25,
+                    Mesh=new PlaneMesh{Size=new Vector2(240,240)},MaterialOverride=Mat.Solid("3d5141",.98f),
+                    CastShadow=GeometryInstance3D.ShadowCastingSetting.Off });
+            }
+            var trees=new List<Transform3D>();
             for (int k = 0; k < 14; k++)
             {
-                var size = new Vector3(rng.RandfRange(4, 12), rng.RandfRange(3, 14) / depth, rng.RandfRange(4, 12));
-                var at = new Vector3(rng.RandfRange(-60, 60), 0, rng.RandfRange(-60, 60));
-                Mat.Box(layer, at, size, mat);
+                // Tall rock foundations extend down into the gorge; canopies remain below the cabin.
+                float height=rng.RandfRange(18,28);
+                var size=new Vector3(rng.RandfRange(10,18),height,rng.RandfRange(10,18));
+                var at=new Vector3(rng.RandfRange(-65,65),-height,rng.RandfRange(-50,50));
+                float yaw=rng.Randf()*Mathf.Tau;
+                layer.AddChild(new MeshInstance3D{Name="GorgeRock",Mesh=OutdoorEdgeArt.Rock(k%6),Position=at,
+                    Basis=new Basis(Vector3.Up,yaw)*Basis.FromScale(size),CastShadow=GeometryInstance3D.ShadowCastingSetting.Off});
+                var treeAt=at+new Basis(Vector3.Up,yaw)*(new Vector3(-.07f,.91f,.065f)*size);
+                trees.Add(new Transform3D(new Basis(Vector3.Up,rng.Randf()*Mathf.Tau).Scaled(Vector3.One*rng.RandfRange(1,1.5f)),treeAt));
             }
+            FoliageArt.Instances(layer,"GorgePines",FoliageArt.Kind.Pine,1,trees,false,detail:1);
             _layers.Add((layer, depth));
         }
     }

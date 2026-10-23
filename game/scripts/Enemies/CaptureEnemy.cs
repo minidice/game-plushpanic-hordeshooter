@@ -111,13 +111,13 @@ public partial class CaptureEnemy : Enemy
         if (Stage.Tiers.Any && Stage.Tiers.TierOf(this) != Stage.Tiers.TierOf(player))
         {
             float y = Mathf.Max(GlobalPosition.Y, player.GlobalPosition.Y) + .7f;
-            return Rays.Clear(this, GlobalPosition with { Y = y }, player.GlobalPosition with { Y = y }, Layers.World | Layers.Props);
+            return Rays.Clear(this, GlobalPosition with { Y = y }, player.GlobalPosition with { Y = y }, Layers.MovementWorld | Layers.Props);
         }
         var body = GlobalPosition + Vector3.Up * .7f;
-        if (!Rays.Clear(this, body, player.GlobalPosition + Vector3.Up * .7f, Layers.World | Layers.Props))
+        if (!Rays.Clear(this, body, player.GlobalPosition + Vector3.Up * .7f, Layers.MovementWorld | Layers.Props))
             return false;
-        return IsLeaper || (Rays.Clear(this, body, Rig.Muzzle.GlobalPosition, Layers.World | Layers.Props) &&
-            Rays.Clear(this, Rig.Muzzle.GlobalPosition, player.GlobalPosition + Vector3.Up * .8f, Layers.World | Layers.Props));
+        return IsLeaper || (Rays.Clear(this, body, Rig.Muzzle.GlobalPosition, Layers.MovementWorld | Layers.Props) &&
+            Rays.Clear(this, Rig.Muzzle.GlobalPosition, player.GlobalPosition + Vector3.Up * .8f, Layers.MovementWorld | Layers.Props));
     }
 
     /// <summary>The survivor currently held (null when not holding anyone).</summary>

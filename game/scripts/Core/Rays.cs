@@ -49,7 +49,7 @@ public static class Rays
             if (field.Tiers is { Any: true } tiers)
                 for (int step = 1; step <= 10; step++)
                     if (Mathf.Abs(tiers.GroundY(from.Lerp(to, step / 10f)) - tiers.GroundY(from)) > .1f) { sameFloor = false; break; }
-            if (!sameFloor || !Clear(mover, from + Vector3.Up * .5f, to + Vector3.Up * .5f, Layers.World | Layers.Props)) continue;
+            if (!sameFloor || !Clear(mover, from + Vector3.Up * .5f, to + Vector3.Up * .5f, Layers.MovementWorld | Layers.Props)) continue;
             distance = d;
             best = (to - from).Normalized();
         }

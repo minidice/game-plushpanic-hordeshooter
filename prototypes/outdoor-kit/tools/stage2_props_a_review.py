@@ -7,6 +7,7 @@ Append -- --manifest-merge to exercise repeat generation in a disposable pack
 and check that missing/duplicate review inputs are rejected (no image renders).
 """
 import json
+import hashlib
 import math
 import runpy
 import struct
@@ -153,8 +154,42 @@ def validate(entry):
     check(abs(lo.z - entry['bounds_min_y']) < .002, asset_id + ' reimport vertical pivot')
     if asset_id == 'ladder_section':
         check(abs(lo.z) < .002 and abs(hi.z - 1.2) < .002, 'section 1.2 m pitch')
+        check(abs(dims.x - .95) < .002, 'section 0.95 m wide silhouette')
+        red = [obj.matrix_world @ obj.data.vertices[i].co for obj in objects if obj.type == 'MESH'
+               for face in obj.data.polygons if obj.data.materials[face.material_index].name.startswith('Red')
+               for i in face.vertices]
+        check(red and abs(min(v.x for v in red) + .475) < .002 and
+              abs(max(v.x for v in red) - .475) < .002, 'wide red rectangular rails')
+        tread_heights = sorted({round((obj.matrix_world @ obj.data.vertices[i].co).z, 4)
+               for obj in objects if obj.type == 'MESH' for face in obj.data.polygons
+               if obj.data.materials[face.material_index].name.startswith('Ochre') for i in face.vertices})
+        check(all(any(abs(v - (z + dz)) < .002 for v in tread_heights)
+                  for z in (.15, .45, .75, 1.05) for dz in (-.055, .055)),
+              'four broad 0.11 m thick treads at 0.3 m spacing')
     if asset_id == 'ladder_top':
         check(abs(lo.z + .15) < .002 and abs(hi.z - .9) < .002, 'top -0.15 / 0.9 m')
+        check(abs(dims.x - .95) < .002, 'top matches the 0.95 m section width')
+        tongue = [v for v in points(objects) if abs(v.z + .15) < .001]
+        check(max(abs(v.x) for v in tongue) < .474,
+              'lower handrail tongue is inset inside stacked rails to prevent coplanar skins')
+    if asset_id == 'gondola_cabin':
+        floor = [v for v in points(objects) if v.z <= .001]
+        check(abs(min(v.x for v in floor) + 3) < .002 and abs(max(v.x for v in floor) - 3) < .002
+              and abs(min(v.y for v in floor) + 2.5) < .002 and abs(max(v.y for v in floor) - 2.5) < .002,
+              'cabin floor is 6 by 5 m')
+        intrusions = 0
+        for obj in objects:
+            if obj.type != 'MESH':
+                continue
+            for face in obj.data.polygons:
+                verts = [obj.matrix_world @ obj.data.vertices[i].co for i in face.vertices]
+                # Triangle AABBs must leave both full-height entry corridors clear.
+                for x in (-2.92, 2.92):
+                    if (min(v.x for v in verts) < x + .12 and max(v.x for v in verts) > x - .12
+                            and min(v.y for v in verts) < 1.199 and max(v.y for v in verts) > -1.199
+                            and min(v.z for v in verts) < 2.18 and max(v.z for v in verts) > .15):
+                        intrusions += 1
+        check(intrusions == 0, 'both 2.4 m doorways clear through 2.18 m character height')
     if asset_id == 'gondola_station':
         overlaps = top_face_overlaps(objects)
         check(overlaps == 0, 'station top coplanar overlapping triangle pairs: ' + str(overlaps))
@@ -219,14 +254,14 @@ def render(objects, name, rear=False, ground=True):
 
 
 def mannequin(at, color):
-    """1.2 m scale figure only; does not claim to reproduce a game character."""
+    """2.18 m scale figure only; does not claim to reproduce a game character."""
     objects = []
     mat = plain_material('ScaleFigure', color)
     for height, scale in ((.52, (.23, .19, .43)), (1.0, (.20, .18, .20))):
         bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=8,
-                                            location=Vector(at) + Vector((0, 0, height)))
+                                            location=Vector(at) + Vector((0, 0, height * 2.18 / 1.2)))
         obj = bpy.context.object
-        obj.scale = scale
+        obj.scale = Vector(scale) * (2.18 / 1.2)
         obj.data.materials.append(mat)
         objects.append(obj)
     return objects
@@ -270,8 +305,8 @@ def main():
     render(stack, 'ladder-assembled')
     clear()
     root, objects = load('gondola_cabin')
-    for x in (-.7, .7):
-        for y in (-.7, .7):
+    for x in (-1.5, 0, 1.5):
+        for y in (-.75, .75):
             objects += mannequin((x, y, 0), (.55, .28, .12) if x < 0 else (.15, .45, .52))
     render(objects, 'cabin-scale-figures')
     # Compare identical camera framing with the authored occlusion role hidden.
@@ -310,6 +345,13 @@ def check_manifest_merge():
         if previous is not None:
             assert result == previous, 'second generation must not duplicate or drift metadata'
         previous = result
+    zipline_before = (sandbox / 'zipline_anchor.glb').read_bytes()
+    zipline_record = next(a for a in previous['assets'] if a['id'] == 'zipline_anchor')
+    build(set(BUDGET) - {'zipline_anchor'})
+    selected_result = json.loads(manifest_path.read_text(encoding='utf-8'))
+    assert selected_result == previous, 'selected generation changed unrelated manifest data'
+    assert next(a for a in selected_result['assets'] if a['id'] == 'zipline_anchor') == zipline_record
+    assert hashlib.sha256((sandbox / 'zipline_anchor.glb').read_bytes()).digest() == hashlib.sha256(zipline_before).digest()
     assert (PACK / 'manifest.json').read_bytes() == original_manifest
     # The reviewer must reject absent/duplicate assets rather than silently skip.
     valid = [dict(id=asset_id) for asset_id in BUDGET]
@@ -322,6 +364,7 @@ def check_manifest_merge():
         else:
             raise AssertionError('review accepted missing or duplicate asset')
     print('STAGE2_MANIFEST_MERGE_PASS two builds; other bundle and metadata preserved')
+    print('STAGE2_SELECTIVE_MERGE_PASS four exports; zipline GLB and all unrelated records preserved')
     print('STAGE2_REVIEW_INPUT_PASS missing and duplicate bundle entries rejected')
 
 

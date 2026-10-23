@@ -22,7 +22,7 @@ public partial class ExplosiveBarrel : RigidBody3D
             Position = at,
             Mass = 3,
             CollisionLayer = Layers.Props,
-            CollisionMask = Layers.World | Layers.Props,
+            CollisionMask = Layers.MovementWorld | Layers.Props,
         };
         // Collider is taller than the 1 m mesh so bullets fired at chest height (Player.AimHeight) always hit it.
         barrel.AddChild(new CollisionShape3D { Shape = new CylinderShape3D { Radius = .38f, Height = 1.4f }, Position = Vector3.Up * .7f });

@@ -205,7 +205,7 @@ public partial class Player : CharacterBody3D
     public override void _Ready()
     {
         CollisionLayer = Layers.Player;
-        CollisionMask = Layers.World | Layers.Enemy | Layers.Props;
+        CollisionMask = Layers.MovementWorld | Layers.Enemy | Layers.Props;
         FloorSnapLength = .3f;
         Health = MaxHealth;
 
@@ -276,7 +276,7 @@ public partial class Player : CharacterBody3D
     public void PressCancel() => _cancelPressed = true;
     /// <summary>Mouse wheel while aiming: change throwable kind.</summary>
     public void PressCycle(int direction) => _cycle = direction;
-    public void PressRoll() => _rollPressed = true;
+    public void PressRoll() { if (!OnGondola) _rollPressed = true; }
     public void PressSlot(int slot) => _slotPressed = slot;
     /// <summary>Scripted aim (right click / Ctrl held).</summary>
     public void HoldAim(bool held) => _aimHeld = held;
@@ -330,6 +330,7 @@ public partial class Player : CharacterBody3D
 
     public override void _PhysicsProcess(double delta)
     {
+        if (OnGondola) { HoldGondolaPosition(); return; }
         float dt = (float)delta;
         _hurt = Mathf.MoveToward(_hurt, 0, dt * 3);
         DamageFlash = Mathf.MoveToward(DamageFlash, 0, dt * 2.5f);
@@ -540,7 +541,7 @@ public partial class Player : CharacterBody3D
         _rollBumped.Clear();
         Stage.Sfx.PlayAt("roll", GlobalPosition + Vector3.Up * .5f);
         // Roll through the crowd instead of into it.
-        CollisionMask = Layers.World | Layers.Props;
+        CollisionMask = Layers.MovementWorld | Layers.Props;
         Rig.Face(_rollDirection);
     }
 
@@ -564,7 +565,7 @@ public partial class Player : CharacterBody3D
         if (_rollTime > 0) return;
         _rollTime = 0;
         Rig.Pose.Transform = Transform3D.Identity;
-        CollisionMask = Layers.World | Layers.Enemy | Layers.Props;
+        CollisionMask = Layers.MovementWorld | Layers.Enemy | Layers.Props;
     }
 
     private void PushProps()

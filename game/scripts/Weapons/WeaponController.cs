@@ -695,7 +695,7 @@ public partial class WeaponController : Node
             .Where(t => t.to.Length() < def.MeleeRange + t.e.Radius && Mathf.RadToDeg(dir.AngleTo(t.to.Normalized())) <= def.MeleeArc * .5f)
             .Where(t => Stage.Tiers.Any ? MeleeReachesAcrossTiers(origin, t.e) : Mathf.Abs(t.e.GlobalPosition.Y - origin.Y) < 1.5f &&
                 Rays.Clear(_player, origin + Vector3.Up * Player.AimHeight,
-                    t.e.GlobalPosition + Vector3.Up * Player.AimHeight, Layers.World | Layers.Props))
+                    t.e.GlobalPosition + Vector3.Up * Player.AimHeight, Layers.MovementWorld | Layers.Props))
             .OrderBy(t => t.to.Length())
             .Take(def.MeleeMaxTargets)
             .ToList();
@@ -729,7 +729,7 @@ public partial class WeaponController : Node
         var tiers = Stage.Tiers;
         if (!tiers.MeleeReach(origin, enemy.GlobalPosition)) return false;
         if (tiers.TierOf(_player) != tiers.TierOf(enemy)) return true;
-        return Rays.Clear(_player, origin + Vector3.Up * Player.AimHeight, enemy.GlobalPosition + Vector3.Up * Player.AimHeight, Layers.World | Layers.Props);
+        return Rays.Clear(_player, origin + Vector3.Up * Player.AimHeight, enemy.GlobalPosition + Vector3.Up * Player.AimHeight, Layers.MovementWorld | Layers.Props);
     }
 
     private static Vector3 Flat(Vector3 v) => new(v.X, 0, v.Z);

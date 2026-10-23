@@ -15,7 +15,7 @@ public partial class Player
     /// <summary>Client: the host has this survivor grabbed; blocks actions like a real grab.</summary>
     public bool NetRestrained { get; set; }
     /// <summary>Host: the host is moving this survivor right now (grabbed, stunned or launched, down), not its owner.</summary>
-    public bool HostMovesMe => IsRestrained || StunTime > 0 || IsDowned || IsDead;
+    public bool HostMovesMe => OnGondola || IsRestrained || StunTime > 0 || IsDowned || IsDead;
 
     private readonly byte[] _pressCounts = new byte[(int)NetPress.Count];
     private readonly byte[] _pressSeen = new byte[(int)NetPress.Count];
