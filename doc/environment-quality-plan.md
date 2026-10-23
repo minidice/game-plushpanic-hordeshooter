@@ -334,3 +334,11 @@ dotnet build game/HordeShooter.csproj
 사용자가 현재 맵이 비좁으며, 시나리오는 넓은 전진 구역과 짧은 보상/미션 분기, 두 번째 모드는 덕코프 지향의 넓은 맵 탐색을 원한다고 설명했다. 따라서 단조로운 구간의 세부 배치 확대를 보류하고 전체 맵 구조·크기 검증을 먼저 한다. 기존 미술/소품 작업은 재사용 가능한 자산으로 유지한다. 이번은 방향 기록이며 맵 확장 구현이 아니다. [확정 방향·설계 제안·미결 사항](scenario-level-design.md#10-넓은-구역을-연결하는-시나리오-2026-10-23-방향-확인).
 
 통합된 후속 작업 목록은 [맵 확장 계획](map-expansion-plan.md)을 따른다. 세부 장식 확대보다 맵 구조/크기 검증을 우선하며, Stage 1과 Stage 2 모두 설계 대상에 포함한다.
+
+### 문서 정리·main 병합 검증 (2026-10-23)
+
+- 사용자 요청으로 맵 확장 방향을 문서화하고 누적 환경 개선 브랜치를 `main`에 fast-forward 병합했다. 이번 정리에서 게임 코드를 추가 변경하지 않았다. 맵 확장 자체는 미구현이며 시간·면적은 미정이다.
+- 병합 후 `dotnet build game/HordeShooter.csproj --nologo -v q`: 경고/오류 0. Godot 헤드리스 전용 검사 `EnvironmentReview` 106, `EnvironmentGeometryCheck` 1,067, `FoliageStudy` 80, `WorkshopArtCheck` 402, `WorkshopWalkthrough` 68, `StageTransitionCheck` 164, `GroundedArtCheck` 74 통과. 이 전용 검사들은 `--fixed-fps 60`으로 실행했다.
+- `Integration`은 `--fixed-fps 60` 실행에서 `awake zombies nearby groan` 항목 실패(`INTEGRATION_FAIL 104`). 동일 코드로 해당 옵션 없이 기존 일반 실행 조건으로 재검사해 `INTEGRATION_PASS 149` 확인. 프레임 기반 검사 대기와 실제 오디오 재생 시간 차이로 음성 슬롯이 포화됐을 가능성이 있으나 원인은 확정하지 않았다. 게임 음성/검사 코드를 바꿔 실패를 숨기지 않았다. 재현: Godot `--headless --path game res://tests/Integration.tscn`; 실패 조건은 여기에 `--fixed-fps 60` 추가.
+- 종료 경고: 소품 검사 ObjectDB 잔존 2개, 실패한 고정 FPS 통합 실행 20개(I-17). 일반 통합 재검사와 나머지 위 검사에는 종료 경고 없음. 로컬 로그 `output/publish-<검사명>.log`, 고정 FPS 실패 로그 `output/publish-Integration-fixed-fps.log`. 생성 로그는 커밋하지 않는다.
+- 문서 링크·`git diff --check`·독립 문서 리뷰 완료. 이번에는 외형 변경이 없어 기존 실제 렌더 검증을 유지했다. `ModeCheck`는 재실행하지 않았고 I-106은 미해결이다. 전체 모드/멀티/목표 사양 성능 검증 완료로 표현하지 않는다.
