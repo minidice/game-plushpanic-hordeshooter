@@ -37,6 +37,10 @@ public sealed class TierMap
     public bool Any { get; private set; }
     public int MaxTier { get; private set; }
     public int MinTier { get; private set; }
+    /// <summary>Goes up on every paint, ladder and ride: flow fields keep their step costs until it changes (I-109).</summary>
+    public int Version { get; private set; }
+    /// <summary>The dearest ride's flow cost (the flow field's bucket queue must span one step).</summary>
+    public int MaxRideCost { get; private set; }
 
     private readonly sbyte[] _tier;
     private readonly float[] _ground;
@@ -97,8 +101,12 @@ public sealed class TierMap
 
     private void Paint(float x0, float x1, float z0, float z1, Action<int, float, float> cell)
     {
-        for (int z = 0; z < Depth; z++)
-        for (int x = 0; x < Width; x++)
+        Version++;
+        // Only the cells around the box (I-109): the test below still decides, exactly as a scan of the whole grid did.
+        var (xa, xb) = FlowField.Span(x0, x1, MinX, Cell, Width);
+        var (za, zb) = FlowField.Span(z0, z1, MinZ, Cell, Depth);
+        for (int z = za; z <= zb; z++)
+        for (int x = xa; x <= xb; x++)
         {
             float cx = MinX + (x + .5f) * Cell, cz = MinZ + (z + .5f) * Cell;
             if (cx >= x0 && cx <= x1 && cz >= z0 && cz <= z1) cell(z * Width + x, cx, cz);
@@ -162,6 +170,7 @@ public sealed class TierMap
         _ladders[a] = b;
         _ladders[b] = a;
         Any = true;
+        Version++;
     }
 
     /// <summary>
@@ -177,7 +186,9 @@ public sealed class TierMap
         outs.Add((b, cost));
         if (!_ridesInto.TryGetValue(b, out var ins)) _ridesInto[b] = ins = new();
         ins.Add((a, cost));
+        MaxRideCost = Math.Max(MaxRideCost, cost);
         Any = true;
+        Version++;
     }
 
     public IReadOnlyList<(int to, int cost)> RidesOut(int cell) => _ridesOut.TryGetValue(cell, out var l) ? l : Array.Empty<(int, int)>();

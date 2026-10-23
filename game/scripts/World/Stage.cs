@@ -287,6 +287,7 @@ public partial class Stage : Node3D
         _enemyRoot = new Node3D { Name = "Enemies" };
         AddChild(_enemyRoot);
         Flow.Update(Player.GlobalPosition);
+        PrepareClimbSteps();
         RefreshRouteFlows();
         // Scenario fills areas ahead and sends waves from the stage's entries; the other modes spawn by their own rules.
         if (Mode == GameMode.Scenario && Map.Encounters is { } encounters) Director.UseEncounters(encounters);
@@ -444,12 +445,13 @@ public partial class Stage : Node3D
     private void RefreshRouteFlows()
     {
         // The route counts doors as open: progress and "forward" must exist before the shutter opens.
-        ExitFlow = Flow.CopyLayout();
-        ExitFlow.Riders = true;
+        // After a door the same fields take the new walls and patch their step costs (no new grids to allocate, I-109).
+        if (ExitFlow == null) { ExitFlow = Flow.CopyLayout(); ExitFlow.Riders = true; }
+        else ExitFlow.CopyWallsFrom(Flow);
         Map.ApplyFlow(ExitFlow, doors: false);
         ExitFlow.Update(Map.RouteGoal);
-        LeaderFlow = Flow.CopyLayout();
-        LeaderFlow.Riders = true;
+        if (LeaderFlow == null) { LeaderFlow = Flow.CopyLayout(); LeaderFlow.Riders = true; }
+        else LeaderFlow.CopyWallsFrom(Flow);
         LeaderFlow.Update(Player.GlobalPosition);
     }
 
@@ -626,6 +628,21 @@ public partial class Stage : Node3D
     public IEnumerable<Enemy> AllEnemies => System.Linq.Enumerable.Concat(Enemies, _pending);
 
     private readonly Dictionary<MonsterClimb, FlowField> _climbFlows = new();
+    /// <summary>Step costs for each way of climbing, worked out while the stage loads (I-109); a chase field starts from one.</summary>
+    private readonly Dictionary<MonsterClimb, FlowField> _climbTemplates = new();
+
+    /// <summary>On a map with tiers: the step costs of every way of climbing, so the first leaper or balloon does not stall a frame.</summary>
+    private void PrepareClimbSteps()
+    {
+        if (!Tiers.Any) return;
+        foreach (var climb in new[] { MonsterClimb.Wall, MonsterClimb.Jump, MonsterClimb.Fly })
+        {
+            var template = Flow.CopyLayout();
+            template.Mover = climb;
+            template.PrepareSteps();
+            _climbTemplates[climb] = template;
+        }
+    }
 
     /// <summary>
     /// The chase field for a way of climbing (L-16). On a flat map, or for ladder users, it is <see cref="Flow"/>; on a map
@@ -636,7 +653,13 @@ public partial class Stage : Node3D
         if (!Tiers.Any || climb == MonsterClimb.Ladder) return Flow;
         if (!_climbFlows.TryGetValue(climb, out var field))
         {
-            field = Flow.CopyLayout();
+            // The field prepared while loading becomes the chase field; walls changed since (doors) are patched on its first build.
+            if (_climbTemplates.Remove(climb, out var template))
+            {
+                field = template;
+                field.CopyWallsFrom(Flow);
+            }
+            else field = Flow.CopyLayout();
             field.Mover = climb;
             if (_flowTargets.Count > 0) field.Update(_flowTargets);
             _climbFlows[climb] = field;
@@ -648,7 +671,8 @@ public partial class Stage : Node3D
     public void RebuildFlow()
     {
         _map?.ApplyFlow();
-        _climbFlows.Clear();
+        // Climb fields keep their step costs and patch them around the door (I-109); they rebuild toward the same targets.
+        foreach (var field in _climbFlows.Values) field.CopyWallsFrom(Flow);
         FlowVersion++;
         if (ExitFlow != null) RefreshRouteFlows();
         if (Lure != null && LureFlow != null)

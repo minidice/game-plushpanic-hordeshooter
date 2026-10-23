@@ -1,3 +1,4 @@
+using Godot;
 using System.Linq;
 
 namespace HordeShooter;
@@ -18,10 +19,17 @@ public static class GameSession
     /// <summary>What the local survivor carries out of the last stage (null: start with the stage's own kit).</summary>
     public static StageCarry? Carry { get; set; }
 
-    /// <summary>A new run from the menu or the room: back to Stage 1, nothing carried.</summary>
+    /// <summary>
+    /// Launch option <c>--stage2-draft</c> (Start-Game.ps1 -Stage2Draft): scenario Stage 2 is the size draft
+    /// (<see cref="LayoutMap"/>, decisions.md L-29) and a new run starts there, for playing it before it replaces today's
+    /// Stage 2. Single player only: a room's other PCs would build today's Stage 2.
+    /// </summary>
+    public static bool Stage2Draft { get; set; } = OS.GetCmdlineUserArgs().Contains("--stage2-draft");
+
+    /// <summary>A new run from the menu or the room: back to Stage 1 (the draft's Stage 2 with --stage2-draft), nothing carried.</summary>
     public static void StartCampaign()
     {
-        ScenarioStage = 1;
+        ScenarioStage = Stage2Draft ? 2 : 1;
         Carry = null;
     }
 

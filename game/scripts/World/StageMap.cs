@@ -26,7 +26,7 @@ public abstract partial class StageMap
     public static StageMap Create(GameMode mode, int scenarioStage = 1) => mode switch
     {
         GameMode.Survivor => new OpenFieldMap(),
-        GameMode.Scenario when scenarioStage == 2 => new StageTwoMap(),
+        GameMode.Scenario when scenarioStage == 2 => GameSession.Stage2Draft ? new LayoutMap() : new StageTwoMap(),
         _ => new StageOneLayout(),
     };
 

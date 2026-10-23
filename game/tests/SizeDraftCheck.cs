@@ -38,6 +38,15 @@ public partial class SizeDraftCheck : Node
 
     private async Task Run()
     {
+        // The launch option (--stage2-draft) puts the draft in Stage 2's place and starts a run there.
+        GameSession.Stage2Draft = true;
+        GameSession.StartCampaign();
+        Check(GameSession.ScenarioStage == 2 && StageMap.Create(GameMode.Scenario, 2) is LayoutMap && StageMap.Create(GameMode.Survival) is not LayoutMap,
+            "with --stage2-draft a new scenario run starts on the draft as Stage 2 (other modes unchanged)");
+        GameSession.Stage2Draft = false;
+        GameSession.StartCampaign();
+        Check(GameSession.ScenarioStage == 1 && StageMap.Create(GameMode.Scenario, 2) is StageTwoMap, "without it, runs start at Stage 1 and Stage 2 is today's");
+
         var watch = Stopwatch.StartNew();
         var map = _map = new LayoutMap();
         Check(map.Layout.Errors.Count == 0, "the layout data loads without errors" + string.Join("; ", map.Layout.Errors));

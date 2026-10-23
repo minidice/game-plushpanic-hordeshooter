@@ -9,7 +9,9 @@ param(
     [switch]$NetHost,
     [string]$NetJoin,
     # One PC, two windows: builds once, opens a host window, then a window that joins it.
-    [switch]$NetPair
+    [switch]$NetPair,
+    # Play the Stage 2 size draft (doc/stage2-floorplan.md 11-12장): a new scenario run starts on it. Single player only.
+    [switch]$Stage2Draft
 )
 $ErrorActionPreference = 'Stop'
 $console = Join-Path $GodotDir 'Godot_v4.7.2-stable_mono_win64_console.exe'
@@ -42,6 +44,8 @@ try {
         Start-Process -FilePath $windowed -ArgumentList '--path', ('"' + $PSScriptRoot + '"'), '--', '--host' -WorkingDirectory $PSScriptRoot
     } elseif ($NetJoin) {
         Start-Process -FilePath $windowed -ArgumentList '--path', ('"' + $PSScriptRoot + '"'), '--', ('--join=' + $NetJoin) -WorkingDirectory $PSScriptRoot
+    } elseif ($Stage2Draft) {
+        Start-Process -FilePath $windowed -ArgumentList '--path', ('"' + $PSScriptRoot + '"'), '--', '--stage2-draft' -WorkingDirectory $PSScriptRoot
     } else {
         Start-Process -FilePath $windowed -ArgumentList '--path', ('"' + $PSScriptRoot + '"') -WorkingDirectory $PSScriptRoot
     }
