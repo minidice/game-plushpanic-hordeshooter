@@ -338,16 +338,18 @@ public partial class Player : CharacterBody3D
         UpdateRestraint(dt);
         // Downed, dead or grabbed on a ladder: let go, and gravity does the rest.
         if (OnLadder && (IsDead || IsDowned || IsRestrained)) EndLadder(arrived: false);
+        if (OnZipline && (IsDead || IsDowned)) EndZipline();
         if (IsDead) return;
         if (IsDowned) { UpdateDowned(dt); return; }
 
         if (!ManualControl) ReadInput();
         // A client's own presses are kept until its next input message to the host.
         if (IsLocal && Stage.Role == NetRole.Client) RecordNetEdges();
-        if (OnLadder)
+        if (OnLadder || OnZipline)
         {
-            // On a ladder: no shooting, using or rolling (L-16); presses made now are dropped.
-            LadderStep(dt);
+            // On a ladder or a zipline: no shooting, using or rolling (L-16 · L-18); presses made now are dropped.
+            if (OnLadder) LadderStep(dt);
+            else ZiplineStep(dt);
             IsAiming = false;
             _firePressed = _reloadPressed = _healPressed = _throwPressed = _rollPressed = _cancelPressed = false;
             _cycle = 0;
@@ -606,7 +608,7 @@ public partial class Player : CharacterBody3D
     {
         if (!Stage.Authoritative && !NetApplying) return;
         // Nothing knocks a survivor off a ladder (L-16).
-        if (IsDead || IsDowned || IsRolling || OnLadder) return;
+        if (IsDead || IsDowned || IsRolling || OnLadder || OnZipline) return;
         _push = new Vector3(impulse.X, 0, impulse.Z);
         Velocity = new Vector3(Velocity.X, impulse.Y, Velocity.Z);
         StunTime = Mathf.Max(StunTime, stun);
@@ -627,6 +629,7 @@ public partial class Player : CharacterBody3D
     {
         // A teleport (squad catch-up) takes them off any ladder first, or the climb would pull them back.
         EndLadder(arrived: false);
+        EndZipline();
         GlobalPosition = at;
         Velocity = Vector3.Zero;
         _push = Vector3.Zero;

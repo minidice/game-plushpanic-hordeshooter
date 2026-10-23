@@ -278,7 +278,7 @@ public partial class SquadBrain : Node
     private void Act(float dt)
     {
         // On a ladder the climb drives; nothing to decide until the top or the bottom.
-        if (Bot.OnLadder) { Bot.SetControls(Vector2.Zero, Bot.AimPoint, false); return; }
+        if (Bot.OnLadder || Bot.OnZipline) { Bot.SetControls(Vector2.Zero, Bot.AimPoint, false); return; }
         var move = Vector3.Zero;
         var aim = Bot.GlobalPosition + _watchDirection * 5 + Vector3.Up * Player.AimHeight;
         bool fire = false;
@@ -354,8 +354,21 @@ public partial class SquadBrain : Node
         // Semi-automatic weapons need a fresh press per shot; automatic ones are held.
         if (!Bot.Gun.Def.Automatic) { bool press = fire && !_firePulse; _firePulse = fire && press; fire = press; }
         Bot.HoldRevive(revive);
-        if (TakeLadder(move)) return;
+        if (TakeLadder(move) || TakeZipline()) return;
         Bot.SetControls(new Vector2(move.X, move.Z).LimitLength(1), aim, fire);
+    }
+
+    /// <summary>When the way to the leader is a zipline from right here (L-18), ride it.</summary>
+    private bool TakeZipline()
+    {
+        if (_stage.Ziplines.Count == 0 || Leader == null) return false;
+        int here = _stage.Tiers.Index(Bot.GlobalPosition);
+        foreach (var line in _stage.Ziplines)
+        {
+            if (line.StartCell != here) continue;
+            if (_stage.LeaderFlow.NextCell(Bot.GlobalPosition) == line.EndCell) return Bot.RideZipline(line);
+        }
+        return false;
     }
 
     /// <summary>When the route steps onto a ladder (L-16), climb it the way a survivor would.</summary>
@@ -425,6 +438,7 @@ public partial class SquadBrain : Node
             if (_goalFlow == null || _goalFlowVersion != _stage.FlowVersion)
             {
                 _goalFlow = _stage.Flow.CopyLayout();
+                _goalFlow.Riders = true;
                 _goalFlowVersion = _stage.FlowVersion;
             }
             _goalFlow.Update(goal);

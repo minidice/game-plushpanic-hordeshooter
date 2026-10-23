@@ -23,6 +23,8 @@ public sealed class FlowField
     public TierMap? Tiers { get; set; }
     /// <summary>Who walks this field: the steps between tiers it may take (L-16). Survivors and the route use ladders.</summary>
     public MonsterClimb Mover { get; set; } = MonsterClimb.Ladder;
+    /// <summary>Survivors' fields also take one-way rides (ziplines, L-18); monsters' fields never do.</summary>
+    public bool Riders { get; set; }
 
     private readonly bool[] _blocked;
     private readonly int[] _cost;
@@ -50,7 +52,7 @@ public sealed class FlowField
     /// <summary>Same walls, independent costs: used for a second target such as the lure.</summary>
     public FlowField CopyLayout()
     {
-        var copy = new FlowField(MinX, MinZ, MinX + Width * Cell, MinZ + Depth * Cell, Cell) { Tiers = Tiers, Mover = Mover };
+        var copy = new FlowField(MinX, MinZ, MinX + Width * Cell, MinZ + Depth * Cell, Cell) { Tiers = Tiers, Mover = Mover, Riders = Riders };
         System.Array.Copy(_blocked, copy._blocked, _blocked.Length);
         return copy;
     }
@@ -147,6 +149,15 @@ public sealed class FlowField
                 _cost[n] = next;
                 open.Enqueue(n, next);
             }
+            if (tiers == null || !Riders) continue;
+            foreach (var (from, ride) in tiers.RidesInto(current))
+            {
+                if (_blocked[from]) continue;
+                int next = cost + ride;
+                if (next >= _cost[from]) continue;
+                _cost[from] = next;
+                open.Enqueue(from, next);
+            }
         }
     }
 
@@ -220,9 +231,29 @@ public sealed class FlowField
                 bestIndex = n;
             }
         }
+        if (Riders && Tiers is { Any: true } rideTiers)
+            foreach (var (to, ride) in rideTiers.RidesOut(i))
+                // At the top the cell's own cost is the ride's, so an equal cost still means "ride" when no neighbour is lower.
+                if (!_blocked[to] && _cost[to] != Unreachable && (bestIndex < 0 ? _cost[to] + ride <= best : _cost[to] + ride < best))
+                {
+                    best = _cost[to] + ride;
+                    bestIndex = to;
+                }
         if (bestIndex < 0) return Vector3.Zero;
         var dir = Center(bestIndex) - new Vector3(p.X, 0, p.Z);
         return dir.LengthSquared() > .0001f ? dir.Normalized() : Vector3.Zero;
+    }
+
+    /// <summary>The cell the field leads to next from <paramref name="p"/> (a neighbour, or a ride's far end), or −1.</summary>
+    public int NextCell(Vector3 p)
+    {
+        var dir = Direction(p);
+        if (dir == Vector3.Zero) return -1;
+        int i = Index(p);
+        if (Riders && Tiers is { Any: true } tiers)
+            foreach (var (to, _) in tiers.RidesOut(i))
+                if ((Center(to) - new Vector3(p.X, 0, p.Z)).Normalized().Dot(dir) > .999f) return to;
+        return Index(p + dir * Cell);
     }
 
     public IEnumerable<Vector3> OpenCellsNear(Vector3 center, float minRadius, float maxRadius)

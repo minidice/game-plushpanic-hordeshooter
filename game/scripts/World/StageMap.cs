@@ -184,6 +184,13 @@ public abstract partial class StageMap
     /// <summary>A ladder from <paramref name="bottom"/> (at the cliff foot) to <paramref name="top"/> (just past the rim above).</summary>
     protected Ladder Ladder(Vector3 bottom, Vector3 top) => HordeShooter.Ladder.Create(_stage, bottom, top);
 
+    /// <summary>A zipline from <paramref name="start"/> (high) down to <paramref name="end"/> (L-18).</summary>
+    protected Zipline Zipline(Vector3 start, Vector3 end) => HordeShooter.Zipline.Create(_stage, start, end);
+
+    /// <summary>A gondola station on <paramref name="platform"/> (x, z) whose ride ends at <paramref name="arrival"/> (L-18).</summary>
+    protected Gondola Gondola(Rect2 platform, float floorY, Vector3 arrival, Vector3 travel, float seconds = 12f) =>
+        HordeShooter.Gondola.Create(_stage, platform, floorY, arrival, travel, seconds);
+
     /// <summary>Rim cells of a raised floor where anyone may step off and drop down (one way, L-16).</summary>
     protected void DropEdge(float x0, float x1, float z0, float z1) => _stage.Tiers.PaintDrop(x0, x1, z0, z1);
 

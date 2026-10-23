@@ -62,6 +62,50 @@ public partial class Player
         }
     }
 
+    // ---------- zipline (L-18) ----------
+
+    private Zipline? _zipline;
+    private float _zipT;
+
+    public bool OnZipline => _zipline != null;
+
+    /// <summary>Hooks onto <paramref name="line"/> at its top: down to its foot, no shooting on the way.</summary>
+    public bool RideZipline(Zipline line)
+    {
+        if (OnLadder || OnZipline || IsDead || IsDowned || IsRestrained || IsRolling) return false;
+        _zipline = line;
+        _zipT = 0;
+        Velocity = Vector3.Zero;
+        _push = Vector3.Zero;
+        Weapons.EndThrowAim();
+        Weapons.CancelMeleeSwing();
+        IsHealing = false;
+        _maskBeforeLadder = CollisionMask;
+        CollisionMask &= ~Layers.Player;
+        return true;
+    }
+
+    private void EndZipline()
+    {
+        if (_zipline == null) return;
+        _zipline = null;
+        CollisionMask = _maskBeforeLadder;
+        Velocity = Vector3.Zero;
+    }
+
+    private void ZiplineStep(float dt)
+    {
+        var line = _zipline!;
+        _zipT += dt / Mathf.Max(.1f, line.Seconds);
+        float t = Mathf.Clamp(_zipT, 0, 1);
+        GlobalPosition = t < 1 ? line.RidePoint(t) : line.End + Vector3.Up * .05f;
+        Velocity = Vector3.Zero;
+        var face = (line.End - line.Start) with { Y = 0 };
+        if (face.LengthSquared() > .001f) Rig.Face(face);
+        Rig.Animate(dt, .2f, 0, _hurt, Vector3.Zero);
+        if (t >= 1) EndZipline();
+    }
+
     private void LadderStep(float dt)
     {
         var ladder = _ladder!;

@@ -36,6 +36,9 @@ public partial class ElevationCheck : Node
             // Tier 1's west face is climbable rock; tier 2 has a ladder on its camera side.
             ClimbableWall(9, 11, -14, -8);
             Ladder(new Vector3(27, 0, .6f), new Vector3(27, 0, -.6f));
+            // A zipline from tier 2 down to the ground, and a gondola station on the ground (L-18).
+            Zipline(new Vector3(37, 0, -12), new Vector3(37, 0, 12));
+            Gondola(new Rect2(-18, -12, 4, 4), 0, new Vector3(-16, 0, 10), Vector3.Back, 2f);
             Lamp(new Vector3(10, 6, 0), "ffe6b0", 4, 40, false);
         }
     }
@@ -260,6 +263,75 @@ public partial class ElevationCheck : Node
         await Ranged();
         await Squad();
         await Climbing();
+        await Rides();
+    }
+
+    /// <summary>L-18: the zipline is a one-way ride for survivors only; the gondola waits for everyone and then plays out.</summary>
+    private async Task Rides()
+    {
+        var stage = await NewStage(new TierTestMap(), squad: 1);
+        var player = stage.Player;
+        var tiers = stage.Tiers;
+        var bot = stage.Squad[0].Bot;
+        var brain = stage.Squad[0];
+        bot.Invulnerable = true;
+        var line = stage.Ziplines.Single();
+        var gondola = stage.Gondolas.Single();
+
+        // ---------- zipline ----------
+        var riders = stage.Flow.CopyLayout();
+        riders.Riders = true;
+        riders.Update(line.End);
+        var walkers = stage.Flow.CopyLayout();
+        walkers.Update(line.End);
+        Check(riders.NextCell(line.Start) == line.EndCell && riders.Distance(line.Start) < walkers.Distance(line.Start) - 100,
+            "a survivor's route from the top takes the zipline");
+        Check(stage.Flow.Riders == false && walkers.NextCell(line.Start) != line.EndCell, "a monster's route never does");
+
+        brain.ProcessMode = ProcessModeEnum.Disabled;
+        await Place(bot, new Vector3(-15, 0, 10), new Vector3(-15, 1, 14));
+        await Place(player, line.Start, line.End);
+        Check(player.RideZipline(line), "a survivor hooks onto the zipline at its top");
+        int mag = player.Gun.Mag;
+        player.SetControls(Vector2.Zero, line.End, true);
+        player.Launch(new Vector3(6, 3, 0), .4f);
+        await Frames(20);
+        Check(player.OnZipline && player.Gun.Mag == mag, "on the zipline: no shooting, and a hit does not knock you off");
+        player.SetControls(Vector2.Zero, line.End, false);
+        for (int i = 0; i < 400 && player.OnZipline; i++) await Frames(1);
+        Check(!player.OnZipline && tiers.TierOf(player) == 0 && player.GlobalPosition.DistanceTo(line.End) < 1.5f,
+            $"the ride ends at the foot ({line.Seconds:0.0} s for {line.Start.DistanceTo(line.End):0} m)");
+
+        brain.ProcessMode = ProcessModeEnum.Inherit;
+        await Place(player, line.End + Vector3.Right * 1.5f, line.End);
+        await Place(bot, line.Start, line.End);
+        bool rode = false;
+        for (int i = 0; i < 420 && tiers.TierOf(bot) != 0; i++)
+        {
+            await Frames(1);
+            rode |= bot.OnZipline;
+        }
+        Check(rode && tiers.TierOf(bot) == 0, "a squadmate rides the zipline down after the leader");
+        for (int i = 0; i < 240 && bot.OnZipline; i++) await Frames(1);
+
+        // ---------- gondola ----------
+        brain.ProcessMode = ProcessModeEnum.Disabled;
+        var platform = new Vector3(gondola.Platform.GetCenter().X, 0, gondola.Platform.GetCenter().Y);
+        await Place(player, platform, platform + Vector3.Back * 3);
+        await Place(bot, platform + Vector3.Back * 6, platform + Vector3.Back * 9);
+        Check(!gondola.TryDepart() && !stage.AllStopped, "the gondola waits while a living survivor is not aboard");
+        await Place(bot, platform + Vector3.Right * .8f, platform + Vector3.Back * 3);
+        var watcher = stage.SpawnEnemy<Enemy>(stage.CommonDefinition, platform + Vector3.Back * 9, awake: true);
+        await Frames(2);
+        var watcherAt = watcher.GlobalPosition;
+        Check(gondola.TryDepart() && stage.AllStopped && gondola.Riding, "with everyone aboard it leaves and the world holds");
+        await Frames(40);
+        Check(gondola.BackdropTravel > 0 && watcher.GlobalPosition.DistanceTo(watcherAt) < .01f && player.GlobalPosition.DistanceTo(platform) < 1f,
+            "during the ride the riders stay put, monsters hold, and only the fake gorge scrolls");
+        for (int i = 0; i < 300 && gondola.Riding; i++) await Frames(1);
+        Check(!gondola.Riding && !stage.AllStopped && player.GlobalPosition.DistanceTo(gondola.Arrival) < 2.5f && bot.GlobalPosition.DistanceTo(gondola.Arrival) < 2.5f,
+            "at the end everyone steps off at the far station and the world goes on");
+        brain.ProcessMode = ProcessModeEnum.Inherit;
     }
 
     /// <summary>L-16: each way of climbing has its own route, monsters climb for real, survivors and squadmates take ladders.</summary>

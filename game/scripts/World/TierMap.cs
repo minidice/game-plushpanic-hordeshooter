@@ -43,6 +43,9 @@ public sealed class TierMap
     private readonly CellFlag[] _flags;
     /// <summary>Ladder ends: each cell maps to the cell at the ladder's other end.</summary>
     private readonly Dictionary<int, int> _ladders = new();
+    /// <summary>One-way rides for survivors only (ziplines, L-18): out of a cell, and into a cell, with their flow cost.</summary>
+    private readonly Dictionary<int, List<(int to, int cost)>> _ridesOut = new();
+    private readonly Dictionary<int, List<(int from, int cost)>> _ridesInto = new();
 
     public TierMap(float minX, float minZ, int width, int depth, float cell)
     {
@@ -160,6 +163,25 @@ public sealed class TierMap
         _ladders[b] = a;
         Any = true;
     }
+
+    /// <summary>
+    /// A one-way ride from <paramref name="from"/> to <paramref name="to"/> taking <paramref name="seconds"/> (a zipline).
+    /// Only fields that let survivors ride (<see cref="FlowField.Riders"/>) use it; monsters never do (L-18).
+    /// </summary>
+    public void AddRide(Vector3 from, Vector3 to, float seconds)
+    {
+        int a = Index(from), b = Index(to);
+        if (a < 0 || b < 0 || a == b) return;
+        int cost = Mathf.RoundToInt(seconds * 44);
+        if (!_ridesOut.TryGetValue(a, out var outs)) _ridesOut[a] = outs = new();
+        outs.Add((b, cost));
+        if (!_ridesInto.TryGetValue(b, out var ins)) _ridesInto[b] = ins = new();
+        ins.Add((a, cost));
+        Any = true;
+    }
+
+    public IReadOnlyList<(int to, int cost)> RidesOut(int cell) => _ridesOut.TryGetValue(cell, out var l) ? l : Array.Empty<(int, int)>();
+    public IReadOnlyList<(int from, int cost)> RidesInto(int cell) => _ridesInto.TryGetValue(cell, out var l) ? l : Array.Empty<(int, int)>();
 
     /// <summary>The cell at the other end of a ladder starting in <paramref name="cell"/>, or −1.</summary>
     public int LadderEnd(int cell) => _ladders.TryGetValue(cell, out int other) ? other : -1;

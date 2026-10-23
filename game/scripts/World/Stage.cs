@@ -191,8 +191,10 @@ public partial class Stage : Node3D
     /// <summary>Loud devices that go off when shot or caught in a blast (spawn-design.md 4장).</summary>
     public List<AlarmCar> AlarmCars { get; } = new();
     public List<Interactable> Interactables { get; } = new();
-    /// <summary>Ladders up tier cliffs (L-16).</summary>
+    /// <summary>Ladders up tier cliffs (L-16), ziplines and gondolas (L-18).</summary>
     public List<Ladder> Ladders { get; } = new();
+    public List<Zipline> Ziplines { get; } = new();
+    public List<Gondola> Gondolas { get; } = new();
     public List<OmniLight3D> FlickerLights { get; } = new();
     /// <summary>Common infected (monsters.csv row "plush"); its look is the zombie version of the player species when mirror_player is on.</summary>
     public MonsterDefinition CommonDefinition { get; private set; } = null!;
@@ -443,9 +445,11 @@ public partial class Stage : Node3D
     {
         // The route counts doors as open: progress and "forward" must exist before the shutter opens.
         ExitFlow = Flow.CopyLayout();
+        ExitFlow.Riders = true;
         Map.ApplyFlow(ExitFlow, doors: false);
         ExitFlow.Update(Map.RouteGoal);
         LeaderFlow = Flow.CopyLayout();
+        LeaderFlow.Riders = true;
         LeaderFlow.Update(Player.GlobalPosition);
     }
 
