@@ -113,11 +113,15 @@ const staticFiles = new Map([
   ['/objects', ['library.html', 'text/html; charset=utf-8']],
   ['/library.js', ['library.js', 'text/javascript; charset=utf-8']],
   ['/library.css', ['library.css', 'text/css; charset=utf-8']],
+  ['/effects', ['media.html', 'text/html; charset=utf-8']],
+  ['/sounds', ['media.html', 'text/html; charset=utf-8']],
+  ['/media.js', ['media.js', 'text/javascript; charset=utf-8']],
+  ['/media.css', ['media.css', 'text/css; charset=utf-8']],
 ]);
 const server = http.createServer(async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('Content-Security-Policy', "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; frame-ancestors 'none'");
+  res.setHeader('Content-Security-Policy', "default-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self'; script-src 'self'; frame-ancestors 'none'");
   const json = (status, data) => { res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify(data)); };
   try {
     if (req.headers.host !== `127.0.0.1:${port}` || (req.headers.origin && req.headers.origin !== origin)) {
@@ -134,6 +138,9 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && url.pathname === '/api/library') {
       json(200, await readCatalog('library')); return;
     }
+    if (req.method === 'GET' && url.pathname === '/api/media') {
+      json(200, await readCatalog('media')); return;
+    }
     if (req.method === 'POST' && url.pathname === '/api/reload') {
       if (pending || reloading) { json(409, { error: '렌더가 끝난 뒤 다시 시도하세요.' }); return; }
       reloading = true;
@@ -141,7 +148,7 @@ const server = http.createServer(async (req, res) => {
       finally { reloading = false; }
       json(200, { ready: true }); return;
     }
-    if (req.method === 'POST' && ['/api/render', '/api/library/render'].includes(url.pathname)) {
+    if (req.method === 'POST' && ['/api/render', '/api/library/render', '/api/effects/render', '/api/sounds/preview'].includes(url.pathname)) {
       if (req.headers['content-type'] !== 'application/json') { json(415, { error: 'JSON required' }); return; }
       let body = '';
       for await (const chunk of req) {
@@ -150,6 +157,12 @@ const server = http.createServer(async (req, res) => {
       }
       let data;
       try { data = JSON.parse(body); } catch { json(400, { error: 'Invalid JSON' }); return; }
+      if (url.pathname === '/api/effects/render' || url.pathname === '/api/sounds/preview') {
+        if (!data || typeof data.id !== 'string' || data.id.length > 128) {
+          json(400, { error: 'Invalid media preview request' }); return;
+        }
+        json(200, await request(url.pathname === '/api/effects/render' ? 'effect_render' : 'sound_preview', data)); return;
+      }
       if (url.pathname === '/api/library/render') {
         if (!data || !['monster', 'object'].includes(data.kind) || typeof data.id !== 'string'
             || !Number.isFinite(data.rotation) || !Number.isFinite(data.zoom)

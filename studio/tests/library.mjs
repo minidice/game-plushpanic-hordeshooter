@@ -44,7 +44,7 @@ const targets = process.argv.includes('--all') ? [
 ];
 for (const [kind, id] of targets) {
   const r = await fetch(origin + '/api/library/render', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ kind, id, variant: 'goose', rotation: -25, zoom: 1 }) });
+    body: JSON.stringify({ kind, id, variant: kind === 'monster' ? 'goose' : data.objects.find(o => o.id === id).variants[0]?.id, rotation: -25, zoom: 1 }) });
   const result = await r.json();
   check(r.status === 200 && result.png && result.bounds?.size.every(Number.isFinite), `${kind}/${id}: live game render and bounds`);
   const png = Buffer.from(result.png, 'base64');

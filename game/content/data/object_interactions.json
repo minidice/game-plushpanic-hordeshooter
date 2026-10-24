@@ -8,11 +8,22 @@
       "blocks_movement": true, "blocks_projectiles": true, "cover": true,
       "destruction": { "breakable_by": "gun", "max_health": 50 }
     },
-    "barrier_cover": { "blocks_movement": true, "blocks_projectiles": true, "cover": true }
+    "barrier_cover": { "blocks_movement": true, "blocks_projectiles": true, "cover": true },
+    "breach_wall": {
+      "blocks_movement": true, "blocks_projectiles": true,
+      "destruction": { "breakable_by": "explosive", "max_health": 60 }
+    },
+    "explosive_barrel": {
+      "blocks_movement": true, "blocks_projectiles": true,
+      "destruction": { "breakable_by": "gun", "max_health": 10 },
+      "explosion": { "on_destroy": true, "radius_m": 4.6, "damage": 125, "impulse": 140, "delay_s": 0.12 }
+    }
   },
   "objects": {
     "wire_fence": "wire_fence",
     "sandbags": "sandbag_cover",
-    "concrete_barrier": "barrier_cover"
+    "concrete_barrier": "barrier_cover",
+    "runtime:breach_wall": "breach_wall",
+    "runtime:barrel": "explosive_barrel"
   }
 }

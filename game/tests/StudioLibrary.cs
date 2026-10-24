@@ -14,7 +14,8 @@ public partial class StudioPreview
     private sealed record LibraryDetail(string title, JsonElement data);
     private sealed record LibraryVariant(string id, string name);
     private sealed record LibraryInteraction(string source, string profile, bool blocks_movement, bool blocks_projectiles,
-        bool cover, string? breakable_by, float? max_health);
+        bool cover, string? breakable_by, float? max_health, LibraryExplosion? explosion);
+    private sealed record LibraryExplosion(bool on_destroy, float radius_m, float damage, float impulse, float delay_s);
     private sealed record LibraryEntry(string id, string name, string category, string source, string summary,
         List<LibraryProperty> properties, List<LibraryDetail> details, LibraryVariant[] variants, JsonElement? sourceData = null,
         string qualityMode = "single", LibraryInteraction? interaction = null);
@@ -117,11 +118,18 @@ public partial class StudioPreview
         AddRuntime("shelf", "창고 선반 · 대표 규격", "StageArt.cs", "StageArt.Shelf의 길이 3m 예시입니다. 실제 배치마다 길이와 상자 구성이 다릅니다.");
         AddRuntime("ammo", "탄약 보급 외형", "StageArt.cs", "StageArt.Ammo의 실제 외형입니다. 보급량과 사용 규칙은 배치 및 게임 모드가 결정합니다.");
         AddRuntime("fixture", "조명 기구 · 대표 색", "StageArt.cs", "StageArt.Fixture의 실제 메시입니다. 밝기·광원 범위는 맵 배치에 따라 달라집니다.");
+        _objectEntries.Add(new("runtime:breach_wall", "균열 콘크리트 벽", "파괴 오브젝트", "res://scripts/World/BreakableWallArt.cs",
+            "폭발로 중앙 통로가 열리는 콘크리트 패널입니다. 같은 실제 모델의 파괴 전·붕괴 중·파괴 후 상태를 확인합니다. 양옆 기둥은 남고 중앙 잔해는 낮은 시각 효과입니다.",
+            new() { new("ID", "runtime:breach_wall"), new("분류", "파괴 오브젝트"),
+                new("크기 · X / Y / Z", Dimensions(new(BreakableWallArt.Width, BreakableWallArt.Height, BreakableWallArt.Thickness))),
+                new("파괴 후 통로 폭", Number(BreakableWallArt.OpeningWidth) + " m") },
+            new() { new("실제 맵 시험 배치", ReadJson(DestructionPlacements.Path)) },
+            new[] { new LibraryVariant("intact", "파괴 전 · 균열"), new LibraryVariant("breaking", "붕괴 중"), new LibraryVariant("broken", "파괴 후 · 통로 개방") }));
         for (int i = 0; i < _objectEntries.Count; i++)
         {
             var entry = _objectEntries[i];
             var info = PropLibrary.Find(entry.id);
-            var rule = info == null ? null : ObjectInteractions.Current.ForProp(info);
+            var rule = info == null ? ObjectInteractions.Current.ForId(entry.id) : ObjectInteractions.Current.ForProp(info);
             entry.properties.Insert(2, new("이동 차단", rule == null ? "공통 데이터 미연결 · 맵 배치 코드에서 결정" : rule.BlocksMovement ? "차단" : "통과"));
             entry.properties.Insert(3, new("탄환 차단", rule == null ? "공통 데이터 미연결 · 맵 배치 코드에서 결정" : rule.BlocksProjectiles ? "차단" : "통과"));
             if (rule != null)
@@ -136,18 +144,27 @@ public partial class StudioPreview
                 entry.properties.Insert(6, new("내구도", rule.Destruction is { } h ? Number(h.MaxHealth) : "—"));
                 entry.properties.Add(new("차단 프로필", rule.Profile));
                 entry.properties.Add(new("차단 데이터 출처", ObjectInteractions.DataPath));
-                entry.properties.Add(new("차단 적용 범위", "StageMap.Prop 기본 배치 · 장식(solid:false) 제외. 별도 충돌은 맵 코드 확인"));
-                entry.details.Add(new("게임 공통 차단 데이터", ReadJson(ObjectInteractions.DataPath)));
+                entry.properties.Add(new("차단 적용 범위", info != null ? "StageMap.Prop 기본 배치 · 장식(solid:false) 제외. 별도 충돌은 맵 코드 확인"
+                    : entry.id == "runtime:breach_wall" ? "실제 파괴 벽의 중앙 패널 · 파괴 후 양옆 기둥은 계속 차단" : "실제 폭발 드럼통 · 단순 장식용 barrel 모델과 구분"));
+                entry.details.Add(new("게임 공통 상호작용 데이터", ReadJson(ObjectInteractions.DataPath)));
+                entry.properties.Insert(7, new("폭발 (부서질 때)", rule.Explosion == null ? "없음 (데이터)" : "자체 폭발"));
+                if (rule.Explosion is { } ex)
+                {
+                    entry.properties.Add(new("폭발 피해 계수", Number(ex.Damage)));
+                    entry.properties.Add(new("폭발 충격 계수", Number(ex.Impulse)));
+                    entry.properties.Add(new("폭발 피해 계산", "양수 계수 × 거리감쇠 + 15 (적/파괴물) · 공격자 배율 적용 · 계수 0이면 피해 없음"));
+                    entry.properties.Add(new("폭발 지연", Number(ex.DelaySeconds) + " s"));
+                    if (!entry.properties.Any(p => p.label == "폭발 반경")) entry.properties.Add(new("폭발 반경", Number(ex.Radius) + " m"));
+                }
                 _objectEntries[i] = entry with { interaction = new(ObjectInteractions.DataPath, rule.Profile, rule.BlocksMovement, rule.BlocksProjectiles,
-                    rule.Cover, rule.Destruction is { } k ? (k.BreakableBy == BreakableBy.Gun ? "gun" : "explosive") : null, rule.Destruction?.MaxHealth) };
+                    rule.Cover, rule.Destruction is { } k ? (k.BreakableBy == BreakableBy.Gun ? "gun" : "explosive") : null, rule.Destruction?.MaxHealth,
+                    rule.Explosion is { } e ? new(true, e.Radius, e.Damage, e.Impulse, e.DelaySeconds) : null) };
             }
             else
             {
-                entry.properties.Add(new("엄폐 · 파괴", entry.id == "runtime:barrel"
-                    ? "현재 코드: 피격 · 주변 폭발 · 황소 충돌로 점화. 공통 데이터 미연결"
-                    : "공통 데이터 미연결 · 미정(파괴 불가를 뜻하지 않음)"));
+                entry.properties.Add(new("엄폐 · 파괴", "공통 데이터 미연결 · 미정(파괴 불가를 뜻하지 않음)"));
+                entry.properties.Add(new("폭발 (부서질 때)", "공통 데이터 미연결 · 미정"));
             }
-            entry.properties.Add(new("폭발 (부서질 때)", entry.id == "runtime:barrel" ? "현재 코드 상수(반경 위) · 공통 데이터 미연결" : "공통 데이터 미연결 · 후속(폭발 오브젝트)"));
         }
         AddQualityEntries();
         _objectEntries = _objectEntries.OrderBy(e => e.category).ThenBy(e => e.name).ToList();
@@ -193,6 +210,19 @@ public partial class StudioPreview
         {
             switch (id[8..])
             {
+                case "breach_wall":
+                    var wall = BreakableWallArt.Create(_librarySubject);
+                    string state = data.TryGetProperty("variant", out var stateValue) ? stateValue.GetString() ?? "intact" : "intact";
+                    float progress = state switch { "intact" => 0, "breaking" => .35f, "broken" => 1, _ => throw new ArgumentException("알 수 없는 벽 파괴 상태입니다.") };
+                    // Match framing across all states, including the flying fragments.
+                    wall.SetProgress(.35f); var wallBounds = VisualBounds(_librarySubject);
+                    wall.SetProgress(0); wallBounds = wallBounds.Merge(VisualBounds(_librarySubject));
+                    wall.SetProgress(1); wallBounds = wallBounds.Merge(VisualBounds(_librarySubject));
+                    wall.SetProgress(progress);
+                    _librarySubject.RotationDegrees = new(0, Mathf.Clamp(data.GetProperty("rotation").GetSingle(), -180, 180), 0);
+                    wallBounds = _librarySubject.Transform * wallBounds;
+                    FrameLibrary(wallBounds, data);
+                    return new { png = await CaptureLibrary(), kind, id, variant = state, bounds = new { size = V(wallBounds.Size), center = V(wallBounds.GetCenter()) } };
                 case "barrel":
                     var barrel = ExplosiveBarrel.Create(_lookStage, Vector3.Zero);
                     barrel.Freeze = true; barrel.Reparent(_librarySubject, false); _lookStage.Props.Remove(barrel); break;

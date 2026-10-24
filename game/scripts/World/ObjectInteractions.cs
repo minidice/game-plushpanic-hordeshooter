@@ -9,7 +9,7 @@ namespace HordeShooter;
 public enum BreakableBy { Gun, Explosive }
 
 /// <summary>Kinds of harm an object can take (melee goes over low cover and does not break it).</summary>
-public enum ObjectDamage { Gun, Explosion }
+public enum ObjectDamage { Gun, Explosion, Impact }
 
 /// <summary>An object that breaks: what it takes and how much (object_interactions.json <c>destruction</c>).</summary>
 public sealed record ObjectDestruction(BreakableBy BreakableBy, float MaxHealth)
@@ -17,7 +17,10 @@ public sealed record ObjectDestruction(BreakableBy BreakableBy, float MaxHealth)
     public bool Accepts(ObjectDamage kind) => BreakableBy == BreakableBy.Gun || kind == ObjectDamage.Explosion;
 }
 
-public sealed record ObjectInteraction(string Profile, bool BlocksMovement, bool BlocksProjectiles, bool Cover = false, ObjectDestruction? Destruction = null)
+public sealed record ObjectExplosion(float Radius, float Damage, float Impulse, float DelaySeconds);
+
+public sealed record ObjectInteraction(string Profile, bool BlocksMovement, bool BlocksProjectiles, bool Cover = false,
+    ObjectDestruction? Destruction = null, ObjectExplosion? Explosion = null)
 {
     // World keeps existing floors/walls and gun ray masks compatible. Movement-only geometry is transparent to gun rays.
     // Low cover has its own layer: walking stops at it, sight and melee pass over it (Layers.Cover); shots meet its screen.
@@ -38,6 +41,9 @@ public sealed class ObjectInteractions
     /// (decisions.md C-29: one body width — room for another survivor in between and the cover counts again).
     /// </summary>
     public float ShootOverGapBodies { get; private set; } = 1f;
+
+    /// <summary>Explicit bindings also cover code-generated game objects, such as barrels and breach walls.</summary>
+    public ObjectInteraction? ForId(string id) => _objects.TryGetValue(id, out var profile) ? _profiles[profile] : null;
 
     public ObjectInteraction? ForProp(PropInfo info)
     {
@@ -69,10 +75,20 @@ public sealed class ObjectInteractions
                     var other => throw new FormatException($"breakable_by must be gun or explosive: {profile.Name} ({other})"),
                 };
                 float health = d.GetProperty("max_health").GetSingle();
-                if (health <= 0) throw new FormatException("max_health must be positive: " + profile.Name);
+                if (!float.IsFinite(health) || health <= 0) throw new FormatException("max_health must be finite and positive: " + profile.Name);
                 destruction = new ObjectDestruction(by, health);
             }
-            if (string.IsNullOrWhiteSpace(profile.Name) || !result._profiles.TryAdd(profile.Name, new(profile.Name, movement, projectiles, cover, destruction)))
+            ObjectExplosion? explosion = null;
+            if (p.TryGetProperty("explosion", out var ex) && ex.GetProperty("on_destroy").GetBoolean())
+            {
+                float radius = ex.GetProperty("radius_m").GetSingle(), damage = ex.GetProperty("damage").GetSingle(),
+                    impulse = ex.GetProperty("impulse").GetSingle(), delay = ex.GetProperty("delay_s").GetSingle();
+                if (destruction == null || !float.IsFinite(radius) || radius <= 0 || !float.IsFinite(damage) || damage < 0 ||
+                    !float.IsFinite(impulse) || impulse < 0 || !float.IsFinite(delay) || delay < 0)
+                    throw new FormatException("Explosion needs destruction, positive finite radius and finite nonnegative damage/impulse/delay: " + profile.Name);
+                explosion = new(radius, damage, impulse, delay);
+            }
+            if (string.IsNullOrWhiteSpace(profile.Name) || !result._profiles.TryAdd(profile.Name, new(profile.Name, movement, projectiles, cover, destruction, explosion)))
                 throw new FormatException("Empty or duplicate object profile: " + profile.Name);
         }
         string defaultId = root.GetProperty("default_solid_profile").GetString() ?? "";
@@ -87,7 +103,7 @@ public sealed class ObjectInteractions
         if (root.TryGetProperty("cover_rules", out var rules))
         {
             result.ShootOverGapBodies = rules.GetProperty("shoot_over_gap_bodies").GetSingle();
-            if (result.ShootOverGapBodies < 0) throw new FormatException("shoot_over_gap_bodies must not be negative");
+            if (!float.IsFinite(result.ShootOverGapBodies) || result.ShootOverGapBodies < 0) throw new FormatException("shoot_over_gap_bodies must be finite and not negative");
         }
         return result;
     }

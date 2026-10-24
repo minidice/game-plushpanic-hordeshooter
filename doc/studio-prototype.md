@@ -12,7 +12,7 @@
 
 같은 날 후속으로 **펫3·드론4·부사수4의 고/저품질 비교**를 추가했다. 하나의 항목에서 같은 시점의 두 렌더와 원본 메시 삼각형 수를 함께 본다. 펫/드론은 실제 별도 GLB, 부사수는 같은 모델의 자동 LOD 설정이다. 현재 로컬 추가 자산을 포함한 검증 시점에는 몬스터15·오브젝트91이며, 품질 때문에 목록을 둘로 복제하지 않는다. [품질 비교 및 후속 상호작용 데이터 계약](object-data-spec.md).
 
-2026-10-24 차단 후속: **철조망은 이동 차단/탄환 통과, 일반 구조물은 양쪽 차단**을 실제 게임 공통 JSON과 로더로 연결했다. 웹은 동일 데이터의 값·프로필·출처·배치 예외를 표시한다. [현재 계약·게임 검증](object-data-spec.md). 파괴/폭발은 계속 미연결이다.
+2026-10-24 차단 후속: **철조망은 이동 차단/탄환 통과, 일반 구조물은 양쪽 차단**을 실제 게임 공통 JSON과 로더로 연결했다. 웹은 동일 데이터의 값·프로필·출처·배치 예외를 표시한다. [현재 계약·게임 검증](object-data-spec.md). 파괴/폭발도 후속으로 실제 데이터 연결했다. 균열 콘크리트 벽의 파괴 전/붕괴 중/파괴 후를 선택하고 드럼통의 내구도·폭발 수치를 확인할 수 있다.
 
 ### 도감의 데이터 계약
 
@@ -93,7 +93,7 @@ node studio/tests/interactions.mjs
 - 신규 품질 항목이 없는 상태에서 검사 실패 확인 후 `StudioQuality.cs`로 실제 팩토리를 연결. `quality.mjs` **33검사·11쌍/22장** 통과: 실제 `_low.glb`/부사수 프리셋 목록, 감량 메시/픽셀 차이, 단일 모델로 복귀, 설정·외형·원본 프리셋 파일 해시 불변. `studio/output/quality-test.log`, `quality-*.png`.
 - 현재 로컬 전체 **106항목·395검사** 재통과, 캐릭터 **36검사** 재통과. `studio/output/library-quality-regression.log`, `studio/output/smoke-quality-regression.log`.
 - Debug/ExportRelease 빌드 오류·경고0. 실제 게임의 모델/전투 코드는 수정하지 않아 이번 품질 작업에서는 PetModelCheck/CompanionModelCheck/Integration/전체 export는 미실행. 독립 정적 리뷰에서 추가 확정 결함 없음.
-- 상호작용 공통 데이터는 아직 없음을 속성 표에 명시한다. `미연결`은 `통과`나 `파괴 불가`를 뜻하지 않는다. 이동/탄환 차단, 공격 종류/등급/내구도, 파괴 시 폭발은 [후속 계약 초안](object-data-spec.md)에 분리했으며 전투 연결 완료로 표시하지 않는다.
+- 당시 품질 비교 단계에서는 상호작용 공통 데이터가 없음을 표시했다(현재는 아래 차단/파괴 후속 구현 참조). `미연결`은 `통과`나 `파괴 불가`를 뜻하지 않는다. 이동/탄환 차단, 공격 종류/등급/내구도, 파괴 시 폭발은 [후속 계약 초안](object-data-spec.md)에 분리했으며 전투 연결 완료로 표시하지 않는다.
 - 브라우저에서 펫3종이 품질별 중복 없이 나오고 두 이미지가 회전 입력에 함께 바뀌는 것을 확인했다. 비교 grid의 최소 콘텐츠 높이 때문에 390px 영역에 이미지가 505px로 넘치는 문제를 실제 화면/DOM 크기로 확인하고, 고정 영역·`minmax(0,1fr)`로 수정(최종 영역/내용 모두390px). 같은 확대값의 고/저 렌더를 `studio/output/studio-quality.png`로 저장했다. 좁은 화면·실제 전투 조명 비교는 미검증이다.
 
 <a id="main-integration-20261024"></a>
@@ -121,3 +121,33 @@ node studio/tests/interactions.mjs
 게임 로그는 `game/output/merge-*.log` 중 위 장면 이름, 웹 로그는 `studio/output/merge-{smoke,library,quality,interactions}.log`. Studio는 전용 포트4319에서 실행하고 `STUDIO_URL=http://127.0.0.1:4319`로 기존 검사 명령을 순차 실행했다. 게임 전용 검사는 `--headless --fixed-fps 60`, 두 지형/숲 검사는 창 모드 `--resolution 1440x900 --fixed-fps 60`, Integration은 `--headless`로 고정 FPS 없이 실행했다. 모든 검사 종료0이며 Integration 외 이번 게임 전용/가져오기에는 오류·종료 경고가 없다. 경사로/새 수관과 Studio 철망 렌더를 직접 열어 확인했다.
 
 커밋에는 실행 에셋·Blender 원본·생성 도구·Studio 소스·검사·문서를 포함한다. `output/`, 캐시, 개인 참고 이미지 첨부는 제외한다. 이번에 새 성능 측정·전체 동선 장면·실제2PC·전체 패키지 export·브라우저 수동 조작 재검수는 실행하지 않았으며 기존 작업의 해당 검증과 구분한다. 이전 산탄 검사 간헐 실패(I-65), ObjectDB(I-17), 다리 원인 미확정(I-116)은 그대로 남긴다.
+
+
+## 2026-10-24 파괴·폭발 후속
+
+실제 `ObjectInteractions`의 파괴 타입·내구도·자체 폭발을 표시한다. **균열 콘크리트 벽**은 `intact`/`breaking`/`broken`을 같은 프레이밍으로 확인하고, 실제 배치 JSON도 펼쳐 읽는다. **폭발 드럼통**은 장식용 barrel과 구분해 실제 HP10/반경4.6/피해계수125/충격계수140/지연0.12를 보여준다. 게임 데이터 파일을 웹에 복제하거나 저장하지 않는다.
+
+`destruction.mjs`24·`interactions.mjs`192·`library.mjs`200(8종)·`quality.mjs`33(11쌍) 통과, 실제 브라우저에서 파괴 후 상태 선택과 양쪽 속성 표를 확인했다. API/모델3상태 PNG는 `studio/output/destruction-wall-*.png`, 브라우저는 `studio/output/studio-destruction-wall.png`. [게임 검증과 제한](object-data-spec.md#파괴-벽폭발-후속-검증-2026-10-24)을 함께 본다. Debug/ExportRelease 빌드 통과, Studio 배포 제외 유지.
+
+
+## 2026-10-24 이펙트·사운드 검수
+
+이펙트와 사운드도 웹에서 확인하고 싶다는 사용자 요청에 따라 `/effects`, `/sounds` 메뉴를 추가한다. 현재 작업 폴더의 실제 코드/데이터를 읽는 T-25 원칙을 유지한다.
+
+- **이펙트**: 실제 Godot 효과 생성기·셰이더로 짧은 프레임 시퀀스를 만들고 브라우저에서 재생/일시정지/느리게 보기/타임라인/반복을 제공한다. 모든 전투 상황을 자동 수집하는 목록은 아니며, 등록한 효과의 대표 조건을 표시한다. 원본 효과 함수를 복제한 웹 애니메이션을 만들지 않는다.
+- **사운드**: `SoundRecipes.All` 전체를 열거하고 실제 `Sfx`가 선택한 합성 PCM 또는 `content/sounds`의 교체 음원을 듣는다. 사용자가 재생하기 전 자동 출력하지 않는다. 원음·기준 피치1의 미리듣기로, 레시피 음량(dB)/피치 흔들림/버스/거리/음성 한도는 속성으로 표시하며 원음에는 적용하지 않는다. 게임 혼합 결과의 음량 검수는 `AudioMixCheck`와 실제 게임에서 한다.
+- 합성음은 실제 PCM을 메모리에서 WAV로 감싼다. 교체 파일은 게임이 선택한 원본 `.ogg`→`.wav`→`.mp3` 우선순위를 따른다. 브라우저 반복은 파일 전체이며 원본의 부분 루프 지점과 다를 수 있다.
+- **조회 전용**: 설정·외형 세이브·음원/게임 데이터 저장 없음. 페이지 이동/항목 전환/재로딩 시 재생을 멈추고 이전 음원 URL을 해제한다. 여러 탭의 동시 렌더는 기존과 같이 지원하지 않는다.
+- **구조**: `StudioEffects.cs`, `StudioSounds.cs`는 Debug 전용 partial bridge. `GET /api/media`, `POST /api/effects/render`, `POST /api/sounds/preview` 사용. 입력 ID는 등록 목록으로 제한하고 임의 파일 경로는 받지 않는다. 웹은 `media.html/js/css`, 기존 Node loopback 서버에 추가한다. ExportRelease/ExportDebug에서 Studio 소스 제외를 유지한다.
+
+검사 스크립트: `node studio/tests/media.mjs --all`. 원본/사용자 파일 해시, 실제 레시피 목록, 모든 음원의 PCM 길이·비무음·피크와 메타데이터, 이펙트 프레임 변화·시간 순서·PNG 크기, 잘못된 ID를 검사한다. 실행 결과는 완료 후 아래에 기록한다.
+
+
+### 이펙트·사운드 실행 결과
+
+- `studio/tests/media.mjs --all`: **312검사**, 현재 SoundRecipes 전체43종·등록 효과13종 통과. 실제 PCM16 길이·피크·비무음, metadata/loop/source 일치, 프레임 시각·640px 크기·이미지 변화, 잘못된 ID/타입 거부, 원본과 `settings.cfg`/`appearance.cfg` 해시 불변. `studio/output/media-test.log`.
+- 실제 Vulkan Forward+ 렌더를 확인했다. 첫 프레임 M4 총구 섬광, 피격선, 폭발 파편을 육안 검수. 캡처는 640×640, 짧은 효과60fps/긴 효과30fps, 최대43장/1.4초이며 실제 캡처 소요시간과 재생 시간을 구분한다. 고정간격으로 실제 노드 `_Process`·트윈·CPU파티클을 진행하고 카메라/뷰포트/기존 모델을 복원한다.
+- 브라우저에서 0.25배 반복·일시정지·0.2초 타임라인 이동, wall 검색, 렌더 중 사운드 메뉴 이동, 원음 준비 후 자동 재생 없음, 권총 및 반복 앰비언스의 재생/일시정지를 확인했다. 기본 브라우저 디코드 readyState4, 재생시간 진행 및 오류 없음. 청각적 믹스 품질 평가를 수행했다고 표현하지 않는다. `studio/output/studio-effects.png`, `studio/output/studio-sounds.png`.
+- 기존 `smoke.mjs`36(캐릭터13렌더), `library.mjs`200(8렌더), `quality.mjs`33(11쌍), `destruction.mjs`24(3렌더) 통과. 효과 촬영 뒤 기존 모델/카메라가 복원됨. `studio/output/media-regression-*.log`.
+- Debug/ExportRelease 빌드 오류·경고0, ExportRelease와 ExportDebug Compile에서 Studio 소스0개. 독립 정적 리뷰에서 출처14경로 존재·재생 시간/상태 복원·비동기 선택·URL해제·CSP 확인. 작은 팝 설명을 실제 Companion.Revive의 동료 부활 표본으로 정정했다.
+- 현재 교체 음원 파일이 없어 override파일의 실제 브라우저 재생은 미검증이다. 선택 경로는 게임 Sfx 로더를 사용한다. 현재 데이터는 합성음만이며 사운드 규격의 오래된44종 표기를 현재43종으로 고쳤다. 전체 게임 Integration·실제 3D거리/버스 믹스·휴대폰 실기기·전체 패키지 export·장시간 메모리 검사는 이번 UI 확장에서 미실행. 게임 전투/오디오 제품 코드 자체는 이번 확장에서 변경하지 않았다.

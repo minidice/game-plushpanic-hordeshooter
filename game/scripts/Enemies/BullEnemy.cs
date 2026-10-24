@@ -129,7 +129,7 @@ public partial class BullEnemy : Enemy
             {
                 case RigidBody3D body:
                     body.ApplyCentralImpulse(_chargeDir * 6f + Vector3.Up * 3f);
-                    if (body is ExplosiveBarrel barrel) barrel.Ignite();
+                    if (body is ExplosiveBarrel barrel) barrel.TakeDamage(barrel.Health, ObjectDamage.Impact);
                     break;
                 case StaticBody3D when collision.GetNormal().Dot(-_chargeDir) > .55f:
                     EndCharge(true);

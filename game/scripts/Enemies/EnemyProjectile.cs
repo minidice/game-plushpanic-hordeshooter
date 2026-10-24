@@ -92,6 +92,7 @@ public partial class EnemyProjectile : Node3D
         if (hit is { } collision)
         {
             if (collision.Collider is Player player) player.TakeDamage(_damage, _direction, .5f);
+            else if (collision.Collider is ExplosiveBarrel barrel) barrel.TakeDamage(_damage, ObjectDamage.Gun);
             else if (ObjectBody.From(collision.Collider) is { } placed) placed.TakeDamage(_damage, ObjectDamage.Gun);
             Impact(collision.Position + collision.Normal * .16f);
             return;

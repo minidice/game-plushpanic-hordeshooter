@@ -70,6 +70,7 @@ public sealed class StageTwoMap : StageMap
         BuildSafehouse();
         LayGround();
         Backdrop();
+        PlaceDestructionExamples("stage2");
         if (Mode == GameMode.Scenario) PlaceSupplies(StageSupplies.Stage2);
     }
 

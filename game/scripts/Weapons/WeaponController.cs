@@ -638,11 +638,11 @@ public partial class WeaponController : Node
                     Stage.Effects.Impact(end, -dir);
                     break;
                 case ExplosiveBarrel barrel:
-                    barrel.Ignite(by: _player);
+                    barrel.TakeDamage(damage * falloff, ObjectDamage.Gun, _player);
                     break;
                 case var placedHit when ObjectBody.From(placedHit) is { } placed:
                     // Sandbags soak the shot and give way after enough of them (object_interactions.json destruction).
-                    placed.TakeDamage(damage * falloff, ObjectDamage.Gun);
+                    placed.TakeDamage(damage * falloff, ObjectDamage.Gun, _player);
                     Stage.Effects.Impact(end, -dir);
                     break;
                 case RigidBody3D body:

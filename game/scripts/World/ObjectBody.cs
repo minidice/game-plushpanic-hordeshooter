@@ -1,5 +1,6 @@
 using Godot;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace HordeShooter;
 
@@ -87,27 +88,36 @@ public partial class ObjectBody : StaticBody3D
     }
 
     /// <summary>Harm from a shot or a blast; ignored when the data says this object does not break, or not from that.</summary>
-    public void TakeDamage(float amount, ObjectDamage kind)
+    public void TakeDamage(float amount, ObjectDamage kind, Player? by = null)
     {
-        if (Broken || amount <= 0 || Interaction.Destruction is not { } d || !d.Accepts(kind) || !_stage.Authoritative) return;
+        if (Broken || !float.IsFinite(amount) || amount <= 0 || Interaction.Destruction is not { } d || !d.Accepts(kind) || !_stage.Authoritative) return;
         Health -= amount;
-        if (Health <= 0) Break();
+        if (Health <= 0) Break(by: by);
     }
 
     /// <summary>Collapses: dust, a thud, gone from physics and the flow field. Clients call it from the host's event.</summary>
-    public void Break()
+    public void Break(bool showEffects = true, Player? by = null)
     {
         if (Broken) return;
         Broken = true;
         Health = 0;
         _stage.Breakables.Remove(this);
         var at = GlobalPosition + Vector3.Up * .4f;
-        for (int i = 0; i < 4; i++) _stage.Effects.Impact(at + new Vector3((i - 1.5f) * .4f, 0, 0), Vector3.Up);
-        _stage.Sfx.PlayAt("roll", at, 0, .7f);
+        if (showEffects)
+        {
+            for (int i = 0; i < 4; i++) _stage.Effects.Impact(at + new Vector3((i - 1.5f) * .4f, 0, 0), Vector3.Up);
+            _stage.Sfx.PlayAt("roll", at, 0, .7f);
+        }
+        foreach (var wall in GetChildren().OfType<BreakableWallVisual>().ToArray())
+        {
+            wall.Reparent(_stage, true);
+            if (showEffects) wall.PlayBreak(); else wall.SetProgress(1);
+        }
         _stage.Net?.OnObjectBreak(this);
         CollisionLayer = 0;
         foreach (var screen in GetChildren()) if (screen is CoverScreen s) s.CollisionLayer = 0;
         _onBreak?.Invoke();
+        if (showEffects && Interaction.Explosion is { } explosion) ObjectDetonation.Schedule(_stage, GlobalPosition, explosion, by);
         QueueFree();
     }
 }

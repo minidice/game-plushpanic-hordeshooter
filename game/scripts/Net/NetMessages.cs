@@ -56,13 +56,26 @@ public static class NetIds
     }
 
     /// <summary>A short fingerprint of the data both sides must agree on; a client with another one is refused.</summary>
-    public static int DataHash()
+    public static int DataHash() => DataHash(FileAccess.GetFileAsString(ObjectInteractions.DataPath),
+        FileAccess.GetFileAsString(DestructionPlacements.Path));
+
+    /// <summary>Also fingerprints destruction policy and placement/build order; accepts text for checks without editing game files.</summary>
+    internal static int DataHash(string interactionsJson, string placementsJson)
     {
         unchecked
         {
             int h = 17;
             foreach (var s in Weapons.Select(w => w.Id).Concat(Throwables).Concat(Monsters).Concat(CaliberDatabase.Current.Order))
                 foreach (char c in s) h = h * 31 + c;
+            foreach (var (path, text) in new[] { (ObjectInteractions.DataPath, interactionsJson), (DestructionPlacements.Path, placementsJson) })
+            {
+                // Windows checkouts and exported Linux resources can use different line endings without changing data.
+                string normalized = text.Replace("\r\n", "\n").Replace('\r', '\n');
+                foreach (char c in path) h = h * 31 + c;
+                h *= 31;
+                foreach (char c in normalized) h = h * 31 + c;
+                h *= 31;
+            }
             return h;
         }
     }

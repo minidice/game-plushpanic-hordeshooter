@@ -852,12 +852,12 @@ public partial class StageNet : Node
         int barrels = r.U16();
         var alive = new HashSet<int>();
         for (int i = 0; i < barrels; i++) alive.Add(r.U16());
-        foreach (var b in _stage.Props.OfType<ExplosiveBarrel>().Where(b => !alive.Contains(b.NetId)).ToList()) b.Explode();
+        foreach (var b in _stage.Props.OfType<ExplosiveBarrel>().Where(b => !alive.Contains(b.NetId)).ToList()) b.Explode(showEffects: false);
         // Breakable objects the host no longer lists gave way there (a missed event, or a late join).
         int objects = r.U16();
         var standing = new HashSet<int>();
         for (int i = 0; i < objects; i++) standing.Add(r.U16());
-        foreach (var o in _stage.Breakables.Where(o => !standing.Contains(o.NetId)).ToList()) o.Break();
+        foreach (var o in _stage.Breakables.Where(o => !standing.Contains(o.NetId)).ToList()) o.Break(showEffects: false);
         _stage.ApplyNetState(state);
     }
 }

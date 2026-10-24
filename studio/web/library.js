@@ -75,6 +75,7 @@ function select(id) {
     details.append(summary, pre); $('details').append(details);
   }
   $('variant').replaceChildren();
+  $('variant-label').textContent = isMonster ? '감염체 기준 종' : '파괴 상태';
   for (const variant of selected.variants) $('variant').add(new Option(variant.name, variant.id));
   $('variant-row').hidden = selected.variants.length === 0;
   for (const button of $('entries').children) button.setAttribute('aria-pressed', String(button.dataset.id === id));

@@ -5,7 +5,12 @@ namespace HordeShooter;
 /// <summary>Shoot it, ram it, or blow up its neighbour. Kills the crowd, and launches you if you stand too close.</summary>
 public partial class ExplosiveBarrel : RigidBody3D
 {
-    public const float Radius = 4.6f;
+    public const string ObjectId = "runtime:barrel";
+    public static ObjectInteraction Rule => ObjectInteractions.Current.ForId(ObjectId)
+        ?? throw new System.InvalidOperationException("Missing object interaction: " + ObjectId);
+    public static float Radius => Rule.Explosion?.Radius ?? 0;
+    public ObjectInteraction Interaction { get; private set; } = null!;
+    public float Health { get; private set; }
     public bool Exploded { get; private set; }
     public bool Ignited { get; private set; }
 
@@ -21,7 +26,9 @@ public partial class ExplosiveBarrel : RigidBody3D
             _stage = stage,
             Position = at,
             Mass = 3,
-            CollisionLayer = Layers.Props,
+            Interaction = Rule,
+            Health = Rule.Destruction?.MaxHealth ?? 0,
+            CollisionLayer = Rule.BlocksProjectiles ? Layers.Props : Rule.BlocksMovement ? Layers.MovementOnly : 0,
             CollisionMask = Layers.MovementWorld | Layers.Props,
         };
         // Collider is taller than the 1 m mesh so bullets fired at chest height (Player.AimHeight) always hit it.
@@ -38,13 +45,22 @@ public partial class ExplosiveBarrel : RigidBody3D
     public int NetId { get; private set; }
 
     /// <param name="by">Who set it off (a shot, or the blast of a barrel they set off): the explosion counts for them.</param>
-    public void Ignite(float fuse = .12f, Player? by = null)
+    public void TakeDamage(float damage, ObjectDamage kind, Player? by = null)
+    {
+        if (Ignited || Exploded || !_stage.Authoritative || !float.IsFinite(damage) || damage <= 0 ||
+            Interaction.Destruction is not { } destruction || !destruction.Accepts(kind)) return;
+        Health = Mathf.Max(0, Health - damage);
+        if (Health <= 0) Ignite(by: by);
+    }
+
+    public void Ignite(float? fuse = null, Player? by = null)
     {
         // On a client the host's explosion arrives as an event and calls Explode directly.
-        if (Ignited || Exploded || !_stage.Authoritative) return;
+        if (Ignited || Exploded || !_stage.Authoritative || Interaction.Destruction == null) return;
         Ignited = true;
+        Health = 0;
         _litBy = by;
-        _fuse = fuse;
+        _fuse = fuse ?? Interaction.Explosion?.DelaySeconds ?? 0;
     }
 
     public override void _PhysicsProcess(double delta)
@@ -54,13 +70,16 @@ public partial class ExplosiveBarrel : RigidBody3D
         if (_fuse <= 0) Explode();
     }
 
-    public void Explode()
+    public void Explode(bool showEffects = true)
     {
         if (Exploded) return;
         Exploded = true;
         _stage.Net?.OnBarrelExplode(this);
-        Blast.Explode(_stage, GlobalPosition, Radius, 125f, new Color("ff9a3c"), this, knockbackPower: 140f, by: _litBy != null && IsInstanceValid(_litBy) ? _litBy : null);
         _stage.Props.Remove(this);
+        CollisionLayer = 0;
+        if (showEffects && Interaction.Explosion is { } explosion)
+            Blast.Explode(_stage, GlobalPosition, explosion.Radius, explosion.Damage, new Color("ff9a3c"), this,
+                knockbackPower: explosion.Impulse, by: _litBy != null && IsInstanceValid(_litBy) ? _litBy : null);
         QueueFree();
     }
 }

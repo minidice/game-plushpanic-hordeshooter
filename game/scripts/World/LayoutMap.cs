@@ -44,10 +44,12 @@ public sealed partial class LayoutMap : StageMap
     private Interactable? _pump, _safehouseSwitch;
     private AlarmCar? _alarmTruck;
     private Rect2 _safehouseRoom;
+    private readonly bool _hasDestructionExamples;
 
     public LayoutMap(string path = Stage2Path, string? encounters = Stage2EncountersPath, string? supplies = Stage2SuppliesPath)
     {
         Layout = StageLayout.Load(path);
+        _hasDestructionExamples = path == Stage2Path;
         _encountersPath = encounters;
         _suppliesPath = supplies;
     }
@@ -148,6 +150,7 @@ public sealed partial class LayoutMap : StageMap
         if (Layout.FindMarker("safehouse") is { } safehouse) BuildSafehouse(safehouse.Pos);
         BuildLandmarks();
         BuildEnvironment();
+        if (_hasDestructionExamples) PlaceDestructionExamples("stage2_draft");
         if (Mode == GameMode.Scenario && _suppliesPath != null) PlaceSupplies(StageSupplies.Load(_suppliesPath));
     }
 
