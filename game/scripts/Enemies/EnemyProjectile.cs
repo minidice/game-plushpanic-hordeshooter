@@ -1,4 +1,5 @@
 using Godot;
+using System.Collections.Generic;
 
 namespace HordeShooter;
 
@@ -15,10 +16,16 @@ public partial class EnemyProjectile : Node3D
     private int _tier;
     private Vector3 _from, _to;
     private float _total, _travelled;
+    /// <summary>Low cover right in front of the shooter is fired over (C-29): where it stood and how wide it is.</summary>
+    private Vector3 _shooter;
+    private float _shooterRadius;
+    private List<Rid>? _overCover;
 
-    public void Setup(Stage stage, Vector3 from, Vector3 target, RangedTrait shot, float damage)
+    /// <param name="shooterRadius">The shooter's body radius: cover within a body width of it does not stop the shot.</param>
+    public void Setup(Stage stage, Vector3 from, Vector3 target, RangedTrait shot, float damage, float shooterRadius = .4f)
     {
         _stage = stage; Position = from; _shot = shot; _damage = damage;
+        _shooter = from; _shooterRadius = shooterRadius;
         _direction = (target - from).Normalized(); _remaining = from.DistanceTo(target);
         if (!stage.Tiers.Any) return;
         int fromTier = TierMap.FloorTier(from.Y - .8f), toTier = TierMap.FloorTier(target.Y - .8f);
@@ -62,7 +69,13 @@ public partial class EnemyProjectile : Node3D
         if (_lob) { Lob((float)delta); return; }
         float travel = Mathf.Min(_remaining, _shot.ProjectileSpeed * (float)delta);
         var next = GlobalPosition + _direction * travel;
-        var hit = Rays.Cast(this, GlobalPosition, next, Layers.World | Layers.Props | Layers.Player);
+        var hit = Rays.Cast(this, GlobalPosition, next, Layers.EnemyShotMask | Layers.Player, _overCover);
+        // Cover the shooter fires over is passed for the rest of the flight; any other cover stops the shot.
+        while (hit is { } over && CoverRule.IsCover(over.Collider) && CoverRule.ShootsOver(_shooter, _shooterRadius, over.Position))
+        {
+            (_overCover ??= new()).Add(over.Rid);
+            hit = Rays.Cast(this, GlobalPosition, next, Layers.EnemyShotMask | Layers.Player, _overCover);
+        }
         if (_flat)
         {
             var tiers = _stage.Tiers;
@@ -79,6 +92,7 @@ public partial class EnemyProjectile : Node3D
         if (hit is { } collision)
         {
             if (collision.Collider is Player player) player.TakeDamage(_damage, _direction, .5f);
+            else if (ObjectBody.From(collision.Collider) is { } placed) placed.TakeDamage(_damage, ObjectDamage.Gun);
             Impact(collision.Position + collision.Normal * .16f);
             return;
         }

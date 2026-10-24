@@ -23,6 +23,8 @@ project/assembly_name="HordeShooter"
 3d_physics/layer_4="Props"
 3d_physics/layer_5="Corpse"
 3d_physics/layer_6="MovementOnly"
+3d_physics/layer_7="Cover"
+3d_physics/layer_8="CoverShot"
 
 [physics]
 3d/physics_engine="Jolt Physics"

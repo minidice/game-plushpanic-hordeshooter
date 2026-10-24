@@ -238,13 +238,24 @@ public abstract partial class StageMap
     protected StaticBody3D Solid(Vector3 center, Vector3 size, string color, bool drawCargo = true, ObjectInteraction? interaction = null)
     {
         var rule = interaction ?? ObjectInteractions.Current.DefaultSolid;
-        var body = new StaticBody3D { Name = "Solid", Position = center, CollisionLayer = rule.CollisionLayer, CollisionMask = 0 };
+        var body = Body("Solid", rule, (center, size));
+        body.Position = center;
         _stage.AddChild(body);
         body.AddChild(new CollisionShape3D { Shape = new BoxShape3D { Size = size } });
+        if (rule.Cover && body is ObjectBody cover) cover.AddShotScreen(Vector3.Zero, size);
         if (drawCargo) StageArt.Cargo(body, size, color);
         if (rule.BlocksMovement) _solids.Add((center, size));
         return body;
     }
+
+    /// <summary>
+    /// The body for a placed object: low cover and breakable objects (decisions.md C-29) get an <see cref="ObjectBody"/>
+    /// that knows its rule and, when it breaks, frees <paramref name="footprint"/> in the flow field.
+    /// </summary>
+    private StaticBody3D Body(string name, ObjectInteraction rule, (Vector3 center, Vector3 size) footprint) =>
+        rule.Cover || rule.Destruction != null
+            ? ObjectBody.Create(_stage, name, rule, () => { _solids.Remove(footprint); _stage.RebuildFlow(); })
+            : new StaticBody3D { Name = name, CollisionLayer = rule.CollisionLayer, CollisionMask = 0 };
 
     protected void Barrel(Vector3 at) => ExplosiveBarrel.Create(_stage, at);
 
@@ -265,14 +276,18 @@ public abstract partial class StageMap
         {
             var size = (c.Kind == "box" ? c.Size : new Vector3(c.Radius * 2, c.Height, c.Radius * 2)) * scale;
             var center = c.Kind == "box" ? c.Center * scale : new Vector3(0, c.Height / 2 * scale, 0);
-            var body = new StaticBody3D { Name = id, Position = at, Basis = basis, CollisionLayer = rule.CollisionLayer, CollisionMask = 0 };
-            _stage.AddChild(body);
-            Shape3D shape = c.Kind == "box" ? new BoxShape3D { Size = size } : new CylinderShape3D { Radius = c.Radius * scale, Height = c.Height * scale };
-            body.AddChild(new CollisionShape3D { Shape = shape, Position = center });
             // The flow field is axis aligned: a turned box blocks its turned footprint's bounds.
             var world = basis * center + at;
             var foot = (basis * new Vector3(size.X, 0, 0)).Abs() + (basis * new Vector3(0, 0, size.Z)).Abs();
-            if (rule.BlocksMovement) _solids.Add((world, new Vector3(foot.X, size.Y, foot.Z)));
+            var footprint = (world, new Vector3(foot.X, size.Y, foot.Z));
+            var body = Body(id, rule, footprint);
+            body.Position = at;
+            body.Basis = basis;
+            _stage.AddChild(body);
+            Shape3D shape = c.Kind == "box" ? new BoxShape3D { Size = size } : new CylinderShape3D { Radius = c.Radius * scale, Height = c.Height * scale };
+            body.AddChild(new CollisionShape3D { Shape = shape, Position = center });
+            if (rule.Cover && body is ObjectBody cover) cover.AddShotScreen(center, size);
+            if (rule.BlocksMovement) _solids.Add(footprint);
             holder = body;
         }
         else

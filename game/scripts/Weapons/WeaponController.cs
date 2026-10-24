@@ -597,7 +597,8 @@ public partial class WeaponController : Node
         int nextBelow = 0;
         for (int pierced = 0; pierced < def.Pierce; pierced++)
         {
-            var hitOrNull = Rays.Cast(_player, origin, origin + dir * range, Layers.BulletMask, exclude);
+            // Low cover right in front of the shooter is fired over (C-29); further away it stops the bullet.
+            var hitOrNull = CoverRule.Cast(_player, _player.GlobalPosition, _player.Definition.ColliderRadius, origin, origin + dir * range, Layers.BulletMask, exclude);
             // Height tiers (L-15): enemies on a lower tier sit under the bullet's line, so they are found on the floor plan
             // instead and are hit when they come before whatever the ray meets at the shooter's height.
             if (below != null && nextBelow < below.Count)
@@ -638,6 +639,11 @@ public partial class WeaponController : Node
                     break;
                 case ExplosiveBarrel barrel:
                     barrel.Ignite(by: _player);
+                    break;
+                case var placedHit when ObjectBody.From(placedHit) is { } placed:
+                    // Sandbags soak the shot and give way after enough of them (object_interactions.json destruction).
+                    placed.TakeDamage(damage * falloff, ObjectDamage.Gun);
+                    Stage.Effects.Impact(end, -dir);
                     break;
                 case RigidBody3D body:
                     body.ApplyImpulse(dir * Knockback.Hit(power) * .3f, end - body.GlobalPosition);
@@ -695,7 +701,7 @@ public partial class WeaponController : Node
             .Where(t => t.to.Length() < def.MeleeRange + t.e.Radius && Mathf.RadToDeg(dir.AngleTo(t.to.Normalized())) <= def.MeleeArc * .5f)
             .Where(t => Stage.Tiers.Any ? MeleeReachesAcrossTiers(origin, t.e) : Mathf.Abs(t.e.GlobalPosition.Y - origin.Y) < 1.5f &&
                 Rays.Clear(_player, origin + Vector3.Up * Player.AimHeight,
-                    t.e.GlobalPosition + Vector3.Up * Player.AimHeight, Layers.MovementWorld | Layers.Props))
+                    t.e.GlobalPosition + Vector3.Up * Player.AimHeight, Layers.MeleeMask))
             .OrderBy(t => t.to.Length())
             .Take(def.MeleeMaxTargets)
             .ToList();
@@ -729,7 +735,7 @@ public partial class WeaponController : Node
         var tiers = Stage.Tiers;
         if (!tiers.MeleeReach(origin, enemy.GlobalPosition)) return false;
         if (tiers.TierOf(_player) != tiers.TierOf(enemy)) return true;
-        return Rays.Clear(_player, origin + Vector3.Up * Player.AimHeight, enemy.GlobalPosition + Vector3.Up * Player.AimHeight, Layers.MovementWorld | Layers.Props);
+        return Rays.Clear(_player, origin + Vector3.Up * Player.AimHeight, enemy.GlobalPosition + Vector3.Up * Player.AimHeight, Layers.MeleeMask);
     }
 
     private static Vector3 Flat(Vector3 v) => new(v.X, 0, v.Z);

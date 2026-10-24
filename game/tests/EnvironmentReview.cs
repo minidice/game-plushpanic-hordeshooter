@@ -81,7 +81,7 @@ public partial class EnvironmentReview : Node
             for (float x = area.Position.X + .5f; x < area.End.X; x++) cells.Append(_stage.Flow.IsBlocked(new Vector3(x, 0, z)) ? '1' : '0');
         _contracts[prefix + "-flow"] = Hash(cells.ToString());
         System.IO.File.WriteAllText(ProjectSettings.GlobalizePath($"res://output/environment-{_tag}-{prefix}-flow.txt"),cells.ToString());
-        var bodies = Walk(_stage).OfType<StaticBody3D>().Where(b => (b.CollisionLayer & Layers.World) != 0);
+        var bodies = Walk(_stage).OfType<StaticBody3D>().Where(b => (b.CollisionLayer & (Layers.World | Layers.Cover)) != 0); // low cover (C-29) has its own layer
         var shapes = bodies.SelectMany(b => b.GetChildren().OfType<CollisionShape3D>()
             .Select(c => $"{b.GlobalTransform}|{c.Transform}|{c.Shape.GetClass()}|" + (c.Shape is BoxShape3D box ? box.Size.ToString() : c.Shape is CylinderShape3D cy ? $"{cy.Radius},{cy.Height}" : "other")))
             .OrderBy(s => s, StringComparer.Ordinal).ToArray();

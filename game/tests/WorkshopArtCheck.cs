@@ -38,7 +38,7 @@ public partial class WorkshopArtCheck : Node
                     var bounds=Bounds(collider);
                     Check(meshes.All(m=>bounds.Grow(.025f).Encloses(m.GlobalTransform*m.GetAabb())),name+" fits its blocking envelope");
                     Check(stage.Flow.IsBlocked(body.GlobalPosition),name+" cannot be walked through");
-                    foreach(var other in stage.GetChildren().OfType<StaticBody3D>().Where(b=>b!=body&&(b.CollisionLayer&Layers.World)!=0))
+                    foreach(var other in stage.GetChildren().OfType<StaticBody3D>().Where(b=>b!=body&&(b.CollisionLayer&(Layers.World|Layers.Cover))!=0)) // low cover (C-29) is its own layer
                         foreach(var shape in other.GetChildren().OfType<CollisionShape3D>().Where(c=>c.Shape is BoxShape3D))
                         {
                             var b=Bounds(shape);

@@ -514,9 +514,16 @@
 
 ## 로컬 개발용 Studio (T-25, 2026-10-24)
 
+### 이번 변경 확인 기록 — 2026-10-24 (낮은 엄폐물 · 파괴, C-29)
+
+- 클라우드 세션(Linux, Godot 4.7.2 .NET 헤드리스). C# 빌드 경고 · 오류 0. 새 `CoverCheck` 27개 통과. 처음엔 사격 검사가 실패: 모래자루 충돌(높이 0.85 m)이 총알 높이(1.0 m)보다 낮아 총알이 그냥 넘어감 → 키 큰 보이지 않는 사격막(`CoverShot`)을 따로 둬서 해결(검사 맵 이름 중복 2건은 검사 쪽 수정).
+- 회귀(커밋 시점까지): `ObjectInteractionCheck` 30 · `Integration` 149 · `ElevationCheck` 76 · `SquadCheck` 51 · `MapCheck` 24 · `StageTransitionCheck` 200 · `EnemyAttackCheck` 79 · `EnemyExpansion` 60 · `SpawnCheck` 41 · `SupplyCheck` 12 · `ModeCheck` 147 · `CombatPacingCheck` 44 · `CardLabCheck` 172 · `CompanionCheck` 39 · `WeaponEffectsCheck` 100 · `RifleEffectsCheck` 17 · `NetCodecCheck` 12 · `PartyNetCheck` 37 · `OnslaughtNetCheck` 29 통과(종료 경고 I-17만). `Stage2RouteCheck` 126 · `Stage2BridgeCheck` · `Stage2EnvironmentCheck` 13 · `EnvironmentGeometryCheck` 1,067 · `TraversalQualityCheck` 55 · `VisionTierCheck` 23 통과. `WorkshopArtCheck`는 처음 393으로 통과했지만 이전 420보다 적어 확인 — 겹침 검사가 `World` 층만 봐서 엄폐 층으로 옮긴 모래자루 · 방벽이 빠졌음. 검사가 `Cover` 층도 보게 고쳐 420 통과. 같은 필터를 쓰는 `EnvironmentReview` 월드 계약도 `Cover` 층을 포함하게 고침: 이 변경 전 `main`과 후의 계약 덤프 6개(Stage 1 시나리오 · 생존, Stage 2 시나리오의 충돌 모양 · 흐름장)가 바이트 단위로 같음. 검사 자체는 둘 다 같은 이유로 실패(I-108, Linux)라 Windows 확인 필요.
+- 미실행: Studio 웹 검사(`studio/tests/interactions.mjs`는 새 칸에 맞게 고쳤으나 로컬 Studio 서버가 필요), `EnvironmentReview`(I-108), 실제 2PC, 창 모드 렌더.
+
 - [x] **시제품**: 웹에서 현재 로컬 게임의 4종 커스터마이징 항목을 읽고 임시 조합, 회전/확대/장비 표시를 실제 Godot Forward+ 정지 렌더로 확인. 저장·외부 배포 없음, 게임 내보내기 제외. [실행·검증·제약](studio-prototype.md).
 - [x] **도감 시제품**: 캐릭터/몬스터/오브젝트 메뉴, 이름·ID 검색/분류, 몬스터 15종과 오브젝트 78종의 실제 렌더·속성 표·원본 상세 정보. 실제 로컬 CSV/manifest/생성 코드 사용. 93종 전체 렌더·354검사, 캐릭터36 회귀 통과. 모델 추천 충돌과 맵 배치 충돌 구분. [범위·제약](studio-prototype.md).
 - [ ] 맵/아이템 도감, 애니메이션, 모든 맵 배치 노드/상호작용의 자동 열거: 후속 범위.
 - [x] **품질 비교**: 펫3·드론4 별도 GLB와 부사수4 자동 LOD 설정을 오브젝트당 한 항목의 고/저 렌더로 비교. 같은 카메라·조명·회전·확대, 원본 삼각형 수. 33검사·22렌더, 전체 로컬106항목·395검사와 캐릭터36 회귀 통과.
 - [x] **오브젝트 이동/탄환 차단 데이터**: 실제 로컬 JSON과 공통 로더를 게임/웹에 연결. 철조망 이동 차단·탄환 통과, 일반 구조물 양쪽 차단. 몸체·흐름장·근접/사격·Stage 2 경계 벽 연결, 웹 기본값/출처/배치 예외 표시. 전용30·웹131·경로420검사 통과. [범위·경고·회귀 결과](object-data-spec.md).
-- [ ] **오브젝트 파괴/폭발 데이터화**: 공격 종류·등급·내구도와 자체 폭발은 [후속 계약](object-data-spec.md)만 작성. 웹은 미연결 표시.
+- [x] **낮은 엄폐물 · 파괴 데이터(C-29, 2026-10-24)**: `cover` · `cover_rules` · `destruction`(깰 수 있는 강도 `gun`/`explosive` · 내구도)을 게임 · 웹이 같은 로더로 읽음. 모래자루 = 깨지는 엄폐물(50), 콘크리트 방벽 = 안 깨지는 엄폐물. 붙으면 넘겨 쏘기(몸 폭 1배 미만), 양쪽 붙음 서로 맞힘, 근접 · 시야 넘어감, 파괴 시 흐름장 해제 · 멀티 동기화. `CoverCheck` 27. [데이터 규격](object-data-spec.md)
+- [ ] 좀비 모래자루 넘어오기, 부서질 때 폭발(`explosion`) 데이터화, 다른 엄폐물 종류(철제 방벽 등) — I-120.

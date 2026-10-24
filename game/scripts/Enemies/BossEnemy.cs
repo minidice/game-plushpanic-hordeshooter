@@ -302,7 +302,7 @@ public partial class BossEnemy : BullEnemy
             float a = count == 1 ? 0 : Mathf.DegToRad(-skill.SpreadDegrees * .5f + skill.SpreadDegrees * i / (count - 1));
             var dir = _castDir.Rotated(Vector3.Up, a);
             var projectile = new EnemyProjectile();
-            projectile.Setup(Stage, from, from + dir * skill.Range, trait, skill.Damage);
+            projectile.Setup(Stage, from, from + dir * skill.Range, trait, skill.Damage, Radius);
             Stage.AddChild(projectile);
             Stage.Net?.OnEnemyProjectile(this, from, from + dir * skill.Range);
         }
