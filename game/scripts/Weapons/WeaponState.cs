@@ -75,15 +75,19 @@ public sealed class WeaponState
     public const float AimBloomShare = .5f;
     /// <summary>The cone fully aimed with the bloom now (the reticle's straight ticks).</summary>
     public float AimedSpread => Math.Min(Def.MaxSpread, Def.AimSpread + _bloom * AimBloomShare);
-    /// <summary>Fired within the last <see cref="HotSeconds"/> (the reticle's widest ticks turn red).</summary>
-    public bool Hot => _sinceShot < HotSeconds;
-    public const float HotSeconds = .3f;
-    private float _sinceShot = HotSeconds;
+    /// <summary>
+    /// 1 while firing (up to <see cref="HotSeconds"/> after a shot), then cooling to 0 over <see cref="CoolSeconds"/>: the
+    /// reticle's hip-fire ticks glow red by this much (doc/weapon-aim-reference.md 8.3).
+    /// </summary>
+    public float Heat => _sinceShot >= HotSeconds + CoolSeconds ? 0 : Math.Clamp(1 - (_sinceShot - HotSeconds) / CoolSeconds, 0, 1);
+    public bool Hot => Heat > 0;
+    public const float HotSeconds = .12f, CoolSeconds = .4f;
+    private float _sinceShot = HotSeconds + CoolSeconds;
 
     /// <summary>Recharging and the time between shots run in hand and put away alike.</summary>
     public void TickCooldown(float dt)
     {
-        _sinceShot = Math.Min(HotSeconds, _sinceShot + dt);
+        _sinceShot = Math.Min(HotSeconds + CoolSeconds, _sinceShot + dt);
         _cooldown = Math.Max(0, _cooldown - dt);
         if (CooldownLeft <= 0) return;
         CooldownLeft = Math.Max(0, CooldownLeft - dt);

@@ -502,6 +502,9 @@ public partial class Enemy : CharacterBody3D
     public virtual void TakeHit(HitInfo hit)
     {
         if (IsDead) return;
+        // The shooter's own reticle shows the hit, on a friend's PC too where its own shot hits the puppet (C-30).
+        // A pet's bite is not the player's aim.
+        if (hit.Shooter is { IsLocal: true } && hit.WeaponType != "companion") Stage.Hud?.ShowHitMarker(hit.Crit);
         if (IsPuppet) { PuppetHit(hit.Point, hit.Direction, hit.Crit); return; }
         if (hit.Shooter != null) LastHitBy = hit.Shooter;
         Stage.Net?.OnEnemyHit(this, hit.Point, hit.Direction, hit.Crit);

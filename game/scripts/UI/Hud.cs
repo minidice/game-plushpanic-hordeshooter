@@ -419,12 +419,64 @@ void fragment() {
         HitArcAngles = angles;
     }
 
-    private static readonly Color ReticleFar = new("ffb347"), ReticleOut = new("ff5a4f"), ReticleHot = new("ff6b6b");
+    private static readonly Color ReticleFar = new("ffb347"), ReticleOut = new("ff5a4f"), ReticleHot = new("ff6b6b"),
+        HitMarkHot = new("ff9a3c"), HitMarkCrit = new("ffd65c");
+    /// <summary>Reticle sizes in 900-high UI pixels (doc/weapon-aim-reference.md 8.3): ticks long and thick enough to read.</summary>
+    public const float ReticleTickLength = 14, ReticleTickWidth = 4, ReticleMinRadius = 12, ReticleDot = 2.5f;
+    /// <summary>A hit's double slash lives this long; at most this many show at once (C-30).</summary>
+    public const float HitMarkSeconds = .4f;
+    public const int MaxHitMarks = 4;
+    private readonly List<(double At, bool Crit)> _hitMarks = new();
+    /// <summary>Hit marks on the reticle now (checks).</summary>
+    public int HitMarks => System.Linq.Enumerable.Count(_hitMarks, m => Now - m.At < HitMarkSeconds);
+    private static double Now => Time.GetTicksMsec() / 1000.0;
 
-    private static void ReticleTick(Control c, Vector2 center, Vector2 dir, float radius, Color color)
+    /// <summary>The local player's shot landed: a double slash on each diagonal pops out and settles in (C-30).</summary>
+    public void ShowHitMarker(bool crit)
     {
-        c.DrawLine(center + dir * (radius + 2), center + dir * (radius + 8), new Color(0, 0, 0, .6f), 4, true);
-        c.DrawLine(center + dir * (radius + 2), center + dir * (radius + 8), color, 2, true);
+        _hitMarks.RemoveAll(m => Now - m.At >= HitMarkSeconds);
+        _hitMarks.Add((Now, crit));
+        if (_hitMarks.Count > MaxHitMarks) _hitMarks.RemoveAt(0);
+    }
+
+    /// <summary>A line with a thin dark edge, and a soft halo of <paramref name="glow"/> when it is hot.</summary>
+    private static void ReticleLine(Control c, Vector2 a, Vector2 b, Color color, float width, Color glow, float heat)
+    {
+        if (heat > 0)
+        {
+            c.DrawLine(a, b, new Color(glow, .18f * heat * color.A), width + 8, true);
+            c.DrawLine(a, b, new Color(glow, .32f * heat * color.A), width + 4, true);
+        }
+        c.DrawLine(a, b, new Color(0, 0, 0, .4f * color.A), width + 2, true);
+        c.DrawLine(a, b, color, width, true);
+    }
+
+    private static void ReticleTick(Control c, Vector2 center, Vector2 dir, float radius, Color color, float heat = 0)
+    {
+        var from = center + dir * (radius + 2);
+        ReticleLine(c, from, from + dir * ReticleTickLength, color, ReticleTickWidth, ReticleHot, heat);
+    }
+
+    private void DrawHitMarks(Control c, Vector2 center, float radius)
+    {
+        double now = Now;
+        _hitMarks.RemoveAll(m => now - m.At >= HitMarkSeconds);
+        foreach (var (at, crit) in _hitMarks)
+        {
+            float t = (float)((now - at) / HitMarkSeconds);
+            // Out at once, then settling in toward the reticle; white turning orange (yellow on a crit), fading at the end.
+            float reach = radius + 6 + 22 * Mathf.Pow(1 - t, 2);
+            var tint = HudWhite.Lerp(crit ? HitMarkCrit : HitMarkHot, Mathf.Min(1, t * 2.5f));
+            tint.A = t < .6f ? 1 : 1 - (t - .6f) / .4f;
+            foreach (var d in new[] { new Vector2(1, 1), new Vector2(-1, 1), new Vector2(1, -1), new Vector2(-1, -1) })
+            {
+                var dir = d.Normalized();
+                var side = new Vector2(-dir.Y, dir.X) * 2.5f;
+                var mid = center + dir * (reach + 6);
+                foreach (var s in new[] { side, -side })
+                    ReticleLine(c, mid - dir * 6 + s, mid + dir * 6 + s, tint, 3, crit ? HitMarkCrit : HitMarkHot, Mathf.Min(1, t * 2.5f));
+            }
+        }
     }
 
     private void DrawReticle(Control c)
@@ -454,7 +506,7 @@ void fragment() {
 
         float distance = Mathf.Max(1, (aim - player.GlobalPosition).Length());
         float Radius(float spread) =>
-            Mathf.Max(7, (cam.UnprojectPosition(aim + cam.GlobalTransform.Basis.X * distance * Mathf.Tan(Mathf.DegToRad(spread * .5f))) - center).Length());
+            Mathf.Max(ReticleMinRadius, (cam.UnprojectPosition(aim + cam.GlobalTransform.Basis.X * distance * Mathf.Tan(Mathf.DegToRad(spread * .5f))) - center).Length());
         float radius = Radius(gun.Spread);
         float aimed = Mathf.Min(radius, Radius(gun.AimedSpread));
         // Past the effective range the reticle turns amber (damage falls off), past the maximum red (no hit; C-27, C-30).
@@ -462,17 +514,22 @@ void fragment() {
         var range = gun.IsMelee ? HudWhite : distance > gun.Def.MaxRange * reach ? ReticleOut : distance > gun.Def.EffectiveRange * reach ? ReticleFar : HudWhite;
         var color = player.CritReady ? HudWarm : gun.Reloading ? HudMuted : new Color(range, .95f);
 
-        // Straight ticks: the cone fully aimed. Diagonal ticks: the cone now, while it is wider (hip fire, moving, shots).
-        // Shots just fired turn the widest ticks red: the diagonals from the hip, the straight ones when aimed.
-        bool wide = radius - aimed > 3, hot = gun.Hot && !gun.Reloading;
+        // Straight ticks and the dot: the cone fully aimed, always white (or the range / crit colour); shots only push them
+        // out. Diagonal ticks: the cone now, while it is wider (hip fire, moving, shots) - red and glowing as the gun fires,
+        // cooling back to white once it stops (doc/weapon-aim-reference.md 8.3).
         foreach (var dir in new[] { Vector2.Up, Vector2.Down, Vector2.Left, Vector2.Right })
-            ReticleTick(c, center, dir, aimed, hot && !wide ? ReticleHot : color);
-        if (wide)
+            ReticleTick(c, center, dir, aimed, color);
+        c.DrawCircle(center, ReticleDot + 1, new Color(0, 0, 0, .4f), true, -1, true);
+        c.DrawCircle(center, ReticleDot, color, true, -1, true);
+        if (radius - aimed > 3)
         {
-            var outer = hot ? ReticleHot : color;
+            float heat = gun.Reloading ? 0 : gun.Heat;
+            var outer = color.Lerp(ReticleHot, heat);
             foreach (var dir in new[] { new Vector2(1, 1), new Vector2(-1, 1), new Vector2(1, -1), new Vector2(-1, -1) })
-                ReticleTick(c, center, dir.Normalized(), radius, outer);
+                ReticleTick(c, center, dir.Normalized(), radius, outer, heat);
         }
+        DrawHitMarks(c, center, aimed);
+        radius += ReticleTickLength - 6;
 
         if (player.FocusTarget != null)
         {

@@ -65,6 +65,9 @@ public partial class WeaponAimCheck : Node
         state.Tick(.001f, false, aiming: true);
         Check(Mathf.IsEqualApprox(state.Spread, m4.AimSpread + m4.SpreadPerShot * WeaponState.AimBloomShare, .02f) && state.Hot,
             "a shot widens the aimed cone by half its bloom, and the reticle runs hot");
+        Check(Mathf.IsEqualApprox(state.Heat, 1), "right after a shot the gun is fully hot");
+        for (float t = 0; t < WeaponState.HotSeconds + WeaponState.CoolSeconds * .5f; t += .01f) state.Tick(.01f, false, aiming: true);
+        Check(state.Heat > .3f && state.Heat < .7f, $"once it stops the heat cools over {WeaponState.CoolSeconds} s, not at once ({state.Heat:0.00})");
         for (float t = 0; t < m4.AimTime * .5f + .02f; t += .01f) state.Tick(.01f, false);
         Check(state.AimProgress == 0, "letting go opens the cone twice as fast as it closed");
         for (float t = 0; t < 1; t += .01f) state.Tick(.01f, false);
@@ -120,6 +123,28 @@ public partial class WeaponAimCheck : Node
         player.SetControls(Vector2.Zero, aimAt, false);
         await Frames(60);
         Check(player.Recoil.Offset == Vector2.Zero && !player.Gun.Hot, "a second after the burst the aim point is back and the cone cool");
+        // Hit marks: the local player's hit puts a double slash on the reticle; a handful at most.
+        // Inside the safe room: the closed door would take the shots.
+        var near = player.GlobalPosition + new Vector3(3.5f, 1, .5f);
+        var dummy = _stage.SpawnCommon(near with { Y = 0 }, awake: false);
+        dummy.ScaleHealth(50);
+        await Frames(3);
+        dummy.Stun(30);
+        player.HoldAim(true);
+        await Frames(Mathf.CeilToInt(m4.AimTime * Engine.PhysicsTicksPerSecond) + 4);
+        int marksBefore = _stage.Hud.HitMarks;
+        for (int i = 0; i < 4 && _stage.Hud.HitMarks == marksBefore; i++) { player.SetControls(Vector2.Zero, near, true); await Frames(2); }
+        Check(_stage.Hud.HitMarks > marksBefore, "an aimed hit puts a hit mark on the reticle");
+        for (int i = 0; i < 6; i++) { player.SetControls(Vector2.Zero, near, true); await Frames(2); }
+        await Shot("hit");
+        player.SetControls(Vector2.Zero, near, false);
+        player.HoldAim(false);
+        for (int i = 0; i < 8; i++) _stage.Hud.ShowHitMarker(false);
+        ulong marked = Time.GetTicksMsec();
+        Check(_stage.Hud.HitMarks == Hud.MaxHitMarks, $"at most {Hud.MaxHitMarks} hit marks show at once");
+        // Hit marks run on real time (UI), not physics frames.
+        for (int i = 0; i < 300 && Time.GetTicksMsec() - marked < (ulong)(Hud.HitMarkSeconds * 1000) + 50; i++) await Frames(1);
+        Check(_stage.Hud.HitMarks == 0, $"each fades within {Hud.HitMarkSeconds} s");
         var pellets = ArmoryCatalog.Weapon("r870");
         Check(pellets.Pellets > 1 && pellets.AimSpread < pellets.BaseSpread, "the shotgun's pellet cone tightens with aiming (aim_spread_deg below spread_deg)");
     }

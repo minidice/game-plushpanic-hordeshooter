@@ -559,3 +559,9 @@
 - C# 빌드 경고·오류 0. 새 `WeaponAimCheck` 23개(헤드리스 · 창 모드), `WeaponHandlingCheck` 36(헤드리스 · 창 모드), `Start-Game.ps1 -Test`(Integration) 149, `CombatPacingCheck` 44, `SquadCheck` 51, `ModeCheck` 147, `CardLabCheck` 172, `NetSyncCheck` 32, `OnslaughtNetCheck` 29, `EnemyAttackCheck` 79, `CompanionCheck` 39, `StageTransitionCheck` 200 통과. Studio `weapons.mjs` 52 · `smoke.mjs` 36 통과.
 - 처음 실패와 처리: `WeaponHandlingCheck` "조준하면 46 m에 닿음"과 `Integration` "18 m 플러시를 연사로 잡기"가 넓어진 비조준 · 조준 시간 때문에 실패 → 조준이 끝난 뒤 쏘도록 검사를 바꿈(사거리 · 명중 경로를 보는 검사이고, 비조준이 느슨해진 것은 의도). `WeaponAimCheck`의 "쏜 직후 빨강"이 소총의 퍼짐 회복과 겹쳐 깜빡임 → 마지막 사격 후 0.3초로 바꿈.
 - 렌더 `output/aim-hip.png`(대각 + 상하좌우 8눈금) · `aim-aimed.png`(4눈금) · `aim-burst.png`(조준 연사: 상하좌우 빨강) · `aim-hip-burst.png`(비조준 연사: 대각 빨강). 반동 오프셋은 마우스 입력에만 붙어 렌더에서는 보이지 않고, Studio 반동 궤적과 검사 값으로 확인. 손으로 쏴 본 확인은 없음.
+
+### 이번 변경 확인 기록 — 2026-10-25 (조준점 2차: 큰 눈금 · 가운데 점 · 번짐과 식기 · 명중 표시, C-30)
+
+- C# 빌드 경고·오류 0. `WeaponAimCheck` 28개(헤드리스 · 창 모드): 쏜 직후 열기 1, 0.4초에 걸쳐 식음, 조준 명중에 명중 표시, 최대 4겹, 0.4초 안에 사라짐 추가. 처음 실패: 열기가 부동소수점으로 0이 안 됨 → 끝에서 0 고정, 과녁이 세이프룸 문 밖이라 명중 안 됨 → 방 안으로, 창 모드에서 물리 프레임이 실제 시간보다 빨라 사라짐 확인이 이름 → 실제 시간으로 기다림.
+- 통과: `WeaponHandlingCheck` 36(헤드리스 · 창 모드), `CardLabCheck` 172, `CompanionCheck` 39, `NetSyncCheck` 32, `OnslaughtNetCheck` 29, `SquadCheck` 51, `CombatPacingCheck` 44, `ModeCheck` 147, `Integration` 149(3회 중 1회는 I-65 산탄 검사 실패, 이어서 두 번 연속 통과).
+- 렌더 `output/aim-aimed.png` · `aim-hip.png` · `aim-hip-burst.png` · `aim-hit.png`, 덕코프와 나란히 `output/reticle-vs-duckov-2.png`. 눈금 크기 · 가운데 점 · 빨간 번짐 · 두 줄 명중 표시가 덕코프와 비슷한 크기로 보임. 손으로 해 본 확인은 없음.
