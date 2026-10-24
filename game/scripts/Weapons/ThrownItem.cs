@@ -179,7 +179,7 @@ public partial class ThrownItem : RigidBody3D
             {
                 case ExplodeEffect e:
                     Blast.Explode(_stage, at, e.RadiusM, e.Damage, Def.Kind == ThrowableKind.Lure ? new Color("ff7ab8") : new Color("ffb347"),
-                        knockbackPower: e.KnockbackPower, selfShare: e.SelfDamageShare, by: Thrower);
+                        knockbackPower: e.KnockbackPower, selfShare: e.SelfDamageShare, by: Thrower, effectSource: Def.Kind == ThrowableKind.Lure ? "lure" : "grenade");
                     break;
                 case BurnPoolEffect b:
                     FireZone.Create(_stage, ground, b, Thrower);

@@ -65,6 +65,9 @@ function clearPreview() {
   $('placeholder').hidden = false; draw();
 }
 function showProperties(item) {
+  $('recipe-panel').hidden = !item.recipe;
+  $('recipe-panel').open = false;
+  $('recipe-json').textContent = item.recipe ? JSON.stringify(item.recipe, null, 2) : '';
   $('item-name').textContent = item.name; $('item-id').textContent = item.id;
   $('item-category').textContent = item.category; $('summary').textContent = item.summary;
   $('source').textContent = item.source; $('properties').replaceChildren();

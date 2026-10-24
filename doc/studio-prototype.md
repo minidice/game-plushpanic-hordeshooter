@@ -151,3 +151,10 @@ node studio/tests/interactions.mjs
 - 기존 `smoke.mjs`36(캐릭터13렌더), `library.mjs`200(8렌더), `quality.mjs`33(11쌍), `destruction.mjs`24(3렌더) 통과. 효과 촬영 뒤 기존 모델/카메라가 복원됨. `studio/output/media-regression-*.log`.
 - Debug/ExportRelease 빌드 오류·경고0, ExportRelease와 ExportDebug Compile에서 Studio 소스0개. 독립 정적 리뷰에서 출처14경로 존재·재생 시간/상태 복원·비동기 선택·URL해제·CSP 확인. 작은 팝 설명을 실제 Companion.Revive의 동료 부활 표본으로 정정했다.
 - 현재 교체 음원 파일이 없어 override파일의 실제 브라우저 재생은 미검증이다. 선택 경로는 게임 Sfx 로더를 사용한다. 현재 데이터는 합성음만이며 사운드 규격의 오래된44종 표기를 현재43종으로 고쳤다. 전체 게임 Integration·실제 3D거리/버스 믹스·휴대폰 실기기·전체 패키지 export·장시간 메모리 검사는 이번 UI 확장에서 미실행. 게임 전투/오디오 제품 코드 자체는 이번 확장에서 변경하지 않았다.
+
+### 폭발·화염·독 공통 데이터 후속 — 2026-10-24
+
+- `combat_effects.json` schema1의 11효과를 자동 등록한다. 이전 단일 `explosion` 표본은 `fx:blast` 및 계열별 목록으로 교체해 현재 효과는23종, 음원43종이다. 이전 `id=explosion` 북마크는 새 목록에서 다시 선택해야 한다.
+- 발생원/사용처·해당 kind의 시각 설정·미리보기 조건을 표시한다. **공통 효과 원본 데이터**를 펼치면 게임과 같은 JSON 레코드를 확인한다. 저장 기능은 없으며 데이터 변경 후 Studio의 최신 코드/데이터 다시 읽기를 사용한다.
+- 실제 `CombatBurstEffect`·`CombatSurfaceEffect`·`CombatProjectileEffect`로 생성. 피해/음향/카메라 흔들림을 재현하지 않는 시각 검수 표본이다. 독 비행 궤적만 Studio 표본이며 같은 외형을 실제 방향에 맞춰 회전한다.
+- 짧은 효과60fps, 보통30fps, 2초 초과는5~15fps로 낮춰 **전체 수명**을 캡처한다. 원본 수명 끝에서0.15초 여유, 표본 수명은 실제 DPS/위험 지속시간과 구분. 최신 결과는 [효과 규격](vfx-quality.md)의 검증 기록을 따른다.

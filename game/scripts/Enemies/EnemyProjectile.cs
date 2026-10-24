@@ -7,6 +7,7 @@ namespace HordeShooter;
 public partial class EnemyProjectile : Node3D
 {
     private Stage _stage = null!;
+    private CombatProjectileEffect? _visual;
     private Vector3 _direction;
     private RangedTrait _shot = null!;
     private float _remaining, _damage;
@@ -53,7 +54,8 @@ public partial class EnemyProjectile : Node3D
         // Vomit is a slow blob you are meant to watch and step away from.
         if (_shot.HazardSeconds > 0)
         {
-            Mat.Mesh(this, new SphereMesh { Radius = .13f, Height = .26f }, Vector3.Zero, Mat.Glow(new Color("b1df3a")));
+            _visual = CombatProjectileEffect.Create(this, CombatEffectCatalog.Current.ForSource("poison_flight"), .22f);
+            _visual.Face(_direction);
             return;
         }
         // Gunshots: the windup is the warning (C-13). The bullet itself is fast and should not glow like a ball.
@@ -97,6 +99,7 @@ public partial class EnemyProjectile : Node3D
             Impact(collision.Position + collision.Normal * .16f);
             return;
         }
+        _visual?.Face(next - GlobalPosition);
         GlobalPosition = next;
         _remaining -= travel;
         if (_remaining <= .001f) Impact(next);
@@ -114,6 +117,7 @@ public partial class EnemyProjectile : Node3D
             Impact(hit.Position);
             return;
         }
+        _visual?.Face(next - GlobalPosition);
         GlobalPosition = next;
         if (t >= 1) Impact(_to);
     }
@@ -122,6 +126,7 @@ public partial class EnemyProjectile : Node3D
     {
         if (_shot.HazardSeconds > 0)
         {
+            CombatBurstEffect.Play(_stage.Effects, CombatEffectCatalog.Current.ForSource("poison_impact"), point, _shot.HazardRadius, _direction, _stage.Tiers.GroundY(point));
             var hazard = new VomitHazard();
             hazard.Setup(_stage, new Vector3(point.X, _stage.Tiers.GroundY(point) + .06f, point.Z), _shot.HazardSeconds, _shot.HazardRadius, _damage * .5f);
             _stage.AddChild(hazard);

@@ -21,33 +21,8 @@ public partial class FireZone : Node3D
         stage.Effects.AddChild(zone);
         zone.AddToGroup(SquadGroups.Hazard);
         zone.SetMeta("radius", burn.RadiusM);
-        // Edge ring + flames only (no filled disc): the burning zombies inside must stay readable.
-        Mat.Mesh(zone, new TorusMesh { InnerRadius = burn.RadiusM * .94f, OuterRadius = burn.RadiusM, Rings = 32, RingSegments = 4 },
-            Vector3.Up * .04f, Mat.Glow(new Color("ff7a2a"), 1.5f));
-        var flameMat = new StandardMaterial3D
-        {
-            VertexColorUseAsAlbedo = true,
-            ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
-            Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
-        };
-        zone.AddChild(new CpuParticles3D
-        {
-            Amount = 80,
-            Lifetime = .7f,
-            Mesh = new SphereMesh { Radius = .18f, Height = .36f, Material = flameMat },
-            EmissionShape = CpuParticles3D.EmissionShapeEnum.Box,
-            EmissionBoxExtents = new Vector3(burn.RadiusM * .75f, .05f, burn.RadiusM * .75f),
-            Direction = Vector3.Up,
-            Spread = 15,
-            Gravity = Vector3.Up * 3,
-            InitialVelocityMin = .5f,
-            InitialVelocityMax = 1.5f,
-            ScaleAmountMin = .6f,
-            ScaleAmountMax = 1.5f,
-            Color = new Color(1f, .5f, .12f, .85f),
-            HueVariationMin = -.03f,
-            HueVariationMax = .05f,
-        });
+        CombatSurfaceEffect.Create(zone, CombatEffectCatalog.Current.ForSource("fire_pool"), burn.RadiusM, burn.Duration);
+        CombatBurstEffect.Play(stage.Effects, CombatEffectCatalog.Current.ForSource("fire_impact"), at, burn.RadiusM);
         var light = new OmniLight3D { OmniRange = burn.RadiusM * 2.2f, LightEnergy = 1.4f, LightColor = new Color("ff7a2a"), Position = Vector3.Up * 1.6f };
         light.AddToGroup(VisionSystem.LightGroup);
         zone.AddChild(light);

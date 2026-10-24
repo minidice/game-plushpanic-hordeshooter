@@ -249,3 +249,7 @@ HUD에는 현재 모드별 임계값 분기가 없다. 여기서는 공용 코�
 - 검사: `game/tests/WeaponHandlingCheck.tscn` (창 모드면 `output/weapons-*.png`).
 - **난전(서바이버)의 탄약 규칙**(2026-10-21, M-26): 모든 무기 예비탄 무제한, 3번 칸 종류(`slot=3`)는 장전 대신 쏜 뒤 `special_cooldown_s`(25초) 충전. 같은 날 난전 전용 3번 칸 꽥(`honk`) · 고무오리(`rubber_duck`)를 더하고 무기별 쿨타임 `special_cooldowns`(꽥 8초 · 고무오리 14초)를 둠(M-27 계획 13.1, I-87). 모델 · 아이콘은 `prototypes/character-lab/tools/gadget-models.py`(Blender)와 `render-weapon-icons.py -- --only honk,rubber_duck`로 만듦([지시문](model-briefs/slot3-honk-duck.md)). 진열대로 고른 무기는 종류와 상관없이 1·2번 칸에 들어간다. [몬스터 테이블 규격](mode-monster-tables.md) 5장.
 
+
+## 9. 폭발 외형 공통 데이터 (2026-10-24, A-19)
+
+`Blast.Explode`의 시각 발생원 키는 기본 `blast`이며 일반 무기 `weapon`, 로켓 `rocket`, 박격포 `mortar`, 드럼통 `barrel`로 구분한다. `game/content/data/combat_effects.json`의 시각 조합을 읽고 실제 폭발 반경/방향을 전달한다. 색/개수/퍼짐/상승/빛/시각 수명은 조정값이며 피해 수치가 아니다. 피해·충격·카메라 흔들림·음향·원격 재생 권한은 기존 경로를 유지한다. [데이터 계약·검증](vfx-quality.md).

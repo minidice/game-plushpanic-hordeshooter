@@ -79,7 +79,7 @@ public partial class ExplosiveBarrel : RigidBody3D
         CollisionLayer = 0;
         if (showEffects && Interaction.Explosion is { } explosion)
             Blast.Explode(_stage, GlobalPosition, explosion.Radius, explosion.Damage, new Color("ff9a3c"), this,
-                knockbackPower: explosion.Impulse, by: _litBy != null && IsInstanceValid(_litBy) ? _litBy : null);
+                knockbackPower: explosion.Impulse, by: _litBy != null && IsInstanceValid(_litBy) ? _litBy : null, effectSource: "barrel");
         QueueFree();
     }
 }

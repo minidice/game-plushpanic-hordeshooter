@@ -10,7 +10,7 @@ namespace HordeShooter.Tests;
 public partial class StudioPreview
 {
     private sealed record EffectEntry(string id, string name, string category, string summary, string source,
-        LibraryProperty[] properties, double duration);
+        LibraryProperty[] properties, double duration, object? recipe = null);
     private sealed record EffectFrame(double time, string png);
 
     private IEnumerable<object> EffectEntries() => EffectDefinitions().Cast<object>();
@@ -50,14 +50,7 @@ public partial class StudioPreview
                 new LibraryProperty("호 각도", Number(melee.MeleeArc) + "°"), new LibraryProperty("지속 시간", "0.16 s"),
                 new LibraryProperty("셰이더", "res://shaders/melee_sweep.gdshader"),
             }, .3);
-        yield return new("explosion", "폭발 드럼통 · 폭발 효과", "환경", "드럼통 데이터의 반경을 사용하는 실제 Effects.Explosion입니다. 섬광·광원·파편만 재생하며 카메라 흔들림과 피해는 제외합니다.",
-            "res://scripts/World/Effects.cs", new[] {
-                new LibraryProperty("반경 데이터", Number(ExplosiveBarrel.Radius) + " m"),
-                new LibraryProperty("발생 코드", "res://scripts/World/ExplosiveBarrel.cs"),
-                new LibraryProperty("설정 출처", ObjectInteractions.DataPath),
-                new LibraryProperty("섬광 / 광원", "0.35 s / 0.4 s"),
-                new LibraryProperty("파편", "40개 / 수명 0.9 s / 정리 1.4 s"),
-            }, 1.4);
+        foreach (var entry in CombatEffectEntries()) yield return entry;
         yield return new("puff", "동료 부활 · 작은 팝", "환경", "Companion.Revive에서 사용하는 반경 1m·크림색 표본입니다. 실제 Effects.Puff를 호출합니다.",
             "res://scripts/World/Effects.cs", new[] {
                 new LibraryProperty("발생 코드", "res://scripts/Companions/Companion.cs"),
@@ -77,53 +70,16 @@ public partial class StudioPreview
             }, 1.2);
     }
 
-    private sealed class EffectStageMap : StageMap
+    private static Effects EffectContext(Node3D root)
     {
-        public override Rect2 Area => new(-8, -8, 16, 16);
-        protected override void BuildMap() { PlayerStart = new(0, 0, -5); }
-    }
-
-    private Effects EffectContext(Node3D root, bool explosion)
-    {
-        if (!explosion)
-        {
-            var effects = new Effects(); root.AddChild(effects);
-            effects.SetProcess(false); effects.SetPhysicsProcess(false);
-            return effects;
-        }
-        // Explosion uses Stage.Cam. Keep an actual minimal Stage, but never run its gameplay loop.
-        // Stage initialization reads settings; it does not save settings. Mute only this bridge's
-        // master bus while initialization creates/stops its ambience stream, then restore the bus.
-        bool muted = AudioServer.IsBusMute(0);
-        var stage = new Stage { Name = "EffectContext", MapOverride = new EffectStageMap(),
-            ModeOverride = GameMode.Scenario, CharacterOverride = "goose", ThemeOverride = "zombie",
-            DirectorEnabled = false, SquadOverride = 0, ReviveOverride = false, ArrivalOverride = false,
-            NextStageOverride = false, ProcessMode = ProcessModeEnum.Disabled };
-        try
-        {
-            AudioServer.SetBusMute(0, true);
-            root.AddChild(stage);
-            foreach (var child in Descendants(stage).ToArray())
-            {
-                if (child is AudioStreamPlayer audio) audio.Stop();
-                if (child is AudioStreamPlayer3D audio3D) audio3D.Stop();
-                if (child is CanvasLayer layer) layer.Visible = false;
-            }
-            foreach (var child in stage.GetChildren().ToArray())
-            {
-                if (child is WorldEnvironment environment) environment.Free();
-                else if (child is Node3D spatial && child != stage.Effects) spatial.Visible = false;
-            }
-            stage.Cam.Current = false; _camera.MakeCurrent();
-            stage.Effects.ProcessMode = ProcessModeEnum.Always;
-            stage.Effects.SetProcess(false); stage.Effects.SetPhysicsProcess(false);
-            return stage.Effects;
-        }
-        finally { AudioServer.SetBusMute(0, muted); }
+        var effects = new Effects(); root.AddChild(effects);
+        effects.SetProcess(false); effects.SetPhysicsProcess(false);
+        return effects;
     }
 
     private void CreateEffect(string id, Node3D root, Effects effects)
     {
+        if (id.StartsWith("fx:", StringComparison.Ordinal)) { CreateCombatEffect(id[3..], root); return; }
         if (id.StartsWith("shot:", StringComparison.Ordinal))
         {
             var weapon = ArmoryCatalog.Weapon(id[5..]);
@@ -153,7 +109,6 @@ public partial class StudioPreview
             case "melee":
                 var melee = ArmoryCatalog.Weapon("frying_pan");
                 effects.Swoosh(new(0, .5f, -.7f), Vector3.Back, melee.MaxRange, melee.MeleeArc); break;
-            case "explosion": effects.Explosion(Vector3.Zero, ExplosiveBarrel.Radius, new Color("ff9a3c")); break;
             case "puff": effects.Puff(Vector3.Up * .6f, 1, new Color("fff3c4")); break;
             case "sonar": effects.SonarPing(Vector3.Zero); break;
             case "wall": BreakableWallArt.Create(root).PlayBreak(); break;
@@ -166,8 +121,8 @@ public partial class StudioPreview
         string id = data.GetProperty("id").GetString() ?? "";
         var entry = EffectDefinitions().SingleOrDefault(e => e.id == id) ?? throw new ArgumentException("알 수 없는 이펙트입니다.");
         const int pixels = 640;
-        int fps = entry.duration <= .5 ? 60 : 30;
-        int steps = Math.Min(47, (int)Math.Round(entry.duration * fps));
+        int fps = entry.duration <= .5 ? 60 : entry.duration > 2 ? Math.Clamp((int)(90 / entry.duration), 5, 15) : 30;
+        int steps = (int)Math.Ceiling(entry.duration * fps);
         double duration = steps / (double)fps, dt = 1d / fps;
         var size = _viewport.Size; var update = _viewport.RenderTargetUpdateMode;
         var transform = _camera.Transform; var projection = _camera.Projection;
@@ -183,19 +138,21 @@ public partial class StudioPreview
             _platform.Visible = false;
             _viewport.Size = new(pixels, pixels); _viewport.AddChild(root);
             _viewport.RenderTargetUpdateMode = SubViewport.UpdateMode.Always;
-            float framing = id.StartsWith("shot:", StringComparison.Ordinal) ? 9 : id == "explosion" ? 10 : id == "wall" ? 6.5f : 4.6f;
+            float framing = id.StartsWith("fx:", StringComparison.Ordinal) ? CombatFraming(id[3..])
+                : id.StartsWith("shot:", StringComparison.Ordinal) ? 9 : id == "wall" ? 6.5f : 4.6f;
             Vector3 focus = id == "wall" ? Vector3.Up : Vector3.Up * .65f;
             _camera.Projection = Camera3D.ProjectionType.Orthogonal; _camera.Size = framing;
             _camera.Position = focus + new Vector3(3, 5, 9); _camera.LookAt(focus);
             Mat.Mesh(root, new PlaneMesh { Size = Vector2.One * framing * 1.5f }, new(0, -.04f, 0), Mat.Solid("303c39"));
-            var effects = EffectContext(root, id == "explosion");
+            var effects = EffectContext(root);
             CreateEffect(id, root, effects);
             // The actual scripts are stepped manually. Never let slow readbacks or shader uploads
             // advance a 35 ms muzzle flash or consume an entire .16 s hit before its first image.
             var nodes = Descendants(root).ToArray();
             foreach (var node in nodes) { node.SetProcess(false); node.SetPhysicsProcess(false); }
             var animated = nodes.Where(n => n is WeaponShotEffect or DamageBurstEffect or MeleeSwingEffect
-                or CharacterHitFlashEffect or BreakableWallVisual).ToArray();
+                or CharacterHitFlashEffect or BreakableWallVisual or CombatBurstEffect or CombatSurfaceEffect
+                or CombatProjectileEffect or StudioProjectileSample).ToArray();
             var particles = nodes.OfType<CpuParticles3D>().ToArray();
             foreach (var particle in particles)
             {

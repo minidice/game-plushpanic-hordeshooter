@@ -656,7 +656,7 @@ public partial class WeaponController : Node
             break;
         }
         if (def.Explodes) Blast.Explode(Stage, end, def.ExplosionRadius, def.ExplosionDamage, new Color("ff8a3c"), selfShare: def.ExplosionSelfShare,
-            knockbackPower: def.ExplosionKnockback, by: _player);
+            knockbackPower: def.ExplosionKnockback, by: _player, effectSource: "weapon");
         return end;
     }
 

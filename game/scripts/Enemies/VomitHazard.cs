@@ -13,9 +13,8 @@ public partial class VomitHazard : Node3D
         AddToGroup(SquadGroups.Hazard);
         SetMeta("radius", _radius);
     }
-    public override void _Ready() => Mat.Mesh(this,
-        new CylinderMesh { TopRadius = _radius, BottomRadius = _radius, Height = .035f }, Vector3.Zero,
-        Mat.Fade(new Color(.42f, .66f, .08f, .7f)));
+    public override void _Ready() => CombatSurfaceEffect.Create(this,
+        CombatEffectCatalog.Current.ForSource("poison_pool"), _radius, _remaining);
     public override void _PhysicsProcess(double delta)
     {
         float dt = (float)delta;

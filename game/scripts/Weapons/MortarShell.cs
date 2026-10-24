@@ -58,7 +58,7 @@ public partial class MortarShell : Node3D
         if (t < 1) return;
         _marker.QueueFree();
         Blast.Explode(_stage, _target, _radius, _damage, new Color("ffa040"), selfShare: _selfShare, knockbackPower: _knockback,
-            by: _by != null && IsInstanceValid(_by) ? _by : null);
+            by: _by != null && IsInstanceValid(_by) ? _by : null, effectSource: "mortar");
         QueueFree();
     }
 

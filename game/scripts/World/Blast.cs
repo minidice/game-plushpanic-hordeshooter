@@ -15,10 +15,11 @@ public static class Blast
     /// min(40, power) at the edge, divided by monster mass. Positive player/prop impulses keep their existing fixed formulas.</param>
     /// <param name="by">The survivor whose weapon this was: the damage takes their damage multiplier (cards, glass cannon) and counts for them.</param>
     public static void Explode(Stage stage, Vector3 at, float radius, float damage, Color color, Node? source = null, float selfShare = PlayerShare,
-        float knockbackPower = 150f, Player? by = null)
+        float knockbackPower = 150f, Player? by = null, string effectSource = "blast", Vector3 effectDirection = default)
     {
         float scale = by != null && GodotObject.IsInstanceValid(by) ? by.OutgoingDamage : 1f;
-        stage.Effects.Explosion(at, radius, color);
+        CombatBurstEffect.Play(stage.Effects, CombatEffectCatalog.Current.ForSource(effectSource), at, radius, effectDirection, stage.Tiers.GroundY(at));
+        stage.Cam.AddShake(.55f);
         stage.Sfx.PlayAt("explosion", at + Vector3.Up, radius > 5 ? 2 : 0);
         stage.Effects.PaintSplat(at, 2f);
         // Corpses are local cosmetic physics on every peer; only the host can hurt/launch living actors or chain barrels.

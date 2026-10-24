@@ -93,7 +93,8 @@ public partial class Rocket : Node3D
     private void Detonate(Vector3 at)
     {
         if (_def.Explodes) Blast.Explode(_stage, at, _def.ExplosionRadius, _def.ExplosionDamage, new Color("ff8a3c"), selfShare: _def.ExplosionSelfShare,
-            knockbackPower: _def.ExplosionKnockback, by: _by != null && IsInstanceValid(_by) ? _by : null);
+            knockbackPower: _def.ExplosionKnockback, by: _by != null && IsInstanceValid(_by) ? _by : null,
+            effectSource: "rocket", effectDirection: _velocity);
         else _stage.Effects.Impact(at, -_velocity.Normalized());
         QueueFree();
     }

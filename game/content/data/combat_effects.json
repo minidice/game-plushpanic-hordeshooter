@@ -1,0 +1,240 @@
+{
+  "schema_version": 1,
+  "effects": [
+    {
+      "id": "blast",
+      "name": "기본 무기 폭발",
+      "kind": "burst",
+      "family": "blast",
+      "color": "ff922d",
+      "accent": "ffcc53",
+      "smoke_color": "665b50",
+      "lobes": 6,
+      "particles": 18,
+      "spread": 0.65,
+      "rise": 1.0,
+      "light_energy": 3,
+      "duration_s": 0.95,
+      "preview_radius_m": 3,
+      "sources": [
+        "blast",
+        "weapon"
+      ],
+      "used_by": [
+        "Weapons/WeaponController.cs",
+        "World/ObjectDetonation.cs"
+      ]
+    },
+    {
+      "id": "grenade",
+      "name": "수류탄 · 충격과 파편",
+      "kind": "burst",
+      "family": "blast",
+      "color": "ffb33f",
+      "accent": "ffcc53",
+      "smoke_color": "807365",
+      "lobes": 5,
+      "particles": 28,
+      "spread": 0.7,
+      "rise": 0.6,
+      "light_energy": 3,
+      "duration_s": 0.85,
+      "preview_radius_m": 4,
+      "sources": [
+        "grenade"
+      ],
+      "used_by": [
+        "Weapons/ThrownItem.cs"
+      ]
+    },
+    {
+      "id": "barrel",
+      "name": "드럼통 · 연료 폭발",
+      "kind": "burst",
+      "family": "blast",
+      "color": "ff782b",
+      "accent": "ffcc53",
+      "smoke_color": "49464a",
+      "lobes": 9,
+      "particles": 20,
+      "spread": 0.6,
+      "rise": 1.7,
+      "light_energy": 4,
+      "duration_s": 1.45,
+      "preview_radius_m": 4.6,
+      "sources": [
+        "barrel"
+      ],
+      "used_by": [
+        "World/ExplosiveBarrel.cs"
+      ]
+    },
+    {
+      "id": "rocket",
+      "name": "로켓 · 방향성 폭발",
+      "kind": "burst",
+      "family": "blast",
+      "color": "ff9635",
+      "accent": "ffcc53",
+      "smoke_color": "69605c",
+      "lobes": 7,
+      "particles": 22,
+      "spread": 0.62,
+      "rise": 0.9,
+      "light_energy": 3,
+      "duration_s": 1.0,
+      "preview_radius_m": 3,
+      "sources": [
+        "rocket"
+      ],
+      "used_by": [
+        "Weapons/Rocket.cs"
+      ]
+    },
+    {
+      "id": "mortar",
+      "name": "박격포 · 솟는 먼지",
+      "kind": "burst",
+      "family": "blast",
+      "color": "ffb449",
+      "accent": "ffcc53",
+      "smoke_color": "8a7b63",
+      "lobes": 6,
+      "particles": 26,
+      "spread": 0.64,
+      "rise": 2.0,
+      "light_energy": 3,
+      "duration_s": 1.2,
+      "preview_radius_m": 4,
+      "sources": [
+        "mortar"
+      ],
+      "used_by": [
+        "Weapons/MortarShell.cs"
+      ]
+    },
+    {
+      "id": "lure",
+      "name": "유인탄 · 분홍 충격",
+      "kind": "burst",
+      "family": "blast",
+      "color": "ff82b5",
+      "accent": "ffe5ed",
+      "smoke_color": "73606d",
+      "lobes": 5,
+      "particles": 18,
+      "spread": 0.6,
+      "rise": 0.7,
+      "light_energy": 2,
+      "duration_s": 0.85,
+      "preview_radius_m": 3,
+      "sources": [
+        "lure"
+      ],
+      "used_by": [
+        "Weapons/ThrownItem.cs"
+      ]
+    },
+    {
+      "id": "fire_impact",
+      "name": "화염병 · 착탄 확산",
+      "kind": "burst",
+      "family": "fire",
+      "color": "ff7d24",
+      "accent": "ffcc53",
+      "smoke_color": "5c5246",
+      "lobes": 5,
+      "particles": 14,
+      "spread": 0.8,
+      "rise": 0.35,
+      "light_energy": 1,
+      "duration_s": 0.65,
+      "preview_radius_m": 3,
+      "sources": [
+        "fire_impact"
+      ],
+      "used_by": [
+        "Weapons/FireZone.cs"
+      ]
+    },
+    {
+      "id": "fire_pool",
+      "name": "화염병 · 지속 화염",
+      "kind": "surface",
+      "family": "fire",
+      "color": "ed460d",
+      "accent": "ffcc53",
+      "lobes": 16,
+      "particles": 12,
+      "spread": 0.77,
+      "rise": 0.65,
+      "preview_radius_m": 3,
+      "preview_lifetime_s": 5,
+      "sources": [
+        "fire_pool"
+      ],
+      "used_by": [
+        "Weapons/FireZone.cs"
+      ]
+    },
+    {
+      "id": "poison_flight",
+      "name": "독 · 비행 방울",
+      "kind": "projectile",
+      "family": "poison",
+      "color": "96d644",
+      "accent": "e3f6a0",
+      "particles": 5,
+      "preview_radius_m": 0.22,
+      "preview_lifetime_s": 1.1,
+      "sources": [
+        "poison_flight"
+      ],
+      "used_by": [
+        "Enemies/EnemyProjectile.cs"
+      ]
+    },
+    {
+      "id": "poison_impact",
+      "name": "독 · 착탄 물보라",
+      "kind": "burst",
+      "family": "poison",
+      "color": "82c845",
+      "accent": "dcf796",
+      "smoke_color": "536c3d",
+      "lobes": 5,
+      "particles": 18,
+      "spread": 0.72,
+      "rise": 0.75,
+      "light_energy": 0,
+      "duration_s": 0.65,
+      "preview_radius_m": 1.5,
+      "sources": [
+        "poison_impact"
+      ],
+      "used_by": [
+        "Enemies/EnemyProjectile.cs"
+      ]
+    },
+    {
+      "id": "poison_pool",
+      "name": "독 · 거품 웅덩이",
+      "kind": "surface",
+      "family": "poison",
+      "color": "4a7834",
+      "accent": "c0ec67",
+      "lobes": 10,
+      "particles": 6,
+      "spread": 0.77,
+      "rise": 0.08,
+      "preview_radius_m": 1.5,
+      "preview_lifetime_s": 5,
+      "sources": [
+        "poison_pool"
+      ],
+      "used_by": [
+        "Enemies/VomitHazard.cs"
+      ]
+    }
+  ]
+}

@@ -119,3 +119,7 @@ GLB 변경만으로 범위가 자동으로 바뀌지 않는다. 현재 감염체
 | 로켓·박격포 중심 | 150 | 약 5m | 약 0.2m |
 
 나(플레이어)가 쏠 때 밀리는 반동은 무기의 `recoil_power`이고, 옵션 `GameSettings.RecoilScale`로 줄일 수 있습니다(`doc/weapon-spec.md` 5장).
+
+## 폭발·화염·독 시각 후속 (2026-10-24)
+
+수류탄/유인 폭발은 `grenade`/`lure`, 화염병은 `fire_impact`+`fire_pool`, 적 독은 `poison_flight`→`poison_impact`→`poison_pool` 프로필을 사용한다. 공통 JSON은 외형만 소유하며 화염과 독의 실제 반경·수명은 기존 `BurnPoolEffect`/`VomitHazard`가 전달한다. 독 꼬리는 실제 이동 방향을 따르고 원래 투사체와 함께 제거된다. 기존 화염의 시야용 광원·음향과 지형 높이 계약은 유지한다. [공통 데이터·검증·제약](vfx-quality.md).

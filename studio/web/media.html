@@ -16,7 +16,7 @@
         <div id="sound-view" class="sound-view" hidden><p class="sound-mark" aria-hidden="true">♪</p><p id="audio-state" role="status">목록에서 항목을 선택하세요.</p><audio id="audio" controls preload="metadata" hidden></audio><label class="loop-label"><input id="sound-loop" type="checkbox" disabled> 반복 재생</label><p class="media-note">원본 음원 · 피치 1× · 초기 청취 볼륨 50%<br>게임의 3D 거리 감쇠, 버스 믹스, 무작위 피치 변화는 적용하지 않습니다.</p></div>
         <div class="retry-row"><button id="retry" type="button" hidden>미리보기 다시 시도</button><span id="renderer" class="media-note"></span></div>
       </div>
-      <div class="item-info"><div class="item-heading"><div><span id="item-category" class="eyebrow"></span><h2 id="item-name">선택 항목</h2></div><code id="item-id"></code></div><p id="summary" class="summary"></p><section class="properties"><h3>속성 정보</h3><table><tbody id="properties"></tbody></table></section><p class="source"><span>원본 위치</span><code id="source"></code></p><p class="media-note">조회 전용 · 게임 데이터와 저장 파일은 변경하지 않습니다.</p></div>
+      <div class="item-info"><div class="item-heading"><div><span id="item-category" class="eyebrow"></span><h2 id="item-name">선택 항목</h2></div><code id="item-id"></code></div><p id="summary" class="summary"></p><section class="properties"><h3>속성 정보</h3><table><tbody id="properties"></tbody></table></section><details id="recipe-panel" hidden><summary>공통 효과 원본 데이터</summary><pre id="recipe-json"></pre></details><p class="source"><span>원본 위치</span><code id="source"></code></p><p class="media-note">조회 전용 · 게임 데이터와 저장 파일은 변경하지 않습니다.</p></div>
     </section>
   </div>
   <footer><span id="status" role="status" aria-live="polite">현재 게임 데이터 연결 중…</span><span id="loaded-at"></span></footer>
