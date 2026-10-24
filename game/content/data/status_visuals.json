@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "statuses": [
+    {
+      "id": "poison",
+      "name": "중독",
+      "color": "a5cb49",
+      "shape": "bubble",
+      "priority": 40,
+      "surface": 1,
+      "surface_alpha": 0.19,
+      "binding": "preview",
+      "sources": []
+    },
+    {
+      "id": "bleed",
+      "name": "출혈",
+      "color": "c74a61",
+      "shape": "drop",
+      "priority": 30,
+      "surface": 2,
+      "surface_alpha": 0.22,
+      "binding": "preview",
+      "sources": []
+    },
+    {
+      "id": "burn",
+      "name": "화상",
+      "color": "ff9b42",
+      "shape": "flame",
+      "priority": 50,
+      "surface": 3,
+      "surface_alpha": 0.12,
+      "binding": "live",
+      "sources": [
+        "Enemies/EnemyCards.cs:BurnTime"
+      ]
+    },
+    {
+      "id": "chill",
+      "name": "냉기 · 둔화",
+      "color": "82d7ec",
+      "shape": "frost",
+      "priority": 45,
+      "surface": 4,
+      "surface_alpha": 0.17,
+      "binding": "preview",
+      "sources": []
+    },
+    {
+      "id": "freeze",
+      "name": "빙결",
+      "color": "c5f2ff",
+      "shape": "ice",
+      "priority": 90,
+      "surface": 4,
+      "surface_alpha": 0.32,
+      "binding": "preview",
+      "sources": []
+    },
+    {
+      "id": "blind",
+      "name": "눈부심 · 실명",
+      "color": "ffe9a5",
+      "shape": "eye",
+      "priority": 70,
+      "surface": 0,
+      "surface_alpha": 0,
+      "binding": "live",
+      "sources": [
+        "Player/Player.cs:BlindTime"
+      ]
+    },
+    {
+      "id": "stun",
+      "name": "기절 · 멍함",
+      "color": "f9d458",
+      "shape": "star",
+      "priority": 85,
+      "surface": 0,
+      "surface_alpha": 0,
+      "binding": "live",
+      "sources": [
+        "Enemies/Enemy.cs:StunTime",
+        "Player/Player.cs:StunTime/DazeTime",
+        "Enemies/EnemyPuppet.cs:Stunned"
+      ]
+    },
+    {
+      "id": "shock",
+      "name": "감전",
+      "color": "aaa2ff",
+      "shape": "arc",
+      "priority": 55,
+      "surface": 0,
+      "surface_alpha": 0,
+      "binding": "preview",
+      "sources": []
+    },
+    {
+      "id": "fear",
+      "name": "공포",
+      "color": "d5a9ef",
+      "shape": "fear",
+      "priority": 65,
+      "surface": 0,
+      "surface_alpha": 0,
+      "binding": "live",
+      "sources": [
+        "Enemies/EnemyCards.cs:FleeTime (host/local)"
+      ]
+    },
+    {
+      "id": "weak",
+      "name": "약화",
+      "color": "f4a0bd",
+      "shape": "weak",
+      "priority": 35,
+      "surface": 0,
+      "surface_alpha": 0,
+      "binding": "live",
+      "sources": [
+        "Enemies/EnemyCards.cs:WeakTime",
+        "Player/Player.cs:WeakTime"
+      ]
+    },
+    {
+      "id": "restrained",
+      "name": "붙잡힘",
+      "color": "ffb175",
+      "shape": "chain",
+      "priority": 100,
+      "surface": 0,
+      "surface_alpha": 0,
+      "binding": "live",
+      "sources": [
+        "Player/PlayerRestraint.cs:IsRestrained"
+      ]
+    },
+    {
+      "id": "floating",
+      "name": "둥실 · 부유",
+      "color": "9bddf4",
+      "shape": "air",
+      "priority": 80,
+      "surface": 0,
+      "surface_alpha": 0,
+      "binding": "live",
+      "sources": [
+        "Enemies/EnemyCards.cs:FloatTime (host/local)"
+      ]
+    }
+  ]
+}

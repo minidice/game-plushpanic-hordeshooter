@@ -6,6 +6,7 @@ public partial class CharacterRig
 {
     private CharacterHitFlashEffect? _hitFlash;
     private DamageBurstEffect? _hitBurst;
+    public bool HitFlashing => _hitFlash?.Active == true;
 
     /// <summary>Call only after accepting positive damage. Normal hits flash white, critical hits yellow.</summary>
     public void FlashHit(bool critical = false)

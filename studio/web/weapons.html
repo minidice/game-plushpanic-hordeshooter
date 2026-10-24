@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Plush Panic Studio · 무기</title><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/library.css"><link rel="stylesheet" href="/weapons.css"><script type="module" src="/weapons.js"></script></head>
+<body>
+<header><a class="brand" href="/">PLUSH PANIC <span>STUDIO</span></a><span class="local"><i></i> LOCAL WORKSPACE</span><button id="reload">로컬 데이터 다시 읽기 ↻</button></header>
+<main>
+  <nav class="main-nav" aria-label="Studio 메뉴"><a href="/">캐릭터</a><a href="/monsters">몬스터</a><a href="/objects">오브젝트</a><a href="/weapons" aria-current="page">무기</a><a href="/effects">이펙트</a><a href="/sounds">사운드</a></nav>
+  <div class="heading"><div><p class="eyebrow">WEAPON LIBRARY / 04</p><h1>무기 도감</h1><p>게임이 읽은 무기 수치와 퍼짐 · 반동. 게임 화면에는 나오지 않는 확인용 정보입니다.</p></div><span class="tag" id="total-count">불러오는 중</span></div>
+  <p id="warnings" class="warning" hidden></p>
+  <div class="library-layout">
+    <aside class="library-sidebar"><div class="search-box"><label for="search">목록 검색</label><input id="search" type="search" placeholder="이름 또는 ID 검색"><label class="filter-label" for="category">분류</label><select id="category"><option value="">모든 분류</option></select><p id="result-count" aria-live="polite"></p></div><div id="entries" class="entries" aria-label="무기 목록"></div></aside>
+    <section class="weapon-main" aria-label="선택 무기 상세">
+      <div class="item-heading"><div><span id="item-category" class="eyebrow"></span><h2 id="item-name">선택 무기</h2></div><code id="item-id"></code></div>
+      <p id="summary" class="summary"></p>
+      <div class="weapon-charts">
+        <figure class="chart"><figcaption>퍼짐 원뿔 · 사거리 <span>위에서 본 모습, 쏘는 사람이 왼쪽</span></figcaption><svg id="cone" viewBox="0 0 520 300" role="img" aria-label="비조준·조준·이동 퍼짐과 사거리"></svg>
+          <ul class="legend"><li class="hip">비조준</li><li class="aim">조준</li><li class="move">비조준 + 이동</li><li class="eff">유효 사거리</li><li class="max">최대 사거리</li></ul></figure>
+        <figure class="chart"><figcaption>반동 궤적 <span id="trace-note"></span></figcaption><svg id="trace" viewBox="0 0 300 300" role="img" aria-label="연사할 때 조준점이 밀리는 길"></svg>
+          <ul class="legend"><li class="first">첫 발</li><li class="shot">발마다 조준점</li><li class="ring">1080 화면 100 px</li></ul></figure>
+      </div>
+      <div id="groups" class="weapon-groups"></div>
+      <p class="source"><span>원본 위치</span><code id="source"></code></p>
+    </section>
+  </div>
+  <footer><span id="status" role="status" aria-live="polite">현재 게임 데이터 연결 중…</span><span id="loaded-at"></span></footer>
+</main></body></html>

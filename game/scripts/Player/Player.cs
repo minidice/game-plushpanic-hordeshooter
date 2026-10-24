@@ -79,6 +79,8 @@ public partial class Player : CharacterBody3D
     public bool IsAiming { get; private set; }
     /// <summary>0–1 easing of the aim, for the low stance and the camera.</summary>
     public float AimBlend { get; private set; }
+    /// <summary>Where shots have kicked the aim point (decisions.md C-30): added to the mouse, so the hand pulls it back.</summary>
+    public WeaponRecoil Recoil { get; } = new();
     public RigidBody3D? Corpse { get; private set; }
     public float DamageFlash { get; private set; }
     public bool ManualControl { get; set; }
@@ -219,6 +221,7 @@ public partial class Player : CharacterBody3D
         Rig = CharacterRig.Create(Definition);
         Rig.ApplyAppearance(Appearance ?? AppearanceStore.ReadProfile(Definition.Id));
         AddChild(Rig);
+        StatusVisualBinding.Attach(this);
 
         // Flashlight sits just in front of the body so the body never shadows its own beam.
         Rig.AddChild(new SpotLight3D
@@ -318,7 +321,7 @@ public partial class Player : CharacterBody3D
 
         var camera = GetViewport().GetCamera3D();
         if (camera == null) return;
-        var mouse = GetViewport().GetMousePosition();
+        var mouse = GetViewport().GetMousePosition() + Recoil.Offset * (GetViewport().GetVisibleRect().Size.Y / WeaponRecoil.ReferenceHeight);
         // With height tiers the cursor lands on the tier under it, not on a plane at the survivor's own height (L-15).
         var hit = Stage.Tiers.Any
             ? Stage.Tiers.AimPoint(camera.ProjectRayOrigin(mouse), camera.ProjectRayNormal(mouse), AimHeight)
@@ -372,6 +375,7 @@ public partial class Player : CharacterBody3D
         bool busy = stunned || IsRolling || IsHealing || IsRestrained || Reviving != null;
         IsAiming = _aimHeld && !busy && Gun.Def.CanAim && !Weapons.AimingThrow && !Gun.Reloading;
         AimBlend = Mathf.MoveToward(AimBlend, IsAiming ? 1 : 0, dt * 6);
+        Recoil.Tick(dt);
         UpdateFocus(dt);
 
         if (_slotPressed != 0 && !stunned && !IsRestrained) Weapons.SelectSlot(_slotPressed);

@@ -184,14 +184,19 @@ public partial class WeaponHandlingCheck : Node
         await Frames(3);
         Check(IsInstanceValid(target) && target.Health == hp, "without aiming a 46 m target is out of the rifle's reach");
         player.HoldAim(true);
-        await Frames(20);
+        // The cone closes over the M4's aim time (C-30).
+        await Frames(Mathf.CeilToInt(m4.AimTime * Engine.PhysicsTicksPerSecond) + 4);
         Check(player.IsAiming && player.AimBlend >= 1 && player.Gun.Spread < m4.BaseSpread, "holding aim with a rifle aims: full blend, tighter than the base cone");
         Check(Mathf.IsEqualApprox(player.HandlingSpeedScale, m4.MoveSpeedScale * m4.AimMoveScale), "aiming slows walking to aim_move_pct");
         await Shot("aim-rifle");
-        player.SetControls(Vector2.Zero, far + Vector3.Up, true);
-        await Frames(3);
-        player.SetControls(Vector2.Zero, far + Vector3.Up, false);
-        await Frames(3);
+        // Even aimed the cone is about 1 m wide at 46 m: a few shots, one of them lands (reach, not luck, is checked).
+        for (int i = 0; i < 5 && IsInstanceValid(target) && target.Health >= hp; i++)
+        {
+            player.SetControls(Vector2.Zero, far + Vector3.Up, true);
+            await Frames(3);
+            player.SetControls(Vector2.Zero, far + Vector3.Up, false);
+            await Frames(8);
+        }
         Check(!IsInstanceValid(target) || target.Health < hp, "aimed, the same shot reaches 46 m");
         player.HoldAim(false);
         await Frames(2);

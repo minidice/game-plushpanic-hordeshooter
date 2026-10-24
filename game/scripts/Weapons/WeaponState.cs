@@ -64,12 +64,26 @@ public sealed class WeaponState
     public bool IsEmpty => !IsMelee && Mag == 0 && CooldownLeft <= 0 && ShotCooldown <= 0 && (HasInfiniteReserve || Reserve == 0);
     public int TotalAmmo => Mag + Reserve;
 
-    /// <summary>Share of the normal cone left while aiming (decisions.md C-26); moving adds nothing then.</summary>
-    public const float AimSpreadShare = .35f;
+    /// <summary>
+    /// 0 = hip fire, 1 = fully aimed: holding aim closes the cone from spread_deg to aim_spread_deg over aim_time_s, letting
+    /// go opens it twice as fast (decisions.md C-30). Moving adds nothing once aimed.
+    /// </summary>
+    public float AimProgress { get; private set; }
+    /// <summary>Spread added by shots so far, closing at spread_recovery_dps.</summary>
+    public float Bloom => _bloom;
+    /// <summary>Share of the shots' bloom kept while fully aimed.</summary>
+    public const float AimBloomShare = .5f;
+    /// <summary>The cone fully aimed with the bloom now (the reticle's straight ticks).</summary>
+    public float AimedSpread => Math.Min(Def.MaxSpread, Def.AimSpread + _bloom * AimBloomShare);
+    /// <summary>Fired within the last <see cref="HotSeconds"/> (the reticle's widest ticks turn red).</summary>
+    public bool Hot => _sinceShot < HotSeconds;
+    public const float HotSeconds = .3f;
+    private float _sinceShot = HotSeconds;
 
     /// <summary>Recharging and the time between shots run in hand and put away alike.</summary>
     public void TickCooldown(float dt)
     {
+        _sinceShot = Math.Min(HotSeconds, _sinceShot + dt);
         _cooldown = Math.Max(0, _cooldown - dt);
         if (CooldownLeft <= 0) return;
         CooldownLeft = Math.Max(0, CooldownLeft - dt);
@@ -81,9 +95,10 @@ public sealed class WeaponState
         TickCooldown(dt);
         _burstTimer = Math.Max(0, _burstTimer - dt);
         _bloom = Math.Max(0, _bloom - Def.SpreadRecovery * dt);
-        Spread = aiming
-            ? Math.Min(Def.MaxSpread, (Def.BaseSpread + _bloom) * AimSpreadShare)
-            : Math.Min(Def.MaxSpread, Def.BaseSpread + _bloom + (moving ? Def.MoveSpread : 0));
+        float step = Def.AimTime > 0 ? dt / Def.AimTime : 1;
+        AimProgress = aiming ? Math.Min(1, AimProgress + step) : Math.Max(0, AimProgress - step * 2);
+        float hip = Math.Min(Def.MaxSpread, Def.BaseSpread + _bloom + (moving ? Def.MoveSpread : 0));
+        Spread = hip + (AimedSpread - hip) * AimProgress;
         if (!Reloading) return;
         ReloadElapsed += dt;
         if (Def.ShellReloadTime <= 0)
@@ -140,6 +155,7 @@ public sealed class WeaponState
         Mag--;
         if (ShotCooldown > 0 && Mag <= 0) CooldownLeft = ShotCooldown;
         _bloom = Math.Min(Def.MaxSpread, _bloom + Def.SpreadPerShot);
+        _sinceShot = 0;
     }
 
     public bool StartReload()
@@ -170,6 +186,7 @@ public sealed class WeaponState
     {
         CancelBurst();
         CancelReload();
+        AimProgress = 0;
     }
 
     public int AddReserve(int amount)

@@ -430,9 +430,13 @@ public partial class Integration : Node
         Check(player.CritReady && player.FocusTarget == front, "holding the aim on an enemy readies a crit");
         int kills = stage.Kills;
         int magBefore = player.Gun.Mag;
+        // 18 m is past what the rifle's hip cone holds on a plush (C-30): aim first, as a player would.
+        player.HoldAim(true);
+        await Frames(Mathf.CeilToInt(player.Gun.Def.AimTime * Engine.PhysicsTicksPerSecond) + 2);
         player.SetControls(Vector2.Zero, aim, true);
         await Frames(30);
         player.SetControls(Vector2.Zero, aim, false);
+        player.HoldAim(false);
         Check(player.Gun.Mag < magBefore, "holding fire spends ammo");
         Check(!IsInstanceValid(front) && stage.Kills > kills, "shots kill the enemy");
         await Frames(2);

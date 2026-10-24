@@ -106,6 +106,9 @@ async function stopRenderer() {
 }
 
 const staticFiles = new Map([
+  ['/statuses', ['statuses.html', 'text/html; charset=utf-8']],
+  ['/statuses.js', ['statuses.js', 'text/javascript; charset=utf-8']],
+  ['/statuses.css', ['statuses.css', 'text/css; charset=utf-8']],
   ['/', ['index.html', 'text/html; charset=utf-8']],
   ['/app.js', ['app.js', 'text/javascript; charset=utf-8']],
   ['/style.css', ['style.css', 'text/css; charset=utf-8']],
@@ -117,6 +120,9 @@ const staticFiles = new Map([
   ['/sounds', ['media.html', 'text/html; charset=utf-8']],
   ['/media.js', ['media.js', 'text/javascript; charset=utf-8']],
   ['/media.css', ['media.css', 'text/css; charset=utf-8']],
+  ['/weapons', ['weapons.html', 'text/html; charset=utf-8']],
+  ['/weapons.js', ['weapons.js', 'text/javascript; charset=utf-8']],
+  ['/weapons.css', ['weapons.css', 'text/css; charset=utf-8']],
 ]);
 const server = http.createServer(async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
@@ -128,6 +134,9 @@ const server = http.createServer(async (req, res) => {
       json(403, { error: 'Local Studio origin only' }); return;
     }
     const url = new URL(req.url, origin);
+    if (req.method === 'GET' && url.pathname === '/api/health') {
+      json(200, { app: 'plush-panic-studio', workspace: root, ready: ready && !reloading }); return;
+    }
     if (req.method === 'GET' && staticFiles.has(url.pathname)) {
       const [name, mime] = staticFiles.get(url.pathname);
       res.writeHead(200, { 'Content-Type': mime }); res.end(await readFile(path.join(studio, 'web', name))); return;
@@ -135,8 +144,14 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && url.pathname === '/api/catalog') {
       json(200, await readCatalog('catalog')); return;
     }
+    if (req.method === 'GET' && url.pathname === '/api/statuses') {
+      json(200, await readCatalog('statuses')); return;
+    }
     if (req.method === 'GET' && url.pathname === '/api/library') {
       json(200, await readCatalog('library')); return;
+    }
+    if (req.method === 'GET' && url.pathname === '/api/weapons') {
+      json(200, await readCatalog('weapons')); return;
     }
     if (req.method === 'GET' && url.pathname === '/api/media') {
       json(200, await readCatalog('media')); return;
@@ -148,7 +163,7 @@ const server = http.createServer(async (req, res) => {
       finally { reloading = false; }
       json(200, { ready: true }); return;
     }
-    if (req.method === 'POST' && ['/api/render', '/api/library/render', '/api/effects/render', '/api/sounds/preview'].includes(url.pathname)) {
+    if (req.method === 'POST' && ['/api/render', '/api/library/render', '/api/effects/render', '/api/sounds/preview', '/api/statuses/render'].includes(url.pathname)) {
       if (req.headers['content-type'] !== 'application/json') { json(415, { error: 'JSON required' }); return; }
       let body = '';
       for await (const chunk of req) {
@@ -157,6 +172,14 @@ const server = http.createServer(async (req, res) => {
       }
       let data;
       try { data = JSON.parse(body); } catch { json(400, { error: 'Invalid JSON' }); return; }
+      if (url.pathname === '/api/statuses/render') {
+        if (!data || typeof data.target !== 'string' || data.target.length > 128 || !Array.isArray(data.states)
+            || data.states.length > 12 || typeof data.hit !== 'boolean' || typeof data.release !== 'boolean'
+            || data.states.some(s => !s || typeof s.id !== 'string' || s.id.length > 64 || !Number.isInteger(s.stacks) || s.stacks < 1 || s.stacks > 5)) {
+          json(400, { error: 'Invalid status preview request' }); return;
+        }
+        json(200, await request('status_render', data)); return;
+      }
       if (url.pathname === '/api/effects/render' || url.pathname === '/api/sounds/preview') {
         if (!data || typeof data.id !== 'string' || data.id.length > 128) {
           json(400, { error: 'Invalid media preview request' }); return;

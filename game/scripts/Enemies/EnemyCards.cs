@@ -21,7 +21,7 @@ public partial class Enemy
     public bool Sticky => StickyTime > 0;
     /// <summary>Melting in the honk beam (M-29 16.6.2): takes double damage, slower, flies further, for this long.</summary>
     public float WeakTime { get; private set; }
-    private float _weakSlow, _weakKnock = 1, _weakTick;
+    private float _weakSlow, _weakKnock = 1;
     /// <summary>What every hit's damage is multiplied by now (2 while melting).</summary>
     public float DamageTakenScale => (WeakTime > 0 ? 2 : 1) * (ClimbingWall ? ClimbDamageScale : 1);
 
@@ -43,15 +43,11 @@ public partial class Enemy
         if (WeakTime <= 0) return;
         WeakTime -= dt;
         desired *= 1 - _weakSlow;
-        _weakTick -= dt;
-        if (_weakTick > 0) return;
-        _weakTick = .3f;
-        Stage.Effects.Puff(GlobalPosition + Vector3.Up * (.4f + Rng.Randf() * .9f), .35f, new Color("ff9ccc"));
     }
 
     /// <summary>Burning (gather!'s fire rounds, M-29): hurts every frame for this long, with flames.</summary>
     public float BurnTime { get; private set; }
-    private float _burnDps, _flameTick;
+    private float _burnDps;
     private Player? _burnBy;
 
     /// <summary>Sets it burning for <paramref name="seconds"/> at <paramref name="dps"/> (the hotter and longer of the two), counted for <paramref name="by"/>.</summary>
@@ -72,12 +68,6 @@ public partial class Enemy
     {
         if (BurnTime <= 0) return;
         BurnTime -= dt;
-        _flameTick -= dt;
-        if (_flameTick <= 0)
-        {
-            _flameTick = .12f;
-            CardFx.Flame(Stage, GlobalPosition + new Vector3(Rng.RandfRange(-.3f, .3f), .5f + Rng.Randf() * .8f, Rng.RandfRange(-.3f, .3f)));
-        }
         if (!IsPuppet && _burnDps > 0) Burn(_burnDps * dt, _burnBy != null && IsInstanceValid(_burnBy) ? _burnBy : null);
     }
 

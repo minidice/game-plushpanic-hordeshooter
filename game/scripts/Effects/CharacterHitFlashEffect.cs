@@ -19,6 +19,7 @@ public partial class CharacterHitFlashEffect : Node
     private readonly Dictionary<Material, Material> _overlayCopies = new();
     private ShaderMaterial? _gripFlash;
     private float _remaining;
+    public bool Active => _remaining > 0;
     private Color _tint = Colors.White;
 
     public override void _Ready() => SetProcess(_remaining > 0);
@@ -38,6 +39,7 @@ public partial class CharacterHitFlashEffect : Node
 
     private void CacheMeshes(Node node)
     {
+        if (node.HasMeta(StatusVisualController.InternalMeta)) return;
         if (node is MeshInstance3D mesh && !_meshes.Exists(entry => entry.Mesh == mesh))
         {
             // While a silhouette is draining off (CharacterRig.ShowAs) the real overlay is parked in meta.

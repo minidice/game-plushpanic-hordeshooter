@@ -70,6 +70,7 @@ public sealed class WeaponDatabase
         "spread_deg", "spread_per_shot_deg", "move_spread_deg", "max_spread_deg", "recoil_power", "hit_power",
         "traits", "fire_sound", "model", "icon", "color", "accent_color", "length_m", "noise_m",
         "move_speed_pct", "aim_range_mult", "aim_move_pct", "aim_focus_mult", "crit_mult", "caliber", "aim_view",
+        "aim_spread_deg", "aim_time_s", "spread_recovery_dps", "recoil_up", "recoil_side", "recoil_return",
     };
 
     private static readonly string[] Required = { "name", "slot", "category", "fire_mode", "damage", "max_range_m", "fire_interval_ms" };
@@ -173,6 +174,11 @@ public sealed class WeaponDatabase
             SpreadPerShot = p.Float("spread_per_shot_deg", 1.5f),
             MoveSpread = p.Float("move_spread_deg", 3f),
             MaxSpread = p.Float("max_spread_deg", 12f),
+            AimTime = p.Float("aim_time_s", .4f),
+            SpreadRecovery = p.Float("spread_recovery_dps", 18f),
+            RecoilUp = p.Float("recoil_up", 0),
+            RecoilSide = p.Float("recoil_side", 0),
+            RecoilReturn = p.Float("recoil_return", 200),
             RecoilPower = p.Float("recoil_power", 0),
             HitPower = p.Float("hit_power", 20),
             FireSound = cells["fire_sound"],
@@ -191,6 +197,10 @@ public sealed class WeaponDatabase
             AimView = p.Float("aim_view", 1),
         };
         def.EffectiveRange = p.Float("effective_range_m", def.MaxRange);
+        def.AimSpread = p.Float("aim_spread_deg", def.BaseSpread);
+        if (def.AimSpread < 0 || def.AimSpread > def.BaseSpread) _errors.Add($"{where}: aim_spread_deg({def.AimSpread})는 0~spread_deg({def.BaseSpread})여야 합니다 (조준이 비조준보다 좁음)");
+        if (def.AimTime < 0 || def.SpreadRecovery <= 0) _errors.Add($"{where}: aim_time_s는 0 이상, spread_recovery_dps는 0보다 커야 합니다");
+        if (def.RecoilUp < 0 || def.RecoilSide < 0 || def.RecoilReturn < 0) _errors.Add($"{where}: recoil_up·recoil_side·recoil_return은 0 이상이어야 합니다");
         def.Thickness = Thickness[def.Category];
         if (def.Noise <= 0) _errors.Add($"{where}: noise_m은 0보다 커야 합니다 (소리 없는 무기는 아주 작은 값)");
         if (def.MoveSpeedScale <= 0 || def.AimMoveScale <= 0) _errors.Add($"{where}: move_speed_pct·aim_move_pct는 0보다 커야 합니다");
@@ -364,6 +374,7 @@ public sealed class WeaponDatabase
         dual.MagSize = (int)MathF.Round(single.MagSize * t.Float("mag_multiplier", 2));
         dual.FireInterval = single.FireInterval * t.Float("fire_interval_multiplier", .6f);
         dual.BaseSpread = single.BaseSpread + t.Float("spread_add_deg", 1);
+        dual.AimSpread = single.AimSpread + t.Float("spread_add_deg", 1);
         dual.MaxSpread = single.MaxSpread + t.Float("spread_add_deg", 1);
         dual.RecoilPower = single.RecoilPower * t.Float("recoil_multiplier", 1.3f);
         return dual;

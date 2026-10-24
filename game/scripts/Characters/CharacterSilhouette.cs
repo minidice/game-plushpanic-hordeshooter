@@ -186,6 +186,7 @@ public partial class CharacterRig
 
     private void Collect(Node node)
     {
+        if (node.HasMeta(StatusVisualController.InternalMeta)) return;
         if (node is MeshInstance3D mesh) _silhouetteMeshes.Add((mesh, mesh.MaterialOverride));
         foreach (var child in node.GetChildren()) Collect(child);
     }

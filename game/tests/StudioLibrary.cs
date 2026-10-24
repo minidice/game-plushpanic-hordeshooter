@@ -181,6 +181,19 @@ public partial class StudioPreview
         _viewport.RemoveChild(_librarySubject); _librarySubject.QueueFree(); _librarySubject = null;
     }
 
+    private Enemy CreateMonsterSubject(Node3D parent, MonsterDefinition monster, CharacterDefinition definition)
+    {
+        Enemy enemy = monster.Behavior switch { MonsterBehavior.Shooter or MonsterBehavior.Spitter => new RangedEnemy(),
+            MonsterBehavior.Balloon => new BalloonEnemy(), MonsterBehavior.Bull => new BullEnemy(), MonsterBehavior.Boss => new BossEnemy(),
+            MonsterBehavior.Tether or MonsterBehavior.Leaper => new CaptureEnemy(), _ => new Enemy() };
+        enemy.ProcessMode = ProcessModeEnum.Disabled;
+        enemy.Setup(_lookStage, monster, definition, false);
+        parent.AddChild(enemy); // Actual _Ready supplies posture, equipment and grips without gameplay ticks.
+        enemy.Rig.Rotation = Vector3.Zero;
+        enemy.Rig.ShowAs(VisionSystem.Visibility.Visible);
+        return enemy;
+    }
+
     private async Task<object> RenderLibrary(JsonElement data)
     {
         Library();
@@ -197,13 +210,7 @@ public partial class StudioPreview
         {
             var m = MonsterDatabase.Get(id);
             var def = MonsterLook(m, data.TryGetProperty("variant", out var variant) ? variant.GetString() ?? "goose" : "goose");
-            Enemy enemy = m.Behavior switch { MonsterBehavior.Shooter or MonsterBehavior.Spitter => new RangedEnemy(),
-                MonsterBehavior.Balloon => new BalloonEnemy(), MonsterBehavior.Bull => new BullEnemy(), MonsterBehavior.Boss => new BossEnemy(),
-                MonsterBehavior.Tether or MonsterBehavior.Leaper => new CaptureEnemy(), _ => new Enemy() };
-            enemy.Setup(_lookStage, m, def, false);
-            _librarySubject.AddChild(enemy); // Calls the same _Ready that adds weapons and attack posture in game.
-            enemy.Rig.Rotation = Vector3.Zero;
-            enemy.Rig.ShowAs(VisionSystem.Visibility.Visible);
+            CreateMonsterSubject(_librarySubject, m, def);
         }
         else if (id.StartsWith("workshop:")) WorkshopArt.Create(_librarySubject, Enum.Parse<WorkshopArt.Kind>(id[9..]));
         else if (id.StartsWith("runtime:"))

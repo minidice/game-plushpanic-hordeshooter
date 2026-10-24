@@ -72,6 +72,7 @@ void fragment() {
         _blind = new ColorRect { Color = new Color(1, 1, 1, 0), MouseFilter = Control.MouseFilterEnum.Ignore };
         _blind.SetAnchorsPreset(Control.LayoutPreset.FullRect);
         _root.AddChild(_blind);
+        BuildStatusEffects();
 
         _status = Place(HudLabel("", 17, UiTheme.Helium), .5f, 1, new Vector2(0, -166), true, true, centerX: true);
         _status.Name = "Status";
@@ -190,6 +191,7 @@ void fragment() {
         _throwables.UpdateSlot(throwable?.DisplayName ?? Loc.Text("hud_throwable"), throwable == null ? "—" : $"×{loadout.Count(throwable)}",
             throwable?.IconPath ?? "", "throwable", player.Weapons.AimingThrow, throwable != null);
         _blind.Color = new Color(1, 1, 1, Mathf.Clamp(player.BlindTime / 1.2f, 0, 1) * .95f);
+        UpdateStatusEffects(player);
 
         _status.Text = player.IsDowned ? Loc.Format("fmt_hud_downed", Mathf.CeilToInt(Mathf.Max(0, player.BleedLeft)))
             : player.IsRestrained ? Loc.Text("restrained_status")
@@ -417,6 +419,14 @@ void fragment() {
         HitArcAngles = angles;
     }
 
+    private static readonly Color ReticleFar = new("ffb347"), ReticleOut = new("ff5a4f"), ReticleHot = new("ff6b6b");
+
+    private static void ReticleTick(Control c, Vector2 center, Vector2 dir, float radius, Color color)
+    {
+        c.DrawLine(center + dir * (radius + 2), center + dir * (radius + 8), new Color(0, 0, 0, .6f), 4, true);
+        c.DrawLine(center + dir * (radius + 2), center + dir * (radius + 8), color, 2, true);
+    }
+
     private void DrawReticle(Control c)
     {
         var stage = Stage;
@@ -443,14 +453,25 @@ void fragment() {
         }
 
         float distance = Mathf.Max(1, (aim - player.GlobalPosition).Length());
-        float spreadOffset = distance * Mathf.Tan(Mathf.DegToRad(gun.Spread * .5f));
-        float radius = Mathf.Max(7, (cam.UnprojectPosition(aim + cam.GlobalTransform.Basis.X * spreadOffset) - center).Length());
-        var color = player.CritReady ? HudWarm : gun.Reloading ? HudMuted : new Color(HudWhite, .95f);
+        float Radius(float spread) =>
+            Mathf.Max(7, (cam.UnprojectPosition(aim + cam.GlobalTransform.Basis.X * distance * Mathf.Tan(Mathf.DegToRad(spread * .5f))) - center).Length());
+        float radius = Radius(gun.Spread);
+        float aimed = Mathf.Min(radius, Radius(gun.AimedSpread));
+        // Past the effective range the reticle turns amber (damage falls off), past the maximum red (no hit; C-27, C-30).
+        float reach = player.IsAiming ? gun.Def.AimRangeMultiplier : 1;
+        var range = gun.IsMelee ? HudWhite : distance > gun.Def.MaxRange * reach ? ReticleOut : distance > gun.Def.EffectiveRange * reach ? ReticleFar : HudWhite;
+        var color = player.CritReady ? HudWarm : gun.Reloading ? HudMuted : new Color(range, .95f);
 
+        // Straight ticks: the cone fully aimed. Diagonal ticks: the cone now, while it is wider (hip fire, moving, shots).
+        // Shots just fired turn the widest ticks red: the diagonals from the hip, the straight ones when aimed.
+        bool wide = radius - aimed > 3, hot = gun.Hot && !gun.Reloading;
         foreach (var dir in new[] { Vector2.Up, Vector2.Down, Vector2.Left, Vector2.Right })
+            ReticleTick(c, center, dir, aimed, hot && !wide ? ReticleHot : color);
+        if (wide)
         {
-            c.DrawLine(center + dir * (radius + 2), center + dir * (radius + 8), new Color(0, 0, 0, .6f), 4, true);
-            c.DrawLine(center + dir * (radius + 2), center + dir * (radius + 8), color, 2, true);
+            var outer = hot ? ReticleHot : color;
+            foreach (var dir in new[] { new Vector2(1, 1), new Vector2(-1, 1), new Vector2(1, -1), new Vector2(-1, -1) })
+                ReticleTick(c, center, dir.Normalized(), radius, outer);
         }
 
         if (player.FocusTarget != null)

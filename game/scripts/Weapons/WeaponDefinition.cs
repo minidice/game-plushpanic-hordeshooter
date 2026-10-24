@@ -89,12 +89,23 @@ public sealed class WeaponDefinition
     public bool InfiniteReserve { get; set; }
     public bool Refillable { get; set; } = true;
 
-    // ---------- spread (degrees) ----------
+    // ---------- spread (degrees) and recoil (decisions.md C-30) ----------
+    /// <summary>The hip-fire cone (spread_deg).</summary>
     public float BaseSpread { get; set; } = 1.5f;
+    /// <summary>The cone once fully aimed (aim_spread_deg), reached over <see cref="AimTime"/>.</summary>
+    public float AimSpread { get; set; } = .5f;
+    /// <summary>Seconds from the hip-fire cone to the aimed one (aim_time_s).</summary>
+    public float AimTime { get; set; } = .4f;
     public float SpreadPerShot { get; set; } = 1.7f;
     public float MoveSpread { get; set; } = 4f;
     public float MaxSpread { get; set; } = 12f;
+    /// <summary>Degrees a second the cone closes after shots (spread_recovery_dps).</summary>
     public float SpreadRecovery { get; set; } = 18f;
+    /// <summary>Aim-point kick per shot in pixels of a 1080-high screen: up (recoil_up), ± sideways (recoil_side).</summary>
+    public float RecoilUp { get; set; }
+    public float RecoilSide { get; set; }
+    /// <summary>Pixels a second the aim point slides back once the gun is quiet (recoil_return).</summary>
+    public float RecoilReturn { get; set; } = 200;
 
     // ---------- handling (doc/mode-weapon-direction.md 1·3장) ----------
     /// <summary>Ammo kind (calibers.csv id). In Outpost reloads draw this from the backpack; empty for melee.</summary>

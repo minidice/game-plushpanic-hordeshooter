@@ -529,7 +529,10 @@ public partial class WeaponController : Node
                 var origin = _player.GlobalPosition + Vector3.Up * Player.AimHeight;
                 // Pellets split the shot's damage and push: all of them hitting = the full number.
                 int pellets = Mathf.Max(1, def.Pellets);
-                float cone = pellets > 1 ? def.PelletSpread : state.Spread;
+                // A shotgun's pellet cone tightens with aiming too, in the same share as its aim cone (C-30).
+                float cone = pellets > 1
+                    ? def.PelletSpread * (def.BaseSpread > 0 ? Mathf.Lerp(1, def.AimSpread / def.BaseSpread, state.AimProgress) : 1)
+                    : state.Spread;
                 var ends = Stage.Net != null ? new System.Collections.Generic.List<Vector3>(pellets) : null;
                 float rangeScale = RangeScale(def);
                 for (int i = 0; i < pellets; i++)
@@ -551,6 +554,8 @@ public partial class WeaponController : Node
         // Every gun pushes its shooter back; power comes from the data, scale from the player's option.
         // Squadmates take a third of the push, so a shotgun does not leave them behind the leader.
         if (def.RecoilPower > 0) _player.Shove(-dir * Knockback.Recoil(def.RecoilPower) * (_player.IsBot ? .3f : 1f));
+        // The aim point kicks on the shooter's own PC (C-30); the host and the others only see where they aim.
+        if (_player.IsLocal) _player.Recoil.Kick(def, _rng);
         float shake = def.Category switch
         {
             WeaponCategory.Heavy => .3f,

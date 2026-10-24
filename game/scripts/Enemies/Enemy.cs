@@ -136,6 +136,7 @@ public partial class Enemy : CharacterBody3D
         AddChild(Shape);
         Rig = CharacterRig.Create(Definition);
         AddChild(Rig);
+        StatusVisualBinding.Attach(this);
         Rig.InitializeEnemyAttackPose();
         if (Monster.Id is "wild_animal" or "armed_animal" or "armed_veteran")
         {
