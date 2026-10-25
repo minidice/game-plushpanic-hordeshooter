@@ -95,7 +95,7 @@ public partial class EnemyProjectile : Node3D
             {
                 var victim = below[0].body;
                 victim.TakeDamage(_damage, _direction, .5f);
-                Impact(victim.GlobalPosition + Vector3.Up * .8f);
+                Impact(victim.GlobalPosition + Vector3.Up * .8f, true);
                 return;
             }
         }
@@ -105,7 +105,7 @@ public partial class EnemyProjectile : Node3D
             else if (collision.Collider is BaseCore core && _stage.Authoritative) core.TakeDamage(_damage, _shooter);
             else if (collision.Collider is ExplosiveBarrel barrel) barrel.TakeDamage(_damage, ObjectDamage.Gun);
             else if (ObjectBody.From(collision.Collider) is { } placed) placed.TakeDamage(_damage, ObjectDamage.Gun);
-            Impact(collision.Position + collision.Normal * .16f);
+            Impact(collision.Position + collision.Normal * .16f, true);
             return;
         }
         _visual?.Face(next - GlobalPosition);
@@ -131,8 +131,9 @@ public partial class EnemyProjectile : Node3D
         if (t >= 1) Impact(_to);
     }
 
-    private void Impact(Vector3 point)
+    private void Impact(Vector3 point, bool contact = false)
     {
+        if (contact && WeaponId == "woodbow") _stage.Sfx.PlayAt("hunter_bow_hit", point);
         if (_shot.HazardSeconds > 0)
         {
             CombatBurstEffect.Play(_stage.Effects, CombatEffectCatalog.Current.ForSource("poison_impact"), point, _shot.HazardRadius, _direction, _stage.Tiers.GroundY(point));

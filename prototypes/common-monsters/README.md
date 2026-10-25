@@ -96,3 +96,23 @@ the vest edge, incomplete rear tiger markings and a missing rear lion mane. Fina
 review covers static rest-pose fit; game animation, weapons, status/corpses, palette presets
 and Studio renders need their separate integration checks. No low-end FPS or real two-PC
 claim is made by this asset audit. Hidden optional source geometry is not visible triangle cost.
+
+
+## Parrot quality benchmark (2026-10-25)
+
+Use `-- --species parrot` on both build and validation commands to modify/check only
+this species; `audit-parrot.json` is separate from the complete `audit.json`. An explicit
+selection of all seven species uses the complete audit name in both commands. Other
+GLBs are hash-checked and not rewritten by a selective build.
+
+Parrot now has a shaped torso/neck, flush belly surface, smaller eye surround/highlight,
+no separate cheek blobs, a swept crest/tail, tapered feather wings and fitted vest.
+Base 6,040 triangles; with vest 6,900. Existing pivot/material/resource contracts remain.
+Equipped parrots use `CharacterAuthoredWing` to preserve the original wing mesh and
+palette surfaces. Other common species still use their compact procedural grip arms;
+player authored surface deformation is unchanged.
+
+`review_parrot.py -- --capture-baseline --label before` preserves a local old GLB
+(refuses overwrite); `-- --label before` / `-- --label after` render the same camera,
+light, silhouette/neutral/color/vest/gameplay-scale views. `parrot_contact_sheet.py`
+assembles the local comparison. [Baseline recovery, results and limitations](../../doc/parrot-quality.md).

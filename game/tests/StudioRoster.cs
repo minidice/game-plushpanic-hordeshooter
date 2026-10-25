@@ -46,7 +46,9 @@ public partial class StudioPreview
             data.GetProperty("palette").GetString()!, data.GetProperty("weapon").GetString()!,
             data.GetProperty("variant").GetInt32(), (CommonGear)data.GetProperty("gear").GetInt32());
         string mode = data.GetProperty("mode").GetString()!;
-        if (mode is not ("individual" or "pack")) throw new ArgumentException("알 수 없는 미리보기 종류입니다.");
+        if (mode is not ("individual" or "pack" or "attack")) throw new ArgumentException("알 수 없는 미리보기 종류입니다.");
+        if (mode == "attack" && (identity.Faction != "hunter" || identity.Weapon is not ("club" or "knife" or "woodbow")))
+            throw new ArgumentException("공격 미리보기는 수렵단의 몽둥이·칼·나무활만 지원합니다.");
         // Validate the requested identity before creating any nodes, including selections ignored by pack composition.
         catalog.Compose(identity);
         string packId = data.TryGetProperty("pack", out var packValue) ? packValue.GetString() ?? "" : "";
@@ -70,9 +72,11 @@ public partial class StudioPreview
             _platform.Visible = false;
             _viewport.AddChild(root);
             var members = new List<object>();
+            Enemy? attackSubject = null;
             for (int i = 0; i < identities.Length; i++)
             {
                 var enemy = CreateMonsterSubject(root, definitions[i], looks[i]);
+                if (mode == "attack") attackSubject = enemy;
                 if (mode == "pack") enemy.Position = new Vector3((i % 5 - 2) * 1.65f, 0, (i / 5) * 2.35f);
                 var monster = enemy.Monster;
                 members.Add(new {
@@ -89,6 +93,7 @@ public partial class StudioPreview
                 });
             }
             root.RotationDegrees = new(0, Mathf.Clamp(data.GetProperty("rotation").GetSingle(), -180, 180), 0);
+            if (attackSubject != null) return await RenderRosterAttack(root, attackSubject, identity, members, data);
             var bounds = VisualBounds(root);
             FrameLibrary(bounds, data);
             if (mode == "pack") {
@@ -110,5 +115,49 @@ public partial class StudioPreview
             if (_rig != null && IsInstanceValid(_rig)) _rig.Visible = rigVisible;
             if (_librarySubject != null && IsInstanceValid(_librarySubject)) _librarySubject.Visible = subjectVisible;
         }
+    }
+
+    private async Task<object> RenderRosterAttack(Node3D root, Enemy enemy, CommonIdentity identity, List<object> members, JsonElement data)
+    {
+        bool bow = identity.Weapon == "woodbow";
+        float windup = bow ? enemy.Monster.Ranged!.Windup : enemy.Monster.MeleeWindup;
+        float recovery = bow ? RangedEnemy.HunterBowRecovery : Enemy.MeleeRecovery;
+        float duration = windup + recovery;
+        // Sample the actual boundary exactly, with enough anticipation and recovery frames to scrub.
+        var times = new[] { 0, windup * .2f, windup * .4f, windup * .6f, windup * .8f, windup * .95f,
+            windup, windup + recovery * .2f, windup + recovery * .4f, windup + recovery * .6f, windup + recovery * .8f, duration };
+        void Pose(float time)
+        {
+            enemy.Rig.Animate(0, 0, 0, 0, Vector3.Zero);
+            enemy.Rig.SetHunterAttackPose(identity.Weapon, time >= duration ? -1 : time, windup, recovery);
+        }
+        Aabb? union = null;
+        foreach (float time in times)
+        {
+            Pose(time);
+            var bounds = VisualBounds(root);
+            union = union == null ? bounds : union.Value.Merge(bounds);
+        }
+        FrameLibrary(union!.Value, data); // One camera for every pose, including the extended weapon.
+        var frames = new List<object>();
+        string? firstPng = null;
+        foreach (float time in times)
+        {
+            Pose(time);
+            string png = await CaptureLibrary();
+            firstPng ??= png;
+            frames.Add(new { time, png, phase = time >= duration ? "idle" : time == windup ? bow ? "release" : "impact" : time < windup ? "windup" : "recovery" });
+        }
+        string prefix = bow ? "hunter_bow" : "hunter_" + identity.Weapon;
+        var sounds = new[] {
+            new { id = prefix + (bow ? "_draw" : identity.Weapon == "club" ? "_raise" : "_ready"), label = "준비 소리" },
+            new { id = prefix + (bow ? "_release" : "_swing"), label = bow ? "발사 소리" : "휘두르기 소리" },
+            new { id = prefix + "_hit", label = "명중 소리" }
+        };
+        return new { png = firstPng, mode = "attack", members, frames, duration,
+            renderer = "Godot Forward+ · CharacterRig.SetHunterAttackPose", composition = identity.Weapon.ToUpperInvariant() + " × 1",
+            attack = new { weapon = identity.Weapon, windup, recovery, impact_time = windup, camera = "fixed_union_bounds", combat_simulated = false, sounds,
+                source = "res://scripts/Characters/CharacterHunterPose.cs", timing_source = bow ? "Monster.Ranged.Windup / RangedEnemy.HunterBowRecovery" : "Monster.MeleeWindup / Enemy.MeleeRecovery" },
+            note = "실제 게임 공격 포즈 12장 · 고정 카메라 · 시각 미리보기입니다. 전투 판정·투사체·명중은 실행하지 않으며 소리는 버튼으로만 미리듣습니다." };
     }
 }

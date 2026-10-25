@@ -17,7 +17,7 @@ public partial class Enemy : CharacterBody3D
 
     private const float Gravity = 20f;
     private float MeleeWindup => Monster.MeleeWindup;
-    private const float MeleeRecovery = .32f;
+    public const float MeleeRecovery = .32f;
 
     public Stage Stage { get; private set; } = null!;
     /// <summary>Look (model, collider size, colors).</summary>
@@ -229,8 +229,8 @@ public partial class Enemy : CharacterBody3D
         else if (flat.LengthSquared() > .05f) FaceToward(flat, dt);
         Rig.ResetEnemyAttackPose();
         Rig.Animate(dt, Mathf.Min(1, flat.Length() / Speed), Kick, Hurt, Velocity);
-        CommonWeaponPose();
-        if (IsMeleeAttacking) Rig.ApplyEnemyAttackPose(_meleeTime, MeleeWindup, MeleeRecovery);
+        CommonWeaponPose(dt);
+        if (IsMeleeAttacking && !HunterMelee) Rig.ApplyEnemyAttackPose(_meleeTime, MeleeWindup, MeleeRecovery);
         if (this is BullEnemy bull && bull.State is BullEnemy.Mode.Windup or BullEnemy.Mode.Charge)
             Rig.ApplyBullChargePose(bull.State == BullEnemy.Mode.Charge ? 1f : .65f);
         AfterAnimate(dt);
@@ -291,6 +291,7 @@ public partial class Enemy : CharacterBody3D
                 AttackCooldown = Mathf.Max(AttackInterval, MeleeWindup + MeleeRecovery);
                 _meleeCore = core;
                 _meleeTime = 0;
+                BeginHunterMelee();
                 _meleeHit = false;
                 _meleeDirection = dist > .001f ? toCore / dist : Rig.Forward;
                 Stage.Net?.OnEnemyAttack(this, NetAttack.Melee, null, core.GlobalPosition);
@@ -420,6 +421,7 @@ public partial class Enemy : CharacterBody3D
         AttackCooldown = Mathf.Max(AttackInterval, MeleeWindup + MeleeRecovery);
         _meleeTarget = player;
         _meleeTime = 0;
+        BeginHunterMelee();
         RevealTo(player, MeleeWindup + MeleeRecovery + VisionSystem.RevealAfterHit);
         Stage.Net?.OnEnemyAttack(this, NetAttack.Melee, player, player.GlobalPosition);
         _meleeHit = false;
@@ -449,6 +451,7 @@ public partial class Enemy : CharacterBody3D
         if (!IsMeleeAttacking) return;
         FaceOverride = _meleeDirection;
         _meleeTime += dt;
+        HunterMeleeSwing();
         if (!_meleeHit && _meleeTime >= MeleeWindup)
         {
             _meleeHit = true;
@@ -456,7 +459,11 @@ public partial class Enemy : CharacterBody3D
             if (_meleeCore is { } core)
             {
                 if (!IsDead && StunTime <= 0 && core.GlobalPosition.DistanceTo(GlobalPosition) <= Radius + BaseCore.Radius + AttackReach + .4f)
+                {
+                    float before = core.Health;
                     core.TakeDamage(AttackDamage, GlobalPosition);
+                    if (core.Health < before) HunterMeleeImpact(core.GlobalPosition + Vector3.Up * .8f);
+                }
                 return;
             }
             var player = _meleeTarget;
@@ -470,14 +477,21 @@ public partial class Enemy : CharacterBody3D
                 (Stage.Tiers.Any || height < 1.1f) && distance <= Radius + player.Definition.ColliderRadius + AttackReach &&
                 (distance < .001f || _meleeDirection.Dot(to / distance) >= .55f) &&
                 CanReachAcrossTiers(player))
+            {
+                int before = player.Health;
                 player.TakeDamage(AttackDamage, _meleeDirection, 1.2f);
+                if (player.Health < before) HunterMeleeImpact(player.GlobalPosition + Vector3.Up * .8f);
+            }
         }
         if (_meleeTime >= MeleeWindup + MeleeRecovery) CancelMelee();
     }
 
     protected void CancelMelee(bool resetPose = true)
     {
+        if (IsMeleeAttacking && HunterMelee) Stage.Net?.OnEnemyAttackEnd(this);
         _meleeTime = -1;
+        StopHunterReady();
+        if (HunterMelee) Rig?.ResetHunterAttackPose();
         _meleeHit = false;
         _meleeTarget = null;
         _meleeCore = null;

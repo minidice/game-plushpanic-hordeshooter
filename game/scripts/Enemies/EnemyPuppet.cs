@@ -35,15 +35,16 @@ public partial class Enemy
         if (_meleeTime >= 0)
         {
             _meleeTime += dt;
-            if (_meleeTime > MeleeWindup + MeleeRecovery) _meleeTime = -1;
+            HunterMeleeSwing();
+            if (_meleeTime > MeleeWindup + MeleeRecovery) CancelMelee();
         }
         var flat = new Vector3(velocity.X, 0, velocity.Z);
         Footsteps(flat.Length() * dt);
         Rig.Face(IsMeleeAttacking ? _meleeDirection : facing);
         Rig.ResetEnemyAttackPose();
         Rig.Animate(dt, Mathf.Min(1, flat.Length() / Speed), Kick, Hurt, velocity);
-        CommonWeaponPose();
-        if (IsMeleeAttacking) Rig.ApplyEnemyAttackPose(_meleeTime, MeleeWindup, MeleeRecovery);
+        CommonWeaponPose(dt);
+        if (IsMeleeAttacking && !HunterMelee) Rig.ApplyEnemyAttackPose(_meleeTime, MeleeWindup, MeleeRecovery);
         if (this is BullEnemy)
         {
             if (flags.HasFlag(NetEnemyFlags.Charging)) Rig.ApplyBullChargePose(1f);
@@ -55,12 +56,13 @@ public partial class Enemy
     public void PuppetMelee(Player? victim, Vector3 direction)
     {
         _meleeTime = 0;
+        BeginHunterMelee();
         _meleeDirection = direction;
         RevealTo(victim, MeleeWindup + MeleeRecovery + VisionSystem.RevealAfterHit);
     }
 
     /// <summary>The host's special stopped its attack: clear the warning lines and markers.</summary>
-    public void PuppetEndAttack() => OnStunned();
+    public void PuppetEndAttack() { CancelMelee(); if (this is RangedEnemy ranged) ranged.EndPuppetShot(); else OnStunned(); }
 
     /// <summary>A hit seen on a client: the flinch and the stuffing, but the host keeps the health.</summary>
     private void PuppetHit(Vector3 point, Vector3 direction, bool crit)

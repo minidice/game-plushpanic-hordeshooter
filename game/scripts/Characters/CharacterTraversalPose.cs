@@ -45,6 +45,11 @@ public partial class CharacterRig
     private void PoseTraversalArm(MeshInstance3D arm,Vector3 hand,float side)
     {
         arm.Visible=true;
+        if (arm is CharacterAuthoredWing wing)
+        {
+            wing.PoseWing(hand,true,_wingSize,0);
+            return;
+        }
         if (CharacterGripSurface.IsSurface(arm))
         {
             CharacterGripSurface.Pose(arm,hand,true,_wingSize,0,HandColor);

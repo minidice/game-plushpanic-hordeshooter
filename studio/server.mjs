@@ -181,7 +181,8 @@ const server = http.createServer(async (req, res) => {
       if (url.pathname === '/api/roster/render') {
         if (!data || ['faction','species','palette','weapon'].some(key => typeof data[key] !== 'string' || data[key].length > 64)
             || (data.pack !== undefined && (typeof data.pack !== 'string' || data.pack.length > 64))
-            || !['individual','pack'].includes(data.mode) || !Number.isInteger(data.variant) || data.variant < 0 || data.variant > 9
+            || !['individual','pack','attack'].includes(data.mode) || !Number.isInteger(data.variant) || data.variant < 0 || data.variant > 9
+            || (data.mode === 'attack' && (data.faction !== 'hunter' || !['club','knife','woodbow'].includes(data.weapon)))
             || !Number.isInteger(data.gear) || data.gear < 0 || data.gear > 3
             || !Number.isFinite(data.rotation) || data.rotation < -180 || data.rotation > 180
             || !Number.isFinite(data.zoom) || data.zoom < .75 || data.zoom > 1.45) {

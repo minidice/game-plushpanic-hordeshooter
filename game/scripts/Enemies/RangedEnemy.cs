@@ -6,12 +6,17 @@ public partial class RangedEnemy : Enemy
 {
     public bool WindingUp { get; private set; }
     public int ProjectilesFired { get; private set; }
+    public const float HunterBowRecovery = .36f;
+    private bool HunterBow => Monster.CommonIdentity?.Weapon == "woodbow";
+    private float _bowTime = -1;
+    private bool _bowReleased;
+    private AudioStreamPlayer3D? _bowDrawSound;
     private RangedTrait Shot => Monster.Ranged!;
     private float _timer, _cooldown = 2f;
     private Vector3 _target;
     private MeshInstance3D? _marker;
     private BaseCore? _targetCore;
-    public string ShotSound => Monster.CommonIdentity?.Weapon == "woodbow" ? "zombie_hit" : Monster.Behavior == MonsterBehavior.Shooter ? "shot_rifle" : "zombie_hit";
+    public string ShotSound => Monster.CommonIdentity?.Weapon == "woodbow" ? "hunter_bow_release" : Monster.Behavior == MonsterBehavior.Shooter ? "shot_rifle" : "zombie_hit";
 
     public override void _Ready()
     {
@@ -54,6 +59,7 @@ public partial class RangedEnemy : Enemy
                     Stage.AddChild(projectile);
                     Stage.Net?.OnEnemyProjectile(this, from, _target);
                     ProjectilesFired++;
+                    ShowShotRelease();
                     Kick = 1;
                     Stage.Sfx.PlayAt(ShotSound, from);
                 }
@@ -119,6 +125,14 @@ public partial class RangedEnemy : Enemy
         WindingUp = true;
         Awake = true;
         _timer = Shot.Windup;
+        if (HunterBow)
+        {
+            _bowReleased = false;
+            _bowTime = 0;
+            _bowDrawSound = Stage.Sfx.Attach("hunter_bow_draw", this);
+            if (_bowDrawSound != null)
+                _bowDrawSound.PitchScale = (float)_bowDrawSound.Stream.GetLength() / Shot.Windup;
+        }
         if (aim == null) victim ??= Target ?? Stage.NearestAlivePlayer(GlobalPosition) ?? Stage.Player;
         _target = aim ?? victim!.GlobalPosition + Vector3.Up * .8f;
         _targetCore = core;
@@ -137,19 +151,54 @@ public partial class RangedEnemy : Enemy
             _marker = Mat.Box(Stage.Effects, (start + flatTarget) * .5f, new Vector3(.12f, .03f, start.DistanceTo(flatTarget)), Mat.Glow(color));
             if (start.DistanceTo(flatTarget) > .01f) _marker.LookAt(flatTarget, Vector3.Up);
         }
-        Stage.Sfx.PlayAt("bull_snort", GlobalPosition, -8, 1.8f);
+        if (!HunterBow) Stage.Sfx.PlayAt("bull_snort", GlobalPosition, -8, 1.8f);
     }
 
     private void AbortShot()
     {
         if (WindingUp) Stage.Net?.OnEnemyAttackEnd(this);
         WindingUp = false;
+        StopBowDraw();
+        if (HunterBow && !_bowReleased) { _bowTime = -1; Rig?.ResetHunterAttackPose(); }
         _targetCore = null;
         _cooldown = Shot.Cooldown;
         if (IsInstanceValid(_marker)) _marker!.QueueFree();
         _marker = null;
     }
-    protected override void OnStunned() => AbortShot();
-    public override void Die(Vector3 direction, float force) { AbortShot(); base.Die(direction, force); }
+    /// <summary>Actual projectile event, on host and puppet. Never release merely because a local timer expired.</summary>
+    public void ShowShotRelease()
+    {
+        if (!HunterBow) return;
+        _bowReleased = true;
+        _bowTime = Shot.Windup;
+        StopBowDraw();
+    }
+
+    internal void AnimateHunterBow(float dt)
+    {
+        if (!HunterBow) return;
+        if (_bowTime >= 0)
+        {
+            _bowTime += dt;
+            if (!_bowReleased) _bowTime = Mathf.Min(_bowTime, Shot.Windup - .001f);
+            else if (_bowTime >= Shot.Windup + HunterBowRecovery) { _bowTime = -1; _bowReleased = false; }
+        }
+        Rig.SetHunterAttackPose("woodbow", _bowTime, Shot.Windup, HunterBowRecovery);
+    }
+
+    private void StopBowDraw()
+    {
+        if (IsInstanceValid(_bowDrawSound)) { _bowDrawSound!.Stop(); _bowDrawSound.QueueFree(); }
+        _bowDrawSound = null;
+    }
+
+    // End follows Projectile in the reliable stream; retain the short release recovery.
+    public void EndPuppetShot() => AbortShot();
+    protected override void OnStunned()
+    {
+        AbortShot(); _bowTime = -1; _bowReleased = false;
+        if (HunterBow) Rig?.ResetHunterAttackPose();
+    }
+    public override void Die(Vector3 direction, float force) { OnStunned(); base.Die(direction, force); }
     public override void _ExitTree() { if (IsInstanceValid(_marker)) _marker!.QueueFree(); }
 }

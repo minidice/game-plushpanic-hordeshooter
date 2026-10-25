@@ -1,4 +1,4 @@
-"""Deterministic crowd assets. Blender --background --python this_file.py -- [--no-render].
+"""Deterministic crowd assets. Blender -b -P this_file.py -- [--species parrot] [--no-render].
 
 Authoring coordinates are Blender Z up / -Y forward. GLB exports Y up / +Z forward.
 The source humanoid head and arms are imported, never overwritten. Clothing and gear
@@ -9,6 +9,8 @@ import bmesh
 import json
 import math
 import sys
+import argparse
+import hashlib
 from pathlib import Path
 from mathutils import Vector
 
@@ -167,6 +169,7 @@ def gear(deform,head,c,kind):
 
 
 def animal(kind):
+    if kind=='parrot':return parrot()
     c=colors(kind);root,deform,head,left,right,arms=frame(kind)
     bird=kind in ['eagle','parrot']
     oval('plush_torso',(0,0,.78),(.38,.31,.49),c['primary'],deform,20,12)
@@ -258,6 +261,139 @@ def animal(kind):
                 for i in range(3):oval('hoof_toe',(s*.22+(i-1)*.08,-.29,.12),(.045,.045,.06),c['horn'],left if s<0 else right,10,7)
             tube('rhino_tail',[(0,.28,.68),(0,.41,.49)],[.045,.025],c['primary'],deform)
     gear(deform,head,c,kind)
+    return root
+
+
+PARROT_BODY=[(.29,.045,.045,.025),(.35,.19,.16,.025),(.44,.29,.24,.015),
+             (.56,.355,.292,.005),(.70,.38,.315,0),(.84,.365,.30,0),
+             (.97,.325,.265,.012),(1.08,.26,.215,.015),(1.17,.19,.16,.01),
+             (1.24,.10,.09,0),(1.27,.01,.01,0)]
+
+
+def loft(name,profiles,material,parent,sides=28):
+    """Horizontal, individually shaped cross sections (z, half-width, depth, y)."""
+    verts=[];faces=[]
+    for z,rx,ry,cy in profiles:
+        for k in range(sides):
+            a=math.tau*k/sides;verts.append((rx*math.sin(a),cy-ry*math.cos(a),z))
+    for j in range(len(profiles)-1):
+        for k in range(sides):
+            a=j*sides+k;b=j*sides+(k+1)%sides;faces.append((a,b,b+sides,a+sides))
+    faces.extend([tuple(reversed(range(sides))),tuple(range((len(profiles)-1)*sides,len(profiles)*sides))])
+    mesh=bpy.data.meshes.new(name);mesh.from_pydata(verts,[],faces);mesh.update()
+    obj=bpy.data.objects.new(name,mesh);bpy.context.collection.objects.link(obj)
+    obj.data.materials.append(material)
+    for face in mesh.polygons:face.use_smooth=True
+    parent_world(obj,parent);return obj
+
+
+def feather(name,points,widths,depths,material,parent,sides=10):
+    """A padded feather with a broad vane and swept tapered tip, not a round tube."""
+    verts=[];faces=[]
+    for j,point in enumerate(points):
+        tangent=(Vector(points[min(j+1,len(points)-1)])-Vector(points[max(0,j-1)])).normalized()
+        across=Vector((1,0,0));normal=tangent.cross(across).normalized()
+        for k in range(sides):
+            a=math.tau*k/sides
+            verts.append(Vector(point)+across*(math.cos(a)*widths[j])+normal*(math.sin(a)*depths[j]))
+    for j in range(len(points)-1):
+        for k in range(sides):
+            a=j*sides+k;b=j*sides+(k+1)%sides;faces.append((a,b,b+sides,a+sides))
+    faces.extend([tuple(reversed(range(sides))),tuple(range((len(points)-1)*sides,len(points)*sides))])
+    mesh=bpy.data.meshes.new(name);mesh.from_pydata(verts,[],faces);mesh.update()
+    obj=bpy.data.objects.new(name,mesh);bpy.context.collection.objects.link(obj);obj.data.materials.append(material)
+    # Cross section orientation differs from the torso loft. Recalculate once for export.
+    bm=bmesh.new();bm.from_mesh(mesh);bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces));bm.to_mesh(mesh);bm.free()
+    for face in mesh.polygons:face.use_smooth=True
+    parent_world(obj,parent);return obj
+
+
+def parrot_body_section(z):
+    for a,b in zip(PARROT_BODY,PARROT_BODY[1:]):
+        if a[0]<=z<=b[0]:
+            t=(z-a[0])/(b[0]-a[0]);return tuple(a[i]+(b[i]-a[i])*t for i in range(1,4))
+    raise ValueError(('Outside parrot body',z))
+
+
+def parrot_belly(c,deform):
+    # Dense surface sampling keeps the panel outside triangulated body faces.
+    # Six mm clearance reads as a sewn panel, rather than the old 75 mm belly lobe.
+    verts=[];faces=[];n=32
+    for j in range(13):
+        r=max(.001,j/12)
+        for k in range(n):
+            a=math.tau*k/n;z=.765+.295*r*math.cos(a);x=.248*r*math.sin(a)
+            rx,ry,cy=parrot_body_section(z)
+            verts.append((x,cy-ry*math.sqrt(max(0,1-(x/rx)**2))-.006,z))
+    for j in range(12):
+        for k in range(n):
+            a=j*n+k;b=j*n+(k+1)%n;faces.append((a,b,b+n,a+n))
+    mesh=bpy.data.meshes.new('flush_belly_panel');mesh.from_pydata(verts,[],faces);mesh.update()
+    obj=bpy.data.objects.new('flush_belly_panel',mesh);bpy.context.collection.objects.link(obj)
+    obj.data.materials.append(c['secondary'])
+    bm=bmesh.new();bm.from_mesh(mesh);bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces));bm.to_mesh(mesh);bm.free()
+    for p in mesh.polygons:p.use_smooth=True
+    parent_world(obj,deform)
+
+
+def parrot():
+    c=colors('parrot');root,deform,head,left,right,arms=frame('parrot')
+    loft('pear_plush_body',PARROT_BODY,c['primary'],deform,32)
+    parrot_belly(c,deform)
+    # The lower head is a tapered neck seated inside the torso, with a softly broad brow.
+    loft('shaped_parrot_head',[(1.095,.115,.12,-.015),(1.15,.21,.20,-.015),
+         (1.24,.31,.275,-.025),(1.36,.395,.325,-.035),(1.50,.425,.34,-.025),
+         (1.63,.405,.325,-.005),(1.74,.335,.275,.01),(1.82,.235,.195,.025),
+         (1.87,.11,.10,.035),(1.885,.01,.01,.035)],c['primary'],head,32)
+    for s in [-1,1]:
+        # Thin inset-looking button surround follows the sloping face; no cheek spheres.
+        oval('compact_eye_rim',(s*.222,-.307,1.535),(.088,.025,.103),c['cream'],head,16,10,rot=(0,0,s*.38))
+        oval('button_eye',(s*.222,-.328,1.54),(.050,.024,.065),c['eye'],head,16,10,rot=(0,0,s*.38))
+        oval('eye_glint',(s*.222-.012,-.349,1.561),(.013,.006,.016),c['glint'],head,8,6)
+    feather('sculpted_upper_beak',[(0,-.303,1.415),(0,-.385,1.44),(0,-.49,1.408),
+            (0,-.565,1.335),(0,-.574,1.265),(0,-.552,1.235)],
+            [.108,.128,.109,.070,.034,.004],[.089,.096,.081,.063,.029,.003],c['horn'],head,16)
+    feather('lower_beak',[(0,-.315,1.29),(0,-.405,1.275),(0,-.49,1.279),(0,-.533,1.295)],
+            [.080,.089,.061,.006],[.046,.041,.026,.004],c['ink'],head,12)
+    for s in [-1,1]:
+        oval('beak_nostril',(s*.075,-.465,1.469),(.013,.009,.010),c['ink'],head,8,6)
+    for i in [-1,0,1]:
+        cresttop=2.025 if i==0 else 1.965
+        feather('swept_crest',[(i*.085,.015,1.79),(i*.105,.085,1.88),
+                (i*.12,.19,cresttop-.025),(i*.13,.30,cresttop)],
+                [.047,.065,.049,.004],[.031,.033,.022,.003],c['accent'],head,10)
+    for sign,foot,arm in zip([-1,1],[left,right],arms):
+        oval('soft_ankle',(sign*.20,.005,.295),(.105,.115,.155),c['primary'],foot,12,8)
+        oval('padded_bird_foot',(sign*.21,-.09,.125),(.145,.205,.125),c['gold'],foot,16,10)
+        for x in [-.044,.044]:seam(foot,c,[(sign*.21+x,-.273,.12),(sign*.21+x,-.235,.196)])
+        feather('wing_shoulder',[(sign*.355,.005,1.095),(sign*.435,-.035,1.015),
+                (sign*.47,-.04,.85),(sign*.445,-.018,.68)],
+                [.055,.127,.128,.047],[.07,.115,.10,.031],c['primary'],arm,16)
+        for j in range(3):
+            x=sign*(.391+j*.070)
+            feather('wing_flight_feather',[(x,-.10,.91-j*.028),(x+sign*.022,-.145,.81-j*.036),
+                    (x+sign*.015,-.12,.68-j*.028),(x-sign*.012,-.055,.62-j*.018)],
+                    [.041,.053,.044,.005],[.028,.038,.027,.003],c['accent'],arm,10)
+    tail=empty('common_parrot_tail',deform,(0,.23,.62))
+    for i in [-1,0,1]:
+        feather('swept_tail_feather',[(i*.055,.20,.66),(i*.085,.36,.57),
+                (i*.12,.50,.42),(i*.14,.56,.30+abs(i)*.035)],
+                [.048,.077,.061,.006],[.037,.040,.026,.004],c['accent'],tail,12)
+    vest=empty('Gear_Vest',deform)
+    profile=[]
+    for z in [.48,.57,.70,.84,.97,1.075]:
+        rx,ry,cy=parrot_body_section(z);profile.append((z,rx+.025,ry+.027,cy))
+    loft('fitted_padded_vest',profile,c['vest'],vest,32)
+    for s in [-1,1]:
+        oval('vest_front_pouch',(s*.145,-.306,.76),(.115,.065,.145),c['vest'],vest,12,8,rot=(0,0,s*.28))
+        tube('vest_shoulder',[(s*.205,-.19,1.06),(s*.205,0,1.155),(s*.205,.20,1.055)],
+             [.042,.047,.042],c['vest'],vest,8)
+    tube('vest_front_closure',[(0,-.300,.52),(0,-.346,.70),(0,-.331,.84),(0,-.287,.98),(0,-.239,1.065)],
+         [.009]*5,c['ink'],vest,6)
+    # Keep the optional legacy node contract; current roster never enables eye gear.
+    glasses=empty('Gear_Glasses',head)
+    for s in [-1,1]:oval('sunglass_lens',(s*.22,-.372,1.535),(.108,.02,.105),c['ink'],glasses,12,8)
+    tube('nose_bridge',[(-.11,-.372,1.55),(.11,-.372,1.55)],[.013,.013],c['ink'],glasses)
     return root
 
 
@@ -436,23 +572,37 @@ StuffingColor = Color(0.87, 0.83, 0.67, 1)
     (ROOT/f'game/content/enemies/common_{kind}.tres').write_text(source,encoding='utf-8')
 
 
-reports=[]
-for kind in SPECIES:
+def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--species',choices=SPECIES,nargs='+',default=SPECIES)
+    parser.add_argument('--no-render',action='store_true')
+    args=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
+    untouched={p:hashlib.sha256(p.read_bytes()).hexdigest() for p in ASSETS.glob('*.glb') if p.stem not in args.species}
+    reports=[]
+    for kind in args.species:
+        build_one(kind,reports,args.no_render)
+    for path,digest in untouched.items():
+        assert hashlib.sha256(path.read_bytes()).hexdigest()==digest,('unselected asset changed',path)
+    report_path=OUT/('audit.json' if set(args.species)==set(SPECIES) else 'audit-'+'-'.join(args.species)+'.json')
+    report_path.write_text(json.dumps(reports,indent=2),encoding='utf-8')
+    print('COMMON_MONSTERS_COMPLETE',len(reports),'UNSELECTED_UNCHANGED',len(untouched))
+
+
+def build_one(kind,reports,no_render):
     clear();root=zombie() if kind=='zombie' else animal(kind)
     consolidate(kind);reports.append(audit(kind));resource(kind)
     bpy.ops.wm.save_as_mainfile(filepath=str(OUT/f'{kind}.blend'))
     bpy.ops.export_scene.gltf(filepath=str(ASSETS/f'{kind}.glb'),export_format='GLB',export_yup=True,
                              export_animations=False,export_cameras=False,export_lights=False)
-    if '--no-render' not in sys.argv:
+    if not no_render:
         stage()
         default=('Outfit_Jeans','Outfit_Shirt','Outfit_Stains') if kind=='zombie' else ()
         for view,angle in [('front',0),('quarter',math.pi/4),('side',math.pi/2),('back',math.pi)]:render(kind,view,angle,default)
-        if kind!='zombie':render(kind,'armed',math.pi/4,('Gear_Vest','Gear_Glasses'))
+        if kind!='zombie':render(kind,'armed',math.pi/4,('Gear_Vest',))
         else:
             for title,mods in [('chinos',('Outfit_Chinos','Outfit_Shirt','Outfit_Pattern')),
                                ('torn',('Outfit_Torn','Outfit_Shirt','Outfit_Stains')),
                                ('overalls',('Outfit_Overalls',)),('suit',('Outfit_Suit',)),
                                ('bare',('Outfit_Shirt',)),('eyepatch',('Outfit_Jeans','Outfit_Shirt','Gear_Eyepatch'))]:render(kind,title,math.pi/4,mods)
     print('COMMON_ASSET_AUDIT',json.dumps(reports[-1]))
-(OUT/'audit.json').write_text(json.dumps(reports,indent=2),encoding='utf-8')
-print('COMMON_MONSTERS_COMPLETE',len(reports))
+if __name__=='__main__':main()

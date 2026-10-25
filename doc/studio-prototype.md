@@ -190,3 +190,8 @@ node studio/tests/interactions.mjs
 - 검증·게임 계약·알려진 제약은 [일반 몬스터 조합](common-monster-roster.md), 제작 계약은 [모델 README](../prototypes/common-monsters/README.md). 기본 실행 `./studio/Start-Studio.ps1` 후 일반 몬스터 조합 탭. 이미 켠 이전 빌드는 로컬 데이터 다시 읽기로 갱신한다.
 
 - 2026-10-25 몬스터 후속: `/roster` 눈 장구류 선택/자동 배정 제거, 좀비10번째를 줄무늬 청바지로 표시. 게임과 같은 검증기로 gear2/3 요청 거부. 방탄복만 선택 가능. roster82/smoke36 및 실제 브라우저 무장10마리 확인. [검수·미완료 개선](common-monster-play-review.md).
+
+
+### 2026-10-25 수렵단 공격 미리보기
+
+`POST /api/roster/render`의 `mode:"attack"`은 수렵단 club/knife/woodbow 한 개체만 허용. 같은 게임 포즈12장을 실제 준비시간/타격 경계/복귀시간으로 샘플링한다. 전체 포즈를 포함하는 고정 카메라, 재생/일시정지·속도·반복·시간 이동과9종 음원 명시적 미리듣기를 제공한다. 편집/피해/투사체 시뮬레이션은 없으며 기존 individual/pack 계약은 유지한다. [규격·검증](hunter-weapon-presentation.md). 신규50검사·기존 roster82검사 및 브라우저에서 선택 변경 시 소리 정리 확인.

@@ -157,6 +157,7 @@ public partial class CharacterRig : Node3D
     /// <param name="velocity">World velocity, drives the head spring.</param>
     public void Animate(float dt, float moveAmount, float kick, float hurt, Vector3 velocity)
     {
+        ResetHunterBowGeometry();
         var def = Definition;
         _clock += dt * def.StepRate;
         float step = Mathf.Sin(_clock);
@@ -213,6 +214,7 @@ public partial class CharacterRig : Node3D
         EndZiplinePose();
         ResetReloadPose();
         ResetEnemyAttackPose();
+        ResetHunterAttackPose();
         _meleePoseTime = -1;
         ResetTail();
         Body.Transform = _bodyHome;

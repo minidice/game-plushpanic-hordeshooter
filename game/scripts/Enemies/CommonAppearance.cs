@@ -81,21 +81,27 @@ public static class CommonWeaponVisual
         }
         else if (weapon.Id == "woodbow")
         {
-            // Upright recurved wood bow and taut string, separate from the firearms silhouette.
+            // Named articulated parts are sampled by the shared rig in gameplay and Studio.
             var points = new[] { new Vector3(0, -.55f, .08f), new Vector3(0, -.3f, .2f), new Vector3(0, 0, .26f), new Vector3(0, .3f, .2f), new Vector3(0, .55f, .08f) };
-            for (int i = 1; i < points.Length; i++) Segment(root, points[i - 1], points[i], .035f, wood);
-            Segment(root, points[0], points[^1], .008f, dark);
-            Segment(root, new Vector3(0, 0, -.16f), new Vector3(0, 0, .65f), .013f, wood);
+            for (int i = 1; i < points.Length; i++) Segment(root, points[i - 1], points[i], .035f, wood, "BowLimb" + i);
+            var nock = new Node3D { Name = "BowNock", Position = new Vector3(0, 0, .08f) }; root.AddChild(nock);
+            Segment(root, points[0], nock.Position, .008f, dark, "BowLowerString");
+            Segment(root, points[^1], nock.Position, .008f, dark, "BowUpperString");
+            var arrow = new Node3D { Name = "BowNockedArrow", Position = nock.Position }; root.AddChild(arrow);
+            Segment(arrow, Vector3.Zero, new Vector3(0, 0, .81f), .013f, wood, "ArrowShaft");
+            var tip = Mat.Mesh(arrow, new CylinderMesh { TopRadius = 0, BottomRadius = .035f, Height = .10f, RadialSegments = 4 }, new Vector3(0, 0, .84f), steel, "Arrowhead");
+            tip.RotationDegrees = new Vector3(90, 0, 0);
+            Mat.Box(arrow, new Vector3(0, 0, .09f), new Vector3(.065f, .008f, .11f), dark, "ArrowFletching");
         }
-        var right = new Node3D { Name = "GripRight", Position = new Vector3(.025f, -.02f, 0) }; root.AddChild(right);
+        var right = new Node3D { Name = "GripRight", Position = weapon.Id == "woodbow" ? new Vector3(0, 0, .08f) : new Vector3(.025f, -.02f, 0) }; root.AddChild(right);
         Node3D? left = null;
         if (weapon.Id == "woodbow") { left = new Node3D { Name = "GripLeft", Position = new Vector3(-.025f, 0, .26f) }; root.AddChild(left); }
         var muzzle = new Node3D { Name = "Muzzle", Position = new Vector3(0, 0, .65f) }; root.AddChild(muzzle);
         return new(root, new List<Node3D> { muzzle }, right, left, def);
     }
-    private static void Segment(Node3D root, Vector3 a, Vector3 b, float thickness, Material material)
+    private static void Segment(Node3D root, Vector3 a, Vector3 b, float thickness, Material material, string name = "")
     {
-        var segment = Mat.Box(root, (a + b) * .5f, new Vector3(thickness, thickness, a.DistanceTo(b)), material);
+        var segment = Mat.Box(root, (a + b) * .5f, new Vector3(thickness, thickness, a.DistanceTo(b)), material, name);
         segment.Quaternion = new Quaternion(Vector3.Back, (b - a).Normalized());
     }
 }

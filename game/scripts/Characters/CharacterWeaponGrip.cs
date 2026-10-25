@@ -20,11 +20,13 @@ public partial class CharacterRig
     public bool WeaponArmsVisible => _gripArms?.Visible==true;
     internal void SetCommonHandColor(Color color) => HandColor = color;
 
-    /// <summary>Replace static wings/paws with compact shapes that meet the equipped weapon's hand positions.</summary>
+    /// <summary>Pose authored wings where supported, otherwise compact arms meet the weapon's hand positions.</summary>
     public void BindWeaponGrip(WeaponVisual.Built built)
     {
         ResetReloadPose();
+        ResetHunterAttackPose();
         _heldWeapon=built;
+        BindHunterBowGeometry();
         _leftGripHome=built.LeftGrip?.Transform??Transform3D.Identity;
         _meleePoseTime=-1;
         _supportGrip=built.Definition.Dual||built.Definition.Category==WeaponCategory.Heavy || (CommonAnimalArms && built.LeftGrip != null && built.Definition.Category != WeaponCategory.Melee);
@@ -46,6 +48,13 @@ public partial class CharacterRig
     private MeshInstance3D MakeForearm(string name)
     {
         string side=name=="RightForearm"?"right":"left";
+        if(Definition.Id=="common_parrot"&&Model.FindChild(Definition.Id+"_"+side+"Arm_mesh",true,false) is MeshInstance3D {Mesh:not null} wing)
+        {
+            var pivot=wing.GetParentNode3D();
+            var home=_featureHomes.TryGetValue(pivot,out var authored)?authored:pivot.Transform;
+            var shoulder=InRig(_gripArms!).AffineInverse()*InRig(pivot.GetParentNode3D())*home;
+            return CharacterAuthoredWing.Create(_gripArms!,wing,shoulder*wing.Transform,shoulder.Origin,name,side=="right"?1:-1);
+        }
         if(HasAnimalArms&&!CommonAnimalArms&&Model.FindChild(Definition.Id+"_"+side+"Arm_mesh",true,false) is MeshInstance3D {Mesh:not null} source)
         {
             var pivot=source.GetParentNode3D();
@@ -74,6 +83,7 @@ public partial class CharacterRig
         _carryKick=kick;
         if(_heldWeapon==null||!HasAnimalArms)return;
         var def=_heldWeapon.Definition;
+        if(def.Id=="woodbow"){ApplyHunterBowCarryPose();return;}
         if(def.Category==WeaponCategory.Melee){ApplyMeleeCarryPose();return;}
         Vector3 at=def.Dual?new Vector3(0,.94f,.42f):_supportGrip?new Vector3(.12f,.91f,.43f):new Vector3(.54f,1.22f,.65f);
         at+=new Vector3(0,_runningCarry*.14f,-_runningCarry*.12f-kick*.065f);
@@ -96,6 +106,12 @@ public partial class CharacterRig
     private void Connect(MeshInstance3D arm,Node3D? target,float side)
     {
         arm.Visible=true;
+        if(arm is CharacterAuthoredWing wing)
+        {
+            bool holding=target!=null&&IsInstanceValid(target);
+            wing.PoseWing(holding?_gripArms!.ToLocal(target!.GlobalPosition):Vector3.Zero,holding,_wingSize,_runningCarry);
+            return;
+        }
         if(CharacterGripSurface.IsSurface(arm))
         {
             bool holding=target!=null&&IsInstanceValid(target);
@@ -133,6 +149,7 @@ public partial class CharacterRig
     }
     private static Vector3 WristPosition(MeshInstance3D arm)
     {
+        if(arm is CharacterAuthoredWing wing)return wing.Wrist;
         if(CharacterGripSurface.IsSurface(arm))return CharacterGripSurface.Wrist(arm);
         var mesh=(CapsuleMesh)arm.Mesh;
         return arm.GlobalTransform*new Vector3(0,mesh.Height*.5f-mesh.Radius,0);

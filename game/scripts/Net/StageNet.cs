@@ -267,6 +267,12 @@ public partial class StageNet : Node
         _batch.Begin(NetEvent.EnemyAttackEnd); _batch.W.U16(enemy.NetId);
     }
 
+    public void OnHunterMeleeImpact(Enemy enemy, Vector3 point)
+    {
+        if (Role != NetRole.Host || enemy.NetId == 0) return;
+        _batch.Begin(NetEvent.HunterMeleeImpact); _batch.W.U16(enemy.NetId); _batch.W.Pos(point);
+    }
+
     public void OnEnemyProjectile(Enemy enemy, Vector3 from, Vector3 target)
     {
         if (Role != NetRole.Host || enemy.NetId == 0) return;
@@ -676,6 +682,12 @@ public partial class StageNet : Node
                 if (_enemies.TryGetValue(r.U16(), out var enemy) && IsInstanceValid(enemy) && !enemy.IsDead) enemy.PuppetEndAttack();
                 break;
             }
+            case NetEvent.HunterMeleeImpact:
+            {
+                int id = r.U16(); var point = r.Pos();
+                if (_enemies.TryGetValue(id, out var enemy) && IsInstanceValid(enemy)) enemy.ShowHunterMeleeImpact(point);
+                break;
+            }
             case NetEvent.EnemyProjectile:
             {
                 int id = r.U16();
@@ -687,6 +699,7 @@ public partial class StageNet : Node
                 _stage.AddChild(projectile);
                 _stage.Sfx.PlayAt(enemy is RangedEnemy rangedShooter ? rangedShooter.ShotSound : "zombie_hit", from);
                 enemy.PuppetEndAttack();
+                if (enemy is RangedEnemy bow) bow.ShowShotRelease();
                 break;
             }
             case NetEvent.PlayerHit:

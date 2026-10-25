@@ -67,7 +67,98 @@ public partial class CommonRosterNetCheck : Node
         Check(_client.AllEnemies.Single(e=>e.NetId==named.NetId).Monster.CommonIdentity==null,"named veteran keeps legacy identity");
         Check(live.Monster.CommonIdentity==after,"birth identity unchanged after peer joins");
         await Frames(20);Check(live.Monster.CommonIdentity==after,"snapshots do not reroll identity");
+        await HunterPresentation(hunter);
     }
+
+    private int Heard(string id) => _client.Sfx.Played.TryGetValue(id,out int count)?count:0;
+    private static bool AttachedSoundPlaying(Enemy enemy) => enemy.GetChildren().OfType<AudioStreamPlayer3D>().Any(p=>p.Playing);
+    private static int DurationFrames(float seconds) => Mathf.CeilToInt(seconds*Engine.PhysicsTicksPerSecond)+3;
+
+    private async Task HunterPresentation(Enemy knife)
+    {
+        knife.GlobalPosition=new Vector3(-7,.05f,-7);
+        var club=_host.SpawnCommonIdentity(new("hunter","eagle","red","club"),new Vector3(-5,.05f,-7),false);
+        club.SetPhysicsProcess(false);
+        await Until(()=>_client.AllEnemies.Any(e=>e.NetId==club.NetId),"club hunter live spawn arrives for presentation checks");
+        await Frames(20);
+        foreach(var hunter in new[]{club,knife}) await HunterMeleeEvents(hunter);
+        await HunterBowEvents((RangedEnemy)_host.AllEnemies.Single(e=>e.Monster.CommonIdentity?.Weapon=="woodbow"));
+        Check(_client.Net!.ApplyErrors==0&&_host.Net!.ApplyErrors==0,"hunter attack events apply without decode errors on either peer");
+    }
+
+    private async Task HunterMeleeEvents(Enemy host)
+    {
+        var remote=_client.AllEnemies.Single(e=>e.NetId==host.NetId);
+        string weapon=host.Monster.CommonIdentity!.Weapon;
+        string prefix="hunter_"+weapon;
+        string readyId=prefix+(weapon=="club"?"_raise":"_ready");
+        int ready=Heard(readyId),swing=Heard(prefix+"_swing"),hit=Heard(prefix+"_hit");
+        var idle=remote.Rig.Weapon.Transform;
+        // Simulated authoritative decisions, transported over real ENet. Damage authority is covered
+        // by HunterCombatCheck; these assertions exercise the actual event decoder and puppet timeline.
+        _host.Net!.OnEnemyAttack(host,NetAttack.Melee,null,host.GlobalPosition+Vector3.Back);
+        await Until(()=>remote.IsMeleeAttacking,weapon+" simulated server start reaches puppet");
+        Check(Heard(readyId)==ready+1,weapon+" puppet plays ready cue exactly once");
+        await Frames(3);
+        Check(!remote.Rig.Weapon.Transform.IsEqualApprox(idle),weapon+" puppet applies shared anticipation pose");
+        await Until(()=>Heard(prefix+"_swing")==swing+1,weapon+" puppet timeline plays swing cue");
+        Check(Heard(prefix+"_hit")==hit,weapon+" timeline alone does not invent contact");
+        _host.Net.OnHunterMeleeImpact(host,host.GlobalPosition+Vector3.Back+Vector3.Up*.8f);
+        await Until(()=>Heard(prefix+"_hit")==hit+1,weapon+" simulated confirmed-contact event plays one impact cue");
+        await Until(()=>!remote.IsMeleeAttacking,weapon+" puppet finishes recovery");
+        Check(Heard(readyId)==ready+1&&Heard(prefix+"_swing")==swing+1&&Heard(prefix+"_hit")==hit+1,
+            weapon+" recovery does not repeat ready swing or impact");
+
+        _host.Net.OnEnemyAttack(host,NetAttack.Melee,null,host.GlobalPosition+Vector3.Back);
+        await Until(()=>remote.IsMeleeAttacking,weapon+" second simulated start reaches puppet");
+        Check(AttachedSoundPlaying(remote),weapon+" cancellation starts with a live attached ready emitter");
+        _host.Net.OnEnemyAttackEnd(host);
+        await Until(()=>!remote.IsMeleeAttacking,weapon+" server end cancels puppet attack");
+        Check(!AttachedSoundPlaying(remote),weapon+" cancellation stops attached ready emitter");
+        Check(remote.Rig.Weapon.Transform.IsEqualApprox(idle),weapon+" cancellation restores idle weapon immediately");
+        await Frames(DurationFrames(host.Monster.MeleeWindup+Enemy.MeleeRecovery));
+        Check(Heard(prefix+"_swing")==swing+1&&Heard(prefix+"_hit")==hit+1,
+            weapon+" cancelled timeline never produces a later swing or hit");
+    }
+
+    private async Task HunterBowEvents(RangedEnemy host)
+    {
+        var remote=(RangedEnemy)_client.AllEnemies.Single(e=>e.NetId==host.NetId);
+        host.GlobalPosition=new Vector3(-4,.05f,-10);
+        host.Rig.Face(_host.Player.GlobalPosition-host.GlobalPosition);
+        await Frames(20);
+        var arrow=(Node3D)remote.Rig.Weapon.FindChild("BowNockedArrow",true,false);
+        var nock=(Node3D)remote.Rig.Weapon.FindChild("BowNock",true,false);
+        int draw=Heard("hunter_bow_draw"),release=Heard("hunter_bow_release");
+        host.StartWindup(_host.Player);
+        await Until(()=>remote.WindingUp,"actual host bow windup reaches puppet over ENet");
+        Check(Heard("hunter_bow_draw")==draw+1,"puppet bow draws with one dedicated cue");
+        await Frames(DurationFrames(host.Monster.Ranged!.Windup+.10f));
+        Check(arrow.Visible&&nock.Position.Z<-.30f,"puppet keeps arrow nocked and string drawn while host timeline is frozen");
+        Check(Heard("hunter_bow_release")==release&&host.ProjectilesFired==0,"puppet timer alone cannot release a projectile or sound");
+
+        // Resume real authoritative AI: the projectile and following end event use production order.
+        host.SetPhysicsProcess(true);
+        await Until(()=>host.ProjectilesFired==1,"actual host bow fires its projectile");
+        host.SetPhysicsProcess(false);
+        await Until(()=>!arrow.Visible,"actual projectile event hides puppet nocked arrow");
+        Check(Heard("hunter_bow_release")==release+1,"actual projectile event plays exactly one puppet release cue");
+        Check(!remote.WindingUp&&!AttachedSoundPlaying(remote),"projectile/end ordering clears telegraph and draw emitter");
+        await Frames(3);Check(!arrow.Visible,"following attack-end event preserves visible release recovery");
+        await Until(()=>arrow.Visible,"puppet bow renocks after release recovery");
+        Check(nock.Position.IsEqualApprox(new Vector3(0,0,.08f)),"recovered puppet string returns to idle");
+
+        host.StartWindup(_host.Player);
+        await Until(()=>remote.WindingUp,"second actual host bow windup reaches puppet");
+        Check(AttachedSoundPlaying(remote),"bow cancellation starts with a live draw emitter");
+        host.Stun(2);
+        await Until(()=>!remote.WindingUp,"actual host stun sends bow cancellation over ENet");
+        Check(!AttachedSoundPlaying(remote)&&arrow.Visible&&nock.Position.IsEqualApprox(new Vector3(0,0,.08f)),
+            "bow cancellation stops draw emitter and immediately restores nocked idle pose");
+        await Frames(DurationFrames(host.Monster.Ranged.Windup+RangedEnemy.HunterBowRecovery));
+        Check(Heard("hunter_bow_release")==release+1&&host.ProjectilesFired==1,"cancelled network bow never invents another release");
+    }
+
     private void Compare(Enemy host)
     {
         var remote=_client.AllEnemies.Single(e=>e.NetId==host.NetId);
