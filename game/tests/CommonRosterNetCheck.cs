@@ -46,6 +46,7 @@ public partial class CommonRosterNetCheck : Node
             new CommonIdentity("hunter","eagle","red","woodbow",2),
             new CommonIdentity("armed","rhino","green","mp5",5,CommonGear.Vest),
             new CommonIdentity("armed","tiger","ochre","ak47",6),
+            new CommonIdentity("hunter","lion","ochre","club",9),
         };
         for(int i=0;i<before.Length;i++) { var e=_host.SpawnCommonIdentity(before[i],new Vector3(i*3,0,4),false);e.SetPhysicsProcess(false); }
         var named=_host.Spawn(MonsterDatabase.Get("armed_veteran"),new Vector3(0,0,10),false);named.SetPhysicsProcess(false);
@@ -166,6 +167,15 @@ public partial class CommonRosterNetCheck : Node
         Check(remote.GetType()==host.GetType()&&remote.Definition.Id==host.Definition.Id,"AI and actual model match #"+host.NetId);
         Check(remote.Monster.Hp==host.Monster.Hp&&remote.Monster.MoveSpeed==host.Monster.MoveSpeed&&remote.Monster.AttackDamage==host.Monster.AttackDamage,"composed combat matches #"+host.NetId);
         if(host.Monster.CommonIdentity is not { } id)return;
+        foreach (string brow in new[] { "common_brow_left", "common_brow_right" })
+        {
+            var a = host.Rig.Head?.GetNodeOrNull<MeshInstance3D>(brow);
+            var b = remote.Rig.Head?.GetNodeOrNull<MeshInstance3D>(brow);
+            bool supported = id.Species is "parrot" or "eagle" or "lion";
+            Check(supported ? a != null && b != null && a.Transform.IsEqualApprox(b.Transform)
+                && a.Mesh.GetFaces().SequenceEqual(b.Mesh.GetFaces()) : a == null && b == null,
+                "birth eyebrow geometry and transform match " + id.Species + " " + brow);
+        }
         foreach(var module in new[]{"Gear_Vest","Gear_Glasses","Outfit_Shirt","Gear_Eyepatch"})
         {
             var a=host.Rig.Model.FindChild(module,true,false) as Node3D;

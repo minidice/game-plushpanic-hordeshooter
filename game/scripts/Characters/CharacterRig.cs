@@ -199,9 +199,11 @@ public partial class CharacterRig : Node3D
         Head.Transform = _headHome;
         if (Head.GetParent() is Node3D parent)
         {
-            var local = parent.GlobalTransform.Basis.Inverse() * _headOffset;
+            // Scale presentation only; the spring state and other species' default response stay unchanged.
+            var displayedOffset = _headOffset * Mathf.Clamp(Definition.HeadSpringScale, 0, 1);
+            var local = parent.GlobalTransform.Basis.Inverse() * displayedOffset;
             Head.Position += local;
-            var tilt = GlobalTransform.Basis.Inverse() * _headOffset;
+            var tilt = GlobalTransform.Basis.Inverse() * displayedOffset;
             Head.Rotation += new Vector3(tilt.Z * 1.6f * _forwardSign, 0, -tilt.X * 1.6f * _forwardSign);
         }
     }

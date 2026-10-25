@@ -23,4 +23,5 @@ ColliderRadius = 0.43
 ColliderHeight = 1.8
 StepRate = 13.0
 WaddleDegrees = 6.0
+HeadSpringScale = 0.05
 StuffingColor = Color(0.87, 0.83, 0.67, 1)

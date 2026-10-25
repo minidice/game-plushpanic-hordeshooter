@@ -33,6 +33,7 @@ async function previewSound(sound){
 function error(e){$('error').textContent=e.message;$('error').hidden=false;$('status').textContent='요청에 실패했습니다. 목록 다시 연결 또는 로컬 데이터 다시 읽기로 복구하세요.';}
 const entries=value=>Array.isArray(value)?value:Object.values(value||{});
 const rawEntry=(key,id)=>entries(catalog.raw[key]).find(v=>v.id===id);
+const browPreset=(species,variant)=>entries(catalog.brows?.species).some(v=>v.id===species)?catalog.brows.presets[variant]:undefined;
 const name=(key,id)=>rawEntry(key,id)?.name||(key==='palettes'?paletteNames[id]:null)||id;
 function options(id,values,label){const previous=$(id).value;$(id).replaceChildren(...[...new Set(values)].map(value=>new Option(label(value),value)));if(values.includes(previous))$(id).value=previous;}
 function selection(){return {faction:$('faction').value,species:$('species').value,palette:$('palette').value,weapon:$('weapon').value,variant:Number($('variant').value),gear:($('vest').checked?1:0),mode:$('mode').value,pack:$('mode').value==='pack'?$('pack').value:'',rotation:Number($('rotation').value),zoom:Number($('zoom').value)};}
@@ -53,7 +54,8 @@ function constrain(){
   if(profile)$('weapon').value=profile.weapons[0];
   options('variant',Array.from({length:10},(_,i)=>String(i)),id=>{
     const preset=entries(catalog.raw.presets)[Number(id)];
-    return faction==='zombie'?`${Number(id)+1}. ${preset?.name||presetNames[preset?.id]||preset?.id||'프리셋'}`:`${Number(id)+1}. 테마 안의 개체 차이`;
+    const brow=browPreset(species,Number(id));
+    return faction==='zombie'?`${Number(id)+1}. ${preset?.name||presetNames[preset?.id]||preset?.id||'프리셋'}`:`${Number(id)+1}. ${brow?brow.label+' 눈썹':'테마 안의 개체 차이'}`;
   });
   $('gear-row').hidden=faction!=='armed';
   if(faction!=='armed'){$('vest').checked=false;}
@@ -68,7 +70,7 @@ function changed(){
   generation++;clearClip();constrain();
   $('rotation-value').textContent=$('rotation').value+'°';$('zoom-value').textContent=Number($('zoom').value).toFixed(2)+'×';
   const chosen=selection();
-  $('data').textContent=JSON.stringify({selection:chosen,source:catalog.source,runtime_sources:catalog.runtime_sources,species:rawEntry('species',chosen.species),palette:rawEntry('palettes',chosen.palette),weapon:rawEntry('weapons',chosen.weapon),preset:chosen.faction==='zombie'?entries(catalog.raw.presets)[chosen.variant]:undefined},null,2);
+  $('data').textContent=JSON.stringify({selection:chosen,source:catalog.source,runtime_sources:catalog.runtime_sources,species:rawEntry('species',chosen.species),palette:rawEntry('palettes',chosen.palette),weapon:rawEntry('weapons',chosen.weapon),preset:chosen.faction==='zombie'?entries(catalog.raw.presets)[chosen.variant]:undefined,brows:browPreset(chosen.species,chosen.variant),brow_source:browPreset(chosen.species,chosen.variant)?catalog.brow_source:undefined},null,2);
   if(rendered)$('status').textContent='설정이 변경되었습니다. 아래 수치·이미지는 직전 렌더 결과입니다. 조합 렌더를 누르세요.';
 }
 function showResult(result,chosen){
@@ -93,7 +95,7 @@ function showResult(result,chosen){
   $('members').replaceChildren();
   for(const [i,member] of result.members.entries()){
     const details=document.createElement('details'),summary=document.createElement('summary'),code=document.createElement('code');
-    summary.textContent=`${i+1}. ${weaponNames[member.identity.weapon]} · 외형 ${member.identity.variant+1} · ${member.runtime_type} · 활성 메시 ${member.visible_modules.length}`;
+    summary.textContent=`${i+1}. ${weaponNames[member.identity.weapon]} · 외형 ${member.identity.variant+1}${member.brows?' · '+member.brows.preset.label+' 눈썹':''} · ${member.runtime_type} · 활성 메시 ${member.visible_modules.length}`;
     code.textContent=JSON.stringify(member,null,2);details.append(summary,code);$('members').append(details);
   }
   $('status').textContent='렌더 완료 · 실제 초기화 수치와 활성 모듈을 확인하세요.';
@@ -113,7 +115,7 @@ async function load(reload=false){
     if(!loaded.combinations.length)throw new Error('사용 가능한 공통 몬스터 조합이 없습니다.');
     catalog=loaded;rendered=false;
     $('pack').replaceChildren(new Option('직접 조합 · 무장단 MP5 4 + AK47 6',''),...catalog.raw.packs.map(p=>new Option(`${factionNames[p.faction]} · ${speciesNames[p.species]} · ${paletteNames[p.palette]} (${p.id})`,p.id)));
-    changed();$('catalog').textContent=JSON.stringify(catalog.raw,null,2);
+    changed();$('catalog').textContent=JSON.stringify({roster:catalog.raw,brows:catalog.brows,brow_source:catalog.brow_source},null,2);
     $('preview').hidden=true;$('preview').removeAttribute('src');$('placeholder').hidden=false;$('stats').replaceChildren();$('members').replaceChildren();
     $('status').textContent=catalog.note;
   }catch(e){catalog=null;error(e);}finally{lock(false);if(catalog)constrain();}

@@ -32,6 +32,7 @@
 - [x] 사자 갈기·얼굴·몸통/조끼 개선과 원본 앞발 보존, Blender/Studio/실제 Stage2 검수. [상세](lion-quality.md).
 - [x] 사자 손 고정 비율/전완 분리, 평평한 발과 허벅지·발목 연결. 실제 Stage2 자동 추격·정지·수렵3전투/렌더38검사, Studio6무기 확인. [후속 검증·한계](lion-limbs.md).
 - [ ] 나머지 종 외형 확대 및 전체 아트 최종 수락. 추가 조류/종족은 별도 모델 필요. 눈 장구류 재도입은 현재 보류.
+- [x] 2026-10-25 방향 정정 첫 적용: [앵무새 매끈한 데포르메](parrot-clean-forms.md) 모델/Studio/Stage2 검수와 머리 흔들림 보정. 다른 종 확대·사용자 최종 아트 수락은 후속이다.
 - [ ] 실제 2PC·6인·저사양·장시간 전투/최악 부하·완성 패키지 export. localhost 검사와 정지60마리 표본으로 대체하지 않음.
 - [ ] 동적 LOD: 실제 전투 성능 측정으로 필요성을 판단. 현재 별도 감량 모델 없음.
 - [ ] Studio 조합 저장/편집과 실제 전투 미리보기. 수렵3무기의 시각 포즈 재생과 수동 소리 미리듣기는 제공하며, 피해/투사체 시뮬레이션은 미구현.
@@ -91,3 +92,11 @@
 - 이번 종료 ObjectDB 경고: CommonRoster16, ENet3, 가속 Integration 실패20, 정상 Integration4. EnemyAttack과 창 Field에는 종료 경고 없음. I-17 유지.
 - 이번 커밋 단계에서 기존 Play16·EnemyExpansion60·실제2PC/저사양/장시간·완성 패키지 export는 재실행하지 않았다. 앞선 작업의 검수 범위와 후속 미완료 체크리스트는 유지한다.
 - 재현 로그 `game/output/commit-followup-*.log`, `studio/output/commit-followup-*.log`. 통합의 정상 재실행은 `commit-followup-Integration-normal.log`. JS 문법·diff 공백 검사 통과.
+
+## 새 아트 기준 독수리 후속 — 2026-10-25
+
+얇은 목깃/날개·발톱·구조적인 조끼로 교체하고 기존 머리 움직임을 유지했다. 실제Stage2 자동 이동·전투38검사와 Studio/Blender 검수 완료. 이번 후속은 아직 커밋·통합하지 않았다. [현재 결과·한계](eagle-clean-forms.md).
+
+## 새 아트 기준 사자 후속 — 2026-10-25
+
+흐르는 갈기·작은 눈·연결된 밝은 주둥이·작은 손/좁은 평면 발·구조적인 조끼로 교체했다. 고정 비율 손/전완 연결과 접지·기존 머리 움직임을 유지했다. 최종 실제Stage2 자동 이동·전투38검사와 Studio3배색/Blender 검수 완료. 이번 후속은 아직 커밋·통합하지 않았다. [현재 결과·한계](lion-clean-forms.md).

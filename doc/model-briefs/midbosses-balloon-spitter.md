@@ -1,5 +1,7 @@
 # 모델 지시문: 난전 중간 보스 "풍선 대왕" (`boss_balloon_king`) · "토사물 어미" (`boss_spitter_mother`)
 
+> 2026-10-25 아트 기준 정정: 이 브리프의 봉제 인형 표현은 과거 제작 이력이다. 재제작 시 [현재 캐릭터 아트 기준](../character-art-direction.md)을 우선하며 몸의 천 결·스티치·솜 같은 부피를 새 목표로 사용하지 않는다. 기존 보스/네임드 모델과 능력은 이번에 변경하지 않았다.
+
 > **상태**: 2026-10-21 작성. Codex CLI(`codex exec`)에 맡기는 세 번째 몬스터 모델 작업(decisions.md A-17, 앞선 작업은 [boss.md](boss.md) · [named-bull-balloon.md](named-bull-balloon.md)). 한 번의 Codex 실행에서 두 모델을 **차례로** 만든다.
 > **왜**: 난전 중간 보스(decisions.md M-27 · Q-24)는 지금 네임드 모델(풍선 `balloon.glb`, 토사물 감염체 `spitter.glb`)을 2.6배 · 2.2배로 키운 임시 외형이라 "보스"로 읽히지 않는다. 거대 황소(`boss_bull_giant`)는 네임드 황소를 키운 그대로 둔다.
 > **검토자**: Claude가 결과를 게임에 붙이고 실제 렌더 · 검사로 확인한다. Codex는 모델 생성 코드와 원본 GLB까지만 만든다.

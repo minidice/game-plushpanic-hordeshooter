@@ -1,0 +1,169 @@
+{
+  "version": 1,
+  "presets": [
+    {
+      "id": "calm",
+      "label": "차분함",
+      "shape": "tapered",
+      "width": 0.098,
+      "thickness": 0.016,
+      "angle": 0,
+      "left_height": 0,
+      "right_height": 0,
+      "left_angle": 0,
+      "right_angle": 0
+    },
+    {
+      "id": "focused",
+      "label": "집중",
+      "shape": "straight",
+      "width": 0.105,
+      "thickness": 0.017,
+      "angle": 9,
+      "left_height": 0,
+      "right_height": 0,
+      "left_angle": 0,
+      "right_angle": 0
+    },
+    {
+      "id": "curious",
+      "label": "호기심",
+      "shape": "arched",
+      "width": 0.086,
+      "thickness": 0.014,
+      "angle": -5,
+      "left_height": 0.004,
+      "right_height": 0,
+      "left_angle": -3,
+      "right_angle": 0
+    },
+    {
+      "id": "stern",
+      "label": "엄격함",
+      "shape": "tapered",
+      "width": 0.112,
+      "thickness": 0.022,
+      "angle": 14,
+      "left_height": 0,
+      "right_height": 0,
+      "left_angle": 0,
+      "right_angle": 0
+    },
+    {
+      "id": "gentle",
+      "label": "부드러움",
+      "shape": "arched",
+      "width": 0.098,
+      "thickness": 0.013,
+      "angle": -9,
+      "left_height": 0,
+      "right_height": 0,
+      "left_angle": 0,
+      "right_angle": 0
+    },
+    {
+      "id": "doubtful",
+      "label": "의심",
+      "shape": "tapered",
+      "width": 0.092,
+      "thickness": 0.016,
+      "angle": 1,
+      "left_height": 0.01,
+      "right_height": -0.003,
+      "left_angle": -10,
+      "right_angle": 4
+    },
+    {
+      "id": "alert",
+      "label": "경계",
+      "shape": "arched",
+      "width": 0.1,
+      "thickness": 0.018,
+      "angle": 5,
+      "left_height": 0.002,
+      "right_height": 0.002,
+      "left_angle": 0,
+      "right_angle": 0
+    },
+    {
+      "id": "resolute",
+      "label": "단호함",
+      "shape": "straight",
+      "width": 0.077,
+      "thickness": 0.022,
+      "angle": 8,
+      "left_height": -0.002,
+      "right_height": 0,
+      "left_angle": 0,
+      "right_angle": 2
+    },
+    {
+      "id": "relaxed",
+      "label": "느긋함",
+      "shape": "tapered",
+      "width": 0.11,
+      "thickness": 0.014,
+      "angle": -8,
+      "left_height": 0,
+      "right_height": 0.002,
+      "left_angle": 0,
+      "right_angle": -2
+    },
+    {
+      "id": "wry",
+      "label": "익살",
+      "shape": "arched",
+      "width": 0.088,
+      "thickness": 0.016,
+      "angle": 0,
+      "left_height": -0.002,
+      "right_height": 0.011,
+      "left_angle": 5,
+      "right_angle": -9
+    }
+  ],
+  "species": [
+    {
+      "id": "parrot",
+      "left": [
+        -0.223,
+        0.45,
+        0.237
+      ],
+      "right": [
+        0.223,
+        0.45,
+        0.237
+      ],
+      "yaw": 38
+    },
+    {
+      "id": "eagle",
+      "left": [
+        -0.225,
+        0.424,
+        0.276
+      ],
+      "right": [
+        0.225,
+        0.424,
+        0.276
+      ],
+      "yaw": 34
+    },
+    {
+      "id": "lion",
+      "left": [
+        -0.185,
+        0.43,
+        0.314
+      ],
+      "right": [
+        0.185,
+        0.43,
+        0.314
+      ],
+      "yaw": 22
+    }
+  ]
+}

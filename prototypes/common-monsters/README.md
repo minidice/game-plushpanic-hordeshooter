@@ -1,5 +1,7 @@
 # Common monster source and verification
 
+Current art target (2026-10-25): [clean stylized animals with grounded equipment](../../doc/character-art-direction.md). Do not use plush/stuffed-toy styling as the character brief. Parrot is the first revised asset; padded shapes in other species still describe earlier iterations.
+
 2026-10-25. This is the reproducible Blender source for the six animal species and the
 refined existing human infected. The original humanoid GLB is imported read-only: its
 asymmetric face, teeth, ears and arm geometry remain the visual identity. Its former
@@ -105,9 +107,11 @@ this species; `audit-parrot.json` is separate from the complete `audit.json`. An
 selection of all seven species uses the complete audit name in both commands. Other
 GLBs are hash-checked and not rewritten by a selective build.
 
-Parrot now has a shaped torso/neck, flush belly surface, smaller eye surround/highlight,
-no separate cheek blobs, a swept crest/tail, tapered feather wings and fitted vest.
-Base 6,040 triangles; with vest 6,900. Existing pivot/material/resource contracts remain.
+Parrot now has a continuous head/torso profile, a closed torso without a belly panel,
+small dark eyes without rings/glint beads, pointed crest/wings and thin planar bird feet.
+The fitted vest has beveled rectangular pouches. Base 5,436 triangles; with vest 6,684.
+Existing pivots/palette contracts remain. The parrot resource emits `HeadSpringScale = 0.05`
+to avoid exposing the rigid neck joint during the shared head spring animation.
 Equipped parrots use `CharacterAuthoredWing` to preserve the original wing mesh and
 palette surfaces. Eagles use the same path; lions use separate rigid paws and forearms (see below). Other common species still use compact procedural grip arms;
 player authored surface deformation is unchanged.
@@ -117,25 +121,34 @@ player authored surface deformation is unchanged.
 light, silhouette/neutral/color/vest/gameplay-scale views. `parrot_contact_sheet.py`
 assembles the local comparison. [Baseline recovery, results and limitations](../../doc/parrot-quality.md).
 
+Use `--review-name parrot-clean-forms` for the current iteration's separate baseline and views.
+Run `ParrotMotionCheck` for acceleration/hit head response and `ParrotGripCheck` for six weapon grips.
+[Current model and motion evidence](../../doc/parrot-clean-forms.md). Repeated GLB exports can differ in
+UV float rounding/inactive triangle order; compare geometry semantics as well as file hashes.
+
 ## Eagle quality follow-up (2026-10-25)
 
-Build/validate with `-- --species eagle`; the eagle has a shaped head/neck/body, compact eyes,
-gold hooked beak, padded collar, broad layered wings and fitted vest. Base 5,220 triangles;
-with vest 5,940. Other six GLBs are unchanged. `review_parrot.py` also accepts
+Build/validate with `-- --species eagle`; the current eagle has clean body/neck forms, small dark low-set eyes,
+gold hooked beak, thin overlapping neck feathers, tapered flight vanes, planar taloned feet and structured vest. Base 7,148 triangles;
+with vest 8,572. Other six GLBs are unchanged from this revision's baseline. `review_parrot.py` also accepts
 `-- --species eagle` (capture baseline before building), and `parrot_contact_sheet.py --species eagle`
 assembles its before/after views. Omitting species retains the parrot QA path.
 Game `ParrotGripCheck -- --eagle` checks the same authored-wing contract; actual terrain review
-uses `HunterCombatCheck -- --eagle-stage2`. [Results and limitations](../../doc/eagle-quality.md).
+uses `HunterCombatCheck -- --eagle-stage2`, now including approach/walk frames. Use `--review-name eagle-clean-forms`
+for the new comparison evidence. The existing head spring remains at scale1 after actual offset/tilt stress review.
+[Current results and limitations](../../doc/eagle-clean-forms.md), [historical results](../../doc/eagle-quality.md).
 
 ## Lion quality follow-up (2026-10-25)
 
-Build/validate with `-- --species lion`. Lion uses a continuous padded mane, compact face,
-stout torso and fitted vest. The limb follow-up separates compact rigid paws from the forearms,
+Build/validate with `-- --species lion`. The current lion uses a swept tapered mane, small dark eyes,
+unified fixed-cream muzzle, clean torso and structured vest. Secondary palette color now belongs to the tail tuft, not a palm patch.
+The limb follow-up separates compact rigid paws from the forearms,
 adds authored Wrist/Grip anchors, planar soles and tapered thighs/ankles.
-Current base 7,414 triangles; vest included8,134. `CharacterLionPaw` preserves paw proportions
+Current base6,464 triangles; vest included7,648. `CharacterLionPaw` preserves paw proportions
 while connecting the forearm shoulder to wrist. No new finger skeleton or terrain foot IK.
 Both QA scripts accept species lion, retaining default parrot behavior and eagle support.
 Run `LionLimbCheck` (also routed from `ParrotGripCheck -- --lion`) and `HunterCombatCheck -- --lion-stage2` for runtime checks.
 Studio attack QA accepts `STUDIO_SPECIES=lion`; default remains eagle and output folders are distinct.
-Other six current GLBs remain unchanged. Review scripts accept `--review-name lion-limbs` to preserve separate baseline evidence.
-[Initial quality history](../../doc/lion-quality.md), [current limb results and limitations](../../doc/lion-limbs.md).
+Other six current GLBs remain unchanged. Review scripts accept `--review-name lion-clean-forms` for current style evidence,
+preserving historical lion-limbs images. Existing head spring scale1 is retained after actual tilt/offset review.
+[Current style and validation](../../doc/lion-clean-forms.md), [limb contract history](../../doc/lion-limbs.md).

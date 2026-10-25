@@ -1,11 +1,15 @@
 # 캐릭터 모델 규격 — 추가·교체 가이드
 
+> 현재 아트 목표(2026-10-25): [매끈한 데포르메 동물과 입체적인 장비](character-art-direction.md). 몸의 봉제선·솜/패딩·구슬 부품을 공통 스타일로 권하지 않는다. 기존 모델 구현과 앞으로의 스타일 보정은 구분한다.
+
 > **대상**: 사람과 AI 에이전트 모두. 새 종(Q-1 결정 후보)이나 적 모델을 게임에 넣을 때 이 문서만 보고 작업할 수 있게 쓴 규격입니다.
 > **구현**: `game/scripts/Characters/` — `CharacterDefinition.cs`, `CharacterRig.cs`, `PlaceholderModel.cs`, `CharacterCatalog.cs`
 
 외형 기획은 [플레이어 동물 가이드](player-species-guide.md)와 [몬스터 가이드](monster-design-guide.md)로 분리한다. 새 종·적을 추가할 때 각 문서의 특징표와 추가 양식을 먼저 작성하고, 이 문서의 기술 계약으로 연결한다. `.tres` 등록만으로 목록에 추가할 수 있으나 새 종의 커스텀 팔레트·얼굴 무늬·귀·꼬리 지원에는 별도 코드 점검이 필요하다.
 
 ## 핵심 원칙
+
+2026-10-25 앵무새 연속형 목 후속: `CharacterDefinition.HeadSpringScale`은 머리 스프링의 **표시 진폭**(0~1, 기본1)이다. `common_parrot.tres`만0.05로 지정하며 실제 스프링 계산/전투는 유지한다. 생성 도구도 이 값을 보존한다. [근거·재현](parrot-clean-forms.md).
 
 게임 코드는 모델 파일을 **직접 참조하지 않습니다.** 캐릭터 하나 = 정의 파일(`.tres`) 하나이고, 정의 파일이 어떤 모델을 쓸지 가리킵니다.
 

@@ -47,6 +47,7 @@ public sealed partial class CommonRoster
                 mesh.SetSurfaceOverrideMaterial(surface, copy);
             }
         }
+        CommonBrowCatalog.Current.Apply(rig, id);
         rig.HideBuiltInWeapon();
         if (id.Weapon == "unarmed") return;
         var built = CommonWeaponVisual.Build(Weapons[id.Weapon], rig.Definition.HandColor);

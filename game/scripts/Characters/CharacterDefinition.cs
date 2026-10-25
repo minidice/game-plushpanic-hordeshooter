@@ -78,6 +78,8 @@ public partial class CharacterDefinition : Resource
     [ExportGroup("Motion")]
     [Export] public float StepRate { get; set; } = 13f;
     [Export] public float WaddleDegrees { get; set; } = 7f;
+    /// <summary>Visual head spring amplitude; continuous neck models can keep the joint nearly fixed.</summary>
+    [Export(PropertyHint.Range, "0,1,0.01")] public float HeadSpringScale { get; set; } = 1f;
     /// <summary>Color of the stuffing that bursts out on hits ("cute gore").</summary>
     [Export] public Color StuffingColor { get; set; } = new("fff4e0");
 

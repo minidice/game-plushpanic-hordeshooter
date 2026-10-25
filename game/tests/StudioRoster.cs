@@ -26,9 +26,11 @@ public partial class StudioPreview
             combinations.Add(new { faction, species, weapon, palette });
         }
         return new {
-        raw = ReadJson(RosterSource), errors = catalog.Errors.ToArray(), combinations,
+        raw = ReadJson(RosterSource), brows = ReadJson(CommonBrowCatalog.DataPath),
+        brow_source = CommonBrowCatalog.DataPath,
+        errors = catalog.Errors.Concat(CommonBrowCatalog.Current.Errors).ToArray(), combinations,
         source = RosterSource, loadedAt = DateTimeOffset.Now.ToString("O"),
-        runtime_sources = new[] { "res://scripts/Enemies/CommonRoster.cs", "res://scripts/Enemies/CommonAppearance.cs", "res://scripts/Enemies/Enemy.cs", "res://scripts/Enemies/RangedEnemy.cs" },
+        runtime_sources = new[] { "res://scripts/Enemies/CommonRoster.cs", "res://scripts/Enemies/CommonAppearance.cs", "res://scripts/Enemies/CommonBrowCatalog.cs", "res://scripts/Enemies/Enemy.cs", "res://scripts/Enemies/RangedEnemy.cs" },
         note = "현재 로컬 공통 카탈로그 · 초기 조정 수치 · 모드/인원 배율 적용 전. 외형은 전투 수치를 바꾸지 않습니다."
         };
     }
@@ -41,7 +43,8 @@ public partial class StudioPreview
     private async Task<object> RenderRoster(JsonElement data)
     {
         var catalog = CommonRoster.Current;
-        if (catalog.Errors.Count > 0) throw new ArgumentException("공통 카탈로그 오류: " + string.Join("; ", catalog.Errors));
+        var errors = catalog.Errors.Concat(CommonBrowCatalog.Current.Errors).ToArray();
+        if (errors.Length > 0) throw new ArgumentException("공통 카탈로그 오류: " + string.Join("; ", errors));
         var identity = new CommonIdentity(data.GetProperty("faction").GetString()!, data.GetProperty("species").GetString()!,
             data.GetProperty("palette").GetString()!, data.GetProperty("weapon").GetString()!,
             data.GetProperty("variant").GetInt32(), (CommonGear)data.GetProperty("gear").GetInt32());
@@ -81,6 +84,8 @@ public partial class StudioPreview
                 var monster = enemy.Monster;
                 members.Add(new {
                     identity = RosterIdentity(identities[i]), runtime_type = enemy.GetType().Name,
+                    brows = JsonSerializer.SerializeToElement(CommonBrowCatalog.Current.Resolve(identities[i]),
+                        new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower }),
                     stats = new { hp = enemy.Health, move_speed = enemy.Speed, mass = monster.Mass,
                         attack_damage = monster.AttackDamage, attack_interval = monster.AttackInterval,
                         attack_reach = monster.AttackReach, attack_windup = monster.MeleeWindup, turn_rate = monster.TurnRate,

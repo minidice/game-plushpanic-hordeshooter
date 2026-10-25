@@ -50,24 +50,49 @@ public partial class HunterCombatCheck : Node
             _stage=new Stage{MapOverride=Stage2Review?new LayoutMap():new Field(),CharacterOverride="goose",ThemeOverride="animals",DirectorEnabled=false,
                 ModeOverride=GameMode.Scenario,SquadOverride=0,ArrivalOverride=false,NextStageOverride=false};
             AddChild(_stage);await Frames(4);_stage.Player.ManualControl=true;
-            if (LionReview) await LionApproach();
+            if (Stage2Review) await ReviewApproach();
+            if (Stage2Review && OS.GetCmdlineUserArgs().Contains("--brow-review")) await ReviewBrows();
             foreach(string weapon in new[]{"club","knife"}) await Melee(weapon);
             await Bow();GD.Print("HUNTER_COMBAT_PASS "+_checks);
         }
         catch(Exception e){GD.PushError("HUNTER_COMBAT_FAIL "+e);exit=1;}
         _stage?.QueueFree();await Frames(3);QuitHygiene.Collect();GetTree().Quit(exit);
     }
-    private async Task LionApproach()
+    private async Task ReviewApproach()
     {
         var enemy=await Spawn("club");
         _stage.Player.TeleportTo(TestPoint(9));
         _stage.Player.SetControls(Vector2.Zero,enemy.GlobalPosition+Vector3.Up,false);
         float before=enemy.GlobalPosition.DistanceTo(_stage.Player.GlobalPosition);
         await Frames(36);
-        Check(enemy.GlobalPosition.DistanceTo(_stage.Player.GlobalPosition)<before-1,"lion approaches through actual Stage2 physics");
+        Check(enemy.GlobalPosition.DistanceTo(_stage.Player.GlobalPosition)<before-1,ReviewSpecies+" approaches through actual Stage2 physics");
         await Shot("walk");
         enemy.SetPhysicsProcess(false);enemy.Rig.ResetPose();
         await Frames(2);await Shot("stance");
+    }
+    private async Task ReviewBrows()
+    {
+        // Facial inspection in the actual map lighting. Close views deliberately use an inspection camera.
+        foreach (var e in _stage.AllEnemies.ToArray()) e.QueueFree();
+        await Frames(3);
+        var camera = _stage.Cam; var saved = camera.Transform;
+        camera.SetProcess(false);
+        try
+        {
+            foreach (int variant in new[] { 0, 3, 9 })
+            {
+                var enemy = _stage.SpawnCommonIdentity(new("hunter",ReviewSpecies,"ochre","club",variant),TestPoint(3),true);
+                enemy.SetPhysicsProcess(false);
+                var focus = enemy.GlobalPosition + Vector3.Up * 1.1f;
+                camera.Transform = saved;
+                enemy.Rig.Face(camera.GlobalPosition - enemy.GlobalPosition);
+                if (variant == 0) { await Frames(2); await Shot("brows-game-distance"); }
+                camera.GlobalPosition = focus + (camera.GlobalPosition-focus).Normalized()*5;
+                camera.LookAt(focus); await Frames(2); await Shot("brows-close-"+variant);
+                enemy.QueueFree(); await Frames(2);
+            }
+        }
+        finally { camera.Transform=saved; camera.SetProcess(true); }
     }
     private async Task Melee(string weapon)
     {
