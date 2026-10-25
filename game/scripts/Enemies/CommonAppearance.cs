@@ -17,7 +17,8 @@ public sealed partial class CommonRoster
         if (id.Faction != "zombie") rig.SetCommonHandColor(new Color(palette.Primary[id.Variant % palette.Primary.Length]));
         var enabled = id.Faction == "zombie" ? Presets[id.Variant].Modules.ToHashSet() : new HashSet<string>();
         if (id.Gear.HasFlag(CommonGear.Vest)) enabled.Add("Gear_Vest");
-        if (id.Gear.HasFlag(CommonGear.Glasses)) enabled.Add("Gear_Glasses");
+        // Eye accessories remain in source GLBs for now, but must never become visible.
+        enabled.Remove("Gear_Eyepatch");
         foreach (var node in rig.Model.FindChildren("*", nameof(Node3D), true, false).OfType<Node3D>())
         {
             string name = node.Name;

@@ -44,7 +44,7 @@ public partial class CommonRosterNetCheck : Node
         var before=new[] {
             new CommonIdentity("zombie","human","ochre","unarmed",9),
             new CommonIdentity("hunter","eagle","red","woodbow",2),
-            new CommonIdentity("armed","rhino","green","mp5",5,CommonGear.Vest|CommonGear.Glasses),
+            new CommonIdentity("armed","rhino","green","mp5",5,CommonGear.Vest),
             new CommonIdentity("armed","tiger","ochre","ak47",6),
         };
         for(int i=0;i<before.Length;i++) { var e=_host.SpawnCommonIdentity(before[i],new Vector3(i*3,0,4),false);e.SetPhysicsProcess(false); }
@@ -58,7 +58,7 @@ public partial class CommonRosterNetCheck : Node
         await Until(()=>_client.Net!.Started&&_client.AllEnemies.Count()==before.Length+1,"late join receives all birth identities");
         Check(_host.GetWorld3D().Space!=_client.GetWorld3D().Space,"separate physical worlds");
         foreach(var hostEnemy in _host.AllEnemies) Compare(hostEnemy);
-        var after=new CommonIdentity("armed","reindeer","red","m4",7,CommonGear.Glasses);
+        var after=new CommonIdentity("armed","reindeer","red","m4",7,CommonGear.None);
         var live=_host.SpawnCommonIdentity(after,new Vector3(12,0,7),false);live.SetPhysicsProcess(false);
         await Until(()=>_client.AllEnemies.Any(e=>e.NetId==live.NetId),"live spawn arrives after welcome");Compare(live);
         var hunter=_host.SpawnCommonIdentity(new("hunter","parrot","green","knife",4),new Vector3(-3,0,6),false);hunter.SetPhysicsProcess(false);

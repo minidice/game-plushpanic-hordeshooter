@@ -36,6 +36,9 @@ public partial class CommonRosterCheck : Node
         Check(catalog.Errors.Count == 0, string.Join(";", catalog.Errors));
         Check(StageTheme.Commons("zombie").All(x => x == "humanoid"), "ordinary infected pool human-only");
         Check(catalog.Species.Count == 7 && catalog.Presets.Count == 10, "seven species and ten presets");
+        Check(catalog.Packs.Keys.SelectMany(p => catalog.CreatePack(p, 20)).All(i => !i.Gear.HasFlag(CommonGear.Glasses)), "no pack equips eyewear");
+        Check(catalog.Presets.All(p => !p.Modules.Contains("Gear_Eyepatch")), "no zombie preset equips an eyepatch");
+        Reject(() => catalog.Compose(new("armed", "eagle", "red", "mp5", 0, CommonGear.Glasses)), "disabled eyewear cannot be explicitly equipped");
         string text = FileAccess.GetFileAsString(CommonRoster.DataPath);
         void Bad(Action<JsonObject> alter)
         { var json = JsonNode.Parse(text)!.AsObject(); alter(json); Check(CommonRoster.FromText(json.ToJsonString()).Errors.Count > 0, "invalid catalog rejected"); }
@@ -112,6 +115,7 @@ public partial class CommonRosterCheck : Node
         {
             var identity = new CommonIdentity("zombie","human","ochre","unarmed",v);
             var rig=CharacterRig.Create(catalog.LookFor(identity)); catalog.Apply(rig,identity);
+            Check(rig.Model.FindChild("Gear_Eyepatch",true,false) is Node3D { Visible: false }, "zombie eyepatch stays hidden " + v);
             foreach (var module in catalog.Presets.SelectMany(p=>p.Modules).Distinct())
             {
                 var node=rig.Model.FindChild(module,true,false) as Node3D;

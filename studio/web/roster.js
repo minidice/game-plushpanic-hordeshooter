@@ -4,7 +4,7 @@ const factionNames={zombie:'감염무리',hunter:'수렵단',armed:'무장단'};
 const speciesNames={human:'인간 좀비',eagle:'독수리',parrot:'앵무새',lion:'사자',tiger:'호랑이',reindeer:'순록',rhino:'코뿔소'};
 const weaponNames={unarmed:'비무장',club:'몽둥이',knife:'칼',woodbow:'나무활',mp5:'MP5',ak47:'AK47',m4:'M4'};
 const paletteNames={red:'붉은 무리',green:'녹색 무리',ochre:'황토색 무리',slate:'청회색 무리'};
-const presetNames={jeans_shirt:'셔츠와 청바지',chinos_shirt:'셔츠와 면바지',bare_legs:'하의 없음',torn_pants:'찢어진 바지',overalls:'멜빵',suit:'양복',stained_jeans:'얼룩진 청바지 차림',striped_chinos:'줄무늬 셔츠와 면바지',torn_stained:'얼룩과 해진 바지',eyepatch_stripes:'드문 애꾸와 줄무늬'};
+const presetNames={jeans_shirt:'셔츠와 청바지',chinos_shirt:'셔츠와 면바지',bare_legs:'하의 없음',torn_pants:'찢어진 바지',overalls:'멜빵',suit:'양복',stained_jeans:'얼룩진 청바지 차림',striped_chinos:'줄무늬 셔츠와 면바지',torn_stained:'얼룩과 해진 바지',striped_jeans:'줄무늬 셔츠와 청바지'};
 async function api(url,data){
   const response=await fetch(url,data===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
   const result=await response.json();if(!response.ok)throw new Error(result.error||'요청 실패');return result;
@@ -15,7 +15,7 @@ const entries=value=>Array.isArray(value)?value:Object.values(value||{});
 const rawEntry=(key,id)=>entries(catalog.raw[key]).find(v=>v.id===id);
 const name=(key,id)=>rawEntry(key,id)?.name||(key==='palettes'?paletteNames[id]:null)||id;
 function options(id,values,label){const previous=$(id).value;$(id).replaceChildren(...[...new Set(values)].map(value=>new Option(label(value),value)));if(values.includes(previous))$(id).value=previous;}
-function selection(){return {faction:$('faction').value,species:$('species').value,palette:$('palette').value,weapon:$('weapon').value,variant:Number($('variant').value),gear:($('vest').checked?1:0)|($('glasses').checked?2:0),mode:$('mode').value,pack:$('mode').value==='pack'?$('pack').value:'',rotation:Number($('rotation').value),zoom:Number($('zoom').value)};}
+function selection(){return {faction:$('faction').value,species:$('species').value,palette:$('palette').value,weapon:$('weapon').value,variant:Number($('variant').value),gear:($('vest').checked?1:0),mode:$('mode').value,pack:$('mode').value==='pack'?$('pack').value:'',rotation:Number($('rotation').value),zoom:Number($('zoom').value)};}
 function constrain(){
   const combos=catalog.combinations;
   const profile=$('mode').value==='pack'&&$('pack').value?rawEntry('packs',$('pack').value):null;
@@ -34,12 +34,12 @@ function constrain(){
     return faction==='zombie'?`${Number(id)+1}. ${preset?.name||presetNames[preset?.id]||preset?.id||'프리셋'}`:`${Number(id)+1}. 테마 안의 개체 차이`;
   });
   $('gear-row').hidden=faction!=='armed';
-  if(faction!=='armed'){$('vest').checked=false;$('glasses').checked=false;}
+  if(faction!=='armed'){$('vest').checked=false;}
   const pack=$('mode').value==='pack';
   $('variant').disabled=pack;$('weapon').disabled=pack&&faction==='armed';$('pack').disabled=!pack;
   for(const key of ['faction','species','palette'])$(key).disabled=!!profile;
   if(profile)$('weapon').disabled=true;
-  $('vest').disabled=pack;$('glasses').disabled=pack;
+  $('vest').disabled=pack;
   $('pack-note').textContent=profile?`실제 조우 프로필: ${profile.id}\n무기 순서를 반복해 10마리 구성 · 장구류도 공통 생성기 배정`:pack?(faction==='armed'?'직접 조합 예시 · MP5 4마리 + AK47 6마리 · 외형 10종 · 장구류 공통 생성기 배정':'같은 종족·색 테마·선택 무기 · 외형 프리셋 1–10'):'선택한 외형 프리셋과 무기를 가진 개체 한 마리';
 }
 function changed(){
@@ -88,7 +88,7 @@ async function load(reload=false){
     $('status').textContent=catalog.note;
   }catch(e){catalog=null;error(e);}finally{lock(false);if(catalog)constrain();}
 }
-for(const id of ['faction','species','palette','weapon','variant','vest','glasses','mode'])$(id).addEventListener('change',changed);
+for(const id of ['faction','species','palette','weapon','variant','vest','mode'])$(id).addEventListener('change',changed);
 $('pack').addEventListener('change',changed);
 for(const id of ['rotation','zoom']){$(id).addEventListener('input',changed);$(id).addEventListener('change',render);}
 $('render').onclick=render;$('retry').onclick=()=>load();$('reload').onclick=()=>load(true);

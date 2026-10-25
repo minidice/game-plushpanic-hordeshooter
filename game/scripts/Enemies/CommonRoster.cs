@@ -7,6 +7,7 @@ using System.Text.Json.Serialization;
 
 namespace HordeShooter;
 
+// Glasses keeps its reserved wire value; new identities cannot equip it.
 [Flags] public enum CommonGear { None = 0, Vest = 1, Glasses = 2 }
 /// <summary>Value fixed at birth; never selected again by appearance, AI, snapshots or late join.</summary>
 public sealed record CommonIdentity(string Faction, string Species, string Palette, string Weapon, int Variant = 0, CommonGear Gear = CommonGear.None);
@@ -114,7 +115,7 @@ public sealed partial class CommonRoster
         if (!Species.ContainsKey(id.Species) || !Palettes.ContainsKey(id.Palette) || !Weapons.TryGetValue(id.Weapon, out var weapon)) throw new ArgumentException("unknown species/palette/weapon");
         if (!weapon.Factions.Contains(id.Faction) || (id.Faction == "zombie") != (id.Species == "human") || (id.Faction == "zombie" && id.Weapon != "unarmed")) throw new ArgumentException("impossible faction/species/weapon combination");
         if (id.Faction == "zombie" && id.Palette is not ("green" or "ochre")) throw new ArgumentException("zombie clothing palettes are brown/green only");
-        if (id.Variant is < 0 or > 9 || (id.Gear & ~(CommonGear.Vest | CommonGear.Glasses)) != 0 || (id.Faction != "armed" && id.Gear != CommonGear.None)) throw new ArgumentException("invalid variant or gear");
+        if (id.Variant is < 0 or > 9 || (id.Gear & ~CommonGear.Vest) != 0 || (id.Faction != "armed" && id.Gear != CommonGear.None)) throw new ArgumentException("invalid variant or gear (eyewear disabled)");
     }
 
     public MonsterDefinition Compose(CommonIdentity id)
@@ -160,7 +161,7 @@ public sealed partial class CommonRoster
         foreach (var weapon in p.Weapons) ValidateIdentity(new(p.Faction, p.Species, p.Palette, weapon));
         if (count < 0) throw new ArgumentOutOfRangeException(nameof(count));
         return Enumerable.Range(0, count).Select(i => new CommonIdentity(p.Faction, p.Species, p.Palette, p.Weapons[i % p.Weapons.Length],
-            (i + Math.Abs(variantOffset % 10)) % 10, p.Faction == "armed" ? (i % 3 == 0 ? CommonGear.Vest : CommonGear.None) | (i % 4 == 1 ? CommonGear.Glasses : CommonGear.None) : CommonGear.None)).ToArray();
+            (i + Math.Abs(variantOffset % 10)) % 10, p.Faction == "armed" && i % 3 == 0 ? CommonGear.Vest : CommonGear.None)).ToArray();
     }
 
     public static void WriteIdentity(NetWriter w, CommonIdentity? id)

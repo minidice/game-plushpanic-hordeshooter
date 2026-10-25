@@ -79,14 +79,14 @@ public partial class CommonRosterPlayCheck : Node
         Frame(new(0,1,0),16);
         for(int i=0;i<_species.Length;i++)Spawn(new("hunter",_species[i],"green",i%3==0?"club":i%3==1?"woodbow":"knife",i),new((i-2.5f)*2.7f,.05f,0));
         await Frames(35);await Shot("hunter-species");await Clear();
-        for(int i=0;i<_species.Length;i++)Spawn(new("armed",_species[i],"red",i%3==0?"mp5":i%3==1?"ak47":"m4",i,CommonGear.Vest|CommonGear.Glasses),new((i-2.5f)*2.7f,.05f,0));
+        for(int i=0;i<_species.Length;i++)Spawn(new("armed",_species[i],"red",i%3==0?"mp5":i%3==1?"ak47":"m4",i,CommonGear.Vest),new((i-2.5f)*2.7f,.05f,0));
         await Frames(35);await Shot("armed-species");await Clear();
         Frame(new(0,1,0),14);
         for(int i=0;i<10;i++)Spawn(new("zombie","human","ochre","unarmed",i),new((i%5-2)*2.6f,.05f,(i/5-.5f)*3.4f));
         await Frames(35);await Shot("zombie-ten");await Clear();
         foreach(string palette in new[]{"red","green"})
         {
-            for(int i=0;i<10;i++)Spawn(new("armed","eagle",palette,i<4?"mp5":"ak47",i,i%2==0?CommonGear.Vest:CommonGear.Glasses),new((i%5-2)*2.6f,.05f,(i/5-.5f)*3.4f));
+            for(int i=0;i<10;i++)Spawn(new("armed","eagle",palette,i<4?"mp5":"ak47",i,i%2==0?CommonGear.Vest:CommonGear.None),new((i%5-2)*2.6f,.05f,(i/5-.5f)*3.4f));
             await Frames(35);await Shot("eagle-"+palette);await Clear();
         }
         var actor=Spawn(new("armed","rhino","green","ak47",2,CommonGear.Vest),Vector3.Zero);

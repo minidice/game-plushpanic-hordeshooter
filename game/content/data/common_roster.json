@@ -292,12 +292,11 @@
       ]
     },
     {
-      "id": "eyepatch_stripes",
+      "id": "striped_jeans",
       "modules": [
         "Outfit_Shirt",
         "Outfit_Jeans",
-        "Outfit_Pattern",
-        "Gear_Eyepatch"
+        "Outfit_Pattern"
       ]
     }
   ],

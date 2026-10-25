@@ -28,7 +28,7 @@ public partial class Stage
             _commonAppearanceNext = 0;
         }
         return identity with { Variant = _commonAppearanceBag[_commonAppearanceNext++], Gear = identity.Faction == "armed"
-            ? (_rng.Randf() < .35f ? CommonGear.Vest : CommonGear.None) | (_rng.Randf() < .25f ? CommonGear.Glasses : CommonGear.None) : CommonGear.None };
+            ? (_rng.Randf() < .35f ? CommonGear.Vest : CommonGear.None) : CommonGear.None };
     }
     public Enemy SpawnCommonIdentity(CommonIdentity identity, Vector3 at, bool awake) => Spawn(CommonRoster.Current.Compose(identity), at, awake);
 

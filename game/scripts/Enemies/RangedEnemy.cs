@@ -126,12 +126,14 @@ public partial class RangedEnemy : Enemy
         RevealTo(victim, Shot.Windup + 1f + VisionSystem.RevealAfterHit);
         Stage.Net?.OnEnemyAttack(this, NetAttack.Ranged, victim, _target);
         var color = Shot.HazardSeconds > 0 ? new Color("b4df45") : new Color("ff6252");
-        var flatTarget = new Vector3(_target.X, .055f, _target.Z);
+        // The locked target is torso-height. Telegraphs belong on the actors' floor,
+        // including upper tiers; a world-zero marker disappears inside elevated terrain.
+        var flatTarget = new Vector3(_target.X, _target.Y - .8f + .055f, _target.Z);
         if (Shot.HazardSeconds > 0)
             _marker = Mat.Mesh(Stage.Effects, new CylinderMesh { TopRadius = Shot.HazardRadius, BottomRadius = Shot.HazardRadius, Height = .025f }, flatTarget, Mat.Fade(new Color(color, .35f)));
         else
         {
-            var start = new Vector3(GlobalPosition.X, .055f, GlobalPosition.Z);
+            var start = GlobalPosition + Vector3.Up * .055f;
             _marker = Mat.Box(Stage.Effects, (start + flatTarget) * .5f, new Vector3(.12f, .03f, start.DistanceTo(flatTarget)), Mat.Glow(color));
             if (start.DistanceTo(flatTarget) > .01f) _marker.LookAt(flatTarget, Vector3.Up);
         }

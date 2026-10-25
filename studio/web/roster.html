@@ -10,10 +10,10 @@
 <label for="palette">무리 색 테마</label><select id="palette"></select>
 <label for="weapon">무기</label><select id="weapon"></select>
 <label for="variant">개체 외형 프리셋</label><select id="variant"></select>
-<div id="gear-row"><span>선택 장구류</span><label><input type="checkbox" id="vest"> 방탄복</label><label><input type="checkbox" id="glasses"> 선글라스</label></div>
+<div id="gear-row"><span>선택 장구류</span><label><input type="checkbox" id="vest"> 방탄복</label></div>
 <label for="mode">보기</label><select id="mode"><option value="individual">개체 한 마리</option><option value="pack">같은 종족·색 테마 10마리</option></select>
 <label for="pack">무리 구성 출처</label><select id="pack"><option value="">직접 조합 · 무장단 MP5 4 + AK47 6</option></select>
-<p id="pack-note" class="summary"></p><button id="render" type="button">조합 렌더</button><p class="summary">색 테마는 검수한 배색만 사용합니다. 외형 변경은 전투 수치를 바꾸지 않습니다.</p></fieldset>
+<p id="pack-note" class="summary"></p><button id="render" type="button">조합 렌더</button><p class="summary">색 테마는 검수한 배색만 사용합니다. 외형 변경은 전투 수치를 바꾸지 않습니다. 선글라스·안대는 장착하지 않습니다.</p></fieldset>
 <section class="roster-main" aria-label="몬스터 조합 미리보기"><div class="library-preview"><div class="preview-top"><span class="live-dot"></span><span id="meta">실제 게임 렌더러</span></div><div class="canvas"><img id="preview" alt="공통 카탈로그로 초기화한 일반 몬스터" hidden><div id="placeholder">조합을 선택하고 렌더하세요.</div></div><fieldset id="camera" class="camera-controls" disabled><legend>카메라</legend><label for="rotation">회전 <input id="rotation" type="range" min="-180" max="180" value="0" step="5"><output id="rotation-value">0°</output></label><label for="zoom">확대 <input id="zoom" type="range" min="0.75" max="1.45" value="1" step="0.05"><output id="zoom-value">1.00×</output></label></fieldset></div>
 <p id="sample" class="summary">미리보기는 정지 외형 검사입니다. 실제 전투 동작·모드/인원 배율은 적용하지 않습니다.</p>
 <div class="properties"><h3>실제 초기화 수치 · 모드/인원 배율 적용 전</h3><table><tbody id="stats"></tbody></table></div>

@@ -58,3 +58,7 @@ Parent independent PlayCheck18 actual Forward+ renders and Stage2 forest combat 
 
 
 2026-10-25 follow-up: user explicitly requested commit, latest main merge and push. Current-tree builds/common262/network62/Integration149/Mode147/window16/Studio71+36+200+52+37 passed; warnings and unchanged remote baseline recorded in detailed spec. This authorization supersedes the implementation phase no-commit instruction.
+
+2026-10-25 play-review follow-up: eyewear excluded, elevated attack telegraph fixed, real Stage2 automated play and regressions verified. Ongoing improvement checklist and scope boundaries: [review](../../../doc/common-monster-play-review.md). No new commit/push in this follow-up.
+
+2026-10-25 subsequent user request explicitly authorizes committing this follow-up, merging latest main and pushing remote main. Fresh verification and accelerated Integration limitation are recorded in the play-review document.

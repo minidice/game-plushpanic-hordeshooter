@@ -20,7 +20,7 @@ const protectedBefore=await snapshot();
 assert.deepEqual(catalog.raw,JSON.parse(before));checks++;
 const defaults={faction:'armed',species:'eagle',palette:catalog.raw.palettes[0].id,weapon:'mp5',variant:0,gear:0,mode:'individual',rotation:0,zoom:1};
 const post=body=>fetch(base+'/api/roster/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-for(const change of [{variant:10},{variant:1.5},{gear:4},{rotation:null},{mode:'invalid'},{faction:'zombie',species:'eagle'},{faction:'hunter',weapon:'mp5'},{faction:'hunter',weapon:'club',gear:1},{species:'missing'},{mode:'pack',pack:'missing'}]){
+for(const change of [{variant:10},{variant:1.5},{gear:2},{gear:3},{gear:4},{rotation:null},{mode:'invalid'},{faction:'zombie',species:'eagle'},{faction:'hunter',weapon:'mp5'},{faction:'hunter',weapon:'club',gear:1},{species:'missing'},{mode:'pack',pack:'missing'}]){
   const r=await post({...defaults,...change});check(!r.ok,'invalid combination rejected '+JSON.stringify(change));
 }
 const out=new URL('../output/roster/',import.meta.url);await mkdir(out,{recursive:true});
@@ -29,6 +29,7 @@ for(const change of [{},{mode:'pack'},...['eagle','parrot','lion','tiger','reind
   const r=await post({...defaults,...change});const result=await r.json();
   check(r.ok&&result.png?.length>1000,'real render '+JSON.stringify(change));
   check(result.members.every(m=>m.runtime_type==='Enemy'||m.runtime_type==='RangedEnemy'),'actual Enemy initialization');
+  check(result.members.every(m=>!(m.identity.gear&2)&&m.visible_modules.every(n=>!/(Glasses|Eyepatch)/i.test(n))),'no eyewear in actual rendered members');
   check(result.members.every(m=>m.stats.hp>0&&m.stats.move_speed>4.4),'resolved baseline combat values');
   if(change.mode==='pack'){
     check(result.members.length===10,'ten coherent pack members');
