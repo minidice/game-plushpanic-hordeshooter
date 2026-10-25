@@ -10,11 +10,13 @@ public partial class RangedEnemy : Enemy
     private float _timer, _cooldown = 2f;
     private Vector3 _target;
     private MeshInstance3D? _marker;
+    private BaseCore? _targetCore;
+    public string ShotSound => Monster.CommonIdentity?.Weapon == "woodbow" ? "zombie_hit" : Monster.Behavior == MonsterBehavior.Shooter ? "shot_rifle" : "zombie_hit";
 
     public override void _Ready()
     {
         base._Ready();
-        if (Monster.Behavior != MonsterBehavior.Shooter) return;
+        if (Monster.Behavior != MonsterBehavior.Shooter || Monster.CommonIdentity != null) return;
         var built = WeaponVisual.Build(ArmoryCatalog.Weapon("m4"), Definition.HandColor);
         var weapon = built.Root;
         weapon.Scale = Vector3.One / Definition.ModelScale;
@@ -40,22 +42,41 @@ public partial class RangedEnemy : Enemy
             {
                 // Check the locked aim point again: closing a door during windup stops the shot.
                 var body = GlobalPosition + Vector3.Up * .8f;
-                var from = Monster.Behavior == MonsterBehavior.Spitter ? Rig.Muzzle.GlobalPosition : body;
+                var weaponMuzzle = Monster.CommonIdentity is { } common
+                    ? Rig.Weapon.FindChild("Weapon_" + common.Weapon, true, false)?.FindChild("Muzzle", true, false) as Node3D : null;
+                var from = weaponMuzzle?.GlobalPosition ?? (Monster.Behavior == MonsterBehavior.Spitter ? Rig.Muzzle.GlobalPosition : body);
                 // A protruding mouth must not spawn a projectile on the far side of cover.
                 if ((from.IsEqualApprox(body) || Rays.Clear(this, body, from, Layers.World | Layers.Props)) &&
-                    ShotClear(from, _target))
+                    ShotClear(from, _target, _targetCore))
                 {
                     var projectile = new EnemyProjectile();
-                    projectile.Setup(Stage, from, _target, Shot, AttackDamage, Radius);
+                    projectile.Setup(Stage, from, _target, Shot, AttackDamage, Radius, Monster.CommonIdentity?.Weapon ?? "");
                     Stage.AddChild(projectile);
                     Stage.Net?.OnEnemyProjectile(this, from, _target);
                     ProjectilesFired++;
                     Kick = 1;
-                    Stage.Sfx.PlayAt(Monster.Behavior == MonsterBehavior.Shooter ? "shot_rifle" : "zombie_hit", from);
+                    Stage.Sfx.PlayAt(ShotSound, from);
                 }
                 AbortShot();
             }
             return Vector3.Zero;
+        }
+        // Ordinary ranged loadouts defend the same objective as ordinary melee units.
+        // Keep named shooters' legacy targeting unchanged.
+        if (Monster.CommonIdentity != null && Stage.ModeRules?.Core is { Alive: true } core &&
+            GlobalPosition.DistanceTo(core.GlobalPosition) < distance)
+        {
+            var coreAim = core.GlobalPosition + Vector3.Up * .8f;
+            var coreDirection = core.GlobalPosition - GlobalPosition; coreDirection.Y = 0;
+            if (Awake && coreDirection.Length() < Shot.Range &&
+                (!Stage.Tiers.Any || Stage.Tiers.TierOf(core) <= Stage.Tiers.TierOf(this)) &&
+                ShotClear(GlobalPosition + Vector3.Up * .8f, coreAim, core))
+            {
+                FaceOverride = coreDirection;
+                if (_cooldown <= 0) StartWindup(null, coreAim, core);
+                return Vector3.Zero;
+            }
+            return base.Think(dt);
         }
         if (Awake && distance < Shot.Range && _cooldown <= 0 && CanShootAt(player) &&
             ShotClear(GlobalPosition + Vector3.Up * .8f, player.GlobalPosition + Vector3.Up * .8f))
@@ -73,7 +94,7 @@ public partial class RangedEnemy : Enemy
     /// Nothing in the way of the shot. Across tiers a lob clears the edge, and a gun firing down a tier checks the line at
     /// its own height (the shot flies level over the edge, see <see cref="EnemyProjectile"/>).
     /// </summary>
-    private bool ShotClear(Vector3 from, Vector3 to)
+    private bool ShotClear(Vector3 from, Vector3 to, BaseCore? core = null)
     {
         if (Stage.Tiers.Any)
         {
@@ -82,19 +103,25 @@ public partial class RangedEnemy : Enemy
             if (toTier < fromTier) to = new Vector3(to.X, from.Y, to.Z);
         }
         // Low cover right in front of it is fired over; cover the target hides behind stops the shot (C-29).
+        if (core != null)
+        {
+            var hit = Rays.Cast(this, from, to, Layers.EnemyShotMask);
+            return hit == null || hit.Value.Collider == core;
+        }
         return CoverRule.Clear(this, GlobalPosition, Radius, from, to, Layers.EnemyShotMask);
     }
 
     /// <param name="victim">Client puppet: the survivor the host's enemy is aiming at.</param>
-    public void StartWindup(Player? victim = null)
+    public void StartWindup(Player? victim = null, Vector3? aim = null, BaseCore? core = null)
     {
         if (IsDead || StunTime > 0) return;
         AbortShot();
         WindingUp = true;
         Awake = true;
         _timer = Shot.Windup;
-        victim ??= Target ?? Stage.NearestAlivePlayer(GlobalPosition) ?? Stage.Player;
-        _target = victim.GlobalPosition + Vector3.Up * .8f;
+        if (aim == null) victim ??= Target ?? Stage.NearestAlivePlayer(GlobalPosition) ?? Stage.Player;
+        _target = aim ?? victim!.GlobalPosition + Vector3.Up * .8f;
+        _targetCore = core;
         // Shooting at you from the dark: you see who it is from the windup until a moment after the shot (C-23).
         RevealTo(victim, Shot.Windup + 1f + VisionSystem.RevealAfterHit);
         Stage.Net?.OnEnemyAttack(this, NetAttack.Ranged, victim, _target);
@@ -115,6 +142,7 @@ public partial class RangedEnemy : Enemy
     {
         if (WindingUp) Stage.Net?.OnEnemyAttackEnd(this);
         WindingUp = false;
+        _targetCore = null;
         _cooldown = Shot.Cooldown;
         if (IsInstanceValid(_marker)) _marker!.QueueFree();
         _marker = null;

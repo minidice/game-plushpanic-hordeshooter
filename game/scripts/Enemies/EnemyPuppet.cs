@@ -42,6 +42,7 @@ public partial class Enemy
         Rig.Face(IsMeleeAttacking ? _meleeDirection : facing);
         Rig.ResetEnemyAttackPose();
         Rig.Animate(dt, Mathf.Min(1, flat.Length() / Speed), Kick, Hurt, velocity);
+        CommonWeaponPose();
         if (IsMeleeAttacking) Rig.ApplyEnemyAttackPose(_meleeTime, MeleeWindup, MeleeRecovery);
         if (this is BullEnemy)
         {

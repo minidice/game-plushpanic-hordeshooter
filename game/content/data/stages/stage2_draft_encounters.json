@@ -77,5 +77,64 @@
     "mob_min_s": 90, "mob_max_s": 120,
     "special_min_s": 60, "special_max_s": 90,
     "start_delay_s": 60, "after_crescendo_s": 45
+  },
+  "common_profiles": {
+    "zombie": {
+      "default_pack": "zombie_street",
+      "areas": {}
+    },
+    "animals": {
+      "default_pack": "hunter_eagle",
+      "areas": {
+        "clearing": {
+          "pack": "hunter_eagle"
+        },
+        "forest": {
+          "pack": "hunter_eagle_green"
+        },
+        "canyon": {
+          "pack": "hunter_lion"
+        },
+        "rim": {
+          "pack": "hunter_tiger"
+        },
+        "yard": {
+          "pack": "hunter_reindeer"
+        },
+        "plateau": {
+          "pack": "armed_rhino",
+          "faction_exception": true
+        },
+        "arrival": {
+          "pack": "hunter_eagle"
+        }
+      }
+    },
+    "armed": {
+      "default_pack": "armed_rhino",
+      "areas": {
+        "clearing": {
+          "pack": "armed_eagle"
+        },
+        "forest": {
+          "pack": "armed_parrot"
+        },
+        "canyon": {
+          "pack": "armed_lion"
+        },
+        "rim": {
+          "pack": "armed_tiger"
+        },
+        "yard": {
+          "pack": "armed_reindeer"
+        },
+        "plateau": {
+          "pack": "armed_rhino"
+        },
+        "arrival": {
+          "pack": "armed_eagle"
+        }
+      }
+    }
   }
 }

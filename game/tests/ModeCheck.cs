@@ -128,9 +128,9 @@ public partial class ModeCheck : Node
         var rng = new RandomNumberGenerator { Seed = 7 };
         var wave1 = Enumerable.Range(0, 60).Select(_ => outpost.PickCommon(1, "zombie", rng)!.Monster).ToList();
         var wave3 = Enumerable.Range(0, 200).Select(_ => outpost.PickCommon(3, "zombie", rng)!.Monster).ToList();
-        Check(wave1.All(m => m == "@common") && wave3.Contains("armed_animal") && wave3.Contains("@common"), "wave 1 sends only commons, wave 3 mixes in armed animals");
+        Check(wave1.All(m => m == "@common") && wave3.All(m => m == "@common"), "all waves use stage common profiles without faction mixing");
         Check(outpost.NamedDue(0, 1, "zombie").Count() == 0 && outpost.NamedDue(1, 3, "zombie").Count() == 2, "named ones open waves 2 and 3, not wave 1");
-        Check(onslaught.PickCommon(30, "armed", rng)!.Monster == "@common" && Enumerable.Range(0, 100).Any(_ => onslaught.PickCommon(80, "armed", rng)!.Monster == "armed_animal"),
+        Check(onslaught.PickCommon(30, "armed", rng)!.Monster == "@common" && Enumerable.Range(0, 100).All(_ => onslaught.PickCommon(80, "armed", rng)!.Monster == "@common"),
             "theme rows only join when they match the stage theme and time");
         // The Onslaught table runs the whole run clock: every stretch has its own, tougher commons and more named.
         var ends = tuning.Survivor.Segments.Select((_, i) => tuning.Survivor.Segments.Take(i + 1).Sum()).ToList();
@@ -140,8 +140,8 @@ public partial class ModeCheck : Node
         var named = starts.Select((t, i) => onslaught.NamedDue(t - .01f, ends[i] - .01f, "zombie").Sum(row => row.Count)).ToList();
         Check(named.All(n => n >= 2) && named.Zip(named.Skip(1)).All(p => p.Second >= p.First) && onslaught.NamedDue(ends[^2], ends[^1], "zombie").Any(row => row.From > ends[^1] - 120),
             "every stretch sends named ones, more each time, up to the last minutes: " + string.Join(", ", named));
-        Check(Enumerable.Range(0, 300).Select(_ => onslaught.PickCommon(ends[^1] - 10, "zombie", rng)!.Monster).Contains("crawler"),
-            "the last stretch still mixes the theme's fast ones in");
+        Check(Enumerable.Range(0, 300).Select(_ => onslaught.PickCommon(ends[^1] - 10, "zombie", rng)!.Monster).All(id => id == "@common"),
+            "the last stretch preserves the stage common profile");
         var badTable = ModeSpawnTable.FromText("test", "monster,role,theme,weight,count,from,until,hp_scale,damage_scale,extra\n" +
             "ghost,common,any,1,,0,,1,1,\n@common,boss,any,1,,0,,1,1,\n@common,common,space,0,,5,2,0,1,\n").Errors;
         Check(badTable.Count >= 6, "a table with an unknown column, monster, role and theme, zero weight and scale, and until before from is reported: " + string.Join(" / ", badTable));
@@ -203,7 +203,7 @@ public partial class ModeCheck : Node
         Check(stage.Notice == Loc.Format("fmt_survival_wave_start", 1, r.Waves.Count), "wave 1 is announced");
         Check(stage.AllEnemies.All(e => e.GlobalPosition.X is < 52 or > 84), "groups come in from the street or the yard, not inside the hall");
         for (int i = 0; i < 6; i++) rules.SpawnGroup(r.Waves[2], 2);
-        Check(stage.AllEnemies.Any(e => e.Monster.Id is "armed_animal"), "the last wave brings armed animals");
+        Check(stage.AllEnemies.Where(e => !e.IsSpecial).All(e => e.Monster.CommonIdentity is { Faction: "zombie", Species: "human" }), "the last wave keeps the human zombie faction");
         stage.AdvanceClockForTest(r.Prep + r.Waves[0].Duration + r.Break + .2f - stage.Elapsed);
         await Until(() => rules.NamedSent >= 1 && stage.AllEnemies.Any(e => e.IsSpecial), "wave 2 opens with a named monster from the table");
 

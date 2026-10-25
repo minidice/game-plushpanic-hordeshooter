@@ -106,6 +106,9 @@ async function stopRenderer() {
 }
 
 const staticFiles = new Map([
+  ['/roster', ['roster.html', 'text/html; charset=utf-8']],
+  ['/roster.js', ['roster.js', 'text/javascript; charset=utf-8']],
+  ['/roster.css', ['roster.css', 'text/css; charset=utf-8']],
   ['/statuses', ['statuses.html', 'text/html; charset=utf-8']],
   ['/statuses.js', ['statuses.js', 'text/javascript; charset=utf-8']],
   ['/statuses.css', ['statuses.css', 'text/css; charset=utf-8']],
@@ -144,6 +147,9 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && url.pathname === '/api/catalog') {
       json(200, await readCatalog('catalog')); return;
     }
+    if (req.method === 'GET' && url.pathname === '/api/roster') {
+      json(200, await readCatalog('roster')); return;
+    }
     if (req.method === 'GET' && url.pathname === '/api/statuses') {
       json(200, await readCatalog('statuses')); return;
     }
@@ -163,7 +169,7 @@ const server = http.createServer(async (req, res) => {
       finally { reloading = false; }
       json(200, { ready: true }); return;
     }
-    if (req.method === 'POST' && ['/api/render', '/api/library/render', '/api/effects/render', '/api/sounds/preview', '/api/statuses/render'].includes(url.pathname)) {
+    if (req.method === 'POST' && ['/api/render', '/api/library/render', '/api/effects/render', '/api/sounds/preview', '/api/statuses/render', '/api/roster/render'].includes(url.pathname)) {
       if (req.headers['content-type'] !== 'application/json') { json(415, { error: 'JSON required' }); return; }
       let body = '';
       for await (const chunk of req) {
@@ -172,6 +178,17 @@ const server = http.createServer(async (req, res) => {
       }
       let data;
       try { data = JSON.parse(body); } catch { json(400, { error: 'Invalid JSON' }); return; }
+      if (url.pathname === '/api/roster/render') {
+        if (!data || ['faction','species','palette','weapon'].some(key => typeof data[key] !== 'string' || data[key].length > 64)
+            || (data.pack !== undefined && (typeof data.pack !== 'string' || data.pack.length > 64))
+            || !['individual','pack'].includes(data.mode) || !Number.isInteger(data.variant) || data.variant < 0 || data.variant > 9
+            || !Number.isInteger(data.gear) || data.gear < 0 || data.gear > 3
+            || !Number.isFinite(data.rotation) || data.rotation < -180 || data.rotation > 180
+            || !Number.isFinite(data.zoom) || data.zoom < .75 || data.zoom > 1.45) {
+          json(400, { error: 'Invalid roster preview request' }); return;
+        }
+        json(200, await request('roster_render', data)); return;
+      }
       if (url.pathname === '/api/statuses/render') {
         if (!data || typeof data.target !== 'string' || data.target.length > 128 || !Array.isArray(data.states)
             || data.states.length > 12 || typeof data.hit !== 'boolean' || typeof data.release !== 'boolean'

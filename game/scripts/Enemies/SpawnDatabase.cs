@@ -101,6 +101,7 @@ public sealed class RaidRules
 /// <summary>One stage's encounters (content/data/stages/&lt;stage&gt;_encounters.json).</summary>
 public sealed class EncounterSet
 {
+    public Dictionary<string, CommonEncounterProfile> CommonProfiles { get; } = new();
     public List<EncounterArea> Areas { get; } = new();
     public List<EncounterGroup> Groups { get; } = new();
     public List<SpawnEntry> Entries { get; } = new();
@@ -253,6 +254,27 @@ public sealed class SpawnDatabase
                 set.Areas.Add(area);
             }
             if (set.Areas.Count == 0) _errors.Add($"{file}: no areas");
+
+            if (root.TryGetProperty("common_profiles", out var profiles))
+                foreach (var profile in profiles.EnumerateObject())
+                {
+                    if (profile.Name is not ("zombie" or "animals" or "armed")) throw new System.FormatException("unknown common profile theme " + profile.Name);
+                    var value = profile.Value;
+                    string defaultPack = value.GetProperty("default_pack").GetString() ?? "";
+                    if (!CommonRoster.Current.Packs.TryGetValue(defaultPack, out var pack)) throw new System.FormatException("unknown default pack " + defaultPack);
+                    string faction = profile.Name == "animals" ? "hunter" : profile.Name;
+                    if (pack.Faction != faction) throw new System.FormatException("default pack must match stage faction");
+                    var areas = new Dictionary<string, string>();
+                    foreach (var area in value.GetProperty("areas").EnumerateObject())
+                    {
+                        string packId = area.Value.GetProperty("pack").GetString() ?? "";
+                        if (!set.Areas.Any(a => a.Id == area.Name) || !CommonRoster.Current.Packs.TryGetValue(packId, out var regional)) throw new System.FormatException("invalid regional pack/area " + area.Name);
+                        bool exception = area.Value.TryGetProperty("faction_exception", out var exceptionValue) && exceptionValue.GetBoolean();
+                        if (regional.Faction != faction && !exception) throw new System.FormatException("foreign faction requires explicit faction_exception");
+                        areas.Add(area.Name, packId);
+                    }
+                    set.CommonProfiles.Add(profile.Name, new(defaultPack, areas));
+                }
 
             i = 0;
             foreach (var g in Array(root, "groups"))

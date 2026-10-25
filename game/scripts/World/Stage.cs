@@ -275,7 +275,7 @@ public partial class Stage : Node3D
         Players.Add(Player);
         Player.Died += CheckWipe;
         ThemeId = StageTheme.Normalize(ThemeOverride ?? GameSession.SelectedTheme);
-        CommonDefinition = MonsterDatabase.Get(StageTheme.Commons(ThemeId)[0]);
+        CommonDefinition = CommonRoster.Current.Compose(CommonRoster.Current.CreatePack(DefaultCommonPack(ThemeId), 1)[0]);
 
         Cam = new CameraRig { Name = "Camera", Target = Player, Player = Player, View = Map.View, Bounds = Map.CameraBounds };
         if (_environment.FogEnabled && _environment.FogMode == Godot.Environment.FogModeEnum.Depth) Cam.Haze = _environment;
@@ -401,8 +401,11 @@ public partial class Stage : Node3D
     private int _commonIndex, _specialIndex;
     public Enemy SpawnCommon(Vector3 at, bool awake)
     {
-        var pool = StageTheme.Commons(ThemeId);
-        return Spawn(MonsterDatabase.Get(pool[_commonIndex++ % pool.Length]), at, awake);
+        var pack = CommonRoster.Current.Packs[CommonPackAt(at)];
+        int index = _commonIndex++;
+        var identity = new CommonIdentity(pack.Faction, pack.Species, pack.Palette, pack.Weapons[index % pack.Weapons.Length], index % 10,
+            pack.Faction == "armed" && index % 3 == 0 ? CommonGear.Vest : CommonGear.None);
+        return SpawnCommonIdentity(RandomCommonAppearance(identity), at, awake);
     }
 
     public Enemy SpawnThemeSpecial(Vector3 at, bool awake)
@@ -423,6 +426,7 @@ public partial class Stage : Node3D
     /// <summary>The look for a monster, built once per stage (zombie looks copy the player's species).</summary>
     public CharacterDefinition LookFor(MonsterDefinition monster)
     {
+        if (monster.CommonIdentity is { } identity) return CommonRoster.Current.LookFor(identity);
         if (_looks.TryGetValue(monster.Id, out var look)) return look;
         var baseLook = CharacterCatalog.Enemy(monster.LookId);
         if (monster.Id is "wild_animal" or "armed_animal" or "armed_veteran")

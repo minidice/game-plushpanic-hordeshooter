@@ -1,0 +1,497 @@
+{
+  "version": 1,
+  "species": [
+    {
+      "id": "human",
+      "look": "common_zombie",
+      "hp": 38,
+      "speed": 4.55,
+      "mass": 1,
+      "damage_scale": 1,
+      "windup_scale": 1,
+      "wake_range": 6.5,
+      "turn_rate": 7
+    },
+    {
+      "id": "eagle",
+      "look": "common_eagle",
+      "hp": 32,
+      "speed": 4.75,
+      "mass": 0.8,
+      "damage_scale": 0.9,
+      "windup_scale": 0.85,
+      "wake_range": 9,
+      "turn_rate": 11
+    },
+    {
+      "id": "parrot",
+      "look": "common_parrot",
+      "hp": 29,
+      "speed": 4.7,
+      "mass": 0.75,
+      "damage_scale": 0.85,
+      "windup_scale": 0.9,
+      "wake_range": 10,
+      "turn_rate": 12
+    },
+    {
+      "id": "lion",
+      "look": "common_lion",
+      "hp": 62,
+      "speed": 4.6,
+      "mass": 1.65,
+      "damage_scale": 1.3,
+      "windup_scale": 1.1,
+      "wake_range": 7.5,
+      "turn_rate": 7
+    },
+    {
+      "id": "tiger",
+      "look": "common_tiger",
+      "hp": 50,
+      "speed": 4.75,
+      "mass": 1.3,
+      "damage_scale": 1.15,
+      "windup_scale": 0.95,
+      "wake_range": 8,
+      "turn_rate": 9
+    },
+    {
+      "id": "reindeer",
+      "look": "common_reindeer",
+      "hp": 44,
+      "speed": 4.7,
+      "mass": 1.15,
+      "damage_scale": 1,
+      "windup_scale": 0.9,
+      "wake_range": 8.5,
+      "turn_rate": 10
+    },
+    {
+      "id": "rhino",
+      "look": "common_rhino",
+      "hp": 90,
+      "speed": 4.55,
+      "mass": 2.6,
+      "damage_scale": 1.5,
+      "windup_scale": 1.3,
+      "wake_range": 6,
+      "turn_rate": 5
+    }
+  ],
+  "palettes": [
+    {
+      "id": "red",
+      "primary": [
+        "a5403b",
+        "b74b40",
+        "913833",
+        "c1584b"
+      ],
+      "secondary": "5b2928",
+      "accent": "dbb56e",
+      "cloth": "98504b",
+      "pants": "3b3942"
+    },
+    {
+      "id": "green",
+      "primary": [
+        "456a47",
+        "557d50",
+        "365a3c",
+        "64875b"
+      ],
+      "secondary": "293d30",
+      "accent": "bbc58b",
+      "cloth": "60755a",
+      "pants": "343d38"
+    },
+    {
+      "id": "ochre",
+      "primary": [
+        "ad7a3c",
+        "c18a46",
+        "996a32",
+        "d19750"
+      ],
+      "secondary": "594529",
+      "accent": "e4c894",
+      "cloth": "a17d55",
+      "pants": "514a3e"
+    },
+    {
+      "id": "slate",
+      "primary": [
+        "59616b",
+        "68717a",
+        "4c535d",
+        "77818a"
+      ],
+      "secondary": "303840",
+      "accent": "c8b991",
+      "cloth": "747e82",
+      "pants": "323e51"
+    }
+  ],
+  "weapons": [
+    {
+      "id": "unarmed",
+      "factions": [
+        "zombie"
+      ],
+      "damage": 5,
+      "reach": 0.4,
+      "interval": 1.15,
+      "windup": 0.3,
+      "range": 0,
+      "projectile_speed": 0,
+      "shared_weapon": ""
+    },
+    {
+      "id": "club",
+      "factions": [
+        "hunter"
+      ],
+      "damage": 9,
+      "reach": 0.7,
+      "interval": 1.5,
+      "windup": 0.5,
+      "range": 0,
+      "projectile_speed": 0,
+      "shared_weapon": ""
+    },
+    {
+      "id": "knife",
+      "factions": [
+        "hunter",
+        "armed"
+      ],
+      "damage": 6,
+      "reach": 0.5,
+      "interval": 0.8,
+      "windup": 0.25,
+      "range": 0,
+      "projectile_speed": 0,
+      "shared_weapon": ""
+    },
+    {
+      "id": "woodbow",
+      "factions": [
+        "hunter"
+      ],
+      "damage": 10,
+      "reach": 0.35,
+      "interval": 2.6,
+      "windup": 1.2,
+      "range": 17,
+      "projectile_speed": 20,
+      "shared_weapon": ""
+    },
+    {
+      "id": "mp5",
+      "factions": [
+        "armed"
+      ],
+      "damage": 5,
+      "reach": 0.4,
+      "interval": 1.1,
+      "windup": 0.75,
+      "range": 14,
+      "projectile_speed": 65,
+      "shared_weapon": "mp5"
+    },
+    {
+      "id": "ak47",
+      "factions": [
+        "armed"
+      ],
+      "damage": 10,
+      "reach": 0.4,
+      "interval": 1.8,
+      "windup": 1.1,
+      "range": 23,
+      "projectile_speed": 85,
+      "shared_weapon": "ak47"
+    },
+    {
+      "id": "m4",
+      "factions": [
+        "armed"
+      ],
+      "damage": 8,
+      "reach": 0.4,
+      "interval": 1.45,
+      "windup": 0.9,
+      "range": 21,
+      "projectile_speed": 95,
+      "shared_weapon": "m4"
+    }
+  ],
+  "presets": [
+    {
+      "id": "jeans_shirt",
+      "modules": [
+        "Outfit_Shirt",
+        "Outfit_Jeans"
+      ]
+    },
+    {
+      "id": "chinos_shirt",
+      "modules": [
+        "Outfit_Shirt",
+        "Outfit_Chinos"
+      ]
+    },
+    {
+      "id": "bare_legs",
+      "modules": [
+        "Outfit_Shirt"
+      ]
+    },
+    {
+      "id": "torn_pants",
+      "modules": [
+        "Outfit_Shirt",
+        "Outfit_Torn"
+      ]
+    },
+    {
+      "id": "overalls",
+      "modules": [
+        "Outfit_Overalls"
+      ]
+    },
+    {
+      "id": "suit",
+      "modules": [
+        "Outfit_Suit"
+      ]
+    },
+    {
+      "id": "stained_jeans",
+      "modules": [
+        "Outfit_Shirt",
+        "Outfit_Jeans",
+        "Outfit_Stains"
+      ]
+    },
+    {
+      "id": "striped_chinos",
+      "modules": [
+        "Outfit_Shirt",
+        "Outfit_Chinos",
+        "Outfit_Pattern"
+      ]
+    },
+    {
+      "id": "torn_stained",
+      "modules": [
+        "Outfit_Shirt",
+        "Outfit_Torn",
+        "Outfit_Stains"
+      ]
+    },
+    {
+      "id": "eyepatch_stripes",
+      "modules": [
+        "Outfit_Shirt",
+        "Outfit_Jeans",
+        "Outfit_Pattern",
+        "Gear_Eyepatch"
+      ]
+    }
+  ],
+  "packs": [
+    {
+      "id": "zombie_street",
+      "faction": "zombie",
+      "species": "human",
+      "palette": "ochre",
+      "weapons": [
+        "unarmed"
+      ]
+    },
+    {
+      "id": "hunter_eagle",
+      "faction": "hunter",
+      "species": "eagle",
+      "palette": "red",
+      "weapons": [
+        "club",
+        "club",
+        "knife",
+        "woodbow",
+        "club",
+        "knife"
+      ]
+    },
+    {
+      "id": "armed_eagle",
+      "faction": "armed",
+      "species": "eagle",
+      "palette": "red",
+      "weapons": [
+        "mp5",
+        "mp5",
+        "ak47",
+        "ak47",
+        "m4",
+        "knife"
+      ]
+    },
+    {
+      "id": "hunter_parrot",
+      "faction": "hunter",
+      "species": "parrot",
+      "palette": "green",
+      "weapons": [
+        "club",
+        "club",
+        "knife",
+        "woodbow",
+        "club",
+        "knife"
+      ]
+    },
+    {
+      "id": "armed_parrot",
+      "faction": "armed",
+      "species": "parrot",
+      "palette": "green",
+      "weapons": [
+        "mp5",
+        "mp5",
+        "ak47",
+        "ak47",
+        "m4",
+        "knife"
+      ]
+    },
+    {
+      "id": "hunter_lion",
+      "faction": "hunter",
+      "species": "lion",
+      "palette": "ochre",
+      "weapons": [
+        "club",
+        "club",
+        "knife",
+        "woodbow",
+        "club",
+        "knife"
+      ]
+    },
+    {
+      "id": "armed_lion",
+      "faction": "armed",
+      "species": "lion",
+      "palette": "ochre",
+      "weapons": [
+        "mp5",
+        "mp5",
+        "ak47",
+        "ak47",
+        "m4",
+        "knife"
+      ]
+    },
+    {
+      "id": "hunter_tiger",
+      "faction": "hunter",
+      "species": "tiger",
+      "palette": "red",
+      "weapons": [
+        "club",
+        "club",
+        "knife",
+        "woodbow",
+        "club",
+        "knife"
+      ]
+    },
+    {
+      "id": "armed_tiger",
+      "faction": "armed",
+      "species": "tiger",
+      "palette": "red",
+      "weapons": [
+        "mp5",
+        "mp5",
+        "ak47",
+        "ak47",
+        "m4",
+        "knife"
+      ]
+    },
+    {
+      "id": "hunter_reindeer",
+      "faction": "hunter",
+      "species": "reindeer",
+      "palette": "green",
+      "weapons": [
+        "club",
+        "club",
+        "knife",
+        "woodbow",
+        "club",
+        "knife"
+      ]
+    },
+    {
+      "id": "armed_reindeer",
+      "faction": "armed",
+      "species": "reindeer",
+      "palette": "green",
+      "weapons": [
+        "mp5",
+        "mp5",
+        "ak47",
+        "ak47",
+        "m4",
+        "knife"
+      ]
+    },
+    {
+      "id": "hunter_rhino",
+      "faction": "hunter",
+      "species": "rhino",
+      "palette": "ochre",
+      "weapons": [
+        "club",
+        "club",
+        "knife",
+        "woodbow",
+        "club",
+        "knife"
+      ]
+    },
+    {
+      "id": "armed_rhino",
+      "faction": "armed",
+      "species": "rhino",
+      "palette": "ochre",
+      "weapons": [
+        "mp5",
+        "mp5",
+        "ak47",
+        "ak47",
+        "m4",
+        "knife"
+      ]
+    },
+    {
+      "id": "hunter_eagle_green",
+      "faction": "hunter",
+      "species": "eagle",
+      "palette": "green",
+      "weapons": [
+        "club",
+        "knife",
+        "woodbow",
+        "club",
+        "knife",
+        "woodbow"
+      ]
+    }
+  ]
+}

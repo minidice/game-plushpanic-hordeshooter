@@ -257,17 +257,18 @@ public partial class HordeDirector : Node
         count = Mathf.Min(count, room);
         // A ledge drop spreads along the wall top; the others bunch around the spot.
         var along = new Vector3(-entry.Dir.Z, 0, entry.Dir.X);
+        var identities = Stage.CommonPack(entry.Ground, Mathf.Max(0, count));
         for (int i = 0; i < count; i++)
         {
             if (entry.Kind == EntryKind.Ledge)
             {
-                var enemy = Stage.SpawnCommon(entry.At + along * _rng.RandfRange(-LedgeSpread, LedgeSpread) + Vector3.Up * .05f, awake: true);
+                var enemy = Stage.SpawnCommonIdentity(identities[i], entry.At + along * _rng.RandfRange(-LedgeSpread, LedgeSpread) + Vector3.Up * .05f, awake: true);
                 enemy.LeapDown(entry.Dir);
                 continue;
             }
             var offset = new Vector3(_rng.RandfRange(-1.4f, 1.4f), 0, _rng.RandfRange(-1.4f, 1.4f));
             var at = Stage.Flow.IsBlocked(entry.Ground + offset) ? entry.Ground : entry.Ground + offset;
-            Stage.SpawnCommon(at, awake: true);
+            Stage.SpawnCommonIdentity(identities[i], at, awake: true);
         }
         return Mathf.Max(0, count);
     }
@@ -406,6 +407,7 @@ public partial class HordeDirector : Node
     {
         // Waiting commons scale with the party too (named ones in Fill do not, M-5).
         int want = Stage.ScaleCommons(group.Count);
+        var identities = Stage.CommonPack(new Vector3(group.Rect.GetCenter().X, 0, group.Rect.GetCenter().Y), want, group.Area);
         int placed = 0;
         for (int pass = 0; pass < 2 && placed < want; pass++)
             for (int attempt = 0; attempt < want * 20 && placed < want; attempt++)
@@ -413,7 +415,7 @@ public partial class HordeDirector : Node
                 var r = group.Rect;
                 var p = new Vector3(_placeRng.RandfRange(r.Position.X, r.End.X), 0, _placeRng.RandfRange(r.Position.Y, r.End.Y));
                 if (Stage.Flow.IsBlocked(p) || IsProtected(p, wave: false) || (pass == 0 && OnScreen(p))) continue;
-                Stage.SpawnCommon(p, false).Reaction = group.Reaction;
+                Stage.SpawnCommonIdentity(identities[placed], p, false).Reaction = group.Reaction;
                 placed++;
             }
     }

@@ -16,7 +16,7 @@ public partial class Enemy : CharacterBody3D
     public const float MinHitHeight = Player.AimHeight + .4f;
 
     private const float Gravity = 20f;
-    private const float MeleeWindup = .28f;
+    private float MeleeWindup => Monster.MeleeWindup;
     private const float MeleeRecovery = .32f;
 
     public Stage Stage { get; private set; } = null!;
@@ -136,6 +136,7 @@ public partial class Enemy : CharacterBody3D
         AddChild(Shape);
         Rig = CharacterRig.Create(Definition);
         AddChild(Rig);
+        if (Monster.CommonIdentity is { } identity) CommonRoster.Current.Apply(Rig, identity);
         StatusVisualBinding.Attach(this);
         Rig.InitializeEnemyAttackPose();
         if (Monster.Id is "wild_animal" or "armed_animal" or "armed_veteran")
@@ -224,10 +225,11 @@ public partial class Enemy : CharacterBody3D
 
         var flat = new Vector3(Velocity.X, 0, Velocity.Z);
         Footsteps(flat.Length() * dt);
-        if (FaceOverride is { } face) Rig.Face(face);
-        else if (flat.LengthSquared() > .05f) Rig.Face(flat);
+        if (FaceOverride is { } face) FaceToward(face, dt);
+        else if (flat.LengthSquared() > .05f) FaceToward(flat, dt);
         Rig.ResetEnemyAttackPose();
         Rig.Animate(dt, Mathf.Min(1, flat.Length() / Speed), Kick, Hurt, Velocity);
+        CommonWeaponPose();
         if (IsMeleeAttacking) Rig.ApplyEnemyAttackPose(_meleeTime, MeleeWindup, MeleeRecovery);
         if (this is BullEnemy bull && bull.State is BullEnemy.Mode.Windup or BullEnemy.Mode.Charge)
             Rig.ApplyBullChargePose(bull.State == BullEnemy.Mode.Charge ? 1f : .65f);
@@ -258,7 +260,7 @@ public partial class Enemy : CharacterBody3D
             else return Wander(dt);
         }
         // Survival: a common goes for the base when it is closer than any survivor.
-        if (Monster.Behavior == MonsterBehavior.Common && Stage.ModeRules?.Core is { Alive: true } core && CoreChase(core, dist, dt) is { } toCore)
+        if ((Monster.Behavior == MonsterBehavior.Common || Monster.CommonIdentity != null) && Stage.ModeRules?.Core is { Alive: true } core && CoreChase(core, dist, dt) is { } toCore)
             return toCore;
         if (dist <= Radius + player.Definition.ColliderRadius + AttackReach)
         {

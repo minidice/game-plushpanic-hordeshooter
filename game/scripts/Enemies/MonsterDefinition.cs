@@ -45,6 +45,10 @@ public sealed record RangedTrait(float Range, float Windup, float Cooldown, floa
 /// </summary>
 public sealed class MonsterDefinition
 {
+    public CommonIdentity? CommonIdentity { get; init; }
+    public float MeleeWindup { get; init; } = .28f;
+    /// <summary>Radians per second; legacy enemies keep their instantaneous facing.</summary>
+    public float TurnRate { get; init; } = float.PositiveInfinity;
     public string Id { get; set; } = "";
     public string NameKey { get; set; } = "";
     public string DisplayName => Loc.Text(NameKey);

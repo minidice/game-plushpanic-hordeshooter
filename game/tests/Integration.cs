@@ -56,8 +56,8 @@ public partial class Integration : Node
         var players = CharacterCatalog.LoadAll(CharacterCatalog.PlayerDir);
         Check(players.Count >= 3 && players.Any(p => p.Id == "goose") && players.Any(p => p.Model == null), "catalog lists GLB and placeholder player characters");
         var enemies = CharacterCatalog.LoadAll(CharacterCatalog.EnemyDir).Select(e => e.Id).ToHashSet();
-        Check(enemies.SetEquals(new[] { "plush", "balloon", "bull", "humanoid", "crawler", "tether", "leaper", "spitter", "boss", "boss_balloon_king", "boss_spitter_mother" }),
-            "catalog lists all eleven enemy model definitions (boss and the two Onslaught middle bosses added 2026-10-21)");
+        Check(enemies.SetEquals(new[] { "plush", "balloon", "bull", "humanoid", "crawler", "tether", "leaper", "spitter", "boss", "boss_balloon_king", "boss_spitter_mother", "common_zombie", "common_eagle", "common_parrot", "common_lion", "common_tiger", "common_reindeer", "common_rhino" }),
+            "catalog lists legacy enemy definitions plus all seven common roster models");
 
         var goose = CharacterRig.Create(CharacterCatalog.Player("goose"));
         Check(!goose.IsPlaceholder && goose.Muzzle.Name == "Muzzle" && goose.Head != null && goose.Body.Name == "goose_body", "GLB rig resolves named parts");
@@ -558,10 +558,10 @@ public partial class Integration : Node
         var player = stage.Player;
         var zombie = MonsterDatabase.Get("plush"); // Fixed 30 HP fixture for weapon balance regression checks.
         var zombieLook = stage.LookFor(stage.CommonDefinition);
-        Check(zombieLook.Id == "humanoid" && zombieLook.Model != player.Definition.Model, "zombie commons use their dedicated humanoid model");
+        Check(zombieLook.Id == "common_zombie" && zombieLook.Model != player.Definition.Model, "zombie commons use their dedicated humanoid model");
         var sample = stage.Enemies.First(e => !e.IsSpecial);
-        Check(sample.Definition.Id is "humanoid" or "crawler" && !sample.Rig.IsPlaceholder,
-            "infected use imported humanoid and crawler models");
+        Check(sample.Definition.Id == "common_zombie" && !sample.Rig.IsPlaceholder,
+            "ordinary infected use only the refined human zombie model");
         Check(player.Rig.Model.FindChild("goose_weapon_mesh", true, false) is Node3D { Visible: false } && player.Gun.Def.Id == "frying_pan",
             "player holds the starting frying pan instead of the model's gun");
 

@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="CharacterDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/Characters/CharacterDefinition.cs" id="1_def"]
+[ext_resource type="PackedScene" path="res://assets/common-monsters/lion.glb" id="2_model"]
+
+[resource]
+script = ExtResource("1_def")
+Id = "common_lion"
+DisplayName = "name_monster_common_lion"
+Description = "Shared common roster model; optional modules selected by immutable spawn identity."
+Role = 1
+Model = ExtResource("2_model")
+ModelFacesPositiveZ = true
+BodyNode = "Body"
+DeformNode = "Deform"
+HeadNode = "Head"
+LeftFootNode = "LeftFoot"
+RightFootNode = "RightFoot"
+WeaponNode = "Weapon"
+MuzzleNode = "Muzzle"
+HandColor = Color(0.66, 0.58, 0.42, 1)
+ColliderRadius = 0.43
+ColliderHeight = 1.8
+StepRate = 13.0
+WaddleDegrees = 6.0
+StuffingColor = Color(0.87, 0.83, 0.67, 1)

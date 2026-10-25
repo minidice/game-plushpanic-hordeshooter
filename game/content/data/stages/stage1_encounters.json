@@ -34,5 +34,51 @@
     { "kind": "ledge", "at": [97, -7.2], "height": 3.4, "dir": [0, 1] },
     { "kind": "ledge", "at": [102, -7.2], "height": 3.4, "dir": [0, 1] }
   ],
-  "protected": []
+  "protected": [],
+  "common_profiles": {
+    "zombie": {
+      "default_pack": "zombie_street",
+      "areas": {}
+    },
+    "animals": {
+      "default_pack": "hunter_eagle",
+      "areas": {
+        "saferoom": {
+          "pack": "hunter_eagle"
+        },
+        "street": {
+          "pack": "hunter_parrot"
+        },
+        "warehouse": {
+          "pack": "hunter_lion"
+        },
+        "yard": {
+          "pack": "hunter_tiger"
+        },
+        "safehouse": {
+          "pack": "hunter_reindeer"
+        }
+      }
+    },
+    "armed": {
+      "default_pack": "armed_rhino",
+      "areas": {
+        "saferoom": {
+          "pack": "armed_eagle"
+        },
+        "street": {
+          "pack": "armed_parrot"
+        },
+        "warehouse": {
+          "pack": "armed_lion"
+        },
+        "yard": {
+          "pack": "armed_tiger"
+        },
+        "safehouse": {
+          "pack": "armed_reindeer"
+        }
+      }
+    }
+  }
 }

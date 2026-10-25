@@ -478,6 +478,7 @@ public partial class StageNet : Node
     private static void WriteSpawn(NetWriter w, Enemy e)
     {
         w.U16(e.NetId); w.U8(NetIds.Monster(e.Monster.Id)); w.Pos(e.GlobalPosition); w.U8((int)e.Reaction); w.U8(e.Awake ? 1 : 0);
+        CommonRoster.WriteIdentity(w, e.Monster.CommonIdentity);
     }
 
     private static void WritePickup(NetWriter w, WeaponPickup p)
@@ -620,6 +621,8 @@ public partial class StageNet : Node
                 var at = r.Pos();
                 var reaction = (Reaction)r.U8();
                 bool awake = r.U8() != 0;
+                var commonIdentity = CommonRoster.ReadIdentity(r);
+                if (commonIdentity != null) monster = CommonRoster.Current.Compose(commonIdentity);
                 if (_enemies.ContainsKey(id)) break;
                 var enemy = _stage.Spawn(monster, at, awake);
                 enemy.MakePuppet();
@@ -662,7 +665,7 @@ public partial class StageNet : Node
                         to.Y = 0;
                         enemy.PuppetMelee(victim, to);
                         break;
-                    case NetAttack.Ranged when enemy is RangedEnemy ranged: ranged.StartWindup(victim); break;
+                    case NetAttack.Ranged when enemy is RangedEnemy ranged: ranged.StartWindup(victim, point); break;
                     case NetAttack.Capture when enemy is CaptureEnemy captor: captor.StartWindup(victim); break;
                     case NetAttack.Charge when enemy is BullEnemy bull: bull.StartWindup(point - bull.GlobalPosition); break;
                 }
@@ -680,9 +683,9 @@ public partial class StageNet : Node
                 var target = r.Pos();
                 if (!_enemies.TryGetValue(id, out var enemy) || !IsInstanceValid(enemy) || enemy.Monster.Ranged is not { } shot) break;
                 var projectile = new EnemyProjectile();
-                projectile.Setup(_stage, from, target, shot, 0, enemy.Radius); // the host already decided the damage
+                projectile.Setup(_stage, from, target, shot, 0, enemy.Radius, enemy.Monster.CommonIdentity?.Weapon ?? ""); // the host already decided the damage
                 _stage.AddChild(projectile);
-                _stage.Sfx.PlayAt(enemy.Monster.Behavior == MonsterBehavior.Shooter ? "shot_rifle" : "zombie_hit", from);
+                _stage.Sfx.PlayAt(enemy is RangedEnemy rangedShooter ? rangedShooter.ShotSound : "zombie_hit", from);
                 enemy.PuppetEndAttack();
                 break;
             }

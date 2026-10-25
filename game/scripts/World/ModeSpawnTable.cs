@@ -110,7 +110,7 @@ public sealed class ModeSpawnTable
     /// <summary>Spawns one row's monster at <paramref name="at"/>, awake, with the row's health and damage scale.</summary>
     public static Enemy Spawn(Stage stage, ModeSpawnRow row, Vector3 at)
     {
-        var enemy = row.Monster switch
+        var enemy = row.Role == SpawnRole.Common ? stage.SpawnCommon(at, awake: true) : row.Monster switch
         {
             "@common" => stage.SpawnCommon(at, awake: true),
             "@special" => stage.SpawnThemeSpecial(at, awake: true),

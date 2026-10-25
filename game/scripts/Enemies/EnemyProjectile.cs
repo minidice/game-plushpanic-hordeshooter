@@ -6,6 +6,7 @@ namespace HordeShooter;
 /// <summary>Swept segment collision prevents fast enemy shots from passing through walls.</summary>
 public partial class EnemyProjectile : Node3D
 {
+    public string WeaponId { get; private set; } = "";
     private Stage _stage = null!;
     private CombatProjectileEffect? _visual;
     private Vector3 _direction;
@@ -23,8 +24,9 @@ public partial class EnemyProjectile : Node3D
     private List<Rid>? _overCover;
 
     /// <param name="shooterRadius">The shooter's body radius: cover within a body width of it does not stop the shot.</param>
-    public void Setup(Stage stage, Vector3 from, Vector3 target, RangedTrait shot, float damage, float shooterRadius = .4f)
+    public void Setup(Stage stage, Vector3 from, Vector3 target, RangedTrait shot, float damage, float shooterRadius = .4f, string weaponId = "")
     {
+        WeaponId = weaponId;
         _stage = stage; Position = from; _shot = shot; _damage = damage;
         _shooter = from; _shooterRadius = shooterRadius;
         _direction = (target - from).Normalized(); _remaining = from.DistanceTo(target);
@@ -60,6 +62,12 @@ public partial class EnemyProjectile : Node3D
         }
         // Gunshots: the windup is the warning (C-13). The bullet itself is fast and should not glow like a ball.
         if (Mathf.Abs(_direction.Dot(Vector3.Up)) < .99f) LookAt(GlobalPosition + _direction, Vector3.Up);
+        if (WeaponId == "woodbow")
+        {
+            Mat.Box(this, new Vector3(0, 0, .28f), new Vector3(.025f, .025f, .56f), Mat.Solid(new Color("a67a48")));
+            Mat.Box(this, new Vector3(0, 0, -.02f), new Vector3(.09f, .025f, .09f), Mat.Solid(new Color("bbc3bf")));
+            return;
+        }
         var streak = Mat.Mesh(this, new CylinderMesh { TopRadius = TracerRadius, BottomRadius = TracerRadius * .4f, Height = TracerLength, RadialSegments = 6, Rings = 1 },
             new Vector3(0, 0, TracerLength * .5f), Mat.Glow(new Color("f2dcb0"), 1.1f));
         streak.RotationDegrees = new Vector3(-90, 0, 0);
@@ -94,6 +102,7 @@ public partial class EnemyProjectile : Node3D
         if (hit is { } collision)
         {
             if (collision.Collider is Player player) player.TakeDamage(_damage, _direction, .5f);
+            else if (collision.Collider is BaseCore core && _stage.Authoritative) core.TakeDamage(_damage, _shooter);
             else if (collision.Collider is ExplosiveBarrel barrel) barrel.TakeDamage(_damage, ObjectDamage.Gun);
             else if (ObjectBody.From(collision.Collider) is { } placed) placed.TakeDamage(_damage, ObjectDamage.Gun);
             Impact(collision.Position + collision.Normal * .16f);

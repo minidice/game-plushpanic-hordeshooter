@@ -7,8 +7,8 @@ public static class StageTheme
     public static string[] Commons(string theme) => Normalize(theme) switch
     {
         "animals" => new[] { "wild_animal" },
-        "armed" => new[] { "armed_animal", "wild_animal", "armed_animal" },
-        _ => new[] { "humanoid", "crawler", "humanoid" },
+        "armed" => new[] { "armed_animal" },
+        _ => new[] { "humanoid" },
     };
     public static string[] Specials(string theme) => Normalize(theme) switch
     {

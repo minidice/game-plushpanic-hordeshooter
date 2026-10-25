@@ -60,14 +60,18 @@ public static class NetIds
         FileAccess.GetFileAsString(DestructionPlacements.Path));
 
     /// <summary>Also fingerprints destruction policy and placement/build order; accepts text for checks without editing game files.</summary>
-    internal static int DataHash(string interactionsJson, string placementsJson)
+    internal static int DataHash(string interactionsJson, string placementsJson, string? commonRosterJson = null)
     {
         unchecked
         {
             int h = 17;
             foreach (var s in Weapons.Select(w => w.Id).Concat(Throwables).Concat(Monsters).Concat(CaliberDatabase.Current.Order))
                 foreach (char c in s) h = h * 31 + c;
-            foreach (var (path, text) in new[] { (ObjectInteractions.DataPath, interactionsJson), (DestructionPlacements.Path, placementsJson) })
+            foreach (var (path, text) in new[] { (ObjectInteractions.DataPath, interactionsJson), (DestructionPlacements.Path, placementsJson),
+                (CommonRoster.DataPath, commonRosterJson ?? FileAccess.GetFileAsString(CommonRoster.DataPath)),
+                (SpawnDatabase.Stage1Path, FileAccess.GetFileAsString(SpawnDatabase.Stage1Path)),
+                (SpawnDatabase.Stage2Path, FileAccess.GetFileAsString(SpawnDatabase.Stage2Path)),
+                ("res://content/data/stages/stage2_draft_encounters.json", FileAccess.GetFileAsString("res://content/data/stages/stage2_draft_encounters.json")) })
             {
                 // Windows checkouts and exported Linux resources can use different line endings without changing data.
                 string normalized = text.Replace("\r\n", "\n").Replace('\r', '\n');

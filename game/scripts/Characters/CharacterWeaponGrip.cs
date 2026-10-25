@@ -15,8 +15,10 @@ public partial class CharacterRig
     private float _wingSize=1;
     public bool IsRunningCarry => _runningCarry>.5f;
     public bool UsesSupportGrip => _supportGrip;
-    private bool HasAnimalArms => Definition.Id is "goose" or "duck" or "raccoon" or "redpanda";
+    private bool CommonAnimalArms => Definition.Id.StartsWith("common_") && Definition.Id != "common_zombie";
+    private bool HasAnimalArms => CommonAnimalArms || Definition.Id is "goose" or "duck" or "raccoon" or "redpanda";
     public bool WeaponArmsVisible => _gripArms?.Visible==true;
+    internal void SetCommonHandColor(Color color) => HandColor = color;
 
     /// <summary>Replace static wings/paws with compact shapes that meet the equipped weapon's hand positions.</summary>
     public void BindWeaponGrip(WeaponVisual.Built built)
@@ -25,7 +27,7 @@ public partial class CharacterRig
         _heldWeapon=built;
         _leftGripHome=built.LeftGrip?.Transform??Transform3D.Identity;
         _meleePoseTime=-1;
-        _supportGrip=built.Definition.Dual||built.Definition.Category==WeaponCategory.Heavy;
+        _supportGrip=built.Definition.Dual||built.Definition.Category==WeaponCategory.Heavy || (CommonAnimalArms && built.LeftGrip != null && built.Definition.Category != WeaponCategory.Melee);
         if(_supportGrip||built.Definition.Category==WeaponCategory.Melee)_runningCarry=0;
         if(built.LeftGrip!=null)built.LeftGrip.Visible=_supportGrip;
         // The authored feather/paw tips form the hand; the old spherical palms would cover them.
@@ -44,14 +46,14 @@ public partial class CharacterRig
     private MeshInstance3D MakeForearm(string name)
     {
         string side=name=="RightForearm"?"right":"left";
-        if(HasAnimalArms&&Model.FindChild(Definition.Id+"_"+side+"Arm_mesh",true,false) is MeshInstance3D {Mesh:not null} source)
+        if(HasAnimalArms&&!CommonAnimalArms&&Model.FindChild(Definition.Id+"_"+side+"Arm_mesh",true,false) is MeshInstance3D {Mesh:not null} source)
         {
             var pivot=source.GetParentNode3D();
             var home=_featureHomes.TryGetValue(pivot,out var authored)?authored:pivot.Transform;
             var rest=InRig(pivot.GetParentNode3D())*home*source.Transform;
-            return CharacterGripSurface.Create(_gripArms!,source,InRig(_gripArms!).AffineInverse()*rest,name,side=="right"?1:-1,AppearanceCatalog.IsBird(Definition.Id));
+            return CharacterGripSurface.Create(_gripArms!,source,InRig(_gripArms!).AffineInverse()*rest,name,side=="right"?1:-1,AppearanceCatalog.IsBird(Definition.Id) || Definition.Id is "common_eagle" or "common_parrot");
         }
-        var mesh=new CapsuleMesh{Radius=.09f,Height=.5f,RadialSegments=16,Rings=6};
+        var mesh=new CapsuleMesh{Radius=CommonAnimalArms?.055f:.09f,Height=.5f,RadialSegments=CommonAnimalArms?12:16,Rings=CommonAnimalArms?4:6};
         var arm=Mat.Mesh(_gripArms!,mesh,Vector3.Zero,_gripMaterial!,name);
         arm.Scale=new Vector3(HasAnimalArms?1.45f:1,1,.72f);return arm;
     }
@@ -101,9 +103,9 @@ public partial class CharacterRig
             CharacterGripSurface.Pose(arm,gripPosition,holding,_wingSize,_runningCarry,HandColor);
             return;
         }
-        arm.Scale=new Vector3((HasAnimalArms?1.45f:1)*_wingSize,1,.72f*_wingSize);
+        arm.Scale=new Vector3((CommonAnimalArms?1:HasAnimalArms?1.45f:1)*_wingSize,1,.72f*_wingSize);
         // Compact shoulder-to-wing shape; the spare wing rests or opens outward while running.
-        var elbow=IsPlaceholder?new Vector3(side*Definition.ColliderRadius*.8f,Definition.ColliderHeight*.40f,.15f):new Vector3(side*.46f,1.00f,.13f);
+        var elbow=CommonAnimalArms?new Vector3(side*Definition.ColliderRadius*.85f,Definition.ColliderHeight*.56f,.13f):IsPlaceholder?new Vector3(side*Definition.ColliderRadius*.8f,Definition.ColliderHeight*.40f,.15f):new Vector3(side*.46f,1.00f,.13f);
         var hand=target!=null&&IsInstanceValid(target)?_gripArms!.ToLocal(target.GlobalPosition)
             :SpareHandPosition(side);
         var direction=hand-elbow;float length=direction.Length();
@@ -111,7 +113,8 @@ public partial class CharacterRig
         arm.Position=(elbow+hand)*.5f;
         arm.Quaternion=new Quaternion(Vector3.Up,direction/length);
         var capsule=(CapsuleMesh)arm.Mesh;
-        if(!Mathf.IsEqualApprox(capsule.Height,length+.18f))capsule.Height=length+.18f;
+        float height=length+capsule.Radius*2;
+        if(!Mathf.IsEqualApprox(capsule.Height,height))capsule.Height=height;
     }
 
     private Vector3 SpareHandPosition(float side=-1) => new(side*(.51f+_runningCarry*.20f),.72f+_runningCarry*(.26f+.035f*Mathf.Sin(_clock)),.13f);

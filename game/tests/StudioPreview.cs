@@ -68,6 +68,8 @@ public partial class StudioPreview : Node
             id = request.GetProperty("id").GetInt32();
             var method = request.GetProperty("method").GetString();
             if (method == "catalog") Send(new { id, result = Catalog() });
+            else if (method == "roster") Send(new { id, result = RosterCatalog() });
+            else if (method == "roster_render") Send(new { id, result = await RenderRoster(request.GetProperty("data")) });
             else if (method == "statuses") Send(new { id, result = StatusCatalog() });
             else if (method == "status_render") Send(new { id, result = await RenderStatuses(request.GetProperty("data")) });
             else if (method == "library") Send(new { id, result = Library() });

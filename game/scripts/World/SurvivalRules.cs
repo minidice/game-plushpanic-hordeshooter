@@ -7,7 +7,7 @@ namespace HordeShooter;
 /// <summary>
 /// Survival MVP (doc/menu-multiplayer-plan.md 3.1): hold the warehouse generator through timed waves.
 /// Waves come in through the two doorways (street side and yard side). Who comes is the mode table
-/// (modes/survival_spawns.csv, wave numbers): later waves mix in armed animals, and named ones arrive as a wave starts.
+/// (modes/survival_spawns.csv, wave numbers): common rows use the stage roster profile, and named ones arrive as a wave starts.
 /// Lasting to the end of the last wave clears the match; the generator breaking or the squad falling loses it.
 /// The schedule follows the clock, so a client can show the same wave text without being sent it.
 /// </summary>
