@@ -2,14 +2,16 @@ import assert from 'node:assert/strict';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 const base=process.env.STUDIO_URL||'http://127.0.0.1:4317';
+const species=process.env.STUDIO_SPECIES||'eagle';
+assert.ok(['eagle','parrot','lion','tiger','reindeer','rhino'].includes(species),'supported animal species');
 let checks=0;
 const check=(ok,label)=>{assert.ok(ok,label);checks++;console.log('PASS '+label);};
 const post=body=>fetch(base+'/api/roster/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-const defaults={faction:'hunter',species:'eagle',palette:'red',weapon:'club',variant:0,gear:0,mode:'attack',rotation:25,zoom:1};
+const defaults={faction:'hunter',species,palette:'red',weapon:'club',variant:0,gear:0,mode:'attack',rotation:25,zoom:1};
 const source=new URL('../../game/content/data/common_roster.json',import.meta.url);
 const hash=async()=>createHash('sha256').update(await readFile(source)).digest('hex');
 const before=await hash();
-const out=new URL('../output/hunter-attacks/',import.meta.url);await mkdir(out,{recursive:true});
+const out=new URL(`../output/hunter-attacks${species==='eagle'?'':'-'+species}/`,import.meta.url);await mkdir(out,{recursive:true});
 for(const weapon of ['club','knife','woodbow']){
   const response=await post({...defaults,weapon});const clip=await response.json();
   check(response.ok&&clip.frames?.length===12,'twelve runtime attack frames '+weapon);

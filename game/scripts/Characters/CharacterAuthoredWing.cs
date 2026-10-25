@@ -3,7 +3,7 @@ using Godot;
 namespace HordeShooter;
 
 /// <summary>
-/// Parrot weapon wing: retain imported feather topology and palette surfaces, pose the whole wing
+/// Authored weapon wing/paw: retain imported topology and palette surfaces, pose the whole limb
 /// about its authored shoulder. No player-specific vertex coordinates or per-frame mesh allocation.
 /// Ordinary node transforms also keep hit, silhouette and status passes on the same geometry.
 /// </summary>

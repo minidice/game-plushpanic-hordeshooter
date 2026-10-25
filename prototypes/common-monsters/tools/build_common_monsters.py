@@ -170,6 +170,8 @@ def gear(deform,head,c,kind):
 
 def animal(kind):
     if kind=='parrot':return parrot()
+    if kind=='eagle':return eagle()
+    if kind=='lion':return lion()
     c=colors(kind);root,deform,head,left,right,arms=frame(kind)
     bird=kind in ['eagle','parrot']
     oval('plush_torso',(0,0,.78),(.38,.31,.49),c['primary'],deform,20,12)
@@ -397,6 +399,171 @@ def parrot():
     return root
 
 
+
+def eagle():
+    """Broad, quiet plush eagle shapes; compact feather caps suit authored-wing grips."""
+    c=colors('eagle');root,deform,head,left,right,arms=frame('eagle')
+    body=[(.27,.13,.13,.015),(.37,.25,.23,.01),(.52,.34,.285,.005),
+          (.72,.385,.31,0),(.90,.365,.29,.005),(1.06,.28,.235,.015),
+          (1.19,.19,.17,.015),(1.25,.10,.10,.015)]
+    loft('eagle_plush_body',body,c['primary'],deform,32)
+    loft('eagle_head_neck',[(1.025,.16,.15,.015),(1.12,.245,.21,.005),
+         (1.25,.32,.27,-.005),(1.40,.405,.325,-.015),(1.55,.415,.335,-.005),
+         (1.68,.37,.295,.015),(1.78,.28,.225,.035),(1.845,.15,.13,.045),
+         (1.865,.015,.015,.045)],c['cream'],head,32)
+    # A broad overlapping collar replaces the old row of detached neck beads.
+    for i in range(7):
+        a=(i-3)*.38;x=math.sin(a)*.275;y=-math.cos(a)*.218
+        feather('padded_neck_ruff',[(x,y,1.32),(x*1.12,y*1.08,1.22),
+                (x*1.08,y*1.04,1.105+abs(i-3)*.016)],
+                [.065,.080,.012],[.035,.042,.008],c['cream'],head,10)
+    for sign in [-1,1]:
+        oval('compact_eye_rim',(sign*.215,-.299,1.546),(.073,.023,.079),c['gold'],head,12,8,rot=(0,0,sign*.35))
+        oval('button_eye',(sign*.215,-.319,1.546),(.043,.023,.052),c['eye'],head,12,8,rot=(0,0,sign*.35))
+        oval('eye_glint',(sign*.215-.01,-.34,1.561),(.011,.005,.012),c['glint'],head,8,6)
+        oval('soft_stern_brow',(sign*.227,-.302,1.614),(.125,.041,.045),c['cream'],head,14,8,rot=(0,sign*-.16,sign*.20))
+    feather('golden_hooked_beak',[(0,-.296,1.46),(0,-.393,1.467),(0,-.498,1.424),
+            (0,-.563,1.355),(0,-.559,1.283),(0,-.532,1.258)],
+            [.102,.12,.098,.062,.027,.004],[.077,.085,.069,.051,.022,.003],c['gold'],head,16)
+    feather('lower_mandible',[(0,-.30,1.345),(0,-.412,1.345),(0,-.506,1.348)],
+            [.077,.083,.008],[.037,.038,.005],c['gold'],head,12)
+    for sign in [-1,1]:
+        oval('nostril',(sign*.07,-.451,1.491),(.013,.009,.01),c['ink'],head,8,6)
+    for sign,foot,arm in zip([-1,1],[left,right],arms):
+        oval('soft_ankle',(sign*.205,.005,.29),(.11,.12,.16),c['primary'],foot,12,8)
+        oval('padded_talon_foot',(sign*.215,-.10,.125),(.157,.215,.125),c['gold'],foot,16,10)
+        for dx in [-.049,.049]:seam(foot,c,[(sign*.215+dx,-.29,.12),(sign*.215+dx,-.245,.198)])
+        # Narrow upper/lower 12% caps prevent the posed fan projecting past anchors.
+        feather('broad_wing_coverts',[(sign*.365,0,1.105),(sign*.447,-.025,1.025),
+                (sign*.485,-.035,.84),(sign*.46,-.025,.685)],
+                [.040,.135,.145,.045],[.044,.10,.088,.024],c['primary'],arm,16)
+        for j in range(4):
+            x=sign*(.385+j*.064)
+            feather('layered_flight_feather',[(x,-.102,.935-j*.025),
+                    (x+sign*.018,-.13,.82-j*.023),(x+sign*.008,-.098,.70-j*.017),
+                    (sign*.451,-.035,.615+j*.004)],
+                    [.036,.048,.044,.005],[.026,.033,.026,.003],
+                    c['secondary'] if j%2==0 else c['primary'],arm,10)
+    tail=empty('common_eagle_tail',deform,(0,.23,.62))
+    for i in [-1,0,1]:
+        feather('broad_tail_fan',[(i*.055,.20,.65),(i*.09,.33,.55),
+                (i*.12,.42,.40),(i*.12,.445,.355+abs(i)*.025)],
+                [.053,.080,.073,.022],[.035,.04,.025,.01],c['secondary'],tail,12)
+    vest=empty('Gear_Vest',deform)
+    loft('fitted_eagle_vest',[(z,rx+.024,ry+.028,cy) for z,rx,ry,cy in body[2:6]],c['vest'],vest,32)
+    for sign in [-1,1]:
+        oval('vest_front_pouch',(sign*.15,-.31,.76),(.115,.06,.145),c['vest'],vest,12,8,rot=(0,0,sign*.25))
+        tube('vest_shoulder',[(sign*.205,-.19,1.045),(sign*.205,0,1.14),(sign*.205,.19,1.04)],
+             [.043,.047,.043],c['vest'],vest,8)
+    tube('vest_closure',[(0,-.316,.54),(0,-.348,.72),(0,-.326,.90),(0,-.252,1.06)],[.009]*4,c['ink'],vest,6)
+    glasses=empty('Gear_Glasses',head)
+    for sign in [-1,1]:oval('sunglass_lens',(sign*.22,-.36,1.55),(.108,.02,.10),c['ink'],glasses,12,8)
+    tube('nose_bridge',[(-.11,-.36,1.55),(.11,-.36,1.55)],[.013,.013],c['ink'],glasses)
+    return root
+
+def lion_mane(c,head):
+    """One continuous padded ruff with broad swept ridges, never a bead necklace."""
+    n=48;verts=[];faces=[]
+    # Inner lip seats under face, outward folds crest then turn into the back cap.
+    profiles=[(.60,-.02),(.80,-.185),(.94,-.105),(1.0,.035),(.94,.22),(.74,.32),(.43,.36),(.015,.37)]
+    for j,(r,y) in enumerate(profiles):
+        for k in range(n):
+            a=math.tau*k/n
+            wave=math.cos(9*a+.32*j)
+            fold=(.014+.019*math.sin(math.pi*j/(len(profiles)-1)))*wave*r
+            # Top crown is generous; lower ruff narrows into the neck.
+            rx=.575*r+fold;rz=.555*r+fold
+            x=rx*math.sin(a);z=1.465+rz*math.cos(a)
+            if math.cos(a)<0:x*=.90
+            verts.append((x,y-.018*wave*math.sin(math.pi*j/7),z))
+    for j in range(len(profiles)-1):
+        for k in range(n):
+            a=j*n+k;b=j*n+(k+1)%n;faces.append((a,b,b+n,a+n))
+    faces.append(tuple(range((len(profiles)-1)*n,len(profiles)*n)))
+    mesh=bpy.data.meshes.new('continuous_swept_mane');mesh.from_pydata(verts,[],faces);mesh.update()
+    obj=bpy.data.objects.new('continuous_swept_mane',mesh);bpy.context.collection.objects.link(obj)
+    obj.data.materials.append(c['mane'])
+    bm=bmesh.new();bm.from_mesh(mesh);bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces));bm.to_mesh(mesh);bm.free()
+    for p in mesh.polygons:p.use_smooth=True
+    parent_world(obj,head)
+
+
+def lion():
+    c=colors('lion');root,deform,head,left,right,arms=frame('lion')
+    body=[(.27,.12,.12,.02),(.36,.26,.225,.015),(.51,.355,.29,.01),
+          (.70,.395,.32,.005),(.88,.38,.305,.01),(1.04,.31,.25,.02),
+          (1.17,.225,.19,.025),(1.24,.12,.12,.025)]
+    loft('stout_lion_body',body,c['primary'],deform,32)
+    lion_mane(c,head)
+    loft('soft_lion_face',[(1.105,.13,.14,-.005),(1.19,.25,.225,-.025),
+         (1.32,.365,.30,-.04),(1.48,.407,.32,-.04),(1.63,.38,.30,-.025),
+         (1.75,.30,.235,-.005),(1.83,.18,.15,.015),(1.855,.01,.01,.02)],c['primary'],head,32)
+    for s in [-1,1]:
+        oval('round_lion_ear',(s*.355,-.065,1.81),(.125,.075,.13),c['primary'],head,14,8,rot=(0,s*.2,0))
+        oval('ear_inset',(s*.355,-.128,1.815),(.071,.018,.076),c['mane'],head,12,8)
+        oval('compact_button_eye',(s*.193,-.326,1.545),(.045,.026,.057),c['eye'],head,16,10,rot=(0,0,s*.28))
+        oval('eye_glint',(s*.193-.011,-.350,1.562),(.011,.005,.014),c['glint'],head,8,6)
+        oval('soft_brow',(s*.195,-.308,1.618),(.096,.031,.032),c['primary'],head,12,8,rot=(0,s*-.1,s*.1))
+        oval('integrated_muzzle',(s*.108,-.327,1.335),(.153,.125,.112),c['cream'],head,16,10)
+        for i in range(2):
+            oval('whisker_stitch',(s*(.14+i*.045),-.443+i*.018,1.35),(.009,.006,.009),c['mane'],head,8,6)
+    oval('soft_chin',(0,-.299,1.255),(.159,.105,.068),c['cream'],head,16,10)
+    feather('rounded_triangle_nose',[(0,-.413,1.421),(0,-.455,1.405),(0,-.453,1.363)],
+            [.068,.076,.018],[.029,.035,.012],c['ink'],head,12)
+    tube('nose_seam',[(0,-.457,1.372),(0,-.455,1.319)],[.008,.008],c['ink'],head,6)
+    tube('quiet_smile',[(-.10,-.429,1.317),(-.056,-.446,1.299),(0,-.454,1.318),(.056,-.446,1.299),(.10,-.429,1.317)],
+         [.007]*5,c['ink'],head,6)
+    for s,foot,arm in zip([-1,1],[left,right],arms):
+        # One tapered thigh/ankle surface; ankle enters the padded shoe upper.
+        leg=loft('tapered_leg',[(.105,.083,.095,-.005),(.18,.083,.09,.005),
+             (.245,.094,.104,.012),(.33,.125,.129,.018),(.405,.128,.132,.018),
+             (.46,.10,.105,.018)],c['primary'],foot,16)
+        for v in leg.data.vertices:v.co.x+=s*.205
+        # Broad closed sole at z=0 with a flatter front and rounded upper/toe.
+        shoe=loft('planted_foot',[(0,.147,.193,-.10),(.024,.174,.222,-.10),
+             (.075,.18,.23,-.10),(.135,.168,.212,-.09),(.185,.131,.159,-.065),
+             (.215,.075,.092,-.025)],c['primary'],foot,20)
+        for v in shoe.data.vertices:
+            v.co.x+=s*.22
+            v.co.y=max(v.co.y,-.305)
+        for poly in shoe.data.polygons:
+            if all(abs(shoe.data.vertices[i].co.z)<1e-6 for i in poly.vertices):poly.use_smooth=False
+        # Forearm terminates at wrist; only this fabric section stretches in-game.
+        forearm=loft('forearm',[(.785,.067,.063,-.025),(.84,.082,.077,-.02),
+             (.92,.105,.09,-.008),(.98,.072,.064,0),(.99,.025,.025,0)],c['primary'],arm,16)
+        for v in forearm.data.vertices:v.co.x+=s*(.435-.045*max(0,min(1,(v.co.z-.80)/.19)))
+        forearm.name=arm.name+'_mesh'
+        side='left' if s<0 else 'right'
+        paw_node=empty(f'common_lion_{side}Paw')
+        parent_world(paw_node,arm)
+        wrist=empty(f'common_lion_{side}Wrist',paw_node)
+        wrist.location=(s*.435,-.025,.80)
+        grip=empty(f'common_lion_{side}Grip',paw_node)
+        grip.location=(s*.435,-.065,.685)
+        paw=loft('closed_grip_paw',[(.60,.035,.035,-.045),(.625,.08,.065,-.055),
+             (.665,.105,.082,-.065),(.725,.108,.077,-.055),(.77,.079,.060,-.035),
+             (.815,.062,.059,-.025)],c['primary'],paw_node,16)
+        for v in paw.data.vertices:v.co.x+=s*.435
+        paw.name=paw_node.name+'_mesh'
+        # Small tucked thumb and compact palm patch read as a closed mitten grip.
+        oval('tucked_thumb',(s*.365,-.098,.71),(.046,.05,.055),c['primary'],paw_node,12,8,rot=(0,s*.35,0))
+        oval('soft_palm_pad',(s*.435,-.136,.678),(.061,.012,.044),c['secondary'],paw_node,12,8)
+    tail=empty('common_lion_tail',deform,(0,.24,.60))
+    tube('soft_curled_tail',[(0,.24,.60),(0,.45,.49),(.17,.51,.54),(.25,.47,.73)],
+         [.065,.058,.048,.035],c['primary'],tail,12)
+    oval('lion_tail_tuft',(.25,.47,.75),(.09,.08,.115),c['mane'],tail,14,10)
+    vest=empty('Gear_Vest',deform)
+    loft('fitted_lion_vest',[(z,rx+.022,ry+.026,cy) for z,rx,ry,cy in body[2:6]],c['vest'],vest,32)
+    for s in [-1,1]:
+        oval('vest_pocket',(s*.15,-.321,.74),(.112,.045,.13),c['vest'],vest,12,8,rot=(0,0,s*.22))
+        tube('vest_strap',[(s*.225,-.20,1.03),(s*.225,0,1.13),(s*.225,.20,1.035)],[.043]*3,c['vest'],vest,8)
+    tube('vest_closure',[(0,-.335,.52),(0,-.351,.70),(0,-.337,.88),(0,-.257,1.04)],[.009]*4,c['ink'],vest,6)
+    glasses=empty('Gear_Glasses',head)
+    for s in [-1,1]:oval('sunglass_lens',(s*.20,-.37,1.55),(.105,.02,.10),c['ink'],glasses,12,8)
+    tube('nose_bridge',[(-.10,-.37,1.55),(.10,-.37,1.55)],[.013,.013],c['ink'],glasses)
+    return root
+
+
 def trousers(module,c,style):
     shell('trouser_waist',module,c['pants'],.40,.69,rx=.40,ry=.325)
     for s in [-1,1]:
@@ -487,10 +654,6 @@ def consolidate(kind):
         for obj in objects:obj.select_set(True)
         bpy.context.view_layer.objects.active=objects[0];bpy.ops.object.join()
         objects[0].name=parent.name+'_mesh'
-        if kind=='lion' and parent.name=='Head':
-            # The dense ring of mane lobes dominates this one species' crowd cost.
-            mod=objects[0].modifiers.new('Mane crowd budget','DECIMATE');mod.ratio=.78
-            bpy.ops.object.modifier_apply(modifier=mod.name)
     bpy.context.view_layer.update()
 
 

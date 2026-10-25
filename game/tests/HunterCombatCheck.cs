@@ -11,7 +11,10 @@ public partial class HunterCombatCheck : Node
     private Stage _stage = null!;
     private int _checks;
     private bool ParrotReview => OS.GetCmdlineUserArgs().Contains("--parrot-stage2");
-    private Vector3 TestPoint(float x) => ParrotReview ? new(x+8, _stage.Tiers.GroundY(new(x+8,0,-2))+.05f, -2) : new(x,.05f,0);
+    private bool LionReview => OS.GetCmdlineUserArgs().Contains("--lion-stage2");
+    private bool Stage2Review => ParrotReview || LionReview || OS.GetCmdlineUserArgs().Contains("--eagle-stage2");
+    private string ReviewSpecies => LionReview ? "lion" : ParrotReview ? "parrot" : "eagle";
+    private Vector3 TestPoint(float x) => Stage2Review ? new(x+8, _stage.Tiers.GroundY(new(x+8,0,-2))+.05f, -2) : new(x,.05f,0);
     private sealed class Field : StageMap
     {
         public override Rect2 Area => new(-20,-20,40,40);
@@ -27,7 +30,7 @@ public partial class HunterCombatCheck : Node
         if(DisplayServer.GetName()=="headless")return;
         await ToSignal(RenderingServer.Singleton,RenderingServer.SignalName.FramePostDraw);
         using var image=GetViewport().GetTexture().GetImage();
-        Check(image.SavePng(ProjectSettings.GlobalizePath("res://output/hunter-combat-"+(ParrotReview?"parrot-stage2-":"")+label+".png"))==Error.Ok,"capture "+label);
+        Check(image.SavePng(ProjectSettings.GlobalizePath("res://output/hunter-combat-"+(Stage2Review?ReviewSpecies+"-stage2-":"")+label+".png"))==Error.Ok,"capture "+label);
     }
     private async Task<Enemy> Spawn(string weapon)
     {
@@ -37,21 +40,34 @@ public partial class HunterCombatCheck : Node
         var player=_stage.Player;player.Heal(999);player.Invulnerable=false;
         player.TeleportTo(TestPoint(4.05f));player.SetControls(Vector2.Zero,TestPoint(3)+Vector3.Up,false);
         _stage.Cam.SnapTo(TestPoint(3)+Vector3.Up);
-        return _stage.SpawnCommonIdentity(new("hunter",ParrotReview?"parrot":"eagle","red",weapon),TestPoint(weapon=="woodbow"?-2:3),true);
+        return _stage.SpawnCommonIdentity(new("hunter",ReviewSpecies,"red",weapon),TestPoint(weapon=="woodbow"?-2:3),true);
     }
     public override async void _Ready()
     {
         int exit=0;
         try
         {
-            _stage=new Stage{MapOverride=ParrotReview?new LayoutMap():new Field(),CharacterOverride="goose",ThemeOverride="animals",DirectorEnabled=false,
+            _stage=new Stage{MapOverride=Stage2Review?new LayoutMap():new Field(),CharacterOverride="goose",ThemeOverride="animals",DirectorEnabled=false,
                 ModeOverride=GameMode.Scenario,SquadOverride=0,ArrivalOverride=false,NextStageOverride=false};
             AddChild(_stage);await Frames(4);_stage.Player.ManualControl=true;
+            if (LionReview) await LionApproach();
             foreach(string weapon in new[]{"club","knife"}) await Melee(weapon);
             await Bow();GD.Print("HUNTER_COMBAT_PASS "+_checks);
         }
         catch(Exception e){GD.PushError("HUNTER_COMBAT_FAIL "+e);exit=1;}
         _stage?.QueueFree();await Frames(3);QuitHygiene.Collect();GetTree().Quit(exit);
+    }
+    private async Task LionApproach()
+    {
+        var enemy=await Spawn("club");
+        _stage.Player.TeleportTo(TestPoint(9));
+        _stage.Player.SetControls(Vector2.Zero,enemy.GlobalPosition+Vector3.Up,false);
+        float before=enemy.GlobalPosition.DistanceTo(_stage.Player.GlobalPosition);
+        await Frames(36);
+        Check(enemy.GlobalPosition.DistanceTo(_stage.Player.GlobalPosition)<before-1,"lion approaches through actual Stage2 physics");
+        await Shot("walk");
+        enemy.SetPhysicsProcess(false);enemy.Rig.ResetPose();
+        await Frames(2);await Shot("stance");
     }
     private async Task Melee(string weapon)
     {

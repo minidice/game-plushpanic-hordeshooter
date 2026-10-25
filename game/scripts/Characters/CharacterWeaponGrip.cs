@@ -48,7 +48,19 @@ public partial class CharacterRig
     private MeshInstance3D MakeForearm(string name)
     {
         string side=name=="RightForearm"?"right":"left";
-        if(Definition.Id=="common_parrot"&&Model.FindChild(Definition.Id+"_"+side+"Arm_mesh",true,false) is MeshInstance3D {Mesh:not null} wing)
+        if(Definition.Id=="common_lion" && Model.FindChild("common_lion_"+side+"Paw_mesh",true,false) is MeshInstance3D {Mesh:not null} paw)
+        {
+            var forearm=(MeshInstance3D)Model.FindChild("common_lion_"+side+"Arm_mesh",true,false);
+            var pivot=forearm.GetParentNode3D();
+            var home=_featureHomes.TryGetValue(pivot,out var authored)?authored:pivot.Transform;
+            var shoulder=InRig(_gripArms!).AffineInverse()*InRig(pivot.GetParentNode3D())*home;
+            var pawNode=paw.GetParentNode3D();
+            var pawHome=shoulder*pawNode.Transform;
+            var wrist=pawNode.GetNode<Node3D>("common_lion_"+side+"Wrist");
+            var grip=pawNode.GetNode<Node3D>("common_lion_"+side+"Grip");
+            return CharacterLionPaw.Create(_gripArms!,paw,pawHome*paw.Transform,forearm,shoulder*forearm.Transform,shoulder.Origin,pawHome*wrist.Position,pawHome*grip.Position,name,side=="right"?1:-1);
+        }
+        if((Definition.Id is "common_parrot" or "common_eagle")&&Model.FindChild(Definition.Id+"_"+side+"Arm_mesh",true,false) is MeshInstance3D {Mesh:not null} wing)
         {
             var pivot=wing.GetParentNode3D();
             var home=_featureHomes.TryGetValue(pivot,out var authored)?authored:pivot.Transform;
@@ -106,6 +118,12 @@ public partial class CharacterRig
     private void Connect(MeshInstance3D arm,Node3D? target,float side)
     {
         arm.Visible=true;
+        if(arm is CharacterLionPaw paw)
+        {
+            bool holding=target!=null&&IsInstanceValid(target);
+            paw.PosePaw(holding?_gripArms!.ToLocal(target!.GlobalPosition):Vector3.Zero,holding,_wingSize,_runningCarry);
+            return;
+        }
         if(arm is CharacterAuthoredWing wing)
         {
             bool holding=target!=null&&IsInstanceValid(target);
@@ -149,6 +167,7 @@ public partial class CharacterRig
     }
     private static Vector3 WristPosition(MeshInstance3D arm)
     {
+        if(arm is CharacterLionPaw paw)return paw.Grip;
         if(arm is CharacterAuthoredWing wing)return wing.Wrist;
         if(CharacterGripSurface.IsSurface(arm))return CharacterGripSurface.Wrist(arm);
         var mesh=(CapsuleMesh)arm.Mesh;
