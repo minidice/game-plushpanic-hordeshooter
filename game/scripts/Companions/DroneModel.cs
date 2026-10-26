@@ -39,7 +39,7 @@ public partial class DroneModel : Node3D
         if(!Enum.IsDefined(quality))throw new ArgumentException("Unknown quality",nameof(quality));
         if(_model!=null && Quality==quality)return;
         var suffix=quality==PetModelQuality.Low?"_low":"";
-        var next=GD.Load<PackedScene>($"res://assets/drones/{BodyId}{suffix}.glb").Instantiate<Node3D>();
+        var next=GD.Load<PackedScene>(AssetPaths.Pattern("drone_model", BodyId + suffix)).Instantiate<Node3D>();
         Equipment?.GetParent()?.RemoveChild(Equipment);_model?.Free();
         _model=next;AddChild(next);Quality=quality;
         _body=(Node3D)next.FindChild("Body",true,false);
@@ -56,7 +56,7 @@ public partial class DroneModel : Node3D
     public void SetEquipment(string? id)
     {
         if(id!=null && !EquipmentIds.Contains(id))throw new ArgumentException("Unknown drone equipment",nameof(id));
-        var next=id==null?null:GD.Load<PackedScene>($"res://assets/drones/{id}.glb").Instantiate<Node3D>();
+        var next=id==null?null:GD.Load<PackedScene>(AssetPaths.Pattern("drone_model", id)).Instantiate<Node3D>();
         Equipment?.Free();Equipment=next;
         if(next!=null)EquipmentSocket.AddChild(next);
     }

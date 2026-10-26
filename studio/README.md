@@ -14,6 +14,8 @@
 
 실행 중 `node studio/tests/smoke.mjs`, `node studio/tests/library.mjs --all`, `node studio/tests/quality.mjs`, `node studio/tests/interactions.mjs`, `node studio/tests/destruction.mjs`로 검증한다(검사에만 Python + Pillow 필요).
 
+지인에게 모델 피드백을 받을 때는 Studio를 밖에 열지 말고 [피드백 공유 꾸러미](share/README.md)(고른 모델만 담은 오프라인 zip, md · 데이터 제외)를 만든다.
+
 
 [이펙트 도감](http://127.0.0.1:4317/effects): 실제 Godot 코드/셰이더로 촬영한 주요13개 효과, 재생·일시정지·속도·타임라인·반복. [사운드 도감](http://127.0.0.1:4317/sounds): 현재 SoundRecipes 전체43종의 실제 선택 음원, 직접 재생·정지·반복, 출처·길이·게임 설정값. 원음 재생이므로 거리/버스 혼합·게임dB·랜덤 피치는 미적용이다. 자동 재생/설정 저장 없음.
 

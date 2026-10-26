@@ -12,7 +12,6 @@ namespace HordeShooter;
 /// </summary>
 public partial class TeamCardView : Node3D
 {
-    public const string FxDir = "res://assets/effects/cards/";
     public LabCards Cards { get; set; } = null!;
     public Stage Stage { get; set; } = null!;
 
@@ -29,7 +28,7 @@ public partial class TeamCardView : Node3D
     private readonly System.Collections.Generic.Dictionary<Player, (Sprite3D Pole, Sprite3D Stars)> _marks = new();
     private float _puffTick;
 
-    public static Texture2D? Fx(string name) => ResourceLoader.Exists(FxDir + name + ".png") ? GD.Load<Texture2D>(FxDir + name + ".png") : null;
+    public static Texture2D? Fx(string name) => AssetPaths.Pattern("card_fx", name) is var path && ResourceLoader.Exists(path) ? GD.Load<Texture2D>(path) : null;
 
     public override void _Ready()
     {

@@ -15,8 +15,10 @@ public enum CardPropKind { Button, Train, JackBox }
 /// </summary>
 public static class CardProps
 {
-    public const string ButtonModel = "res://assets/card-props/button_missile.glb", TrainModel = "res://assets/card-props/toy_train.glb",
-        JackModel = "res://assets/card-props/jack_box.glb";
+    /// <summary>Models from content/data/asset_paths.json (T-26).</summary>
+    public static string ButtonModel => AssetPaths.File("card_prop.button_missile");
+    public static string TrainModel => AssetPaths.File("card_prop.toy_train");
+    public static string JackModel => AssetPaths.File("card_prop.jack_box");
 
     /// <summary>Puts a prop on the field: a button from <paramref name="a"/> to <paramref name="target"/> (or <paramref name="b"/>), a train from <paramref name="a"/> along <paramref name="b"/>, a box at <paramref name="a"/>.</summary>
     public static Node3D Spawn(Stage stage, CardPropKind kind, Vector3 a, Vector3 b, Player? by = null, Enemy? target = null, float damage = 0)

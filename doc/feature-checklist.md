@@ -1,5 +1,7 @@
 # 게임 기능 체크리스트
 
+> **2026-10-26부터 기록 방식이 바뀌었다**([decisions.md](decisions.md) T-26, [기록 문서 나누기](records-split-plan.md)). 새 기록의 본문 · 작업 기록은 [기능별 폴더](features/README.md)에 쓰고, 이 문서에는 짧은 줄만 추가한다. **이 문서의 기존 기록은 옮기지 않고 그대로 남아 있다**(앞으로만 새 구조, 6.4).
+
 ### 2026-10-25 캐릭터 아트 방향 정정
 
 - [x] 봉제인형 해석 철회, 첨부 기준의 매끈한 데포르메 동물·입체적인 장비로 문서/제작 지시 정리.
@@ -563,6 +565,14 @@
 - 기존 완료된 환경/소품 자산은 재사용한다. 아직 새 맵이나 분기 임무가 구현된 것은 아니다. [맵 확장 계획](map-expansion-plan.md).
 
 
+## 기록 · 문서 (T-26)
+
+- [x] 기록 문서를 기능별 폴더로(앞으로만 새 구조, 옛 기록은 그대로) — [기록 001](features/tech-tools/log/001-doc-records-split.md)
+- [x] Studio 최상단 「리소스 | md」와 문서 목록 · 검색 · 읽기 — [기록 002](features/tech-tools/log/002-code-studio-md-menu.md)
+- [x] `codex/mammal-weapon-arms` 병합 검증 — [기록 003](features/tech-tools/log/003-check-merge-mammal-weapon-arms.md)
+- [ ] Studio 「기획서」 메뉴
+- [ ] 옛 기록을 기능 폴더로 옮기기(필요한 기능부터)
+
 ## 로컬 개발용 Studio (T-25, 2026-10-24)
 
 - [x] 실행기 후속(2026-10-25): `Start-Studio.ps1` 준비 완료 후 기본 브라우저 자동 열기, 동일 작업 폴더/포트 재실행 시 서버 재사용, 준비 중 연속 실행 중복 방지. 다른 앱/작업 폴더의 포트 점유는 오류 처리. [실행 계약](studio-prototype.md#실행).
@@ -589,6 +599,7 @@
 - [x] **오브젝트 이동/탄환 차단 데이터**: 실제 로컬 JSON과 공통 로더를 게임/웹에 연결. 철조망 이동 차단·탄환 통과, 일반 구조물 양쪽 차단. 몸체·흐름장·근접/사격·Stage 2 경계 벽 연결, 웹 기본값/출처/배치 예외 표시. 전용30·웹131·경로420검사 통과. [범위·경고·회귀 결과](object-data-spec.md).
 - [x] **낮은 엄폐물 · 파괴 데이터(C-29, 2026-10-24)**: `cover` · `cover_rules` · `destruction`(깰 수 있는 강도 `gun`/`explosive` · 내구도)을 게임 · 웹이 같은 로더로 읽음. 모래자루 = 깨지는 엄폐물(50), 콘크리트 방벽 = 안 깨지는 엄폐물. 붙으면 넘겨 쏘기(몸 폭 1배 미만), 양쪽 붙음 서로 맞힘, 근접 · 시야 넘어감, 파괴 시 흐름장 해제 · 멀티 동기화. `CoverCheck` 27. [데이터 규격](object-data-spec.md)
 - [ ] 좀비 모래자루 넘어오기, 다른 엄폐물 종류(철제 방벽 등) — I-120.
+- [x] **피드백 공유 꾸러미(T-27, 2026-10-26)**: 모델 31(P · M · O)과 게임 장면 4(S)의 회전 사진 · 3D 보기 · 의견 칸을 담은 오프라인 zip. md · 데이터 제외. [기록 004](features/tech-tools/log/004-code-share-pack.md).
 
 
 ### 폭발·화염·독과 Studio 공통 데이터 — 2026-10-24 (A-19·T-25)
@@ -673,6 +684,13 @@
 - `WeaponAimCheck` 32개(헤드리스 · 창 모드): 0.5초 겨누면 준비 · 연사 중 첫 발만 치명타(`C . .`) · 쏘면 집중 소모 · 다시 겨누면 다음 치명타 추가. 처음 실패는 앞 단계 몹에 잠금이 남아 준비 대기가 건너뛰어진 검사 순서 문제 → 앞 몹을 지우고 "이 몹에 잠금"을 기다리도록 고침.
 - 다시 돌린 검사: WeaponHandlingCheck 36 · CombatPacingCheck 44 · TailMeleeCheck 13976 · CardLabCheck 172 · SquadCheck 51 · CompanionCheck 39 · NetSyncCheck 32 · ModeCheck 147 · EnemyAttackCheck 79 · Integration 2회 149, 모두 통과 · 종료 경고 0.
 
+### 이번 변경 확인 기록 — 2026-10-26 (코드의 리소스 직접 경로 → 목록 파일, T-26 개선 ②)
+
+- [x] 코드에 직접 적힌 리소스 경로 8파일(카드 아이콘 · 카드 이펙트 · 카드 소품 모델 3 · 투표 이미지 2 · 펫 · 드론 모델 · 소품 키트 폴더 5 · 공장 바닥/벽 셰이더)을 `content/data/asset_paths.json`으로 옮기고 `AssetPaths`로 읽음. 게임 동작은 그대로.
+- C# 빌드 경고 · 오류 0. 새 `AssetPathsCheck` 20개: 목록 로드, 파일 7개 · 키트 폴더 5개(각 manifest) 존재, 패턴 4개가 실제 파일과 맞음, 없는 키는 빈 경로 + 오류(멈추지 않음), `scripts/`에 직접 경로 없음.
+- 다시 돌린 검사: CardLabCheck 172(창 모드 173, 카드 아이콘 · 이펙트 · 소품 · 투표 이미지 실제 로드) · ModeCheck 147 · CompanionCheck 39(펫 · 드론 모델) · StageTransitionCheck 200 · SpawnCheck 41 · OnslaughtNetCheck 29 · MenuCheck 44 · Integration 149(공장 바닥 · 벽 셰이더), 모두 통과 · 로그에 [assets] 오류 0. Studio 도감(`PropLibrary.Folders` 사용)은 서버를 띄워 확인하지 않음.
+- 같은 날 설계안만: [기록 문서 나누기](records-split-plan.md)(기능별 폴더 + 작업별 기록 파일, 아직 안 옮김).
+
 ## 2026-10-26 공통 총기 자세 A-4
 
 - [x] 플레이어4종·일반 동물6종 공통 어깨 견착/양손 권총, 체형 기준점과 Blender 개머리판 기준점 분리.
@@ -685,3 +703,5 @@
 - [x] 라쿤·랫서판다·사자·호랑이·순록·코뿔소: 원본 팔 비율 제한, 공통 비스듬한 자세/어깨·총·왼손 위치 조정. 양손 접촉 및 기존 커스터마이징 유지.
 - [x] 조준·구르기·무장 적 밀치기 추가 총 이동 보완.11,016 검사 및 Studio22 렌더. [정확한 검증/구현 범위](shared-weapon-poses.md#2026-10-26-짧은-팔-비율-유지-후속).
 - [ ] 재장전/횡단까지 고정 팔길이 확대, 독립 가슴/머리 조준, 확대 관절선·최종 미술 수락.
+
+- [x] A-4 / I-35 짧은 팔 후속: 기존 모델·커스텀 유지, 공통 자세 개선 및 최신 main 통합. [작업·검증 기록](features/art-characters/log/001-code-compact-weapon-poses.md).

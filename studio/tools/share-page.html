@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<script type="importmap">/*IMPORTMAP*/</script>
+<style>
+  :root {
+    --bg: #0f1517; --panel: #172024; --panel-2: #1e2a2f; --line: #2b3a40; --text: #e6ece9; --muted: #93a4a2;
+    --accent: #e8b04a; --accent-ink: #1b1406; --good: #7fc79a; --photo: #0f1719;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 "Pretendard", "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif; }
+  a { color: var(--accent); }
+  header { padding: 32px 16px 8px; max-width: 1280px; margin: 0 auto; }
+  h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: -.01em; }
+  .intro { color: var(--muted); margin: 0 0 16px; }
+  .how { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 12px; margin: 0 0 16px; }
+  .box { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .box h2 { margin: 0 0 6px; font-size: 14px; color: var(--accent); }
+  .box ol, .box ul { margin: 0; padding-left: 20px; }
+  .box li { margin: 2px 0; }
+  nav { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line); }
+  nav .inner { max-width: 1280px; margin: 0 auto; padding: 8px 16px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  nav a { text-decoration: none; color: var(--text); background: var(--panel-2); border: 1px solid var(--line); padding: 4px 12px; border-radius: 999px; font-size: 13px; }
+  nav .spacer { flex: 1; }
+  button { font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); padding: 5px 10px; }
+  button:hover { border-color: var(--muted); }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+  button.on { background: var(--text); color: var(--bg); border-color: var(--text); }
+  main { max-width: 1280px; margin: 0 auto; padding: 8px 16px 64px; }
+  section { padding-top: 24px; }
+  section > h2 { margin: 0; font-size: 20px; }
+  section > p { margin: 2px 0 14px; color: var(--muted); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(290px, 100%), 1fr)); gap: 14px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+  .card .top { display: flex; align-items: baseline; gap: 8px; padding: 10px 12px 6px; }
+  .key { font-weight: 800; color: var(--accent-ink); background: var(--accent); border-radius: 6px; padding: 0 7px; font-size: 13px; }
+  .card .title { font-weight: 600; }
+  .card .meta { margin-left: auto; color: var(--muted); font-size: 12px; white-space: nowrap; }
+  .spin { position: relative; aspect-ratio: 1; background: var(--photo); overflow: hidden; cursor: grab; touch-action: pan-y; user-select: none; }
+  .spin.drag { cursor: grabbing; }
+  .spin img { width: 100%; height: 100%; display: block; transform-origin: 50% 50%; pointer-events: none; -webkit-user-drag: none; }
+  .spin .hint { position: absolute; left: 8px; bottom: 6px; font-size: 11px; color: var(--muted); background: rgba(0,0,0,.35); padding: 1px 6px; border-radius: 4px; }
+  .tools { display: flex; gap: 6px; padding: 8px 12px; flex-wrap: wrap; }
+  .tools .grow { flex: 1; }
+  .note { margin: 0 12px 12px; }
+  .note textarea { width: 100%; min-height: 54px; resize: vertical; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; font: inherit; font-size: 13px; }
+  .note textarea::placeholder { color: #66777a; }
+  .scenes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr)); gap: 14px; }
+  .scene img { width: 100%; display: block; aspect-ratio: 16/9; object-fit: cover; cursor: zoom-in; background: var(--photo); }
+  .modal { position: fixed; inset: 0; z-index: 20; background: rgba(5,8,9,.86); display: none; }
+  .modal.open { display: flex; }
+  .viewer { margin: auto; width: min(1100px, 100vw - 24px); height: min(820px, 100vh - 24px); background: var(--panel); border: 1px solid var(--line); border-radius: 14px; display: flex; flex-direction: column; overflow: hidden; }
+  .viewer .bar { display: flex; gap: 6px; align-items: center; padding: 8px 10px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .viewer .bar .title { font-weight: 600; margin-right: 8px; }
+  .viewer .stage { position: relative; flex: 1; min-height: 0; }
+  .viewer canvas { width: 100%; height: 100%; display: block; }
+  .viewer .status { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); pointer-events: none; }
+  .viewer .foot { padding: 6px 12px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); }
+  .lightbox img { margin: auto; max-width: 96vw; max-height: 92vh; border-radius: 8px; }
+  .lightbox .cap { position: fixed; left: 0; right: 0; bottom: 12px; text-align: center; color: var(--text); }
+  .export textarea { width: 100%; height: 50vh; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px; font: inherit; font-size: 13px; }
+  .export .viewer { height: auto; padding: 0 0 12px; }
+  .export .body { padding: 12px; }
+  .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--good); color: #062010; padding: 6px 14px; border-radius: 999px; font-weight: 600; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 30; }
+  .toast.show { opacity: 1; }
+  @media (max-width: 520px) { h1 { font-size: 22px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title"></h1>
+  <p class="intro" id="intro"></p>
+  <div class="how">
+    <div class="box"><h2>보는 법</h2><ul>
+      <li>사진을 <b>좌우로 끌면</b> 모델이 돕니다. <b>휠</b>로 확대, 두 번 클릭하면 원래대로.</li>
+      <li><b>눈높이 / 게임 시점</b>으로 보는 각도를 바꿉니다. 게임 시점은 실제 게임 카메라 각도(55°)입니다.</li>
+      <li><b>3D</b>를 누르면 자유롭게 돌려 볼 수 있습니다. 3D는 게임 셰이더 없이 그린 것이라 색 · 질감은 사진이 정확합니다.</li>
+    </ul></div>
+    <div class="box"><h2>봐 주셨으면 하는 것</h2><ol id="questions"></ol></div>
+    <div class="box"><h2>의견 남기기</h2><ul>
+      <li>카드 아래 칸에 적으면 이 브라우저에 저장됩니다.</li>
+      <li>다 쓰고 위쪽 <b>의견 모아 보기</b>를 눌러 복사하거나 파일로 저장해 보내 주세요.</li>
+      <li>메신저로 바로 보낼 때는 카드 번호(P1, M3, O7, S2 …)를 붙여 주세요.</li>
+    </ul></div>
+  </div>
+</header>
+<nav><div class="inner" id="nav"><span class="spacer"></span><button class="primary" id="collect">의견 모아 보기</button></div></nav>
+<main id="main"></main>
+
+<div class="modal" id="viewer3d"><div class="viewer">
+  <div class="bar">
+    <span class="key" id="v-key"></span><span class="title" id="v-title"></span>
+    <button data-view="front">정면</button><button data-view="side">옆</button><button data-view="back">뒤</button>
+    <button data-view="game">게임 시점</button><button data-view="gamesize" title="1080p 화면에서 게임 카메라로 볼 때의 크기">게임 크기</button>
+    <span class="grow" style="flex:1"></span><button id="v-close">닫기 (Esc)</button>
+  </div>
+  <div class="stage"><canvas id="v-canvas"></canvas><div class="status" id="v-status">불러오는 중…</div></div>
+  <div class="foot">왼쪽 끌기: 회전 · 휠: 확대 · 오른쪽 끌기: 이동 · 3D는 셰이더 없이 그린 단순 조명입니다(색 · 질감은 사진 기준).</div>
+</div></div>
+<div class="modal lightbox" id="lightbox"><img id="lb-img" alt=""><div class="cap" id="lb-cap"></div></div>
+<div class="modal export" id="export"><div class="viewer">
+  <div class="bar"><span class="title">모은 의견</span><span style="flex:1"></span><button id="ex-copy" class="primary">복사</button><button id="ex-save">텍스트 파일로 저장</button><button id="ex-close">닫기</button></div>
+  <div class="body"><textarea id="ex-text" readonly></textarea></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const PAGE = /*PAGE*/;
+const $ = (id) => document.getElementById(id);
+const el = (tag, props = {}, ...children) => { const n = Object.assign(document.createElement(tag), props); n.append(...children); return n; };
+const store = {
+  get(k) { try { return localStorage.getItem(`share:${PAGE.pack}:${k}`) ?? ''; } catch { return ''; } },
+  set(k, v) { try { localStorage.setItem(`share:${PAGE.pack}:${k}`, v); } catch {} },
+};
+function toast(text) { const t = $('toast'); t.textContent = text; t.classList.add('show'); clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.remove('show'), 1600); }
+function openModal(id) { $(id).classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeModal(id) { $(id).classList.remove('open'); document.body.style.overflow = ''; }
+
+document.title = PAGE.title;
+$('title').textContent = PAGE.title;
+$('intro').textContent = PAGE.intro;
+for (const q of PAGE.questions) $('questions').append(el('li', { textContent: q }));
+
+const frameUrl = (card, ring, i) => `photos/${card.name}/${ring}_${String(i).padStart(2, '0')}.webp`;
+const ringLabel = { eye: '눈높이', game: '게임 시점' };
+
+function noteBox(key) {
+  const area = el('textarea', { placeholder: `${key} 의견 (선택)`, value: store.get(key) });
+  area.addEventListener('input', () => store.set(key, area.value));
+  return el('div', { className: 'note' }, area);
+}
+
+function spinCard(card) {
+  const state = { ring: 'eye', frame: 0, zoom: 1, ox: 50, oy: 50, warmed: new Set() };
+  const img = el('img', { alt: card.title, src: frameUrl(card, 'eye', 0), draggable: false, decoding: 'async' });
+  const spin = el('div', { className: 'spin', title: '끌어서 돌리기 · 휠 확대 · 두 번 클릭 초기화' }, img, el('span', { className: 'hint', textContent: '↔ 끌어서 돌리기' }));
+  const warm = (ring) => { if (state.warmed.has(ring)) return; state.warmed.add(ring); for (let i = 0; i < card.frames; i++) new Image().src = frameUrl(card, ring, i); };
+  const show = () => { img.src = frameUrl(card, state.ring, state.frame); img.style.transform = `scale(${state.zoom})`; img.style.transformOrigin = `${state.ox}% ${state.oy}%`; };
+  spin.addEventListener('pointerenter', () => warm(state.ring));
+  let dragX = null, startFrame = 0;
+  spin.addEventListener('pointerdown', (e) => { warm(state.ring); dragX = e.clientX; startFrame = state.frame; spin.setPointerCapture(e.pointerId); spin.classList.add('drag'); });
+  spin.addEventListener('pointermove', (e) => {
+    if (dragX === null) return;
+    const step = spin.clientWidth / (card.frames * 1.4);
+    state.frame = ((startFrame + Math.round((e.clientX - dragX) / step)) % card.frames + card.frames) % card.frames;
+    show();
+  });
+  const end = () => { dragX = null; spin.classList.remove('drag'); };
+  spin.addEventListener('pointerup', end); spin.addEventListener('pointercancel', end);
+  spin.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const r = spin.getBoundingClientRect();
+    state.ox = ((e.clientX - r.left) / r.width) * 100; state.oy = ((e.clientY - r.top) / r.height) * 100;
+    state.zoom = Math.min(4, Math.max(1, state.zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15)));
+    show();
+  }, { passive: false });
+  spin.addEventListener('dblclick', () => { state.zoom = 1; state.frame = 0; show(); });
+
+  const ringButtons = card.rings.map((ring) => {
+    const b = el('button', { textContent: ringLabel[ring] ?? ring, className: ring === state.ring ? 'on' : '' });
+    b.addEventListener('click', () => { state.ring = ring; warm(ring); ringButtons.forEach((x) => x.classList.toggle('on', x === b)); show(); });
+    return b;
+  });
+  const open3d = el('button', { textContent: '3D' });
+  open3d.addEventListener('click', () => window.openViewer?.(card));
+  const meta = `높이 ${card.height}m`;
+  return el('article', { className: 'card', id: card.key },
+    el('div', { className: 'top' }, el('span', { className: 'key', textContent: card.key }), el('span', { className: 'title', textContent: card.title }), el('span', { className: 'meta', textContent: meta })),
+    spin,
+    el('div', { className: 'tools' }, ...ringButtons, el('span', { className: 'grow' }), open3d),
+    noteBox(card.key));
+}
+
+const main = $('main'), nav = $('nav');
+const navLink = (href, text) => el('a', { href: `#${href}`, textContent: text });
+const spacer = nav.querySelector('.spacer');
+for (const group of PAGE.groups) {
+  const cards = PAGE.cards.filter((c) => c.group === group.key);
+  nav.insertBefore(navLink(`g-${group.key}`, `${group.key} ${group.title} ${cards.length}`), spacer);
+  main.append(el('section', { id: `g-${group.key}` },
+    el('h2', { textContent: `${group.key} · ${group.title}` }), el('p', { textContent: group.note }),
+    el('div', { className: 'grid' }, ...cards.map(spinCard))));
+}
+if (PAGE.scenes.length) {
+  nav.insertBefore(navLink('g-S', `S 게임 장면 ${PAGE.scenes.length}`), spacer);
+  main.append(el('section', { id: 'g-S' },
+    el('h2', { textContent: 'S · 게임 장면' }), el('p', { textContent: '실제 게임 화면(게임 카메라, HUD 숨김). 배치 · 크기 · 색 구분을 봐 주세요. 클릭하면 크게 봅니다.' }),
+    el('div', { className: 'scenes' }, ...PAGE.scenes.map((s) => {
+      const img = el('img', { src: `scenes/${s.file}`, alt: s.title, loading: 'lazy' });
+      img.addEventListener('click', () => { $('lb-img').src = img.src; $('lb-cap').textContent = `${s.key} ${s.title}`; openModal('lightbox'); });
+      return el('article', { className: 'card scene', id: s.key },
+        el('div', { className: 'top' }, el('span', { className: 'key', textContent: s.key }), el('span', { className: 'title', textContent: s.title })),
+        img, el('p', { className: 'intro', style: 'margin:8px 12px', textContent: s.note }), noteBox(s.key));
+    }))));
+}
+main.append(el('section', { id: 'g-all' }, el('h2', { textContent: '전체 의견' }), el('p', { textContent: '카드 하나에 담기 어려운 의견(전체 분위기, 순위, 바라는 점)을 적어 주세요.' }), noteBox('전체')));
+
+$('lightbox').addEventListener('click', () => closeModal('lightbox'));
+$('collect').addEventListener('click', () => {
+  const lines = [`${PAGE.title} (${PAGE.pack})`, ''];
+  const all = [...PAGE.cards.map((c) => [c.key, c.title]), ...PAGE.scenes.map((s) => [s.key, s.title]), ['전체', '']];
+  for (const [key, title] of all) { const v = store.get(key).trim(); if (v) lines.push(`[${key}${title ? ' ' + title : ''}]`, v, ''); }
+  $('ex-text').value = lines.length > 2 ? lines.join('\n') : '아직 적은 의견이 없습니다. 카드 아래 칸에 적어 주세요.';
+  openModal('export');
+});
+$('ex-close').addEventListener('click', () => closeModal('export'));
+$('ex-copy').addEventListener('click', async () => {
+  const area = $('ex-text');
+  try { await navigator.clipboard.writeText(area.value); toast('복사했습니다'); }
+  catch { area.select(); toast(document.execCommand('copy') ? '복사했습니다' : 'Ctrl+C로 복사해 주세요'); }
+});
+$('ex-save').addEventListener('click', () => {
+  const url = URL.createObjectURL(new Blob([$('ex-text').value], { type: 'text/plain;charset=utf-8' }));
+  el('a', { href: url, download: `feedback-${PAGE.pack}.txt` }).click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') for (const id of ['viewer3d', 'lightbox', 'export']) if ($(id).classList.contains('open')) { closeModal(id); window.closeViewer?.(); } });
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three-gltf';
+import { OrbitControls } from 'three-orbit';
+
+const $ = (id) => document.getElementById(id);
+const loader = new GLTFLoader();
+const cache = new Map();
+const GAME = { pitch: 55, yaw: -30, wideSize: 17, screen: 1080 };
+
+function loadScript(name) {
+  if (window.__glb?.[name]) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const s = Object.assign(document.createElement('script'), { src: `models/${name}.js` });
+    s.onload = () => { s.remove(); resolve(); };
+    s.onerror = () => reject(new Error(`models/${name}.js 를 읽지 못했습니다`));
+    document.head.append(s);
+  });
+}
+
+async function loadModel(name) {
+  if (cache.has(name)) return cache.get(name);
+  await loadScript(name);
+  const bytes = Uint8Array.from(atob(window.__glb[name]), (c) => c.charCodeAt(0));
+  delete window.__glb[name];
+  const gltf = await loader.parseAsync(bytes.buffer, '');
+  cache.set(name, gltf.scene);
+  return gltf.scene;
+}
+
+let view = null;
+function ensureView() {
+  if (view) return view;
+  const canvas = $('v-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x151d20);
+  scene.add(new THREE.HemisphereLight(0xf4f1e8, 0x3a4440, 1.6));
+  const sun = new THREE.DirectionalLight(0xfff3df, 2.4); sun.position.set(-4, 8, 6); scene.add(sun);
+  const fill = new THREE.DirectionalLight(0xbfd6ff, .6); fill.position.set(5, 3, -4); scene.add(fill);
+  const grid = new THREE.GridHelper(20, 20, 0x4a5c62, 0x2c3a3f);
+  grid.material.transparent = true; grid.material.opacity = .45; grid.material.depthWrite = false; grid.renderOrder = -1;
+  scene.add(grid);
+  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.01, 500);
+  const controls = new OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  const holder = new THREE.Group(); scene.add(holder);
+  view = { renderer, scene, camera, controls, holder, grid, radius: 1, center: new THREE.Vector3(), running: false };
+  const resize = () => {
+    const w = canvas.clientWidth, h = canvas.clientHeight; if (!w || !h) return;
+    renderer.setSize(w, h, false);
+    const half = view.half ?? 1;
+    camera.left = -half * w / h; camera.right = half * w / h; camera.top = half; camera.bottom = -half;
+    camera.updateProjectionMatrix();
+  };
+  view.resize = resize;
+  new ResizeObserver(resize).observe(canvas);
+  return view;
+}
+
+function setView(kind) {
+  const v = view; if (!v) return;
+  const deg = THREE.MathUtils.degToRad;
+  let yaw = 0, pitch = 10;
+  if (kind === 'side') yaw = 90; else if (kind === 'back') yaw = 180; else if (kind === 'game' || kind === 'gamesize') { yaw = GAME.yaw; pitch = GAME.pitch; }
+  const dir = new THREE.Vector3(Math.sin(deg(yaw)) * Math.cos(deg(pitch)), Math.sin(deg(pitch)), Math.cos(deg(yaw)) * Math.cos(deg(pitch)));
+  v.camera.position.copy(v.center).addScaledVector(dir, v.radius * 6 + 10);
+  v.controls.target.copy(v.center);
+  v.camera.zoom = 1;
+  // Ortho half height: fit the model, or match the game's wide camera on a 1080-pixel-high screen.
+  v.half = kind === 'gamesize' ? (GAME.wideSize / 2) * ($('v-canvas').clientHeight / GAME.screen) : v.radius * 1.15;
+  v.resize();
+  v.controls.update();
+  document.querySelectorAll('#viewer3d [data-view]').forEach((b) => b.classList.toggle('on', b.dataset.view === kind));
+}
+
+function loop() {
+  if (!view?.running) return;
+  view.controls.update();
+  view.renderer.render(view.scene, view.camera);
+  requestAnimationFrame(loop);
+}
+
+window.openViewer = async (card) => {
+  $('v-key').textContent = card.key; $('v-title').textContent = card.title;
+  $('v-status').textContent = '불러오는 중…';
+  $('viewer3d').classList.add('open'); document.body.style.overflow = 'hidden';
+  const v = ensureView();
+  v.holder.clear();
+  if (!v.running) { v.running = true; loop(); }
+  try {
+    const model = await loadModel(card.name);
+    if (!$('viewer3d').classList.contains('open')) return;
+    v.holder.add(model);
+    const box = new THREE.Box3().setFromObject(model);
+    const sphere = box.getBoundingSphere(new THREE.Sphere());
+    v.center.copy(sphere.center); v.radius = Math.max(sphere.radius, .2);
+    v.grid.position.y = box.min.y;
+    v.grid.scale.setScalar(Math.max(1, Math.ceil(v.radius / 5)));
+    $('v-status').textContent = '';
+    setView('front');
+  } catch (e) { $('v-status').textContent = '모델을 열지 못했습니다: ' + e.message; }
+};
+window.closeViewer = () => { if (view) view.running = false; };
+$('v-close').addEventListener('click', () => { $('viewer3d').classList.remove('open'); document.body.style.overflow = ''; window.closeViewer(); });
+document.querySelectorAll('#viewer3d [data-view]').forEach((b) => b.addEventListener('click', () => setView(b.dataset.view)));
+
+// A link straight into the viewer: index.html#3d=P2 or #3d=P2:game (front, side, back, game, gamesize).
+const direct = /^#3d=(\w+)(?::(\w+))?$/.exec(location.hash);
+const directCard = direct && PAGE.cards.find((c) => c.key === direct[1].toUpperCase());
+if (directCard) { await window.openViewer(directCard); if (direct[2]) setView(direct[2]); }
+
+// Pack check: open index.html?selftest — every model is read and parsed, the result goes to the title and #selftest.
+if (location.search.includes('selftest')) {
+  const out = []; let ok = 0;
+  for (const card of PAGE.cards) {
+    try { const m = await loadModel(card.name); let meshes = 0; m.traverse((o) => { if (o.isMesh) meshes++; }); out.push(`${card.key} ok ${meshes}`); ok++; }
+    catch (e) { out.push(`${card.key} FAIL ${e.message}`); }
+  }
+  let gl = 'no-webgl';
+  try { ensureView(); gl = 'webgl'; } catch {}
+  const result = `selftest ${ok}/${PAGE.cards.length} ${gl}`;
+  document.title = result;
+  document.body.append(Object.assign(document.createElement('pre'), { id: 'selftest', textContent: [result, ...out].join('\n') }));
+}
+</script>
+</body>
+</html>

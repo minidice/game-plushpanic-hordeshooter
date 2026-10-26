@@ -88,4 +88,4 @@
 
 첫 길이검사 RED는 `game/output/compact-poses/red.log`, 중간 조준/구르기 실패는 위 본문의 제작 이력으로 구분한다. 최종 로그도 같은 폴더, Studio 렌더는 `studio/output/compact-poses/`, 라쿤 M4 이전 렌더는 `game/output/compact-poses/before-raccoon-m4-25.png`다. 산출물은 로컬 재생성용이며 버전 관리하지 않는다.
 
-남은 제약: 확대 관절 단면/연결선, 어깨의 원형 몸통 근사, 모든 장구류 조합 관통, 가슴·머리 독립 조준과 발 IK, 장시간 수동 플레이/실제2PC/성능 측정 및 최종 미술 수락. 이번 작업은 별도 브랜치 `codex/compact-weapon-poses`에 있으며 main 병합·커밋·푸시는 요청 범위가 아니다.
+남은 제약: 확대 관절 단면/연결선, 어깨의 원형 몸통 근사, 모든 장구류 조합 관통, 가슴·머리 독립 조준과 발 IK, 장시간 수동 플레이/실제2PC/성능 측정 및 최종 미술 수락. 초기 구현은 `codex/compact-weapon-poses`에서 진행했다. 후속 사용자 요청에 따른 최신 main 병합·검증 기록은 [기능별 작업 기록](features/art-characters/log/001-code-compact-weapon-poses.md)을 따른다.

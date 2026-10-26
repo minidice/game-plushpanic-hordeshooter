@@ -73,6 +73,7 @@ public partial class StudioPreview : Node
             else if (method == "statuses") Send(new { id, result = StatusCatalog() });
             else if (method == "status_render") Send(new { id, result = await RenderStatuses(request.GetProperty("data")) });
             else if (method == "library") Send(new { id, result = Library() });
+            else if (method == "share_item") Send(new { id, result = await ShareItem(request.GetProperty("data")) });
             else if (method == "weapons") Send(new { id, result = Weapons() });
             else if (method == "media") Send(new { id, result = new { effects = EffectEntries(), sounds = SoundEntries(),
                 loadedAt = DateTimeOffset.Now.ToString("O"), renderer = "Godot Forward+ · 실제 게임 이펙트 / 현재 로컬 음원" } });

@@ -19,7 +19,8 @@ public sealed record PropInfo(string Id, string File, Vector3 Dimensions, PropCo
 /// </summary>
 public static class PropLibrary
 {
-    public static readonly string[] Folders = { "res://assets/outdoor-kit", "res://assets/stage-props", "res://assets/edge-kit", "res://assets/ground-bits", "res://assets/stage2-props" };
+    /// <summary>Asset kit folders, each with its manifest.json (content/data/asset_paths.json "prop_kits", T-26).</summary>
+    public static string[] Folders => AssetPaths.Folders("prop_kits");
 
     private static Dictionary<string, PropInfo>? _props;
     private static readonly Dictionary<string, PackedScene> _scenes = new();

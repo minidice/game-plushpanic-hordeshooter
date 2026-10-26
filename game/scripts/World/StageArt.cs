@@ -79,7 +79,7 @@ internal static class StageArt
         string color = interior ? "344655" : "34414a";
         if (!Floors.TryGetValue(color, out var material))
         {
-            material = new ShaderMaterial { Shader = GD.Load<Shader>("res://assets/environment/factory_floor.gdshader") };
+            material = new ShaderMaterial { Shader = GD.Load<Shader>(AssetPaths.File("shader.factory_floor")) };
             material.SetShaderParameter("tile_color", new Color(color));
             material.SetShaderParameter("tile_size", interior ? 1f : 1.5f);
             Floors.Add(color, material);
@@ -92,7 +92,7 @@ internal static class StageArt
         bool alongX = size.X > size.Z;
         if (!Walls.TryGetValue(alongX, out var material))
         {
-            material = new ShaderMaterial { Shader = GD.Load<Shader>("res://assets/environment/factory_wall.gdshader") };
+            material = new ShaderMaterial { Shader = GD.Load<Shader>(AssetPaths.File("shader.factory_wall")) };
             material.SetShaderParameter("along_x", alongX);
             Walls.Add(alongX, material);
         }
