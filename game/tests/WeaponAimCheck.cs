@@ -145,6 +145,32 @@ public partial class WeaponAimCheck : Node
         // Hit marks run on real time (UI), not physics frames.
         for (int i = 0; i < 300 && Time.GetTicksMsec() - marked < (ulong)(Hud.HitMarkSeconds * 1000) + 50; i++) await Frames(1);
         Check(_stage.Hud.HitMarks == 0, $"each fades within {Hud.HitMarkSeconds} s");
+        // One crit per focus (C-31): the shot after 0.5 s on a target crits, the ones right after do not, and focusing
+        // again earns the next.
+        if (IsInstanceValid(dummy)) dummy.QueueFree();
+        var mark = _stage.SpawnCommon(near with { Y = 0 }, awake: false);
+        mark.ScaleHealth(100);
+        await Frames(3);
+        mark.Stun(60);
+        var crits = new System.Collections.Generic.List<bool>();
+        void OnHit(Enemy e, HitInfo h) { if (e == mark && h.Shooter == player) crits.Add(h.Crit); }
+        _stage.EnemyHit += OnHit;
+        var onMark = mark.GlobalPosition + Vector3.Up;
+        player.HoldAim(true);
+        for (int i = 0; i < 60 && !(player.CritReady && player.FocusTarget == mark); i++) { player.SetControls(Vector2.Zero, onMark, false); await Frames(1); }
+        Check(player.CritReady && player.FocusTarget == mark, "half a second on a monster readies a crit");
+        for (int i = 0; i < 20; i++) { player.SetControls(Vector2.Zero, onMark, true); await Frames(1); }
+        player.SetControls(Vector2.Zero, onMark, false);
+        Check(crits.Count >= 2 && crits[0] && crits.Skip(1).All(c => !c), $"only the first shot of the burst crits ({string.Join(" ", crits.Select(c => c ? "C" : "."))})");
+        Check(!player.CritReady, "firing spends the focus");
+        crits.Clear();
+        for (int i = 0; i < 60 && !player.CritReady; i++) { player.SetControls(Vector2.Zero, onMark, false); await Frames(1); }
+        player.SetControls(Vector2.Zero, onMark, true);
+        await Frames(2);
+        player.SetControls(Vector2.Zero, onMark, false);
+        Check(crits.Count > 0 && crits[0], "focusing again earns the next crit");
+        _stage.EnemyHit -= OnHit;
+        player.HoldAim(false);
         var pellets = ArmoryCatalog.Weapon("r870");
         Check(pellets.Pellets > 1 && pellets.AimSpread < pellets.BaseSpread, "the shotgun's pellet cone tightens with aiming (aim_spread_deg below spread_deg)");
     }

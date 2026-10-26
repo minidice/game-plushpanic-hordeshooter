@@ -551,6 +551,8 @@ public partial class WeaponController : Node
         }
 
         _muzzleIndex++;
+        // The shot spends the focus, crit or not (C-31); a swing spends it when it lands, below in Swing.
+        if (def.Mode != FireMode.Melee) _player.SpendFocus();
         // Every gun pushes its shooter back; power comes from the data, scale from the player's option.
         // Squadmates take a third of the push, so a shotgun does not leave them behind the leader.
         if (def.RecoilPower > 0) _player.Shove(-dir * Knockback.Recoil(def.RecoilPower) * (_player.IsBot ? .3f : 1f));
@@ -724,6 +726,7 @@ public partial class WeaponController : Node
             if (to.Length() < def.MeleeRange + .4f && dir.AngleTo(to.Normalized()) < Mathf.DegToRad(def.MeleeArc * .5f))
                 prop.ApplyCentralImpulse(to.Normalized() * 3f + Vector3.Up * 1.5f);
         }
+        _player.SpendFocus();
         Stage.Effects.Swoosh(origin + Vector3.Up * Player.AimHeight, dir, def.MeleeRange, def.MeleeArc);
         if (targets.Count > 0)
         {

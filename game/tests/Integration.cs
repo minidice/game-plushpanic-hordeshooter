@@ -422,7 +422,17 @@ public partial class Integration : Node
         player.SetControls(Vector2.Zero, aim, false);
         var front = stage.SpawnEnemy<Enemy>(plush, new Vector3(44, 0, .4f), awake: false);
         var behind = stage.SpawnEnemy<Enemy>(plush, new Vector3(18, 0, -2), awake: false);
-        await Frames(40);
+        // A sleeping monster wanders a little: keep the cursor on it, as a player would (otherwise the aim lock and its crit
+        // drop once it strays 0.8 m from a fixed point — the intermittent "shots kill" failure, issues.md 2026-10-26).
+        async Task Track(int frames, bool fire)
+        {
+            for (int i = 0; i < frames; i++)
+            {
+                player.SetControls(Vector2.Zero, IsInstanceValid(front) && !front.IsDead ? front.GlobalPosition + Vector3.Up : aim, fire);
+                await Frames(1);
+            }
+        }
+        await Track(40, false);
         // Behind you it is not shown as it is: hidden in the dark, or only a silhouette in a lamp's glow (decisions.md C-23).
         Check(front.IsSeen && !behind.IsSeen && behind.Visibility != VisionSystem.Visibility.Visible && !behind.Rig.IsSilhouette == !behind.Rig.Visible,
             $"vision cone shows the enemy ahead; the one behind is not shown as it is ({behind.Visibility})");
@@ -432,9 +442,8 @@ public partial class Integration : Node
         int magBefore = player.Gun.Mag;
         // 18 m is past what the rifle's hip cone holds on a plush (C-30): aim first, as a player would.
         player.HoldAim(true);
-        await Frames(Mathf.CeilToInt(player.Gun.Def.AimTime * Engine.PhysicsTicksPerSecond) + 2);
-        player.SetControls(Vector2.Zero, aim, true);
-        await Frames(30);
+        await Track(Mathf.CeilToInt(player.Gun.Def.AimTime * Engine.PhysicsTicksPerSecond) + 2, false);
+        await Track(30, true);
         player.SetControls(Vector2.Zero, aim, false);
         player.HoldAim(false);
         Check(player.Gun.Mag < magBefore, "holding fire spends ammo");

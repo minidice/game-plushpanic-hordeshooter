@@ -633,10 +633,22 @@
 
 - [x] 중간 부풀음 제거·완만한 기본 곡선·3구간 지연 굽힘. 두 clean GLB와 런타임 스타일 생성기를 일치시키고 원래 밝은 끝/2색 채널 보존.
 - [x] 짧은 꼬리/조류 유지, 크기·모양·색·기본 복원과 상태이상/피격/숨김 검증. 실제 Stage2 이동·회전·정지 및 Studio 렌더 확인.
-- [ ] 별도 전체 Integration의 사격 처치 항목 실패 원인 확인. main 통합 단독 재검증149개는 통과했지만 이전 실패 원인은 미확정이다. 2026-10-26 `NetSyncCheck` 파티원 사격 처치도 4회 중 1회 실패(C-30 퍼짐 추정, issues.md 해당 기록). [결과·재현·경고](mammal-tail-quality.md).
+- [x] 별도 전체 Integration의 사격 처치 항목 실패 원인 확인(2026-10-26: 대기 중 어슬렁거리는 몹을 고정 지점에 겨눠 잠금이 풀린 검사 문제 — 두 검사가 몹을 따라 겨누게 고침, issues.md). main 통합 단독 재검증149개는 통과했지만 이전 실패 원인은 미확정이다. 2026-10-26 `NetSyncCheck` 파티원 사격 처치도 4회 중 1회 실패(C-30 퍼짐 추정, issues.md 해당 기록). [결과·재현·경고](mammal-tail-quality.md).
 
 ### 이번 변경 확인 기록 — 2026-10-26 (종료 ObjectDB 경고 I-17 해결)
 
 - 원인: 재생 중인 반복 소리(밤바람 · 경보)를 오디오 서버가 쥔 채 종료. `QuitHygiene.Collect`에서 모든 소리를 멈추고 80 ms 기다리게 고침. C# 빌드 경고·오류 0.
 - `--verbose` 확인: `Integration` 수정 전 2회 모두 4개(AudioStreamWAV 2 + AudioStreamPlaybackWAV 2, 같은 ID) → 수정 후 3회 0, 일반 실행 149 · 0. `WeaponHandlingCheck` 36 · `ModeCheck` 147 · `SpawnCheck` 41 · `CardLabCheck` 172 · `ReloadPoseCheck` 279(이전 6개, 2회) · `CorpseTierCheck` 36(이전 11개, 2회) · `NetSyncCheck` 32(3회) 모두 경고 0.
 - 별도: `NetSyncCheck`가 같은 날 한 번 "파티원 사격 처치"에서 실패(종료 처리와 무관, 이어서 3회 통과). 사격 처치 미확정 항목에 함께 적음.
+
+### 이번 변경 확인 기록 — 2026-10-26 (사격 처치 간헐 실패: 검사가 몹을 따라 겨누게)
+
+- 진단(임시 장면, 지움): 고정 지점 겨누기 Integration 장면 26/30 · 9/14 처치, 따라 겨누기 40/40. NetSync 장면 30/30 · 40/40.
+- 실제 검사 재실행: Integration 4회 중 사격 처치 항목 4회 모두 통과(1회는 그보다 앞선 I-65 산탄 검사에서 멈춤 — 갓 생긴 몹에 2프레임 뒤 쏘는 검사라 어슬렁거림과 무관, 산탄 퍼짐 랜덤 문제로 I-65 유지), 나머지 3회 149 통과 · 종료 경고 0, NetSyncCheck 3회 32 통과.
+- 같이 확인: 잠금이 유지되면 발마다 치명타(따라 겨누기 40회 모두 2발 이상 연속 치명타로 처치) — decisions.md Q-29로 의도 확인 대기.
+
+### 이번 변경 확인 기록 — 2026-10-26 (치명타는 집중 한 번에 한 발, C-31)
+
+- [x] 조준 집중 치명타: 0.5초 겨누면 다음 한 발만 치명타, 쏘면(맞든 빗나가든) 집중 0, 근접은 휘두름이 닿을 때 집중을 씀.
+- `WeaponAimCheck` 32개(헤드리스 · 창 모드): 0.5초 겨누면 준비 · 연사 중 첫 발만 치명타(`C . .`) · 쏘면 집중 소모 · 다시 겨누면 다음 치명타 추가. 처음 실패는 앞 단계 몹에 잠금이 남아 준비 대기가 건너뛰어진 검사 순서 문제 → 앞 몹을 지우고 "이 몹에 잠금"을 기다리도록 고침.
+- 다시 돌린 검사: WeaponHandlingCheck 36 · CombatPacingCheck 44 · TailMeleeCheck 13976 · CardLabCheck 172 · SquadCheck 51 · CompanionCheck 39 · NetSyncCheck 32 · ModeCheck 147 · EnemyAttackCheck 79 · Integration 2회 149, 모두 통과 · 종료 경고 0.
