@@ -4,6 +4,7 @@ import { createInterface } from 'node:readline';
 import { readFile, mkdir, appendFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { listDocs, readDoc, searchDocs } from './docs.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const game = path.join(root, 'game');
@@ -126,6 +127,9 @@ const staticFiles = new Map([
   ['/weapons', ['weapons.html', 'text/html; charset=utf-8']],
   ['/weapons.js', ['weapons.js', 'text/javascript; charset=utf-8']],
   ['/weapons.css', ['weapons.css', 'text/css; charset=utf-8']],
+  ['/docs', ['docs.html', 'text/html; charset=utf-8']],
+  ['/docs.js', ['docs.js', 'text/javascript; charset=utf-8']],
+  ['/docs.css', ['docs.css', 'text/css; charset=utf-8']],
 ]);
 const server = http.createServer(async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
@@ -143,6 +147,16 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && staticFiles.has(url.pathname)) {
       const [name, mime] = staticFiles.get(url.pathname);
       res.writeHead(200, { 'Content-Type': mime }); res.end(await readFile(path.join(studio, 'web', name))); return;
+    }
+    // md menu: read straight from the working folder, no renderer needed (T-26).
+    if (req.method === 'GET' && url.pathname === '/api/docs') {
+      json(200, { docs: await listDocs(root), loadedAt: new Date().toISOString() }); return;
+    }
+    if (req.method === 'GET' && url.pathname === '/api/docs/file') {
+      const doc = await readDoc(root, url.searchParams.get('path')); json(doc.status, doc.body); return;
+    }
+    if (req.method === 'GET' && url.pathname === '/api/docs/search') {
+      json(200, await searchDocs(root, url.searchParams.get('q'))); return;
     }
     if (req.method === 'GET' && url.pathname === '/api/catalog') {
       json(200, await readCatalog('catalog')); return;

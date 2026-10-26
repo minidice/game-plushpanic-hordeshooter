@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Plush Panic Studio · md</title><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/library.css"><link rel="stylesheet" href="/docs.css"><script type="module" src="/docs.js"></script></head>
+<body>
+<header><a class="brand" href="/">PLUSH PANIC <span>STUDIO</span></a><nav class="top-nav" aria-label="Studio 영역"><a href="/">리소스</a><a href="/docs" aria-current="page">md</a></nav><span class="local"><i></i> LOCAL WORKSPACE</span><button id="reload">목록 다시 읽기 ↻</button></header>
+<main>
+  <div class="heading"><div><p class="eyebrow">PROJECT DOCUMENTS</p><h1>문서 · md</h1><p>저장소의 모든 Markdown 문서를 한곳에서 찾고 읽습니다. 기능별 기록, 색인과 옛 기록, 규격 · 설계. 읽기 전용입니다.</p></div><span class="tag" id="total-count">불러오는 중</span></div>
+  <div class="library-layout docs-layout">
+    <aside class="library-sidebar">
+      <div class="search-box">
+        <label for="search">전체 내용 검색</label><input id="search" type="search" placeholder="예: C-32, 치명타, I-17" autocomplete="off">
+        <label class="filter-label" for="group">묶음</label><select id="group"><option value="">모든 묶음</option></select>
+        <p id="result-count" aria-live="polite"></p>
+      </div>
+      <div id="entries" class="entries" aria-label="문서 목록"></div>
+    </aside>
+    <section class="doc-main" aria-label="문서 내용">
+      <div class="doc-head"><div><span id="doc-group" class="eyebrow"></span><h2 id="doc-title">문서를 고르세요</h2></div><code id="doc-path"></code></div>
+      <article id="doc" class="md-body"><p class="empty">왼쪽 목록에서 문서를 고르거나 검색하세요.</p></article>
+    </section>
+  </div>
+  <footer><span id="status" role="status" aria-live="polite">문서 목록을 읽는 중…</span><span id="loaded-at"></span></footer>
+</main></body></html>

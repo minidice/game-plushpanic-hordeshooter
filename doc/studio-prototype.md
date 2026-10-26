@@ -195,3 +195,9 @@ node studio/tests/interactions.mjs
 ### 2026-10-25 수렵단 공격 미리보기
 
 `POST /api/roster/render`의 `mode:"attack"`은 수렵단 club/knife/woodbow 한 개체만 허용. 같은 게임 포즈12장을 실제 준비시간/타격 경계/복귀시간으로 샘플링한다. 전체 포즈를 포함하는 고정 카메라, 재생/일시정지·속도·반복·시간 이동과9종 음원 명시적 미리듣기를 제공한다. 편집/피해/투사체 시뮬레이션은 없으며 기존 individual/pack 계약은 유지한다. [규격·검증](hunter-weapon-presentation.md). 신규50검사·기존 roster82검사 및 브라우저에서 선택 변경 시 소리 정리 확인.
+
+## 2026-10-26 최상단 「리소스 | md」와 문서 메뉴
+
+- 머리글에 `리소스 | md`. 기존 메뉴는 「리소스」 아래 두 번째 줄. 「기획서」는 나중에 같은 줄에 추가할 예정.
+- `md`(`/docs`): 저장소 Markdown 전부(`doc/**` · `docs/**` · 저장소 안내 4개)의 목록 · 묶음 · 전체 내용 검색 · 읽기. [`studio/docs.mjs`](../studio/docs.mjs)가 작업 폴더에서 직접 읽어 렌더러 없이 동작, 읽기 전용, `.md`만 · 바깥 경로 거부.
+- 검사 `node studio/tests/docs.mjs`(25). 자세한 기록: [기능 기록 002](features/tech-tools/log/002-code-studio-md-menu.md).

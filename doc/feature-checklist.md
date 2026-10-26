@@ -1,5 +1,7 @@
 # 게임 기능 체크리스트
 
+> **2026-10-26부터 기록 방식이 바뀌었다**([decisions.md](decisions.md) T-26, [기록 문서 나누기](records-split-plan.md)). 새 기록의 본문 · 작업 기록은 [기능별 폴더](features/README.md)에 쓰고, 이 문서에는 짧은 줄만 추가한다. **이 문서의 기존 기록은 옮기지 않고 그대로 남아 있다**(앞으로만 새 구조, 6.4).
+
 ### 2026-10-25 캐릭터 아트 방향 정정
 
 - [x] 봉제인형 해석 철회, 첨부 기준의 매끈한 데포르메 동물·입체적인 장비로 문서/제작 지시 정리.
@@ -562,6 +564,14 @@
 - [ ] 실제 플레이 검증(넓이 · 이동 피로 · 20분 · 저사양 프레임) → 미술 마감(새 모델은 로컬 작업).
 - 기존 완료된 환경/소품 자산은 재사용한다. 아직 새 맵이나 분기 임무가 구현된 것은 아니다. [맵 확장 계획](map-expansion-plan.md).
 
+
+## 기록 · 문서 (T-26)
+
+- [x] 기록 문서를 기능별 폴더로(앞으로만 새 구조, 옛 기록은 그대로) — [기록 001](features/tech-tools/log/001-doc-records-split.md)
+- [x] Studio 최상단 「리소스 | md」와 문서 목록 · 검색 · 읽기 — [기록 002](features/tech-tools/log/002-code-studio-md-menu.md)
+- [x] `codex/mammal-weapon-arms` 병합 검증 — [기록 003](features/tech-tools/log/003-check-merge-mammal-weapon-arms.md)
+- [ ] Studio 「기획서」 메뉴
+- [ ] 옛 기록을 기능 폴더로 옮기기(필요한 기능부터)
 
 ## 로컬 개발용 Studio (T-25, 2026-10-24)
 

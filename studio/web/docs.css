@@ -1,0 +1,24 @@
+.docs-layout{grid-template-columns:300px minmax(0,1fr)}
+.docs-layout .entries{max-height:72vh}
+.entries .hit em{display:block;font-style:normal;font-size:11px;line-height:1.6;color:#b8c7bd;margin-top:6px;overflow-wrap:anywhere}
+.doc-main{min-width:0;border:1px solid var(--line);border-radius:14px;background:#141c18;padding:26px 30px 40px}
+.doc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:8px}
+.doc-head .eyebrow{display:block;margin-bottom:6px}.doc-head h2{font-size:22px}
+.doc-head code{color:#96ac9c;background:#1b281f;padding:7px 10px;border-radius:5px;font-size:11px;overflow-wrap:anywhere}
+.md-body{font-size:13.5px;line-height:1.85;color:#dbe5dd;overflow-wrap:anywhere}
+.md-body h1,.md-body h2,.md-body h3,.md-body h4{margin:28px 0 10px;letter-spacing:-.2px;color:#eef4ef;scroll-margin-top:16px}
+.md-body h1{font-size:24px}.md-body h2{font-size:19px;border-bottom:1px solid #26352a;padding-bottom:6px}.md-body h3{font-size:16px}.md-body h4{font-size:14px}
+.md-body p{margin:10px 0}.md-body ul,.md-body ol{margin:8px 0;padding-left:24px}.md-body li{margin:3px 0}
+.md-body a{color:var(--accent)}.md-body strong{color:#f3f7f3}.md-body del{color:var(--muted)}
+.md-body code{font:12px Consolas,monospace;background:#1d2a22;border:1px solid #2b3a30;border-radius:4px;padding:1px 5px;color:#cfe3c4}
+.md-body pre{background:#0f1612;border:1px solid var(--line);border-radius:8px;padding:14px 16px;overflow:auto}
+.md-body pre code{background:none;border:0;padding:0;color:#b9cdbf;white-space:pre}
+.md-body pre[data-lang]::before{content:attr(data-lang);display:block;font:10px Consolas,monospace;color:var(--muted);margin-bottom:6px}
+.md-body blockquote{margin:12px 0;padding:6px 16px;border-left:3px solid var(--accent);background:#18241c;border-radius:0 8px 8px 0;color:#c8d6cc}
+.md-body .table-wrap{overflow:auto;margin:12px 0;border:1px solid var(--line);border-radius:8px}
+.md-body table{width:100%;border-collapse:collapse;font-size:12.5px}
+.md-body th,.md-body td{padding:8px 12px;border-bottom:1px solid #25352a;vertical-align:top;text-align:left;line-height:1.65}
+.md-body th{background:#1a251e;color:#cfe0d3;font-weight:600}
+.md-body .flash{animation:flash 2.4s ease-out}
+@keyframes flash{0%,40%{background:#3d5a2f}100%{background:transparent}}
+@media(max-width:800px){.docs-layout{grid-template-columns:1fr}.doc-main{padding:18px}}
