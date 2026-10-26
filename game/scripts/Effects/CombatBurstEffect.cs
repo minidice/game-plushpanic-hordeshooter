@@ -18,10 +18,11 @@ public partial class CombatBurstEffect : Node3D
     private ShaderMaterial _hot = null!, _smoke = null!;
     private ShaderMaterial? _ring;
     private OmniLight3D? _light;
+    private BarrelBurstVisual? _fuel;
     private float _age, _radius;
     public string EffectId => _def.Id;
     public float Age => _age;
-    public int VisualParts => _parts.Count;
+    public int VisualParts => _parts.Count + (_fuel?.VisualParts ?? 0);
 
     internal static ShaderMaterial Volume(Color color, Color accent, float heat)
     {
@@ -57,6 +58,12 @@ public partial class CombatBurstEffect : Node3D
 
     private void Build(Vector3 direction, float floorOffset)
     {
+        if (_def.Id == "barrel")
+        {
+            _fuel = BarrelBurstVisual.Create(this, _def, _radius);
+            BuildLight();
+            return;
+        }
         bool poison = _def.Family == "poison";
         var random = new RandomNumberGenerator { Seed = 7417 };
         _hot = Volume(_def.Color, _def.Accent, poison ? .12f : 1.4f);
@@ -90,6 +97,10 @@ public partial class CombatBurstEffect : Node3D
             velocity += directed * 2;
             AddPart(poison ? Blob : Shard, spark, Vector3.Up * .25f, velocity, random.RandfRange(.045f, .085f), 0, 2, i);
         }
+        BuildLight();
+    }
+    private void BuildLight()
+    {
         if (_def.LightEnergy > 0 && GetTree().GetNodesInGroup(LightGroup).Count(n => !n.IsQueuedForDeletion()) < MaxLights)
         {
             _light = new OmniLight3D { Position = Vector3.Up * 1.2f, OmniRange = _radius * 2, LightColor = _def.Color,
@@ -110,9 +121,10 @@ public partial class CombatBurstEffect : Node3D
     }
     private void UpdateVisual()
     {
+        if (_light != null) _light.LightEnergy = _def.LightEnergy * Mathf.Pow(Mathf.Max(0, 1 - _age / .22f), 2);
+        if (_fuel != null) { _fuel.Advance(_age); return; }
         _hot.SetShaderParameter("clock", _age); _smoke.SetShaderParameter("clock", _age);
         _ring?.SetShaderParameter("clock", _age);
-        if (_light != null) _light.LightEnergy = _def.LightEnergy * Mathf.Pow(Mathf.Max(0, 1 - _age / .22f), 2);
         foreach (var part in _parts)
         {
             float elapsed = _age - part.Delay;

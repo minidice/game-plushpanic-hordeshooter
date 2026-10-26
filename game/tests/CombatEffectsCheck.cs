@@ -85,19 +85,56 @@ public partial class CombatEffectsCheck : Node
         {
             var effect=CombatBurstEffect.Play(_stage.Effects,def,new(-3,0,0),def.PreviewRadius,Vector3.Right);
             effect.SetProcess(false);effect._Process(.12);
-            var volume=Nodes<MeshInstance3D>(effect).First(m=>m.Visible&&m.MaterialOverride is ShaderMaterial sm&&sm.Shader.ResourcePath.EndsWith("combat_volume.gdshader"));
-            float alpha=(float)volume.GetInstanceShaderParameter("visibility_alpha").AsDouble();
+            var volume=Nodes<MeshInstance3D>(effect).First(m=>m.Visible&&(def.Id=="barrel"
+                ? m.MaterialOverride is StandardMaterial3D
+                : m.MaterialOverride is ShaderMaterial sm&&sm.Shader.ResourcePath.EndsWith("combat_volume.gdshader")));
+            float alpha=volume.MaterialOverride is StandardMaterial3D card ? card.AlbedoColor.A
+                : (float)volume.GetInstanceShaderParameter("visibility_alpha").AsDouble();
             Check(alpha>0&&alpha<1,"custom volume shader receives animated opacity "+def.Id);
             Check(effect.VisualParts>=def.Lobes+def.Particles,"actual layered recipe "+def.Id);
             Check(!Nodes<CollisionObject3D>(effect).Any(),"visual has no collision "+def.Id);
             await Shot(def.Id);
+            if(def.Id=="barrel")
+            {
+                Check(!Nodes<MeshInstance3D>(effect).Any(m=>m.Mesh is PlaneMesh and not QuadMesh),"fuel burst has no ground paint");
+                effect._Process(.8);
+                Check(Nodes<MeshInstance3D>(effect).Any(m=>m.Visible&&m.Name.ToString().StartsWith("Smoke")),"fuel smoke outlives initial fireball");
+                Check(!Nodes<MeshInstance3D>(effect).Any(m=>m.Visible&&m.Name.ToString().StartsWith("Fireball")),"fuel fireball retires before smoke");
+                await Shot("barrel-tail");
+                effect._Process(def.Duration-.92-.02);
+                Check(Nodes<MeshInstance3D>(effect).All(m=>!m.Visible),"fuel cards fade before owner cleanup");
+            }
             effect._Process(def.Duration+.1);await Frames(2);
             Check(!IsInstanceValid(effect),"burst expires "+def.Id);
+        }
+        // Studio may step in one jump; live playback may take many smaller steps.
+        var fuelDef=catalog.ForSource("barrel");
+        var a=CombatBurstEffect.Play(_stage.Effects,fuelDef,Vector3.Zero,3);
+        var b=CombatBurstEffect.Play(_stage.Effects,fuelDef,Vector3.Zero,3);
+        a.SetProcess(false);b.SetProcess(false);a._Process(.4);
+        for(int i=0;i<4;i++)b._Process(.1);
+        var cardsA=Nodes<MeshInstance3D>(a).ToArray();var cardsB=Nodes<MeshInstance3D>(b).ToArray();
+        Check(cardsA.Zip(cardsB).All(pair=>pair.First.Visible==pair.Second.Visible&&(!pair.First.Visible
+            ||pair.First.Position.IsEqualApprox(pair.Second.Position)
+            &&pair.First.Scale.IsEqualApprox(pair.Second.Scale)
+            &&Mathf.IsEqualApprox(((StandardMaterial3D)pair.First.MaterialOverride).AlbedoColor.A,
+                ((StandardMaterial3D)pair.Second.MaterialOverride).AlbedoColor.A))),"fuel timeline is independent of step size");
+        var frozen=cardsA.Select(c=>c.Position).ToArray();await Frames(3);
+        Check(cardsA.Select((c,i)=>c.Position==frozen[i]).All(v=>v),"fuel cards do not advance without parent clock");
+        a.QueueFree();b.QueueFree();await Frames(2);
+        Check(cardsA.All(c=>!IsInstanceValid(c)),"fuel child cards retire with parent");
+        foreach(int lobes in new[]{0,24})
+        {
+            var shortBurst=CombatBurstEffect.Play(_stage.Effects,fuelDef with {Duration=.1f,Lobes=lobes,Particles=0},Vector3.Zero,.05f);
+            shortBurst.SetProcess(false);shortBurst._Process(.099);
+            Check(Nodes<MeshInstance3D>(shortBurst).All(m=>!m.Visible),"short fuel lifetime and lobe boundary "+lobes);
+            shortBurst._Process(.01);await Frames(2);
+            Check(!IsInstanceValid(shortBurst),"short fuel cleanup "+lobes);
         }
         for(int i=0;i<40;i++)CombatBurstEffect.Play(_stage.Effects,catalog.ForSource("barrel"),new(-5,0,0),3);
         Check(Nodes<CombatBurstEffect>(_stage).Count(n=>!n.IsQueuedForDeletion())<=CombatBurstEffect.MaxBursts,"transient burst budget");
         Check(GetTree().GetNodesInGroup("combat_visual_light").Count<=CombatBurstEffect.MaxLights,"transient light budget");
-        await Frames(100);
+        await Frames((int)Math.Ceiling(catalog.ForSource("barrel").Duration*60)+5);
         Check(!Nodes<CombatBurstEffect>(_stage).Any(),"overlap leaves no burst nodes");
         var barrel=ExplosiveBarrel.Create(_stage,new(-4,0,0));barrel.Explode();
         Check(Burst("barrel"),"actual barrel selects fuel explosion");await Frames(100);

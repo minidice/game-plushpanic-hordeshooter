@@ -60,7 +60,7 @@
       "spread": 0.6,
       "rise": 1.7,
       "light_energy": 4,
-      "duration_s": 1.45,
+      "duration_s": 2.4,
       "preview_radius_m": 4.6,
       "sources": [
         "barrel"

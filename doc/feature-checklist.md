@@ -1,5 +1,7 @@
 # 게임 기능 체크리스트
 
+- [x] A-28 연료통 폭발: 바닥 링 없이 순간 화염 팽창→반투명 잔연기/개별 잔불. 피해·음향 유지, 게임/Studio 공통 생성기. [검사·렌더·제약](features/effects-audio/log/009-art-barrel-burst.md).
+
 - [x] A-27 화염의 GPU 불꽃·잔연기·무해한 그을음, 연무 시각 표본 및 공통 Studio 연결. 실제 연막탄/단차 투영은 후속. [검사·제약](features/effects-audio/log/004-code-area-effects.md).
 - [x] A-27 외형 후속: 지속 화염의 원 테두리를 제거하고 불규칙한 열기 경계로 변경. [렌더·검사](features/effects-audio/log/005-art-fire-ground-without-ring.md).
 - [x] A-27 최신 외형: 화염의 바닥 그림·그을음·착탄 링을 제거하고 불꽃/불티/연기만 표시. [렌더·검사](features/effects-audio/log/006-art-fire-without-ground.md).
