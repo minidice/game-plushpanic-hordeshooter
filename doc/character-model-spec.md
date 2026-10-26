@@ -36,6 +36,7 @@
 | `GearNodes` | 장비 부품 노드 목록(헬멧·조끼·배낭). **좀비 버전에서 숨김** | 없음 |
 | `BuiltInWeaponNode` | 모델에 포함된 총 노드. 게임 무기를 쥐면 숨기고, 좀비 버전에서도 숨김 | 빈 값 |
 | `HandColor` | 게임 무기를 쥐는 손과 좀비 팔의 색 | 크림색 |
+| `WeaponShoulderOffset` | Arm 피벗→실제 어깨 보정. X는 왼쪽에서 반전. `*_Shoulder` 노드가 있으면 그것을 우선. `.tres`의 `script` 선언 뒤에 기록 | `(0,0,0)` |
 | `Shape`, `PrimaryColor`, `SecondaryColor` | 대체 모델 모양(`0` 캡슐 / `1` 둥근형 / `2` 풍선 / `3` 황소)과 색 | |
 | `ColliderRadius`, `ColliderHeight` | 충돌 캡슐. **게임플레이 판정은 모델이 아니라 이 값 기준** | 0.45 / 1.8 |
 | `MoveSpeed`, `MaxHealth` | 이동 속도(m/s), 체력. **플레이어 정의 전용** — 몬스터의 속도 · 체력은 `content/data/monsters.csv`에서 오므로 `content/enemies/*.tres`에는 적지 않는다(I-94) | 4.2 / 100 |
@@ -316,3 +317,7 @@ node prototypes/character-lab/tools/validate-game-roster.mjs
 ### 조류 얼굴 표시 진폭 (2026-10-26)
 
 거위/오리 clean 모델의 얼굴 Head는 연속 torso와 분리되어 있다. 기존 최대140mm 얼굴 이동이 눈을 몸 안에 넣으므로 두 종 리소스의 `HeadSpringScale=0.05`로 표시만 제한한다. 피벗/몸 마스크 좌표·커스텀 저장과 다른 종 스프링은 그대로다. `BirdFaceVisibilityCheck`와 같은 실제 Stage2 캡처에서 가속·반전·정지·사격 중 눈 노출을 확인했다. [통합 검수](four-species-art.md).
+
+### 2026-10-26 공통 무기 자세 계약
+
+분리된 GLB라도 같은 `CharacterWeaponPose`를 사용한다. 정지 Arm/Shoulder와 몸 배율은 캐릭터에서, `StockContact`·`GripRight`·`GripLeft`·`Muzzle`은 무기에서 읽는다. `StockContact`는 총의 후면 실제 표면이며 일반 GLB는 작성 필수다. 어깨 견착/권총/전용 자세 분기와 기존 형태별 팔 표면 연결을 분리한다. [현재 구현·제작 수치·예외·검수](shared-weapon-poses.md).

@@ -213,7 +213,8 @@ const server = http.createServer(async (req, res) => {
         json(200, await request('library_render', data)); return;
       }
       if (!data || typeof data.species !== 'string' || !data.fields || Array.isArray(data.fields) || typeof data.fields !== 'object'
-          || !Number.isFinite(data.rotation) || !Number.isFinite(data.zoom) || typeof data.gear !== 'boolean' || typeof data.weapon !== 'boolean') {
+          || !Number.isFinite(data.rotation) || !Number.isFinite(data.zoom) || typeof data.gear !== 'boolean' || typeof data.weapon !== 'boolean'
+          || (data.weapon_id !== undefined && typeof data.weapon_id !== 'string')) {
         json(400, { error: 'Invalid preview request' }); return;
       }
       json(200, await request('render', data)); return;

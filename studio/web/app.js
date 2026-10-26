@@ -22,7 +22,8 @@ async function render() {
   const started = performance.now();
   try {
     const result = await api('/api/render', { species: species.id, fields: { ...overrides },
-      rotation: Number($('rotation').value), zoom: Number($('zoom').value), gear: $('gear').checked, weapon: $('weapon').checked });
+      rotation: Number($('rotation').value), zoom: Number($('zoom').value), gear: $('gear').checked, weapon: $('weapon').checked,
+      weapon_id: $('weapon-choice').value || 'm4' });
     if (current === revision) {
       const source = `data:image/png;base64,${result.png}`;
       const decoded = new Image(); decoded.src = source; await decoded.decode();
@@ -71,7 +72,13 @@ function selectSpecies(id) {
   fieldList(); invalidate();
 }
 async function load() {
-  catalog = await api('/api/catalog');
+  const loaded = await Promise.all([api('/api/catalog'), api('/api/weapons')]);
+  catalog = loaded[0];
+  const previousWeapon = $('weapon-choice').value || 'm4';
+  $('weapon-choice').replaceChildren();
+  for (const item of loaded[1].weapons.filter(item => !item.dual))
+    $('weapon-choice').add(new Option(item.name, item.id));
+  $('weapon-choice').value = previousWeapon;
   $('species').replaceChildren(); $('tabs').replaceChildren();
   for (const item of catalog.species) {
     const button = document.createElement('button'); button.textContent = item.name; button.dataset.id = item.id;
@@ -90,7 +97,8 @@ async function load() {
   $('loaded-at').textContent = `로컬 데이터 로드 ${new Date(catalog.loadedAt).toLocaleTimeString('ko-KR')}`;
   selectSpecies(catalog.species.some(s => s.id === species?.id) ? species.id : catalog.species[0].id);
 }
-for (const id of ['rotation', 'zoom', 'gear', 'weapon']) $(id).addEventListener('input', () => {
+for (const id of ['rotation', 'zoom', 'gear', 'weapon', 'weapon-choice']) $(id).addEventListener('input', () => {
+  if (id === 'weapon-choice') $('weapon').checked = true;
   $('rotation-value').textContent = `${$('rotation').value}°`;
   $('zoom-value').textContent = `${Number($('zoom').value).toFixed(2)}×`; invalidate();
 });

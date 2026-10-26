@@ -1,20 +1,33 @@
 using Godot;
 namespace HordeShooter;
 
-/// <summary>Rigid authored paw with a separate shoulder-to-wrist forearm. Mesh resources remain immutable.</summary>
+/// <summary>Rigid authored paw and two closed Blender arm sections. Shared meshes remain immutable.</summary>
 internal partial class CharacterLionPaw : MeshInstance3D
 {
     private Transform3D _rest, _forearmRest;
     private Vector3 _shoulder, _wrist, _grip;
     private MeshInstance3D _forearm=null!;
+    private MeshInstance3D _upperArm=null!;
+    private MeshInstance3D _restArm=null!;
+    private Node3D _elbowMarker=null!;
     private Node3D _wristMarker=null!;
     private Vector3 _meshGrip;
     private float _side;
+    private float _radius;
     public static CharacterLionPaw Create(Node3D parent,MeshInstance3D paw,Transform3D rest,MeshInstance3D forearm,Transform3D forearmRest,Vector3 shoulder,Vector3 wrist,Vector3 grip,string name,float side)
     {
         var result=new CharacterLionPaw{Name=name,Mesh=paw.Mesh,_rest=rest,_forearmRest=forearmRest,_shoulder=shoulder,_wrist=wrist,_grip=grip,_side=side,Transform=rest};
         CopyMaterials(paw,result);parent.AddChild(result);
-        result._forearm=new MeshInstance3D{Name="Forearm",Mesh=forearm.Mesh};CopyMaterials(forearm,result._forearm);result.AddChild(result._forearm);
+        var template=GD.Load<PackedScene>("res://assets/characters/shared/mammal-arm-segments.glb").Instantiate<Node3D>();
+        result._upperArm=Section("UpperArm");result._forearm=Section("Forearm");
+        MeshInstance3D Section(string section) {
+            var mesh=new MeshInstance3D{Name=section,Mesh=((MeshInstance3D)template.FindChild(section,true,false)).Mesh};
+            mesh.SetSurfaceOverrideMaterial(0,forearm.GetActiveMaterial(0));result.AddChild(mesh);return mesh;
+        }
+        template.Free();
+        result._restArm=new MeshInstance3D{Name="RestArm",Mesh=forearm.Mesh};CopyMaterials(forearm,result._restArm);result.AddChild(result._restArm);
+        result._radius=Mathf.Clamp((forearmRest*forearm.Mesh.GetAabb()).Size.X*.5f,.065f,.12f);
+        result._elbowMarker=new Node3D{Name="Elbow"};result.AddChild(result._elbowMarker);
         result._wristMarker=new Node3D{Name="Wrist",Position=rest.AffineInverse()*wrist};result.AddChild(result._wristMarker);
         result._meshGrip=rest.AffineInverse()*grip;
         result.PosePaw(Vector3.Zero,false,1,0);return result;
@@ -25,22 +38,40 @@ internal partial class CharacterLionPaw : MeshInstance3D
     {
         var axis=(_grip-_wrist).Normalized();
         Basis pose;
-        if(holding && target.DistanceSquaredTo(_shoulder)>.000001f)
-            pose=new Basis(new Quaternion(axis,(target-_shoulder).Normalized())).Scaled(Vector3.One*size);
-        else pose=new Basis(Vector3.Back,-_side*running*.35f).Scaled(Vector3.One*size);
+        Vector3 elbow;
+        if(holding && target.DistanceSquaredTo(_shoulder)>.000001f) {
+            var reach=target-_shoulder;float distance=reach.Length();var direction=reach/distance;
+            float hand=(_grip-_wrist).Length()*size;
+            float upper=.36f*size,lower=.36f*size+hand;
+            // Extreme reload/traversal targets retain exact contact. Idle rifles stay within nominal reach.
+            float extension=Mathf.Max(1,distance/((upper+lower)*.98f));upper*=extension;lower*=extension;
+            float along=Mathf.Clamp((distance*distance+upper*upper-lower*lower)/(2*distance),-upper,upper);
+            var pole=new Vector3(_side*.8f,-1,-.1f);
+            pole-=direction*pole.Dot(direction);
+            if(pole.LengthSquared()<.0001f)pole=direction.Cross(Vector3.Forward);
+            elbow=_shoulder+direction*along+pole.Normalized()*Mathf.Sqrt(Mathf.Max(0,upper*upper-along*along));
+            pose=new Basis(new Quaternion(axis,(target-elbow).Normalized())).Scaled(Vector3.One*size);
+        }
+        else {
+            pose=new Basis(Vector3.Back,-_side*running*.35f).Scaled(Vector3.One*size);
+            elbow=_shoulder+pose*((_wrist-_shoulder)*.5f)+new Vector3(_side*.012f,0,-.018f)*size;
+        }
         var offset=holding?target-pose*_grip:_shoulder-pose*_shoulder;
         var pawPose=new Transform3D(pose,offset);
         Transform=pawPose*_rest;
+        _upperArm.Visible=_forearm.Visible=holding;_restArm.Visible=!holding;
+        _restArm.Transform=Transform.AffineInverse()*pawPose*_forearmRest;
         var wrist=pawPose*_wrist;
-        var restDirection=_wrist-_shoulder;
-        float restLength=restDirection.Length();
-        var direction=wrist-_shoulder;
-        var forearmAxis=restDirection/restLength;
-        float stretch=direction.Length()/restLength-size;
-        var axial=new Basis(Vector3.Right*size+forearmAxis*(forearmAxis.X*stretch),Vector3.Up*size+forearmAxis*(forearmAxis.Y*stretch),Vector3.Back*size+forearmAxis*(forearmAxis.Z*stretch));
-        var forearmPose=new Basis(new Quaternion(forearmAxis,direction.Normalized()))*axial;
-        var desired=new Transform3D(forearmPose,_shoulder-forearmPose*_shoulder)*_forearmRest;
-        _forearm.Transform=Transform.AffineInverse()*desired;
+        _elbowMarker.Position=Transform.AffineInverse()*elbow;
+        var upperDirection=(elbow-_shoulder).Normalized();var lowerDirection=(wrist-elbow).Normalized();
+        Place(_upperArm,_shoulder-upperDirection*.04f*size,elbow+upperDirection*.025f*size,size);
+        Place(_forearm,elbow-lowerDirection*.025f*size,wrist+lowerDirection*.012f*size,size);
+    }
+    private void Place(MeshInstance3D section,Vector3 from,Vector3 to,float size) {
+        var delta=to-from;float length=Mathf.Max(delta.Length(),.0001f);
+        var rotation=delta.LengthSquared()>.00000001f?new Basis(new Quaternion(Vector3.Up,delta/length)):Basis.Identity;
+        var basis=rotation*Basis.FromScale(new Vector3(_radius*size,length,_radius*size));
+        section.Transform=Transform.AffineInverse()*new Transform3D(basis,from);
     }
     public Vector3 Grip=>GlobalTransform*_meshGrip;
 }
