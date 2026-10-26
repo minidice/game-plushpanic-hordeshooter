@@ -84,6 +84,72 @@
       "sha256": "fc4b25121281f385a77e7a2422ccd20d79e4b0bc195cb05f1f0977a51364c832",
       "sources": [],
       "original_arrangement": true
+    },
+    "shot_rifle.wav": {
+      "sha256": "6b53148ab0ded1531d8cfc87b8353fb80a0adecb3a6e09efd5c3c9a9b93a2ce2",
+      "sources": [
+        "ar15-D32.wav"
+      ],
+      "original_arrangement": false
+    },
+    "shot_rifle_2.wav": {
+      "sha256": "70b897dd8ea5af6eb7bfcf15de60b49242541bb9f856872ab922702cde8bd21d",
+      "sources": [
+        "ar15-D32.wav"
+      ],
+      "original_arrangement": false
+    },
+    "shot_rifle_3.wav": {
+      "sha256": "198b4f75aa2ac2ac34c90b7df79b1820207ef0b94bb0e1a9dbfaa839a380fc4a",
+      "sources": [
+        "ar15-D24.wav"
+      ],
+      "original_arrangement": false
+    },
+    "zombie_hit.wav": {
+      "sha256": "c2adc52748764c1fd1e598c34c92ae85dced370fa50e1646c17b38129bafde96",
+      "sources": [
+        "kenney-impactSoft_heavy_000.ogg",
+        "kenney-impactWood_heavy_000.ogg"
+      ],
+      "original_arrangement": false
+    },
+    "zombie_hit_2.wav": {
+      "sha256": "5ad072348233037bb7ab6b66f55f10850108f35b6222f53ede225aeec4b4f4fe",
+      "sources": [
+        "kenney-impactSoft_medium_001.ogg",
+        "kenney-impactWood_heavy_000.ogg"
+      ],
+      "original_arrangement": false
+    },
+    "zombie_hit_3.wav": {
+      "sha256": "08508d5bf964bc5e5f4d914e483f3f7c5c6ecc62e3ada865eb2be3e03b7f5c3a",
+      "sources": [
+        "kenney-impactSoft_heavy_000.ogg",
+        "kenney-impactWood_heavy_000.ogg"
+      ],
+      "original_arrangement": false
+    },
+    "reload_start.wav": {
+      "sha256": "739656d594c44cabcdbbb0db472e823ed870718b1e92caadb76f58df63af2ed4",
+      "sources": [
+        "assault-rifle-reload.wav"
+      ],
+      "original_arrangement": false
+    },
+    "reload_end.wav": {
+      "sha256": "589a3ba5a805950e50a2eec889a05b944cde2788fb65d6fd90bde7ee583c8729",
+      "sources": [
+        "assault-rifle-reload.wav"
+      ],
+      "original_arrangement": false
+    },
+    "dry_fire.wav": {
+      "sha256": "f1025e88d18161ed4eada87a0e816c3fa662ba8f4867bc0167150c7588f8779c",
+      "sources": [
+        "assault-rifle-reload.wav"
+      ],
+      "original_arrangement": false
     }
   },
   "sources": [
@@ -194,6 +260,42 @@
       "retrieved": "2026-10-27",
       "note": "Public HQ MP3 preview of a recorded shaving-cream can edited as pressure release. Not the original WAV; used as designed balloon air, not an actual balloon recording.",
       "sha256": "e9f3f979e8640b12ac7908db628c4281ec03cec0c7567b51a05a12047b77d52e"
+    },
+    {
+      "file": "ar15-D24.wav",
+      "author": "Ben Jaszczak, Brian Nelson, Kevin Heras, Matthew Nanney",
+      "title": "The Free Firearm Sound Library",
+      "page": "https://opengameart.org/content/the-free-firearm-sound-library",
+      "download": "https://opengameart.org/sites/default/files/Prepared%20SFX%20Library.7z",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "retrieved": "2026-10-27",
+      "sha256": "4c6a54ca0583150bbb32b7f658bc64da9ad9ba42fd3aca769c6120b44af8d3f0",
+      "note": "Prepared library recording; selected archive member Prepared SFX Library/AR-15/D_24P.wav. Original stereo source retained; short shot edits remove long tails."
+    },
+    {
+      "file": "ar15-D32.wav",
+      "author": "Ben Jaszczak, Brian Nelson, Kevin Heras, Matthew Nanney",
+      "title": "The Free Firearm Sound Library",
+      "page": "https://opengameart.org/content/the-free-firearm-sound-library",
+      "download": "https://opengameart.org/sites/default/files/Prepared%20SFX%20Library.7z",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "retrieved": "2026-10-27",
+      "sha256": "acee9d2106b68fe5956225a19d7aedf943d97793817f9bda9d486a2b74b0a812",
+      "note": "Prepared library recording; selected archive member Prepared SFX Library/AR-15/D_32P.wav. Original stereo source retained; short shot edits remove long tails."
+    },
+    {
+      "file": "assault-rifle-reload.wav",
+      "author": "SpringySpringo",
+      "title": "Gun reload sounds",
+      "page": "https://opengameart.org/content/gun-reload-sounds",
+      "download": "https://opengameart.org/sites/default/files/assaultriflereload1_0.wav",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "retrieved": "2026-10-27",
+      "sha256": "efb2d724d634eabe6ba8d3065686abca848bb7497d4d43a5e4aed5e5ea23016f",
+      "note": "Author describes airsoft gun recordings. Two mechanical events edited into shared reload cues; a short excerpt builds the dry-fire click, not a recording of an empty firearm."
     }
   ],
   "note": "CC0-derived edits. Original additive arrangements for game_over and stage_clear are project-authored, with no external music sample."

@@ -36,12 +36,20 @@ public static class SoundRecipes
     /// <summary>Finite base draw; gameplay scales playback pitch to the species' actual windup.</summary>
     public const float HunterBowDrawSeconds = 1.2f;
 
+    // Recorded files have headroom; their playback gain must not boost a missing-file synth fallback.
+    private static float[] FallbackGain(float[] samples, float db)
+    {
+        float gain = MathF.Pow(10, db / 20);
+        for (int i = 0; i < samples.Length; i++) samples[i] *= gain;
+        return samples;
+    }
+
     public static readonly IReadOnlyList<SoundDef> All = new List<SoundDef>
     {
         // ---------- weapons ----------
         new("shot_pistol", "권총 발사", s => Gunshot(s, .13f, 4200, 1500, 22, 150, .35f), -2, .08f, 6, Priority: 2),
         new("shot_smg", "기관단총 발사", s => Gunshot(s, .12f, 3900, 1300, 24, 135, .4f), -2, .08f, 6, Priority: 2),
-        new("shot_rifle", "소총 발사", s => Gunshot(s, .2f, 3400, 900, 16, 110, .55f), 0, .06f, 6, Priority: 2),
+        new("shot_rifle", "소총 발사", s => FallbackGain(Gunshot(s, .2f, 3400, 900, 16, 110, .55f), -7), 7, .025f, 6, Priority: 2, NearCap: true, Variants: 3),
         new("shot_lmg", "경기관총 발사", s => Gunshot(s, .16f, 2800, 800, 18, 95, .6f), -1, .07f, 6, Priority: 2),
         new("shot_shotgun", "산탄총 발사", s => Gunshot(s, .42f, 2200, 450, 8, 75, 1f), 2, .05f, 4, Priority: 2),
         new("shot_sniper", "저격총 발사", Sniper, 3, .04f, 3, Priority: 2),
@@ -51,9 +59,9 @@ public static class SoundRecipes
         // Played at the muzzle beside the listener: without the cap it rode the +3 dB ceiling like a gunshot.
         new("melee_swing", "근접 휘두르기", Swing, -1, .1f, 4, NearCap: true),
         new("pan_bong", "프라이팬 타격", PanBong, -1, .08f, 4),
-        new("dry_fire", "빈 탄창 딸깍", s => Click(s, .06f, 2400), -6, .05f, 2),
-        new("reload_start", "재장전 시작 (탄창 빼기)", ReloadStart, -6, .05f, 2),
-        new("reload_end", "재장전 끝 (장전 손잡이)", ReloadEnd, -5, .05f, 2),
+        new("dry_fire", "빈 탄창 딸깍", s => FallbackGain(Click(s, .06f, 2400), -7), 1, .03f, 2, NearCap: true),
+        new("reload_start", "재장전 시작 (탄창 빼기)", s => FallbackGain(ReloadStart(s), -6), 0, .025f, 2, NearCap: true),
+        new("reload_end", "재장전 끝 (장전 손잡이)", s => FallbackGain(ReloadEnd(s), -6), 1, .025f, 2, NearCap: true),
         new("throw", "투척", s => Whoosh(s, .22f, 600, 2400), -6, .1f, 3),
 
         // Hunters stay below player weapons even when a crowd attacks at the listener's feet.
@@ -90,7 +98,7 @@ public static class SoundRecipes
         // ---------- zombies & specials ----------
         new("zombie_step", "좀비 발소리 (질질, 작게)", ZombieStep, -17, .15f, 6, Priority: 0, NearCap: true),
         new("groan", "좀비 신음 (목 울림)", Groan, 2, .05f, 3, Priority: 0, RestartWhenFull: false, NearCap: true, Variants: 2),
-        new("zombie_hit", "좀비 피격 (솜 퍽)", ZombieHit, -6, .15f, 6, Priority: 0, NearCap: true),
+        new("zombie_hit", "좀비 피격 (짧은 접촉)", s => FallbackGain(ZombieHit(s), -4), -2, .05f, 3, Priority: 0, RestartWhenFull: false, NearCap: true, Variants: 3),
         new("zombie_die", "좀비 쓰러짐 (짧은 발성·낙하)", ZombieDie, -4, .05f, 3, Priority: 0, RestartWhenFull: false, NearCap: true, Variants: 2),
         new("sonar", "소나 파문 (보이지 않는 적)", Sonar, -10, .04f, 4, RestartWhenFull: false),
         new("balloon_inflate", "풍선 부풂 (공기 압력)", BalloonInflate, 0, .03f, 2, NearCap: true),

@@ -29,7 +29,16 @@ public partial class AudioQualityCheck : Node
     {
         var sfx = new Sfx();
         AddChild(sfx);
-        var ids = new[] { "honk", "honk_long", "groan", "zombie_die", "balloon_inflate", "balloon_pop", "bull_bonk", "game_over", "stage_clear" };
+        var ids = new[] { "honk", "honk_long", "groan", "zombie_die", "balloon_inflate", "balloon_pop", "bull_bonk", "game_over", "stage_clear",
+            "shot_rifle", "zombie_hit", "reload_start", "reload_end", "dry_fire" };
+        foreach (string id in new[] { "shot_rifle", "zombie_hit", "reload_start", "reload_end", "dry_fire" })
+        {
+            var def = SoundRecipes.Find(id)!;
+            float legacyGain = id == "shot_rifle" ? 0 : id == "reload_end" ? -5 : -6;
+            float ceiling = .91f * Mathf.DbToLinear(legacyGain);
+            Check(def.Build(new Synth(42)).Max(v => Math.Abs(v)) * Mathf.DbToLinear(def.VolumeDb) <= ceiling,
+                id + " synthesis fallback preserves its previous peak budget if the recording is absent");
+        }
         foreach (string id in ids)
         {
             Check(sfx.Overridden.Contains(id) && sfx.Stream(id) is AudioStreamWav w && w.MixRate == 48000
@@ -39,7 +48,7 @@ public partial class AudioQualityCheck : Node
             Check(p != null && p.MaxDb == p.VolumeDb, id + " cannot amplify beyond its authored gain near the listener");
             p?.Stop();
         }
-        foreach (string id in new[] { "honk", "groan", "zombie_die" })
+        foreach (string id in new[] { "honk", "groan", "zombie_die", "shot_rifle", "zombie_hit" })
         {
             var first = sfx.PlayAt(id, Vector3.Zero)!;
             var stream = first.Stream;
@@ -47,8 +56,23 @@ public partial class AudioQualityCheck : Node
             var second = sfx.PlayAt(id, Vector3.Zero)!;
             Check(second.Stream != stream, id + " avoids repeating the same vocal take");
             second.Stop();
+            if (id is "shot_rifle" or "zombie_hit")
+            {
+                var seen = new System.Collections.Generic.HashSet<AudioStream>();
+                AudioStream? previous = null;
+                bool repeated = false;
+                for (int i = 0; i < 60; i++)
+                {
+                    var voice = sfx.Play(id)!;
+                    repeated |= voice.Stream == previous;
+                    previous = voice.Stream;
+                    seen.Add(voice.Stream);
+                    voice.Stop();
+                }
+                Check(seen.Count == 3 && !repeated, id + " loads three distinct takes with no immediate repeat in 2D");
+            }
         }
-        foreach (string id in new[] { "groan", "zombie_die" })
+        foreach (string id in new[] { "groan", "zombie_die", "zombie_hit" })
         {
             int count = 0;
             for (int i = 0; i < 8; i++) if (sfx.PlayAt(id, Vector3.Zero) != null) count++;
