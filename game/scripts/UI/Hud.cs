@@ -73,6 +73,7 @@ void fragment() {
         _blind.SetAnchorsPreset(Control.LayoutPreset.FullRect);
         _root.AddChild(_blind);
         BuildStatusEffects();
+        BuildWeaponAction();
 
         _status = Place(HudLabel("", 17, UiTheme.Helium), .5f, 1, new Vector2(0, -166), true, true, centerX: true);
         _status.Name = "Status";
@@ -217,6 +218,7 @@ void fragment() {
         if (Paused && !_pausePanel.Visible) ShowPauseQuality();
         _pausePanel.Visible = Paused;
         if (InventoryOpen && (!playing || Paused || player.IsDead)) SetInventoryOpen(false);
+        UpdateWeaponAction((float)delta);
         bool captured = playing && !Paused && !InventoryOpen && !CardWindowOpen && !stage.AllStopped && GetWindow().HasFocus();
         var mode = captured ? Input.MouseModeEnum.Hidden : Input.MouseModeEnum.Visible;
         if (Input.MouseMode != mode) Input.MouseMode = mode;
@@ -483,7 +485,7 @@ void fragment() {
     {
         var stage = Stage;
         var player = stage.Player;
-        if (player.IsDead || player.IsDowned || stage.State != StageState.Playing || Paused) return;
+        if (player.IsDead || player.IsDowned || stage.State != StageState.Playing || Paused || stage.AllStopped || InventoryOpen || CardWindowOpen) return;
         var cam = stage.Cam;
         if (player.Weapons.AimingThrow && player.Weapons.Preview is { } preview)
         {
@@ -497,11 +499,12 @@ void fragment() {
         var aim = player.AimPoint;
         var center = cam.UnprojectPosition(aim);
         var gun = player.Gun;
-        if (player.AimBlend > 0)
+        float actionWeight = _weaponAction.Weight;
+        if (player.AimBlend > 0 && actionWeight < 1)
         {
             // Aiming (decisions.md C-26): a faint sight line from the gun to the cursor.
             var from = cam.UnprojectPosition(player.GlobalPosition + Vector3.Up * Player.AimHeight);
-            c.DrawLine(from, center, new Color(UiTheme.Accent, .35f * player.AimBlend), 2, true);
+            c.DrawLine(from, center, new Color(UiTheme.Accent, .35f * player.AimBlend * (1 - actionWeight)), 2, true);
         }
 
         float distance = Mathf.Max(1, (aim - player.GlobalPosition).Length());
@@ -512,48 +515,40 @@ void fragment() {
         // Past the effective range the reticle turns amber (damage falls off), past the maximum red (no hit; C-27, C-30).
         float reach = player.IsAiming ? gun.Def.AimRangeMultiplier : 1;
         var range = gun.IsMelee ? HudWhite : distance > gun.Def.MaxRange * reach ? ReticleOut : distance > gun.Def.EffectiveRange * reach ? ReticleFar : HudWhite;
-        var color = player.CritReady ? HudWarm : gun.Reloading ? HudMuted : new Color(range, .95f);
+        var color = (player.CritReady ? HudWarm : new Color(range, .95f)).Lerp(ActionLight, actionWeight);
 
         // Straight ticks and the dot: the cone fully aimed, always white (or the range / crit colour); shots only push them
         // out. Diagonal ticks: the cone now, while it is wider (hip fire, moving, shots) - red and glowing as the gun fires,
         // cooling back to white once it stops (doc/weapon-aim-reference.md 8.3).
         foreach (var dir in new[] { Vector2.Up, Vector2.Down, Vector2.Left, Vector2.Right })
-            ReticleTick(c, center, dir, aimed, color);
-        c.DrawCircle(center, ReticleDot + 1, new Color(0, 0, 0, .4f), true, -1, true);
-        c.DrawCircle(center, ReticleDot, color, true, -1, true);
+        {
+            var direction = dir.Rotated(Mathf.Pi / 4 * actionWeight);
+            var from = center + direction * Mathf.Lerp(aimed + 2, 29, actionWeight);
+            float length = Mathf.Lerp(ReticleTickLength, .5f, actionWeight);
+            ReticleLine(c, from, from + direction * length, color, Mathf.Lerp(ReticleTickWidth, 2.5f, actionWeight), ReticleHot, 0);
+        }
+        c.DrawCircle(center, ReticleDot + 1, new Color(0, 0, 0, .4f * (1 - actionWeight)), true, -1, true);
+        c.DrawCircle(center, ReticleDot, new Color(color, color.A * (1 - actionWeight)), true, -1, true);
         if (radius - aimed > 3)
         {
             float heat = gun.Reloading ? 0 : gun.Heat;
             var outer = color.Lerp(ReticleHot, heat);
+            outer.A *= 1 - actionWeight;
             foreach (var dir in new[] { new Vector2(1, 1), new Vector2(-1, 1), new Vector2(1, -1), new Vector2(-1, -1) })
-                ReticleTick(c, center, dir.Normalized(), radius, outer, heat);
+                ReticleTick(c, center, dir.Normalized(), Mathf.Lerp(radius, 29, actionWeight), outer, heat);
         }
         DrawHitMarks(c, center, aimed);
+        DrawWeaponActionRing(c, center);
         radius += ReticleTickLength - 6;
 
-        if (player.FocusTarget != null)
+        if (player.FocusTarget != null && actionWeight < .01f)
         {
             float focus = Mathf.Min(1, player.FocusTime / Player.CritFocusTime);
             c.DrawArc(center, radius + 7, -Mathf.Pi / 2, -Mathf.Pi / 2 + Mathf.Tau * focus, 40, UiTheme.Accent, 3, true);
         }
 
         var font = c.GetThemeDefaultFont();
-        if (player.Weapons.WindupProgress > 0)
-        {
-            // Mortar set-up or railgun charge.
-            var bar = new Rect2(center + new Vector2(-60, radius + 18), new Vector2(120, 10));
-            c.DrawRect(bar, new Color(0, 0, 0, .7f));
-            c.DrawRect(new Rect2(bar.Position, new Vector2(bar.Size.X * player.Weapons.WindupProgress, bar.Size.Y)), UiTheme.Accent);
-        }
-        else if (gun.Reloading)
-        {
-            var bar = new Rect2(center + new Vector2(-60, radius + 18), new Vector2(120, 10));
-            c.DrawRect(bar, new Color(0, 0, 0, .7f));
-            float progress = Mathf.Clamp(gun.ReloadElapsed / gun.ReloadTime, 0, 1);
-            c.DrawRect(new Rect2(bar.Position.X + bar.Size.X * progress - 1.5f, bar.Position.Y - 3, 3, bar.Size.Y + 6), UiTheme.Paper);
-        }
-        // Recharging weapons (Onslaught slot 3) never reload: the ammo panel shows their recharge instead.
-        else if (!gun.IsMelee && gun.ShotCooldown <= 0 && gun.Mag <= Mathf.Max(1, gun.Def.MagSize / 6))
+        if (!_weaponAction.Active && actionWeight < .01f && !gun.IsMelee && gun.ShotCooldown <= 0 && gun.Mag <= Mathf.Max(1, gun.Def.MagSize / 6))
         {
             c.DrawString(font, center + new Vector2(-60, radius + 32), Loc.Text(gun.Mag == 0 ? "ui_hud_mag_empty" : "ui_hud_ammo_low"),
                 HorizontalAlignment.Center, 120, 16, UiTheme.Accent);

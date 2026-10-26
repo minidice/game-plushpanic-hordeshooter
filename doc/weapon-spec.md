@@ -223,6 +223,18 @@ HUD에는 현재 모드별 임계값 분기가 없다. 여기서는 공용 코�
 - 코드: [WeaponShotEffect.cs](../game/scripts/Effects/WeaponShotEffect.cs), [weapon_shot.gdshader](../game/shaders/weapon_shot.gdshader), [MeleeSwingEffect.cs](../game/scripts/Effects/MeleeSwingEffect.cs), [melee_sweep.gdshader](../game/shaders/melee_sweep.gdshader), [WeaponController.cs](../game/scripts/Weapons/WeaponController.cs).
 - 재검사: `WeaponEffectsCheck.tscn`(헤드리스 + 창 모드, 전 무기 표시·로컬 산탄/점사/쌍권총/근접/특수), `RifleEffectsCheck.tscn`(즉시 피해·끝점 제한·연사 소멸), `TailMeleeCheck.tscn`, `CombatPacingCheck.tscn`, `WeaponHandlingCheck.tscn`, `NetSyncCheck.tscn`, `Integration.tscn`. `WeaponEffectsCheck` 창 모드는 `output/weapon-fx-*.png`를 만든다. 고정한 표시 시간과 합성한 명중 끝점으로 비교하는 실제 엔진 렌더이며 플레이 녹화는 아니다. M4 1차의 `output/rifle-fx-*.png`, `rifle-fx-frames/` 출력도 유지한다.
 
+### 6.4 장전/충전 진행 UI (M-33)
+
+2026-10-27 구현. [영상 관찰·설계](features/menu-ui/reload-ui-design.md), [작업·검사 기록](features/menu-ui/log/001-code-reload-progress-ui.md).
+
+- 장전 시 조준 눈금은 약0.16초에 작은 대각 네 점으로 모이며 가운데 점/외곽 퍼짐 눈금/조준선은 옅어진다. 고정 반경19px 진행 링이 나타나고, 종료 시 약0.20초에 복귀한다. 집중 호는 겹쳐 그리지 않으며 명중 표시는 유지한다.
+- 하단 장비 도크 위: 248×16px 둥근 반투명 트랙, 청백색 채움과 얇은 하이라이트, `장전 중 · N%`/`발사 준비 · N%`/`재충전 중 · N%`. 상태이상 아이콘은 게이지가 보일 때 70px 위로 이동해 겹침을 피한다. 상호작용/상태 문구 위치는 유지한다.
+- 같은 `WeaponActionFeedback.Progress`가 링·막대·퍼센트를 구동한다. 장전은 `ReloadFraction`, 레일건/박격포 준비는 `WindupProgress`, 난전 특수무기는 `1-CooldownLeft/ShotCooldown`. 진행률 자체에는 지연 보간을 적용하지 않는다.
+- 진행 중 숫자는 최대99%. 정상 완료만100%로 퇴장하며 취소는 마지막 값으로 사라진다. `WeaponState.ReloadCompleted`는 최종 탄 삽입 시 설정하고 다음 장전/취소 때 지운다. 완료 틱에 바로 사격해서 탄수가 그대로여도 완료를 놓치지 않는다. 탄창이 가득 차지 않아도 예비탄 소진으로 장전이 끝나면100%다.
+- 한 발씩 장전은 각 삽입 주기가0→100%이고 다음 탄에서0으로 돌아간다. 중간 사격/교체의 기존 규칙은 유지한다. 무기 교체 시 이전 UI 상태는 즉시 초기화한다.
+- 사망/쓰러짐/일시정지/전체 정지/배낭/카드창/투척 조준 중에는 이 진행 UI를 숨긴다. UI가 무기 타이머나 사격 가능 시점을 바꾸지 않는다.
+- 리소스: `HudWeaponAction.cs`의 Godot 벡터 도형과 공유 `StyleBoxFlat`(`ActionTrack`, `ActionFill`). 별도 PNG/GLB/외부 의존성 없음. 알파는 트랙0.50, 채움0.78, 링 배경0.32, 링 진행0.86이며 최종 UI 수락 전 제작값이다.
+
 ## 7. 손잡이와 팔 연결 (2026-10-20)
 
 게임용 무기는 `WeaponVisual.Built`의 `RightGrip`/`LeftGrip`으로 손 위치를 제공한다. `CharacterRig.BindWeaponGrip`은 모델의 정적인 `leftArm`/`rightArm`을 숨기고, 어깨에서 손잡이까지 짧고 납작한 날개·앞발을 연결한다. 일반 총은 몸 오른쪽에서 한 손으로 들며 반대 날개는 몸 옆에 둔다. 쌍권총과 중화기는 양손을 쓴다. 이동/반동/시각적 변형/도약 뒤에 연결을 갱신한다. 무기가 숨겨진 투척 조준 중에는 이 날개·앞발도 숨긴다.
@@ -249,7 +261,7 @@ HUD에는 현재 모드별 임계값 분기가 없다. 여기서는 공용 코�
 - **투척·곡사 조준 중 이동 -50%**: G로 투척 조준 중, 또는 박격포를 들고 있는 동안(`Player.LobAimMoveScale`).
 - **3번 특수무기 칸**: 로켓런처(`alabong`), 박격포(`mortar`), 레일건(`railgun`, 새 무기). 줍으면 3번으로 들어가고 바로 듭니다. 같은 무기를 또 주우면 예비탄으로, 다른 특수무기면 3번만 바뀌어 바닥에 떨어집니다. 탄약 더미로는 충전되지 않습니다(C-4).
   - **박격포**: 들고 있으면 착탄 원·최대 거리·궤적이 보임(투척 조준과 같은 표시). 클릭하면 0.8초 거치 → 발사 → 0.5초 회수, 그동안 이동 불가. 거치 중 기절·교체·투척하면 취소되고 탄을 돌려받음.
-  - **레일건**: 클릭하면 0.7초 충전(조준선이 굵어짐, 조준점 아래 진행 막대) → 굵은 빔. 대미지 260, 관통 99(관통마다 ×0.8). 충전 중 교체·기절하면 취소, 탄 반환. 모델은 지금 AWM을 재사용(전용 모델은 후속).
+  - **레일건**: 클릭하면 0.7초 충전(조준선이 굵어짐, M-33 진행 링과 하단 퍼센트 게이지) → 굵은 빔. 대미지 260, 관통 99(관통마다 ×0.8). 충전 중 교체·기절하면 취소, 탄 반환. 모델은 지금 AWM을 재사용(전용 모델은 후속).
 - 멀티: 조준 버튼은 입력의 `NetHeld.Aim`으로 방장에게 가고(사거리·집중은 방장이 계산), 3번 칸은 스냅샷의 `Special`로 맞춘다. 프로토콜 3.
 - 검사: `game/tests/WeaponHandlingCheck.tscn` (창 모드면 `output/weapons-*.png`).
 - **난전(서바이버)의 탄약 규칙**(2026-10-21, M-26): 모든 무기 예비탄 무제한, 3번 칸 종류(`slot=3`)는 장전 대신 쏜 뒤 `special_cooldown_s`(25초) 충전. 같은 날 난전 전용 3번 칸 꽥(`honk`) · 고무오리(`rubber_duck`)를 더하고 무기별 쿨타임 `special_cooldowns`(꽥 8초 · 고무오리 14초)를 둠(M-27 계획 13.1, I-87). 모델 · 아이콘은 `prototypes/character-lab/tools/gadget-models.py`(Blender)와 `render-weapon-icons.py -- --only honk,rubber_duck`로 만듦([지시문](model-briefs/slot3-honk-duck.md)). 진열대로 고른 무기는 종류와 상관없이 1·2번 칸에 들어간다. [몬스터 테이블 규격](mode-monster-tables.md) 5장.

@@ -12,6 +12,8 @@ public sealed class WeaponState
     public int Mag { get; private set; }
     public int Reserve { get; private set; }
     public bool Reloading { get; private set; }
+    /// <summary>Last reload ended by inserting its final round, even if the trigger consumes it in the same tick.</summary>
+    public bool ReloadCompleted { get; private set; }
     /// <summary>Current full cone angle in degrees.</summary>
     public float Spread { get; private set; }
     public float ReloadElapsed { get; private set; }
@@ -116,7 +118,11 @@ public sealed class WeaponState
             Mag++;
             if (!HasInfiniteReserve) Reserve--;
             _insertedShell = true;
-            if (Mag >= Def.MagSize || (!HasInfiniteReserve && Reserve == 0)) Reloading = false;
+            if (Mag >= Def.MagSize || (!HasInfiniteReserve && Reserve == 0))
+            {
+                Reloading = false;
+                ReloadCompleted = true;
+            }
         }
     }
 
@@ -167,13 +173,18 @@ public sealed class WeaponState
         if (IsMelee || Reloading || Mag >= Def.MagSize || ShotCooldown > 0) return false;
         if (!HasInfiniteReserve && Reserve <= 0) return false;
         Reloading = true;
+        ReloadCompleted = false;
         ReloadElapsed = 0;
         _insertedShell = false;
         _burstLeft = 0;
         return true;
     }
 
-    public void CancelReload() => Reloading = false;
+    public void CancelReload()
+    {
+        Reloading = false;
+        ReloadCompleted = false;
+    }
 
     /// <summary>A shot that was taken but never left (mortar set-up or railgun charge cut short): the round comes back.</summary>
     internal void Refund()
@@ -211,5 +222,6 @@ public sealed class WeaponState
         Mag += take;
         if (!HasInfiniteReserve) Reserve -= take;
         Reloading = false;
+        ReloadCompleted = true;
     }
 }

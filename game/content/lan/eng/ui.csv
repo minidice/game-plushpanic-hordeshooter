@@ -11,6 +11,8 @@ ui_hud_stage,STAGE 1 · Warehouse District
 fmt_hud_timer,{0:00}:{1:00}    Kills {2}
 fmt_hud_healing,Healing... {0}%
 ui_hud_reload,Reloading
+hud_action_charge,Charging
+hud_action_recharge,Recharging
 fmt_hud_throw_aim,Aiming throw: {0} ×{1}   LMB throw · RMB/G cancel · Wheel change type
 fmt_hud_helium,Helium high! Vision narrowed  {0}s
 ui_hud_stunned,Aaargh!

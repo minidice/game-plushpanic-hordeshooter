@@ -11,6 +11,8 @@ ui_hud_stage,STAGE 1 · 창고 지구
 fmt_hud_timer,{0:00}:{1:00}    처치 {2}
 fmt_hud_healing,치료 중... {0}%
 ui_hud_reload,장전 중
+hud_action_charge,발사 준비
+hud_action_recharge,재충전 중
 fmt_hud_throw_aim,투척 조준: {0} ×{1}   좌클릭 던지기 · 우클릭/G 취소 · 휠 종류 변경
 fmt_hud_helium,헬륨 중독! 시야 좁아짐  {0}초
 ui_hud_stunned,으아악!
