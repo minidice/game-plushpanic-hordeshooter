@@ -172,6 +172,10 @@ def animal(kind):
     if kind=='parrot':return parrot()
     if kind=='eagle':return eagle()
     if kind=='lion':return lion()
+    if kind=='tiger':
+        sys.path.insert(0,str(Path(__file__).resolve().parent))
+        import tiger_clean
+        return tiger_clean.build(sys.modules[__name__])
     if kind=='reindeer':return reindeer()
     if kind=='rhino':
         sys.path.insert(0,str(Path(__file__).resolve().parent))

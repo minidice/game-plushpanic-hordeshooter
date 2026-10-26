@@ -48,7 +48,7 @@ public partial class CharacterRig
     private MeshInstance3D MakeForearm(string name)
     {
         string side=name=="RightForearm"?"right":"left";
-        if((Definition.Id is "common_lion" or "common_reindeer" or "common_rhino" or "redpanda" or "raccoon") && Model.FindChild(Definition.Id+"_"+side+"Paw_mesh",true,false) is MeshInstance3D {Mesh:not null} paw)
+        if((Definition.Id is "common_lion" or "common_tiger" or "common_reindeer" or "common_rhino" or "redpanda" or "raccoon") && Model.FindChild(Definition.Id+"_"+side+"Paw_mesh",true,false) is MeshInstance3D {Mesh:not null} paw)
         {
             var forearm=(MeshInstance3D)Model.FindChild(Definition.Id+"_"+side+"Arm_mesh",true,false);
             var pivot=forearm.GetParentNode3D();
