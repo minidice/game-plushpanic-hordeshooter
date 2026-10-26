@@ -15,6 +15,8 @@ public sealed class SurfaceProfiles
     public const string DataPath = "res://content/data/surface_profiles.json";
     private static SurfaceProfiles? _current;
     public static SurfaceProfiles Current => _current ??= Parse(FileAccess.GetFileAsString(DataPath));
+    // Studio reloads authored values after an atomic save. Running games keep their session data.
+    public static void Reload() => _current = Parse(FileAccess.GetFileAsString(DataPath));
     public Dictionary<string, SurfaceProfile> Profiles { get; } = new();
     public Dictionary<string, string?> Objects { get; } = new();
     public Dictionary<string, string> Families { get; } = new();

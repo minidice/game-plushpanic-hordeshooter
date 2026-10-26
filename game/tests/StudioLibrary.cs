@@ -32,7 +32,8 @@ public partial class StudioPreview
     private object Library()
     {
         if (_monsterEntries == null) BuildMonsterEntries();
-        if (_objectEntries == null) BuildObjectEntries();
+        SurfaceProfiles.Reload();
+        BuildObjectEntries();
         return new { monsters = _monsterEntries, objects = _objectEntries, loadedAt = DateTimeOffset.Now.ToString("O"),
             warnings = MonsterDatabase.Current.Errors.Concat(PropLibrary.Errors).ToArray() };
     }
