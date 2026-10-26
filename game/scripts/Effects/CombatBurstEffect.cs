@@ -19,10 +19,11 @@ public partial class CombatBurstEffect : Node3D
     private ShaderMaterial? _ring;
     private OmniLight3D? _light;
     private BarrelBurstVisual? _fuel;
+    private ImpactBurstVisual? _impact;
     private float _age, _radius;
     public string EffectId => _def.Id;
     public float Age => _age;
-    public int VisualParts => _parts.Count + (_fuel?.VisualParts ?? 0);
+    public int VisualParts => _parts.Count + (_fuel?.VisualParts ?? 0) + (_impact?.VisualParts ?? 0);
 
     internal static ShaderMaterial Volume(Color color, Color accent, float heat)
     {
@@ -61,6 +62,12 @@ public partial class CombatBurstEffect : Node3D
         if (_def.Id == "barrel")
         {
             _fuel = BarrelBurstVisual.Create(this, _def, _radius);
+            BuildLight();
+            return;
+        }
+        if (_def.Family == "blast")
+        {
+            _impact = ImpactBurstVisual.Create(this, _def, _radius, direction, floorOffset);
             BuildLight();
             return;
         }
@@ -123,6 +130,7 @@ public partial class CombatBurstEffect : Node3D
     {
         if (_light != null) _light.LightEnergy = _def.LightEnergy * Mathf.Pow(Mathf.Max(0, 1 - _age / .22f), 2);
         if (_fuel != null) { _fuel.Advance(_age); return; }
+        if (_impact != null) { _impact.Advance(_age); return; }
         _hot.SetShaderParameter("clock", _age); _smoke.SetShaderParameter("clock", _age);
         _ring?.SetShaderParameter("clock", _age);
         foreach (var part in _parts)

@@ -1,5 +1,9 @@
 # 게임 기능 체크리스트
 
+- [x] A-29 기존 기본/수류탄/로켓/박격포/유인 폭발을 반투명 카드 질감으로 확장. 바닥 링 제거, 기존 화염·연무·연료통과 피해/음향 보존. 공통 Studio/전투/부하 통합 검사. [통합 기록](features/effects-audio/log/012-check-effects-rollout.md).
+
+- [x] A-27/A-28 현재 화염·연무·연료통 외형 사용자 수락. 영역 효과의 실제 보스 예고/HUD·1/6/12중첩 및 낮은 렌더 비용 조건의 로컬 검수 완료. 실제 저사양/다인 장시간은 별도. [검사·제약](features/effects-audio/log/010-check-area-readability.md).
+
 - [x] A-28 연료통 폭발: 바닥 링 없이 순간 화염 팽창→반투명 잔연기/개별 잔불. 피해·음향 유지, 게임/Studio 공통 생성기. [검사·렌더·제약](features/effects-audio/log/009-art-barrel-burst.md).
 
 - [x] A-27 화염의 GPU 불꽃·잔연기·무해한 그을음, 연무 시각 표본 및 공통 Studio 연결. 실제 연막탄/단차 투영은 후속. [검사·제약](features/effects-audio/log/004-code-area-effects.md).

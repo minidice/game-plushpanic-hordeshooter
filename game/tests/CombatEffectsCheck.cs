@@ -70,6 +70,59 @@ public partial class CombatEffectsCheck : Node
         using var image=GetViewport().GetTexture().GetImage();
         Check(image.SavePng(ProjectSettings.GlobalizePath("res://output/vfx-"+name+".png"))==Error.Ok,"render "+name);
     }
+    private async Task ImpactContracts()
+    {
+        var catalog=CombatEffectCatalog.Current;
+        foreach(string id in new[]{"blast","grenade","rocket","mortar","lure"})
+        {
+            var def=catalog.All[id];
+            var whole=CombatBurstEffect.Play(_stage.Effects,def,new(0,2,0),4,Vector3.Right,0);
+            var split=CombatBurstEffect.Play(_stage.Effects,def,new(0,2,0),4,Vector3.Right,0);
+            whole.SetProcess(false);split.SetProcess(false);
+            whole._Process(def.Duration*.2);for(int i=0;i<2;i++)split._Process(def.Duration*.1);
+            var a=Nodes<MeshInstance3D>(whole).ToArray();var b=Nodes<MeshInstance3D>(split).ToArray();
+            Check(!a.Any(m=>m.Mesh is PlaneMesh and not QuadMesh),"impact has no ground ring "+id);
+            Check(a.Zip(b).All(pair=>pair.First.Visible==pair.Second.Visible&&(!pair.First.Visible
+                ||pair.First.Position.IsEqualApprox(pair.Second.Position)&&pair.First.Scale.IsEqualApprox(pair.Second.Scale)
+                &&Mathf.IsEqualApprox(((StandardMaterial3D)pair.First.MaterialOverride).AlbedoColor.A,
+                    ((StandardMaterial3D)pair.Second.MaterialOverride).AlbedoColor.A))),"impact timeline independent of step size "+id);
+            var positions=a.Select(m=>m.Position).ToArray();await Frames(2);
+            Check(a.Select((m,i)=>m.Position==positions[i]).All(s=>s),"impact freezes with parent clock "+id);
+            if(id=="lure")
+            {
+                var tint=((StandardMaterial3D)a.First(m=>m.Visible&&m.Name.ToString().StartsWith("Impact")).MaterialOverride).AlbedoColor;
+                Check(tint.R>tint.G&&tint.B>tint.G,"lure retains pink impact color");
+            }
+            whole._Process(def.Duration*.45);
+            Check(a.Any(m=>m.Visible&&m.Name.ToString().StartsWith("Smoke"))
+                &&!a.Any(m=>m.Visible&&m.Name.ToString().StartsWith("Impact")),"impact ends before translucent dust "+id);
+            var fragments=a.Where(m=>m.Visible&&m.Name.ToString().StartsWith("Fragment")).ToArray();
+            Check(fragments.Any(m=>m.Position.Y<0)&&fragments.All(m=>m.Position.Y>=-1.941f),"airburst fragments descend toward supplied floor "+id);
+            whole._Process(def.Duration*.33);
+            Check(a.All(m=>!m.Visible),"impact layers fade before owner expires "+id);
+            whole.QueueFree();split.QueueFree();await Frames(2);
+            Check(a.All(m=>!IsInstanceValid(m)),"impact children retire with parent "+id);
+            foreach(int lobes in new[]{0,24})
+            {
+                var tiny=CombatBurstEffect.Play(_stage.Effects,def with {Duration=.1f,Lobes=lobes,Particles=0},Vector3.Zero,.05f);
+                tiny.SetProcess(false);tiny._Process(.099);
+                Check(Nodes<MeshInstance3D>(tiny).All(m=>!m.Visible),"short impact and zero particles finish "+id+"/"+lobes);
+                tiny._Process(.01);await Frames(2);
+                Check(!IsInstanceValid(tiny),"short impact cleanup "+id+"/"+lobes);
+            }
+        }
+        var rocket=catalog.ForSource("rocket");
+        var right=CombatBurstEffect.Play(_stage.Effects,rocket,Vector3.Zero,3,Vector3.Right);
+        var fast=CombatBurstEffect.Play(_stage.Effects,rocket,Vector3.Zero,3,Vector3.Right*30);
+        var left=CombatBurstEffect.Play(_stage.Effects,rocket,Vector3.Zero,3,Vector3.Left);
+        var zero=CombatBurstEffect.Play(_stage.Effects,rocket,Vector3.Zero,3);
+        foreach(var effect in new[]{right,fast,left,zero}){effect.SetProcess(false);effect._Process(.2);}
+        MeshInstance3D[] Impacts(CombatBurstEffect effect)=>Nodes<MeshInstance3D>(effect).Where(m=>m.Name.ToString().StartsWith("Impact")).ToArray();
+        Check(Impacts(right).Average(m=>m.Position.X)>Impacts(left).Average(m=>m.Position.X)+1,"rocket motion visibly follows supplied direction");
+        Check(Impacts(right).Zip(Impacts(fast)).All(p=>p.First.Position.IsEqualApprox(p.Second.Position)),"rocket visual depends on direction not speed");
+        Check(Impacts(zero).All(m=>m.Position.IsFinite())&&Mathf.Abs(Impacts(zero).Average(m=>m.Position.X))<.5f,"zero direction remains finite radial burst");
+        foreach(var effect in new[]{right,fast,left,zero})effect.QueueFree();await Frames(2);
+    }
     private async Task Run()
     {
         _stage=new Stage{MapOverride=new TestMap(),CharacterOverride="goose",ThemeOverride="zombie",DirectorEnabled=false,
@@ -85,7 +138,10 @@ public partial class CombatEffectsCheck : Node
         {
             var effect=CombatBurstEffect.Play(_stage.Effects,def,new(-3,0,0),def.PreviewRadius,Vector3.Right);
             effect.SetProcess(false);effect._Process(.12);
-            var volume=Nodes<MeshInstance3D>(effect).First(m=>m.Visible&&(def.Id=="barrel"
+            if(def.Family=="blast")
+                Check(Nodes<MeshInstance3D>(effect).Any(m=>m.Visible&&m.Mesh is QuadMesh
+                    &&m.MaterialOverride is StandardMaterial3D mat&&mat.AlbedoTexture!=null),"blast family uses textured translucent cards "+def.Id);
+            var volume=Nodes<MeshInstance3D>(effect).First(m=>m.Visible&&(def.Family=="blast"
                 ? m.MaterialOverride is StandardMaterial3D
                 : m.MaterialOverride is ShaderMaterial sm&&sm.Shader.ResourcePath.EndsWith("combat_volume.gdshader")));
             float alpha=volume.MaterialOverride is StandardMaterial3D card ? card.AlbedoColor.A
@@ -107,6 +163,7 @@ public partial class CombatEffectsCheck : Node
             effect._Process(def.Duration+.1);await Frames(2);
             Check(!IsInstanceValid(effect),"burst expires "+def.Id);
         }
+        await ImpactContracts();
         // Studio may step in one jump; live playback may take many smaller steps.
         var fuelDef=catalog.ForSource("barrel");
         var a=CombatBurstEffect.Play(_stage.Effects,fuelDef,Vector3.Zero,3);
@@ -138,6 +195,11 @@ public partial class CombatEffectsCheck : Node
         Check(!Nodes<CombatBurstEffect>(_stage).Any(),"overlap leaves no burst nodes");
         var barrel=ExplosiveBarrel.Create(_stage,new(-4,0,0));barrel.Explode();
         Check(Burst("barrel"),"actual barrel selects fuel explosion");await Frames(100);
+        Blast.Explode(_stage,new(-4,0,0),2,0,Colors.Orange,knockbackPower:0);
+        Check(Burst("blast"),"default blast source selects generic impact");
+        ThrownItem.Throw(_stage,ArmoryCatalog.Throwable("lure"),new(-4,1,0),new(-4,0,-3),p);
+        await Until(()=>Burst("lure"),"actual lure selects pink impact",900);
+        await Frames((int)Math.Ceiling(catalog.ForSource("lure").Duration*60)+5);
         ThrownItem.Throw(_stage,ArmoryCatalog.Throwable("frag"),new(-4,1,0),new(-4,0,-3),p);
         await Until(()=>Burst("grenade"),"actual thrown grenade selects fragment explosion");await Frames(65);
         Rocket.Launch(_stage,new(4,1,0),Vector3.Right,ArmoryCatalog.Weapon("alabong"),p.GetRid(),p);
