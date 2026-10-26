@@ -671,3 +671,10 @@
 - [x] 조준 집중 치명타: 0.5초 겨누면 다음 한 발만 치명타, 쏘면(맞든 빗나가든) 집중 0, 근접은 휘두름이 닿을 때 집중을 씀.
 - `WeaponAimCheck` 32개(헤드리스 · 창 모드): 0.5초 겨누면 준비 · 연사 중 첫 발만 치명타(`C . .`) · 쏘면 집중 소모 · 다시 겨누면 다음 치명타 추가. 처음 실패는 앞 단계 몹에 잠금이 남아 준비 대기가 건너뛰어진 검사 순서 문제 → 앞 몹을 지우고 "이 몹에 잠금"을 기다리도록 고침.
 - 다시 돌린 검사: WeaponHandlingCheck 36 · CombatPacingCheck 44 · TailMeleeCheck 13976 · CardLabCheck 172 · SquadCheck 51 · CompanionCheck 39 · NetSyncCheck 32 · ModeCheck 147 · EnemyAttackCheck 79 · Integration 2회 149, 모두 통과 · 종료 경고 0.
+
+### 이번 변경 확인 기록 — 2026-10-26 (코드의 리소스 직접 경로 → 목록 파일, T-26 개선 ②)
+
+- [x] 코드에 직접 적힌 리소스 경로 8파일(카드 아이콘 · 카드 이펙트 · 카드 소품 모델 3 · 투표 이미지 2 · 펫 · 드론 모델 · 소품 키트 폴더 5 · 공장 바닥/벽 셰이더)을 `content/data/asset_paths.json`으로 옮기고 `AssetPaths`로 읽음. 게임 동작은 그대로.
+- C# 빌드 경고 · 오류 0. 새 `AssetPathsCheck` 20개: 목록 로드, 파일 7개 · 키트 폴더 5개(각 manifest) 존재, 패턴 4개가 실제 파일과 맞음, 없는 키는 빈 경로 + 오류(멈추지 않음), `scripts/`에 직접 경로 없음.
+- 다시 돌린 검사: CardLabCheck 172(창 모드 173, 카드 아이콘 · 이펙트 · 소품 · 투표 이미지 실제 로드) · ModeCheck 147 · CompanionCheck 39(펫 · 드론 모델) · StageTransitionCheck 200 · SpawnCheck 41 · OnslaughtNetCheck 29 · MenuCheck 44 · Integration 149(공장 바닥 · 벽 셰이더), 모두 통과 · 로그에 [assets] 오류 0. Studio 도감(`PropLibrary.Folders` 사용)은 서버를 띄워 확인하지 않음.
+- 같은 날 설계안만: [기록 문서 나누기](records-split-plan.md)(기능별 폴더 + 작업별 기록 파일, 아직 안 옮김).

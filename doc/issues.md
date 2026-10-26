@@ -342,6 +342,7 @@ I-17 재검토(2026-10-24, 폭발·화염·독): 전용 가속 헤드리스 종�
 
 | 변경 영역 | 함께 확인할 것 |
 |---|---|
+| 리소스 경로 · 이름 바꾸기, 코드에 새 리소스 연결 (2026-10-26, T-26) | `AssetPathsCheck`: `content/data/asset_paths.json`의 모든 파일 · 패턴 · 키트 폴더가 실제로 있는지, `scripts/` C# 소스에 `"res://assets` 직접 경로가 다시 생기지 않았는지. 새 이슈는 아님(동작 변경 없는 구조 정리) |
 | 높이 단 · 흐름장 · 조준 · 사격 높이 | `ElevationCheck`(시험 단차 맵: 흐름장 경사로 · 한 방향 뛰어내리기, 가장자리 멈춤 · 넉백 낙하, 조준면, 아래로 쏘기 · 위로 막힘, 근접 경계 띠, 박격포 · 투척 높이, 폭발 한 단) + 평지 맵이 그대로인지 `EnvironmentReview`(월드 · 흐름장 해시) · `MapCheck` · `Integration` · `TailMeleeCheck` · `EnemyAttackCheck` · `CombatPacingCheck`. [높이 단 규격 14장](elevation-tiers.md) |
 | 무기 발사·근접 시각 효과 | `WeaponEffectsCheck`(헤드리스 + 창 모드, `output/weapon-fx-*.png`) + `RifleEffectsCheck` + `TailMeleeCheck` + `CombatPacingCheck` + `WeaponHandlingCheck` + `NetSyncCheck` + `Integration`; 산탄 1회 섬광/조명, 점사·쌍권총, 즉시 명중·탄약, 수신 표시만 수행, 끝점 제한, 근접 타격 전 표시 없음, 효과 소멸. [무기 규격 6.3](weapon-spec.md#weapon-effects) |
 | 무기 수치·장전 | `CombatPacingCheck` + `Integration` + `ReloadPoseCheck`; 잔탄/예비탄 보존, 빈 탄창/부분 장전, 사격·교체 중단, 더블배럴 예외. 수치는 `combat-pacing-research.md`와 일치시킴. `CaptureReloadPose`로 네 종 기본/장비의 손 왕복·장전 시야 확인 |

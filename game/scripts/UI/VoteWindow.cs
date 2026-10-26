@@ -11,7 +11,9 @@ namespace HordeShooter;
 /// </summary>
 public partial class VoteWindow : CanvasLayer
 {
-    public const string StampIcon = "res://assets/icons/ui/vote_stamp.png", WinnerFrame = "res://assets/icons/ui/vote_winner_frame.png";
+    /// <summary>From content/data/asset_paths.json (T-26).</summary>
+    public static string StampIcon => AssetPaths.File("ui.vote_stamp");
+    public static string WinnerFrame => AssetPaths.File("ui.vote_winner_frame");
 
     public Stage Stage { get; set; } = null!;
     public SpecialVote Vote { get; set; } = null!;

@@ -42,7 +42,7 @@ public partial class PetModel : Node3D
         if(!Enum.IsDefined(quality)) throw new ArgumentException("Unknown pet quality",nameof(quality));
         if(_model != null && Quality == quality) return;
         string suffix=quality == PetModelQuality.Low ? "_low" : "";
-        var model=GD.Load<PackedScene>($"res://assets/pets/{Species}{suffix}.glb").Instantiate<Node3D>();
+        var model=GD.Load<PackedScene>(AssetPaths.Pattern("pet_model", Species + suffix)).Instantiate<Node3D>();
         Weapon?.GetParent()?.RemoveChild(Weapon);
         _model?.Free();
         _model=model; Quality=quality;AddChild(model);
@@ -67,7 +67,7 @@ public partial class PetModel : Node3D
     public void SetWeapon(string? id)
     {
         if (id != null && id is not ("twin_blaster" or "rocket_pod")) throw new ArgumentException("Unknown pet weapon", nameof(id));
-        var next = id == null ? null : GD.Load<PackedScene>($"res://assets/pets/{id}.glb").Instantiate<Node3D>();
+        var next = id == null ? null : GD.Load<PackedScene>(AssetPaths.Pattern("pet_model", id)).Instantiate<Node3D>();
         Weapon?.Free();
         Weapon = next;
         if (next != null) BackSocket.AddChild(next);

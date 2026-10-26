@@ -64,7 +64,7 @@ public static class CardCatalog
     /// <summary>A card's picture (assets/icons/cards/card_&lt;name&gt;.png, Codex), or null when it has none yet.</summary>
     public static Texture2D? Icon(string name)
     {
-        string path = $"res://assets/icons/cards/card_{name}.png";
+        string path = AssetPaths.Pattern("card_icon", name);
         return ResourceLoader.Exists(path) ? GD.Load<Texture2D>(path) : null;
     }
 

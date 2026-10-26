@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "_comment": "Asset paths the code reaches by name (doc/work-process.md 1.2). Art can move or rename these files by editing this list, without touching code. files = one file; patterns = {0} is filled by the code (a card name, a model id); folders = asset kit folders read with their manifest.json.",
+  "files": {
+    "card_prop.button_missile": "res://assets/card-props/button_missile.glb",
+    "card_prop.toy_train": "res://assets/card-props/toy_train.glb",
+    "card_prop.jack_box": "res://assets/card-props/jack_box.glb",
+    "ui.vote_stamp": "res://assets/icons/ui/vote_stamp.png",
+    "ui.vote_winner_frame": "res://assets/icons/ui/vote_winner_frame.png",
+    "shader.factory_floor": "res://assets/environment/factory_floor.gdshader",
+    "shader.factory_wall": "res://assets/environment/factory_wall.gdshader"
+  },
+  "patterns": {
+    "card_icon": "res://assets/icons/cards/card_{0}.png",
+    "card_fx": "res://assets/effects/cards/{0}.png",
+    "drone_model": "res://assets/drones/{0}.glb",
+    "pet_model": "res://assets/pets/{0}.glb"
+  },
+  "folders": {
+    "prop_kits": [
+      "res://assets/outdoor-kit",
+      "res://assets/stage-props",
+      "res://assets/edge-kit",
+      "res://assets/ground-bits",
+      "res://assets/stage2-props"
+    ]
+  }
+}
