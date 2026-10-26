@@ -625,7 +625,7 @@
 
 ## 2026-10-26 거위 기본형 조형
 
-- [x] `goose-clean.glb` 생성·게임 연결, fitted 원본과 다른 종 모델 보존. Blender 독립 검사 165, 실제 Godot Stage 2/파지 전용 61, Studio 40 통과. [검사와 미검증 범위](goose-clean-forms.md).
+- [x] `goose-clean.glb` 생성·게임 연결, fitted 원본과 다른 종 모델 보존. Blender 독립 검사 175, 실제 Godot Stage 2/파지 전용 61, Studio 40 통과. [검사와 미검증 범위](goose-clean-forms.md).
 - [ ] 기존 날개 전체 신장의 극단 포즈, 경사면 발 IK·실제 2 PC·장시간 성능과 최종 사용자 아트 수락.
 
 ## 2026-10-26 라쿤 얼굴·귀·손발

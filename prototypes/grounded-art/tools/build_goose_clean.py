@@ -88,6 +88,51 @@ def sculpt(name, operation):
     obj.data.update()
 
 
+def replace_webbed_foot(side, sign):
+    """One shallow web and a narrow upright ankle sharing a closed surface."""
+    obj = bpy.data.objects[f'goose_{side}Foot_mesh']
+    old = obj.data
+    mesh = bpy.data.meshes.new(obj.name + '_clean')
+    for material in old.materials:
+        mesh.materials.append(material)
+    count = 24
+    x0 = sign * .20
+    # z, y-centre, x radius, y radius. The sole is broad/flat, while the
+    # ankle reaches the unchanged lower torso at z=.22 without a second plate.
+    rings = ((0.000, -.076, .125, .174),
+             (.020, -.076, .131, .178),
+             (.036, -.071, .127, .165),
+             (.058, -.042, .058, .074),
+             (.135, -.040, .047, .054),
+             (.232, -.040, .043, .047))
+    vertices = []
+    for z, yc, rx, ry in rings:
+        for k in range(count):
+            angle = math.tau * k / count
+            c, s = math.cos(angle), math.sin(angle)
+            toe = .038 * math.cos(3 * math.pi * c) * max(0.0, -s) * (1 if z <= .036 else 0)
+            vertices.append((x0 + rx * c, yc + (ry + toe) * s, z))
+    faces = [tuple(reversed(range(count)))]
+    material_ids = [1]
+    for ring in range(len(rings) - 1):
+        for k in range(count):
+            j = (k + 1) % count
+            faces.append((ring * count + k, ring * count + j,
+                          (ring + 1) * count + j, (ring + 1) * count + k))
+            material_ids.append(1 if ring == 0 else 0)
+    faces.append(tuple((len(rings) - 1) * count + k for k in range(count)))
+    material_ids.append(0)
+    inverse = obj.matrix_world.inverted()
+    mesh.from_pydata([inverse @ Vector(p) for p in vertices], [], faces)
+    mesh.update()
+    for polygon, material_id in zip(mesh.polygons, material_ids):
+        polygon.material_index = material_id
+        polygon.use_smooth = material_id == 0
+    obj.data = mesh
+    if old.users == 0:
+        bpy.data.meshes.remove(old)
+
+
 # Keep all authored beak layers and style masks while making a slimmer goose bill.
 sculpt('goose_beak_mesh', lambda p: (p.x * (.79 if p.y < -.42 else .85),
                                     -.299 + (p.y + .299) * .94, p.z))
@@ -108,14 +153,7 @@ for side, sign in (('left', -1), ('right', 1)):
         return (x, -.17 + (p.y + .17) * (1.0 - .25 * tip) - .046 * tip, p.z)
     sculpt(f'goose_{side}Arm_mesh', shape_wing)
 
-    # Flatten the upper web and taper the rear ankle; preserve both foot
-    # materials and the authored sole's height relative to the foot pivot.
-    def shape_foot(p, s=sign):
-        ankle = max(0.0, min(1.0, (p.y + .10) / .15))
-        return (s * .2 + (p.x - s * .2) * (1 - .20 * ankle),
-                p.y - .025 * max(0.0, 1 - ankle),
-                .016 + (p.z - .016) * (1.0 - .30 * (1.0 - ankle) if .055 < p.z < .15 else 1.0))
-    sculpt(f'goose_{side}Foot_mesh', shape_foot)
+    replace_webbed_foot(side, sign)
 
 bpy.ops.object.select_all(action='DESELECT')
 root.select_set(True)

@@ -1,5 +1,6 @@
 """Independently reimport the clean goose and verify the fitted GLB contract."""
 import bpy
+import bmesh
 import hashlib
 import json
 from pathlib import Path
@@ -60,7 +61,8 @@ for name, data in original.items():
     check(all(abs(a - b) < 2e-5 for a, b in zip(now['matrix'], data['matrix'])), f'transform {name}')
     if obj.type == 'MESH':
         check(now['materials'] == data['materials'], f'material order {name}')
-        check(now['vertices'] == data['vertices'] and now['triangles'] == data['triangles'], f'topology {name}')
+        if name not in {'goose_leftFoot_mesh', 'goose_rightFoot_mesh'}:
+            check(now['vertices'] == data['vertices'] and now['triangles'] == data['triangles'], f'topology {name}')
         if name not in changed:
             check(now['points'] == data['points'], f'untouched geometry {name}')
 
@@ -74,8 +76,32 @@ for side in ('left', 'right'):
     check((eye[1][1] - eye[1][0]) < .61 * (old_eye[1][1] - old_eye[1][0]), f'{side} eye shallow')
     check((eye[2][1] - eye[2][0]) < .82 * (old_eye[2][1] - old_eye[2][0]), f'{side} eye compact')
     foot = bounds(target[f'goose_{side}Foot_mesh'])
-    check(abs(foot[2][0] - .016) < .001, f'{side} foot base preserved')
-    check(foot[2][1] > .205, f'{side} ankle still joins body')
+    check(abs(foot[2][0]) < 1e-4, f'{side} sole at ground')
+    check(foot[2][1] > .225, f'{side} ankle meets lower torso')
+    foot_obj = target[f'goose_{side}Foot_mesh']
+    foot_points = points(foot_obj)
+    check(sum(abs(p.z) < 1e-4 for p in foot_points) >= 24, f'{side} flat sole ring')
+    check(foot[1][0] < -.23, f'{side} projected web')
+    check(len(foot_obj.data.materials) == 2 and set(p.material_index for p in foot_obj.data.polygons) == {0, 1}, f'{side} two palette channels')
+    bm = bmesh.new()
+    bm.from_mesh(foot_obj.data)
+    bmesh.ops.remove_doubles(bm, verts=list(bm.verts), dist=1e-5)
+    check(all(edge.is_manifold for edge in bm.edges), f'{side} closed manifold web and ankle')
+    check(bm.calc_volume(signed=True) > 0, f'{side} outward normals')
+    seen = set(); components = 0
+    for vertex in bm.verts:
+        if vertex in seen:
+            continue
+        components += 1
+        stack = [vertex]; seen.add(vertex)
+        while stack:
+            current = stack.pop()
+            for edge in current.link_edges:
+                neighbor = edge.other_vert(current)
+                if neighbor not in seen:
+                    seen.add(neighbor); stack.append(neighbor)
+    check(components == 1, f'{side} one connected foot surface')
+    bm.free()
     arm = bounds(target[f'goose_{side}Arm_mesh'])
     check(arm[2][0] == source_bounds[f'goose_{side}Arm_mesh'][2][0], f'{side} wing lower extent')
 

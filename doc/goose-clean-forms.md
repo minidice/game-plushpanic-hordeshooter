@@ -4,18 +4,18 @@
 
 `goose.tres`는 `goose-clean.glb`를 읽는다. 원본 `goose-fitted.glb`는 재현 입력으로 보존한다. 제작기는 `prototypes/grounded-art/tools/build_goose_clean.py`, 독립 재가져오기 검사는 `validate_goose_clean.py`다. Blender의 Z 위쪽·-Y 앞쪽 좌표에서 수정하고 GLB로 내보낸다.
 
-거위의 오리 대비 큰 세로 윤곽과 기존 몸통/얼굴 마스크를 유지하면서 부리 폭과 돌출을 줄이고 눈을 작고 얕게 했다. 기존 날개의 깃털 표면을 끝으로 좁혀 무장 자세의 파지 형태를 작게 하며, 앞쪽 물갈퀴 발등을 낮추고 뒤쪽 발목 높이는 보존했다. 몸통·꼬리·볏·복장·무기 메시는 변경하지 않았다. 게임의 기존 `CharacterAuthoredWing` 전체 날개 회전/신장 방식을 사용하며 새 런타임 특례는 없다.
+거위의 오리 대비 큰 세로 윤곽과 기존 몸통/얼굴 마스크를 유지하면서 부리 폭과 돌출을 줄이고 눈을 작고 얕게 했다. 기존 날개의 깃털 표면을 끝으로 좁혀 무장 자세의 파지 형태를 작게 하며, 겹친 발 판을 닫힌 단일 물갈퀴/발목 표면으로 교체했다. 몸통·꼬리·볏·복장·무기 메시는 변경하지 않았다. 게임의 기존 `CharacterGripSurface` 날개 변형 방식을 사용하며 새 런타임 특례는 없다.
 
-기존 47개 노드와 부모/전체 변환, 수정하지 않은 메시의 세계 좌표, 모든 메시의 재질 순서·정점/삼각형 수를 유지했다. 바뀐 메시 이름은 `goose_beak_mesh`, 좌우 `Eye_mesh`/`Arm_mesh`/`Foot_mesh`뿐이다. 얼굴·몸 색, 부리/눈/날개/발 팔레트, 얼굴·부리 스타일, 크기, 투구·고글·조끼·배낭 및 저장 키는 그대로다. 충돌 캡슐 0.48×2.18m, 속도 4.4m/s와 전투 수치도 바꾸지 않았다. 조형 수치는 현재 기본형의 제작값이며 최종 사용자 아트 수락으로 보지 않는다.
+기존 47개 노드와 부모/전체 변환, 수정하지 않은 메시의 세계 좌표, 모든 메시의 재질 순서를 유지하고 발 이외 메시의 정점/삼각형 수를 보존했다. 바뀐 메시 이름은 `goose_beak_mesh`, 좌우 `Eye_mesh`/`Arm_mesh`/`Foot_mesh`뿐이다. 얼굴·몸 색, 부리/눈/날개/발 팔레트, 얼굴·부리 스타일, 크기, 투구·고글·조끼·배낭 및 저장 키는 그대로다. 충돌 캡슐 0.48×2.18m, 속도 4.4m/s와 전투 수치도 바꾸지 않았다. 조형 수치는 현재 기본형의 제작값이며 최종 사용자 아트 수락으로 보지 않는다.
 
 ## 재현과 검사
 
-작업 기준 `de43ab9`의 source SHA-256은 `7a4352c961f4868c3c709f6a73d552cbdf9e584b1c7881119008ac69462a4735`; clean SHA-256은 `17f1497f3e3f149c6d4f588fa9b8486f117daf2fcdb207067e45ff9f0057a6bc`다. Blender 전후 각 정면/쿼터/측면 × 실루엣/단색/최종색/장비, 총 24장을 `prototypes/grounded-art/output/goose-clean/`에 생성한다. 폴더는 무시되는 로컬 산출물이다.
+작업 기준 `de43ab9`의 source SHA-256은 `7a4352c961f4868c3c709f6a73d552cbdf9e584b1c7881119008ac69462a4735`; clean SHA-256은 `62d2014258ab8f9abd822dcf40415733cb6ddd948d22e60ef2c879883717d9f3`다. Blender 전후 각 정면/쿼터/측면 × 실루엣/단색/최종색/장비, 총 24장을 `prototypes/grounded-art/output/goose-clean/`에 생성한다. 폴더는 무시되는 로컬 산출물이다.
 
 | 검사 | 결과 |
 |---|---|
 | `blender --background --python-exit-code 1 --python prototypes/grounded-art/tools/build_goose_clean.py` | 생성 및 24장 렌더. 원본과 다른 플레이어 GLB 해시 유지 |
-| `blender --background --python-exit-code 1 --python prototypes/grounded-art/tools/validate_goose_clean.py` | 165개 계약 검사. 47→47 노드, 36,243→36,243 삼각형 |
+| `blender --background --python-exit-code 1 --python prototypes/grounded-art/tools/validate_goose_clean.py` | 175개 계약 검사. 47→47 노드, 36,243→35,989 삼각형. 양발 닫힌 외향 단일 연결 표면/지면 밑면/두 재질 채널 포함 |
 | `dotnet build game/HordeShooter.csproj --nologo -v q` / Godot `--headless --editor --import` | 최종 C# 빌드 0오류·0경고, GLB 임포트 성공 |
 | `ModularCustomization.tscn` / `WeaponGripCheck.tscn` / `ReloadPoseCheck.tscn` | 최종 GLB에서 각각 67 / 187 / 279 통과 |
 | `CustomizationToneCheck.tscn` (headless) | 87 통과. 별도 GPU 전용 `CharacterSurfaceCheck.tscn`은 이 종의 몸 메시가 원본과 좌표 동일함을 독립 Blender 검사로 확인했고 이번 가지에서 실행하지 않았다 |
