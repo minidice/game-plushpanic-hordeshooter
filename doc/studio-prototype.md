@@ -201,3 +201,10 @@ node studio/tests/interactions.mjs
 - 머리글에 `리소스 | md`. 기존 메뉴는 「리소스」 아래 두 번째 줄. 「기획서」는 나중에 같은 줄에 추가할 예정.
 - `md`(`/docs`): 저장소 Markdown 전부(`doc/**` · `docs/**` · 저장소 안내 4개)의 목록 · 묶음 · 전체 내용 검색 · 읽기. [`studio/docs.mjs`](../studio/docs.mjs)가 작업 폴더에서 직접 읽어 렌더러 없이 동작, 읽기 전용, `.md`만 · 바깥 경로 거부.
 - 검사 `node studio/tests/docs.mjs`(25). 자세한 기록: [기능 기록 002](features/tech-tools/log/002-code-studio-md-menu.md).
+
+## 2026-10-26 피드백 공유 꾸러미 (T-27)
+
+- Studio를 밖에 열지 않고, 고른 모델만 정적 페이지 zip으로 보낸다. 안내 · 만드는 순서: [studio/share/README.md](../studio/share/README.md).
+- Studio 렌더러에 `share_item`(POST `/api/share/item`, 같은 출처만): 플레이어(맨몸/장비) · 일반 몬스터 무리의 첫 개체 · 오브젝트를 Studio와 같은 코드로 조립해, 눈높이 12° · 게임 카메라 55° 두 바퀴 정사영 사진(WebP)과 숨김 부품을 뺀 GLB를 `studio/share/.build/<이름>/`에만 쓴다. 이름은 `[a-z0-9_-]` 40자까지, 그 밖은 거부.
+- 장면 사진: `tests/ShareSceneCapture.tscn`(창 모드 전용) — Stage 1 안전 지대 · Stage 2 숲 · 일반 몬스터 전투 · 크기 비교. 동료 AI · 시야 원뿔을 멈추고 몬스터를 세워 찍는다.
+- 자세한 기록: [기능 기록 004](features/tech-tools/log/004-code-share-pack.md).

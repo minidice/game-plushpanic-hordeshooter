@@ -183,7 +183,7 @@ const server = http.createServer(async (req, res) => {
       finally { reloading = false; }
       json(200, { ready: true }); return;
     }
-    if (req.method === 'POST' && ['/api/render', '/api/library/render', '/api/effects/render', '/api/sounds/preview', '/api/statuses/render', '/api/roster/render'].includes(url.pathname)) {
+    if (req.method === 'POST' && ['/api/render', '/api/library/render', '/api/effects/render', '/api/sounds/preview', '/api/statuses/render', '/api/roster/render', '/api/share/item'].includes(url.pathname)) {
       if (req.headers['content-type'] !== 'application/json') { json(415, { error: 'JSON required' }); return; }
       let body = '';
       for await (const chunk of req) {
@@ -217,6 +217,9 @@ const server = http.createServer(async (req, res) => {
           json(400, { error: 'Invalid media preview request' }); return;
         }
         json(200, await request(url.pathname === '/api/effects/render' ? 'effect_render' : 'sound_preview', data)); return;
+      }
+      if (url.pathname === '/api/share/item') {
+        json(200, await request('share_item', data)); return;
       }
       if (url.pathname === '/api/library/render') {
         if (!data || !['monster', 'object'].includes(data.kind) || typeof data.id !== 'string'

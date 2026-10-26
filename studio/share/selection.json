@@ -1,0 +1,65 @@
+{
+  "title": "Plush Panic 모델 피드백",
+  "intro": "캐릭터와 배경 오브젝트 모델만 모은 피드백용 페이지입니다. 카드 번호(P1, M3, O7, S2 …)로 의견을 적어 주세요.",
+  "questions": [
+    "한눈에 어떤 동물인지 바로 알아보이나요? 헷갈리는 카드가 있나요?",
+    "게임 시점(위에서 비스듬히)에서 실루엣과 장비가 잘 읽히나요?",
+    "플레이어와 몬스터, 배경이 서로 구분되나요? 너무 비슷하거나 튀는 것이 있나요?",
+    "인형(봉제) 느낌과 무기 · 장비의 현실감이 어울리나요?",
+    "가장 좋은 것과 가장 고치고 싶은 것을 하나씩 골라 주세요."
+  ],
+  "groups": [
+    {
+      "key": "P", "title": "플레이어", "note": "생존자 네 종. 맨몸과 장비(헬멧 · 조끼 · 가방 · M4)를 따로 담았습니다.",
+      "items": [
+        { "kind": "player", "id": "goose", "gear": false },
+        { "kind": "player", "id": "goose", "gear": true },
+        { "kind": "player", "id": "duck", "gear": false },
+        { "kind": "player", "id": "duck", "gear": true },
+        { "kind": "player", "id": "raccoon", "gear": false },
+        { "kind": "player", "id": "raccoon", "gear": true },
+        { "kind": "player", "id": "redpanda", "gear": false },
+        { "kind": "player", "id": "redpanda", "gear": true }
+      ]
+    },
+    {
+      "key": "M", "title": "일반 몬스터", "note": "자주 만나는 일반 몬스터. 무리에서 한 마리씩 담았습니다.",
+      "items": [
+        { "kind": "common", "id": "zombie_street" },
+        { "kind": "common", "id": "hunter_eagle" },
+        { "kind": "common", "id": "hunter_parrot" },
+        { "kind": "common", "id": "hunter_lion", "title": "사자 · 사냥꾼" },
+        { "kind": "common", "id": "hunter_tiger" },
+        { "kind": "common", "id": "hunter_reindeer" },
+        { "kind": "common", "id": "hunter_rhino" },
+        { "kind": "common", "id": "armed_lion", "title": "사자 · 무장(총)" }
+      ]
+    },
+    {
+      "key": "O", "title": "배경 오브젝트", "note": "맵에 놓이는 나무 · 바위 · 엄폐물 · 건물.",
+      "items": [
+        { "kind": "object", "id": "round_oak" },
+        { "kind": "object", "id": "pine_tall" },
+        { "kind": "object", "id": "forest_broadleaf", "title": "숲 활엽수" },
+        { "kind": "object", "id": "boulder" },
+        { "kind": "object", "id": "edge_rock_wall" },
+        { "kind": "object", "id": "bit_grass_clump" },
+        { "kind": "object", "id": "sandbags" },
+        { "kind": "object", "id": "concrete_barrier" },
+        { "kind": "object", "id": "wooden_crate" },
+        { "kind": "object", "id": "container_closed" },
+        { "kind": "object", "id": "warning_sign" },
+        { "kind": "object", "id": "watchtower" },
+        { "kind": "object", "id": "pump_house" },
+        { "kind": "object", "id": "alarm_truck" },
+        { "kind": "object", "id": "gondola_station" }
+      ]
+    }
+  ],
+  "scenes": [
+    { "key": "S1", "file": "S1.png", "title": "Stage 1 안전 지대", "note": "생존자 네 명이 시작 안전 지대에 선 모습(게임 카메라)." },
+    { "key": "S2", "file": "S2.png", "title": "Stage 2 숲", "note": "숲 지역에 놓인 나무 · 바위 · 건물과 생존자." },
+    { "key": "S3", "file": "S3.png", "title": "일반 몬스터와 전투", "note": "생존자 네 명과 일반 몬스터 M1~M7이 마주친 장면(움직임을 멈춰 찍음)." },
+    { "key": "S4", "file": "S4.png", "title": "크기 비교", "note": "생존자 네 명(앞줄)과 일반 몬스터 일곱 종 M1~M7(뒷줄)을 나란히 세운 모습. 게임 카메라를 가깝게 당긴 크기입니다." }
+  ]
+}

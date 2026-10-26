@@ -26,3 +26,7 @@ Thumbs.db
 
 # Exported game for other PCs (game/Export-Game.cmd)
 build/
+
+# Feedback pack output (studio/share/README.md): photos, GLBs, scene shots, packs and zips
+studio/share/.build/
+studio/share/packs/
