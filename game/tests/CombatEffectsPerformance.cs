@@ -28,13 +28,18 @@ public partial class CombatEffectsPerformance : Node
             for(int i=0;i<20;i++){var e=_stage.SpawnEnemy<Enemy>(_stage.CommonDefinition,at+new Vector3((i%5-2)*1.2f,0,-3-i/5),awake:false);e.SetPhysicsProcess(false);}
             await Wait(2);
             var rows=new List<object>();
-            foreach(bool stress in new[]{false,true})
+            foreach(var (scenario,count,smoke) in new[]{("forest_twenty_fixed_actors",0,false),
+                ("six_surfaces_ten_bursts_per_second",6,false), ("one_area_ten_bursts_per_second",1,true),
+                ("six_areas_ten_bursts_per_second",6,true), ("twelve_areas_ten_bursts_per_second",12,true)})
             {
+                bool stress = count > 0;
+                var holders = new List<Node3D>();
                 if(stress)
-                    for(int i=0;i<6;i++)
+                    for(int i=0;i<count;i++)
                     {
                         var holder=new Node3D{Position=at+new Vector3((i%3-1)*3,0,-2-(i/3)*3)};_stage.Effects.AddChild(holder);
-                        CombatSurfaceEffect.Create(holder,CombatEffectCatalog.Current.ForSource(i%2==0?"fire_pool":"poison_pool"),2.5f,20);
+                        holders.Add(holder);
+                        CombatSurfaceEffect.Create(holder,CombatEffectCatalog.Current.ForSource(i%2==0?"fire_pool":smoke?"smoke_preview":"poison_pool"),2.5f,20);
                     }
                 var watch=Stopwatch.StartNew();double previous=0,nextBurst=0;
                 var frames=new List<double>();var draws=new List<double>();var cpu=new List<double>();
@@ -53,11 +58,13 @@ public partial class CombatEffectsPerformance : Node
                     previous=now;
                 }
                 frames.Sort();
-                var row=new{scenario=stress?"six_surfaces_ten_bursts_per_second":"forest_twenty_fixed_actors",samples=frames.Count,
+                var row=new{scenario,samples=frames.Count,
                     mean_ms=frames.Average(),p95_ms=frames[(int)((frames.Count-1)*.95)],draw_calls=draws.Average(),process_ms=cpu.Average()};
                 rows.Add(row);GD.Print(JsonSerializer.Serialize(row));
                 await ToSignal(RenderingServer.Singleton,RenderingServer.SignalName.FramePostDraw);
-                using var image=GetViewport().GetTexture().GetImage();image.SavePng(ProjectSettings.GlobalizePath("res://output/vfx-performance-"+(stress?"stress":"base")+".png"));
+                using var image=GetViewport().GetTexture().GetImage();image.SavePng(ProjectSettings.GlobalizePath("res://output/vfx-performance-"+scenario+".png"));
+                foreach (var holder in holders) holder.QueueFree();
+                await Wait(1.6);
             }
             System.IO.File.WriteAllText(ProjectSettings.GlobalizePath("res://output/vfx-performance.json"),JsonSerializer.Serialize(new{
                 adapter=RenderingServer.GetVideoAdapterName(),resolution=GetViewport().GetVisibleRect().Size.ToString(),

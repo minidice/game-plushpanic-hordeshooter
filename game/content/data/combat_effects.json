@@ -164,7 +164,7 @@
       "family": "fire",
       "color": "ed460d",
       "accent": "ffcc53",
-      "lobes": 16,
+      "lobes": 24,
       "particles": 12,
       "spread": 0.77,
       "rise": 0.65,
@@ -175,7 +175,10 @@
       ],
       "used_by": [
         "Weapons/FireZone.cs"
-      ]
+      ],
+      "smoke_color": "79716a",
+      "opacity": 0.78,
+      "residue_s": 2.0
     },
     {
       "id": "poison_flight",
@@ -234,6 +237,29 @@
       ],
       "used_by": [
         "Enemies/VomitHazard.cs"
+      ]
+    },
+    {
+      "id": "smoke_cloud",
+      "name": "노란 연무 · 시각 표본 (판정 없음)",
+      "kind": "surface",
+      "family": "smoke",
+      "color": "b9a95a",
+      "accent": "e3cc72",
+      "smoke_color": "c8ba72",
+      "lobes": 20,
+      "particles": 0,
+      "spread": 0.65,
+      "rise": 0.25,
+      "opacity": 0.58,
+      "residue_s": 0,
+      "preview_radius_m": 3,
+      "preview_lifetime_s": 5,
+      "sources": [
+        "smoke_preview"
+      ],
+      "used_by": [
+        "Effects/CombatSurfaceEffect.cs"
       ]
     }
   ]

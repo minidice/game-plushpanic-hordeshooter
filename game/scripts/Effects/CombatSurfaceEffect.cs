@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace HordeShooter;
 
@@ -12,6 +13,9 @@ public partial class CombatSurfaceEffect : Node3D
     private readonly List<(MeshInstance3D mesh, Vector3 at, float phase)> _pieces = new();
     private readonly List<(MeshInstance3D mesh, Vector3 at, float phase)> _motes = new();
     private float _age, _life;
+    private AreaSurfaceVisual? _area;
+    public bool IsResidue => _age >= _life;
+    public const int MaxResidues = 24;
     public float Radius { get; private set; }
     public string EffectId => _def.Id;
     public float Lifetime => _life;
@@ -25,6 +29,11 @@ public partial class CombatSurfaceEffect : Node3D
     private void Build()
     {
         bool fire = _def.Family == "fire";
+        if (_def.Family is "fire" or "smoke")
+        {
+            _area = AreaSurfaceVisual.Create(this, _def, Radius);
+            return;
+        }
         _ground = CombatBurstEffect.Ground(_def, fire ? 1 : 2);
         var plane = CombatBurstEffect.Mesh(this, new PlaneMesh { Size = Vector2.One * Radius * 2 }, _ground);
         plane.Position = Vector3.Up * .035f;
@@ -49,11 +58,28 @@ public partial class CombatSurfaceEffect : Node3D
     public override void _Process(double delta)
     {
         _age += (float)delta;
-        if (_age >= _life) { QueueFree(); return; }
+        if (_age >= _life + _def.ResidueSeconds) { QueueFree(); return; }
+        if (_area != null)
+        {
+            _area.Advance((float)delta, _age, !IsResidue, 1 - Mathf.Clamp((_age - _life) / Math.Max(.001f, _def.ResidueSeconds), 0, 1),
+                _def.Family == "smoke" ? Mathf.Clamp((_life - _age) / .6f, 0, 1) : 1);
+            return;
+        }
         UpdateVisual();
+    }
+    /// <summary>Called only at natural hazard expiry. The damaging node and its sound/light still retire immediately.</summary>
+    public void ReleaseResidue(Node3D owner)
+    {
+        if (_def.ResidueSeconds <= 0 || IsQueuedForDeletion()) return;
+        _age = _life;
+        Reparent(owner, true);
+        foreach (var old in owner.GetChildren().OfType<CombatSurfaceEffect>().Where(n => n != this && n.IsResidue && !n.IsQueuedForDeletion()).SkipLast(MaxResidues - 1))
+            old.QueueFree();
+        _area?.Advance(0, _age, false, 1);
     }
     private void UpdateVisual()
     {
+        if (_area != null) { _area.Advance(0, _age, true, 1); return; }
         bool fire = _def.Family == "fire";
         float fade = Mathf.Clamp((_life - _age) / .3f, 0, 1);
         _ground.SetShaderParameter("clock", _age); _ground.SetShaderParameter("fade", fade);

@@ -11,6 +11,7 @@ public partial class FireZone : Node3D
     private readonly System.Collections.Generic.Dictionary<Player, float> _playerDebts = new();
     private readonly Dictionary<Enemy, float> _ticks = new();
     private Player? _by;
+    private CombatSurfaceEffect _visual = null!;
 
     public float Radius => _radius;
 
@@ -21,7 +22,7 @@ public partial class FireZone : Node3D
         stage.Effects.AddChild(zone);
         zone.AddToGroup(SquadGroups.Hazard);
         zone.SetMeta("radius", burn.RadiusM);
-        CombatSurfaceEffect.Create(zone, CombatEffectCatalog.Current.ForSource("fire_pool"), burn.RadiusM, burn.Duration);
+        zone._visual = CombatSurfaceEffect.Create(zone, CombatEffectCatalog.Current.ForSource("fire_pool"), burn.RadiusM, burn.Duration);
         CombatBurstEffect.Play(stage.Effects, CombatEffectCatalog.Current.ForSource("fire_impact"), at, burn.RadiusM);
         var light = new OmniLight3D { OmniRange = burn.RadiusM * 2.2f, LightEnergy = 1.4f, LightColor = new Color("ff7a2a"), Position = Vector3.Up * 1.6f };
         light.AddToGroup(VisionSystem.LightGroup);
@@ -39,6 +40,7 @@ public partial class FireZone : Node3D
         _life -= dt;
         if (_life <= 0)
         {
+            if (IsInstanceValid(_visual)) _visual.ReleaseResidue(_stage.Effects);
             QueueFree();
             return;
         }

@@ -30,7 +30,7 @@ public partial class CombatEffectsCheck : Node
     private void Data()
     {
         var catalog=CombatEffectCatalog.Current;
-        Check(catalog.All.Count==11,"eleven shared recipes");
+        Check(catalog.All.Count==12,"twelve shared recipes including visual-only smoke");
         foreach(var source in new[]{"blast","weapon","grenade","barrel","rocket","mortar","lure","fire_impact","fire_pool","poison_flight","poison_impact","poison_pool"})
             Check(catalog.ForSource(source).Sources.Contains(source),"registered actual source "+source);
         bool rejected=false;try{catalog.ForSource("unknown");}catch(ArgumentException){rejected=true;}
@@ -111,8 +111,11 @@ public partial class CombatEffectsCheck : Node
         var fire=FireZone.Create(_stage,new(-4,0,-2),burn,p);
         var surface=Nodes<CombatSurfaceEffect>(fire).Single();
         Check(surface.EffectId=="fire_pool"&&surface.Radius==burn.RadiusM&&surface.Lifetime==burn.Duration,"fire visual gets actual gameplay radius and duration");
+        var fireLight=Nodes<OmniLight3D>(fire).Single();
         Check(Burst("fire_impact"),"fire creates impact spread");await Frames(15);await Shot("fire-live");await Frames(60);
-        Check(!IsInstanceValid(fire)&&!IsInstanceValid(surface),"fire hazard and visual end together");
+        Check(!IsInstanceValid(fire)&&IsInstanceValid(surface)&&surface.IsResidue,"fire hazard ends before harmless residue");
+        Check(!GetTree().GetNodesInGroup(SquadGroups.Hazard).Contains(fire)&&!IsInstanceValid(fireLight)&&!_stage.FlickerLights.Contains(fireLight),"expired fire leaves no hazard or light registration");
+        Check(surface.GetParent()==_stage.Effects&&!Nodes<CollisionObject3D>(surface).Any()&&!Nodes<Light3D>(surface).Any()&&!Nodes<AudioStreamPlayer3D>(surface).Any(),"detached residue subtree contains visual-only layers");
         var spit=new EnemyProjectile();spit.Setup(_stage,new(-3,1,0),new(2,1,0),new RangedTrait(15,.5f,2,5,1.2f,1.5f),8);_stage.AddChild(spit);
         Check(Nodes<CombatProjectileEffect>(spit).Single().EffectId=="poison_flight","actual enemy projectile has liquid trail");
         await Frames(15);await Shot("poison-flight-live");
@@ -135,6 +138,6 @@ public partial class CombatEffectsCheck : Node
         }
         p.SetControls(Vector2.Zero,Vector3.Zero,false);
         Check(p.ShotsFired>shots&&p.GlobalPosition.DistanceTo(before)>.3f,"real player moves and fires during overlapping effects");
-        await Frames(150);Check(!Nodes<CombatSurfaceEffect>(_stage).Any()&&!Nodes<CombatBurstEffect>(_stage).Any(),"all finite visuals retire after combat");
+        await Frames(240);Check(!Nodes<CombatSurfaceEffect>(_stage).Any()&&!Nodes<CombatBurstEffect>(_stage).Any(),"all finite visuals retire after combat");
     }
 }

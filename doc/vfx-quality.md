@@ -1,5 +1,7 @@
 # 폭발·화염·독 효과 품질 및 공통 데이터
 
+현재 확장: 2026-10-27 [A-27 화염·연무](features/effects-audio/decisions.md#a-27-화염연무의-시각-계층과-무해한-잔흔), [구현/검사 기록](features/effects-audio/log/004-code-area-effects.md). 아래의 2026-10-24 검사 수치는 당시 이력이며 최신 검사는 기능 기록을 따른다.
+
 2026-10-24. 사용자가 공통 부품+계열별 조합 추천안과 Studio 공통 데이터 연결을 승인했다. 구현/검증 결과는 아래에 별도로 기록한다.
 
 ## 범위와 구조
@@ -8,7 +10,7 @@
 - `game/content/data/combat_effects.json`은 효과 ID·표시 이름·계열·색·시각 수치·사용처와 Studio 표본 크기/시간의 원본이다. 웹 전용 복사본을 만들지 않는다. 기존 피해·충돌·피해 반경·DPS·유효 시간은 전투 데이터가 소유한다. 미리보기 수치는 피해 데이터가 아니다.
 - `CombatEffectCatalog`는 원본을 엄격하게 읽는다. `CombatBurstEffect`와 `CombatSurfaceEffect`, `CombatProjectileEffect`는 판정 없는 외형만 생성하며 Studio도 같은 생성기를 사용한다. 효과 시간은 명시적으로 진행해 Studio 고정 시간 캡처에서 게임과 같은 움직임을 얻는다.
 - 런타임은 발생원 키로 효과를 선택한다. Studio는 등록 효과를 자동 열거하고 ID/계열/사용처/원본/시각 수치/표본 조건을 보여 준다. 기존 총구·피격·소나·벽 붕괴는 보존한다.
-- 파편/불꽃은 공유 메시와 셰이더로 제작한다. 이번 효과는 런타임 변형이 중심이므로 별도 Blender GLB나 외부 패키지는 필요하지 않다. 기존 레벨과 시점에 맞는 실제 엔진 렌더로 검수한다.
+- 폭발/독은 공유 메시와 셰이더를 유지한다. 지속 화염/연무는 `AreaSurfaceVisual`의 GPU 입자 카드와 전용 지면 셰이더를 사용한다. 원본 PNG는 `prototypes/effects/tools/generate_area_textures.py`로 재생성한다. 기존 레벨과 시점에 맞는 실제 엔진 렌더로 검수한다.
 
 ## 선택과 제약
 
@@ -20,11 +22,13 @@
 
 | 항목 | 의미 / 적용 |
 |---|---|
-| `id`, `name`, `kind`, `family` | 고유 ID, 표시 이름, burst/surface/projectile, blast/fire/poison |
+| `id`, `name`, `kind`, `family` | 고유 ID, 표시 이름, burst/surface/projectile, blast/fire/poison/smoke. smoke는 surface만 허용 |
 | `sources`, `used_by` | 런타임 조회 키(중복 금지), `game/scripts/` 기준 사용처. Studio도 그대로 표시 |
 | `color`, `accent`, `particles` | 6자리 RGB, 작은 파편/입자 수 0~48 |
 | `lobes`, `spread`, `rise` | burst/surface만. 덩어리0~24, 퍼짐0.1~0.85, 상승0~3. surface는 반경에 대한 군집 위치 비율과 불꽃 높이/거품 상승 |
-| `smoke_color`, `light_energy`, `duration_s` | burst만. RGB, 추가 광원0~6, 시각 수명0.1~3초 |
+| `smoke_color` | burst 및 fire/smoke surface의 필수6자리 RGB |
+| `light_energy`, `duration_s` | burst만. 추가 광원0~6, 시각 수명0.1~3초 |
+| `opacity`, `residue_s` | fire/smoke surface만 필수. 카드 농도0.01~1, 무해한 잔흔0~3초. smoke의 잔흔은0만 허용 |
 | `preview_radius_m` | 모든 종류의 Studio 표본 크기0.05~10m. 피해 반경 설정이 아님 |
 | `preview_lifetime_s` | surface/projectile의 Studio 표본 수명0.01~15초. 실제 전투 지속시간 설정이 아님 |
 
@@ -36,9 +40,19 @@
 | `grenade`, `lure` | 수류탄·유인 폭발 |
 | `barrel`, `rocket`, `mortar` | 연료 팽창·진행 방향·위로 솟는 형태 |
 | `fire_impact`, `fire_pool` | 화염병 착탄 및 지속 위험 |
+| `smoke_cloud` (`smoke_preview`) | 노란 저층 연무. Studio 표본 전용, 피해/시야 차단 없음 |
 | `poison_flight`, `poison_impact`, `poison_pool` | 실제 적 투사체, 착탄, 기존 VomitHazard |
 
 폭발은 최대24개·추가 광원4개이며 오래된 일회성 장식만 줄인다. 지속 위험 노드는 이 제한으로 제거하지 않는다. 시각 RNG는 고정 독립 인스턴스로 전투 RNG를 소비하지 않는다. `visibility_alpha` 인스턴스 셰이더 값으로 불꽃/연기/거품/독 꼬리를 감쇠한다.
+
+### 화염·연무 현재 계약
+
+- 공유 정의는12개다. fire_pool은 불꽃24개/불티12개/얇은 연기12개, opacity0.78, 잔흔2초. smoke_cloud는 연무20개, opacity0.58, 잔흔0초. 수치는 피해 밸런스와 독립적인 제작값이다.
+- `area_ground.gdshader`는 별도 흐름 노이즈2종을 섞는다. 실제 반경을 얇게 표시하고 내부를 불규칙하게 끊는다. 강한 위험 지면은 활성 수명 내내 표시하고 종료 즉시 제거한다. 장식 불꽃은 시작0.32초 동안 커지고 일반 연무는 마지막0.6초에 사라진다.
+- 카드에는 알파 수명 곡선, 무음영 재질, 깊이 기반 Proximity Fade를 적용한다. 입자는 fixed seed6517/SpeedScale0/60Hz로 생성하고 `RequestParticlesProcess`로만 진행한다. 셰이더도 TIME 대신 전달된 clock을 사용하므로 Studio 정지·타임라인과 게임 일시정지에서 벽시계 시간이 흐르지 않는다.
+- 자연 종료의 화염은 시각 노드만 같은 Stage.Effects로 이동해2초간 잔연기·그을음을 남긴다. 잔흔은 같은 소유자 아래 최대24개, 넘치면 오래된 장식부터 제거한다. 별도 광원/음향/피해는 추가하지 않는다. 장면이 제거되면 함께 정리된다.
+- 그을음은3개512px 마스크를 발생 위치로 선택하는 평면이다. 연무는2×2아틀라스(각512px), 불꽃은4×4아틀라스(각128px,16프레임의 닫힌 주기), 노이즈는512px2종. 에셋은 `asset_paths.json`의 `vfx.area_*`로 등록하고 `.import`와 밉맵 설정을 함께 관리한다.
+- 일반 연무/화염은 벽과의 시각 교차선을 부드럽게 처리하지만 벽 우회 시뮬레이션이나 지형 투영은 하지 않는다. 현재 FireZone의 수평 반경 판정 자체는 바꾸지 않았다.
 
 ## 검증 계획
 

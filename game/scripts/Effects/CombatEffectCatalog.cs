@@ -8,7 +8,8 @@ namespace HordeShooter;
 /// <summary>Visual-only recipes. Gameplay owns damage, radius and active hazard lifetime.</summary>
 public sealed record CombatEffectDefinition(string Id, string Name, string Kind, string Family,
     Color Color, Color Accent, Color SmokeColor, int Lobes, int Particles, float Spread, float Rise,
-    float LightEnergy, float Duration, float PreviewRadius, float PreviewLifetime, string[] Sources, string[] UsedBy);
+    float LightEnergy, float Duration, float PreviewRadius, float PreviewLifetime, string[] Sources, string[] UsedBy,
+    float Opacity = 1, float ResidueSeconds = 0);
 
 public sealed class CombatEffectCatalog
 {
@@ -58,20 +59,24 @@ public sealed class CombatEffectCatalog
                 return values.ToArray();
             }
             string kind = Text("kind"), family = Text("family");
-            if (kind is not ("burst" or "surface" or "projectile") || family is not ("blast" or "fire" or "poison")
-                || kind == "surface" && family == "blast" || kind == "projectile" && family != "poison")
+            if (kind is not ("burst" or "surface" or "projectile") || family is not ("blast" or "fire" or "poison" or "smoke")
+                || kind == "surface" && family == "blast" || kind == "projectile" && family != "poison" || family == "smoke" && kind != "surface")
                 throw new FormatException("Unsupported effect kind/family");
             var fields = new HashSet<string> { "id", "name", "kind", "family", "color", "accent", "particles", "preview_radius_m", "sources", "used_by" };
             if (kind != "projectile") fields.UnionWith(new[] { "lobes", "spread", "rise" });
             if (kind == "burst") fields.UnionWith(new[] { "smoke_color", "light_energy", "duration_s" });
             else fields.Add("preview_lifetime_s");
+            bool cards = kind == "surface" && family is "fire" or "smoke";
+            if (cards) fields.UnionWith(new[] { "smoke_color", "opacity", "residue_s" });
             foreach (var field in item.EnumerateObject())
                 if (!fields.Remove(field.Name)) throw new FormatException("Unknown/duplicate field for " + kind + ": " + field.Name);
             if (fields.Count != 0) throw new FormatException("Missing effect fields: " + string.Join(", ", fields));
-            var def = new CombatEffectDefinition(Text("id"), Text("name"), kind, family, Tint("color"), Tint("accent"), kind == "burst" ? Tint("smoke_color") : Colors.Transparent,
+            var def = new CombatEffectDefinition(Text("id"), Text("name"), kind, family, Tint("color"), Tint("accent"), kind == "burst" || cards ? Tint("smoke_color") : Colors.Transparent,
                 kind != "projectile" ? Count("lobes", 24) : 0, Count("particles", 48), kind != "projectile" ? Number("spread", .1f, .85f) : 0, kind != "projectile" ? Number("rise", 0, 3) : 0,
                 kind == "burst" ? Number("light_energy", 0, 6) : 0, kind == "burst" ? Number("duration_s", .1f, 3) : 0, Number("preview_radius_m", .05f, 10),
-                kind != "burst" ? Number("preview_lifetime_s", .01f, 15) : 0, List("sources"), List("used_by"));
+                kind != "burst" ? Number("preview_lifetime_s", .01f, 15) : 0, List("sources"), List("used_by"),
+                cards ? Number("opacity", .01f, 1) : 1, cards ? Number("residue_s", 0, 3) : 0);
+            if (family == "smoke" && def.ResidueSeconds != 0) throw new FormatException("Smoke must not leave scorch residue");
             if (kind != "burst" && def.PreviewLifetime <= 0) throw new FormatException("Sustained effect needs preview lifetime");
             if (!result._all.TryAdd(def.Id, def)) throw new FormatException("Duplicate effect ID: " + def.Id);
             foreach (string source in def.Sources)

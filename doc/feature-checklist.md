@@ -1,5 +1,7 @@
 # 게임 기능 체크리스트
 
+- [x] A-27 화염의 GPU 불꽃·잔연기·무해한 그을음, 연무 시각 표본 및 공통 Studio 연결. 실제 연막탄/단차 투영은 후속. [검사·제약](features/effects-audio/log/004-code-area-effects.md).
+
 > **2026-10-26부터 기록 방식이 바뀌었다**([decisions.md](decisions.md) T-26, [기록 문서 나누기](records-split-plan.md)). 새 기록의 본문 · 작업 기록은 [기능별 폴더](features/README.md)에 쓰고, 이 문서에는 짧은 줄만 추가한다. **이 문서의 기존 기록은 옮기지 않고 그대로 남아 있다**(앞으로만 새 구조, 6.4).
 
 ### 2026-10-25 캐릭터 아트 방향 정정

@@ -9,7 +9,14 @@
     "ui.vote_winner_frame": "res://assets/icons/ui/vote_winner_frame.png",
     "shader.factory_floor": "res://assets/environment/factory_floor.gdshader",
     "shader.factory_wall": "res://assets/environment/factory_wall.gdshader",
-    "character.mammal_arm_segments": "res://assets/characters/shared/mammal-arm-segments.glb"
+    "character.mammal_arm_segments": "res://assets/characters/shared/mammal-arm-segments.glb",
+    "vfx.area_smoke": "res://assets/effects/area/smoke_atlas.png",
+    "vfx.area_flame": "res://assets/effects/area/flame_atlas.png",
+    "vfx.area_flow": "res://assets/effects/area/flow_0.png",
+    "vfx.area_detail": "res://assets/effects/area/flow_1.png",
+    "vfx.area_scorch_0": "res://assets/effects/area/scorch_0.png",
+    "vfx.area_scorch_1": "res://assets/effects/area/scorch_1.png",
+    "vfx.area_scorch_2": "res://assets/effects/area/scorch_2.png"
   },
   "patterns": {
     "card_icon": "res://assets/icons/cards/card_{0}.png",

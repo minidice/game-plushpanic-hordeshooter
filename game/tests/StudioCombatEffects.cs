@@ -13,8 +13,8 @@ public partial class StudioPreview
         foreach (var raw in source.RootElement.GetProperty("effects").EnumerateArray())
         {
             var def = CombatEffectCatalog.Current.All[raw.GetProperty("id").GetString()!];
-            double duration = (def.Kind == "burst" ? def.Duration : def.PreviewLifetime) + .15;
-            yield return new("fx:" + def.Id, def.Name, def.Family == "blast" ? "폭발" : def.Family == "fire" ? "화염" : "독",
+            double duration = (def.Kind == "burst" ? def.Duration : def.PreviewLifetime + def.ResidueSeconds) + .15;
+            yield return new("fx:" + def.Id, def.Name, def.Family == "blast" ? "폭발" : def.Family == "fire" ? "화염" : def.Family == "smoke" ? "연무 · 시각 표본" : "독",
                 "공통 효과 정의와 실제 게임 외형 생성기를 재생합니다. 피해·충돌·음향·화면 흔들림은 실행하지 않습니다. 표본 반경/시간은 미리보기용이며 실제 전투 값은 발생원이 전달합니다.",
                 CombatEffectCatalog.DataPath, CombatProperties(def), duration, raw.Clone());
         }
@@ -43,6 +43,11 @@ public partial class StudioPreview
             properties.Add(new("폭발 광원 에너지", Number(def.LightEnergy) + " / 동시 최대 " + CombatBurstEffect.MaxLights));
         }
         else properties.Add(new("미리보기 표본 수명", Number(def.PreviewLifetime) + " s (실제 위험 지속시간 아님)"));
+        if (def.Kind == "surface" && def.Family is "fire" or "smoke")
+        {
+            properties.Add(new("입자 농도 / 무해한 잔흔", Number(def.Opacity) + " / " + Number(def.ResidueSeconds) + " s"));
+            properties.Add(new("연기색", "#" + def.SmokeColor.ToHtml(false)));
+        }
         return properties.ToArray();
     }
 

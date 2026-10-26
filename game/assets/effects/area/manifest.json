@@ -1,0 +1,15 @@
+{
+  "generator": "prototypes/effects/tools/generate_area_textures.py",
+  "seed_version": 1,
+  "flame_frames": 16,
+  "smoke_variants": 4,
+  "sha256": {
+    "flame_atlas.png": "edd6b13fc4bc6aedd26d6b76f4e57ce991976128afe365d217efaf92de9cf1f5",
+    "flow_0.png": "5a0b2e0bc6f56590fb3efcc0946fbfad1ffd380374d18861b76ebaa73647b35a",
+    "flow_1.png": "4aad38b5a7f42a57ba9e1ebc8f6a0bdf65d731931c1144e15e07e7d4873acdd9",
+    "scorch_0.png": "8c9882b7c66de417491094097a442eeeb5656c76386346b092249ffdc945918e",
+    "scorch_1.png": "c121e40337ff0e99b16ac77d1a7d5a8b4694c0f1a26b11e660d4389636ad225a",
+    "scorch_2.png": "9292868130f0866d86948c954d8a66fc66e77fc611a9d7cecd6d92a4e64726e3",
+    "smoke_atlas.png": "48dca50584e606c5e097a3982e598ab013c84c2f5026cc831cd555c3127b0d9c"
+  }
+}
