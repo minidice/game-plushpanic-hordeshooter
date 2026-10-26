@@ -4,11 +4,11 @@ using System.Collections.Generic;
 
 namespace HordeShooter;
 
-/// <summary>Textured GPU cards with soft intersections. Only the smoke specimen uses a ground mask.</summary>
+/// <summary>Textured GPU cards with soft intersections; no ground paint. Flame roots stay in place.</summary>
 public partial class AreaSurfaceVisual : Node3D
 {
     private readonly List<(GpuParticles3D particles, StandardMaterial3D material, float alpha, bool flame)> _layers = new();
-    private ShaderMaterial? _ground;
+    private ShaderMaterial? _flameMotion;
     private CombatEffectDefinition _def = null!;
     private float _radius;
     public const uint ParticleSeed = 6517;
@@ -27,17 +27,6 @@ public partial class AreaSurfaceVisual : Node3D
     private void Build()
     {
         bool fire = _def.Family == "fire";
-        if (!fire)
-        {
-            _ground = new ShaderMaterial { Shader = GD.Load<Shader>("res://shaders/area_ground.gdshader") };
-            _ground.SetShaderParameter("flow", Texture("flow"));
-            _ground.SetShaderParameter("detail", Texture("detail"));
-            _ground.SetShaderParameter("color", _def.Color);
-            _ground.SetShaderParameter("accent", _def.Accent);
-            _ground.SetShaderParameter("fire", false);
-            var plane = CombatBurstEffect.Mesh(this, new PlaneMesh { Size = Vector2.One * _radius * 2 }, _ground);
-            plane.Position = Vector3.Up * .035f;
-        }
         if (fire)
         {
             Layer("Flames", true, Math.Max(1, _def.Lobes), _def.Opacity, _radius * .31f, Math.Max(.45f, _def.Rise * 1.65f), .75f, 1.25f);
@@ -67,6 +56,15 @@ public partial class AreaSurfaceVisual : Node3D
             ColorRamp = new GradientTexture1D { Gradient = gradient },
         };
         if (ember) process.InitialVelocityMin = .6f;
+        Material motion = process;
+        if (flame && !ember)
+        {
+            _flameMotion = new ShaderMaterial { Shader = GD.Load<Shader>("res://shaders/area_flame_particles.gdshader") };
+            _flameMotion.SetShaderParameter("root_radius", _radius * _def.Spread);
+            _flameMotion.SetShaderParameter("root_count", amount);
+            _flameMotion.SetShaderParameter("card_height", height);
+            motion = _flameMotion;
+        }
         var material = new StandardMaterial3D {
             ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
             Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
@@ -81,7 +79,7 @@ public partial class AreaSurfaceVisual : Node3D
         };
         var particles = new GpuParticles3D {
             Name = name, Amount = amount, Lifetime = life, LocalCoords = true,
-            ProcessMaterial = process, DrawPass1 = new QuadMesh { Size = new Vector2(width,height), Material = material },
+            ProcessMaterial = motion, DrawPass1 = new QuadMesh { Size = new Vector2(width,height), Material = material },
             Position = Vector3.Up * (flame ? height * .42f : height * .28f),
             CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
             SpeedScale = 0, UseFixedSeed = true, Seed = ParticleSeed, FixedFps = 60,
@@ -98,8 +96,7 @@ public partial class AreaSurfaceVisual : Node3D
         float grow = Mathf.SmoothStep(0, .32f, age);
         // With no painted ground cue, fire must already read at hazard activation.
         if (_def.Family == "fire") grow = .35f + .65f * grow;
-        _ground?.SetShaderParameter("clock", age);
-        _ground?.SetShaderParameter("active", active ? endFade : 0f);
+        _flameMotion?.SetShaderParameter("clock", age);
         foreach (var (particles, material, alpha, flame) in _layers)
         {
             if (delta > 0) particles.RequestParticlesProcess(active ? delta : 0, active ? 0 : delta);
