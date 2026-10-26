@@ -159,3 +159,20 @@
 `AudioMixCheck`는 실제 총구3D 소총의 3변형×pitch0.975/1.025를 기준으로 휘두르기/걷기/피격 상·하한을 검사한다. `AudioQualityCapture`는27조건으로 확장(5종 단독+30발 연사+군중 피격 중첩7조건 추가). 연사 녹음은 Sfx 직접 호출의 통제 시나리오로 실제 총알/적 판정 플레이와 구별한다. 캡처에 credits.json과 오디오 구현3파일/캡처 시나리오 코드의 SHA-256을 기록하고 비교 페이지는 현재 에셋·오디오 코드와 일치하는 녹음만 싣는다.
 
 페이지는14종 동일50ms RMS 단발과 소총30발·피격30회의 전후 반복 비교를 제공한다. 비교용 변형 순환은 편집 순서이며 게임의 랜덤 선택과 구별한다. 출력 수치 통과는 인간의 피로도/음색 선호 확정이 아니다.
+
+
+## 재질 접촉음 (2026-10-27)
+
+[표면 데이터](../game/content/data/surface_profiles.json)와 [오브젝트 규격](object-data-spec.md)의 7계열/15프리셋을 사용한다. 새17종은 각2변형, 전체 배포 WAV는55개(기존21개 불변)다.
+
+| 이벤트 | ID | 재생 게인 / 동시수 / 피치 변동 |
+|---|---|---|
+| 발소리6계열 | `surface_step_{metal,wood,soft,soil,gravel,grass}` | -10dB / 3 / ±0.06 |
+| 환경 명중7계열 | `surface_hit_{stone,metal,wood,soft,soil,gravel,grass}` | -3dB / 3 / ±0.05 |
+| 파손4계열 | `surface_break_{stone,metal,wood,soft}` | 0dB / 2 / ±0.04 |
+
+모두 priority0·NearCap·초과 요청 생략·같은 변형 연속 재생 방지. 수치는 제작 초기값이며 프리셋 추가 게인과 더한다. 좀비의 새 발소리는 -5dB 추가, 봇의 기존 추가 감쇠는 유지한다. 파일은 mono PCM16 48kHz, 피크≤-6dBFS, 부드러운 입출력 fade. 기본 RMS 목표는 발 -12 / 명중 -18 / 파손 -16dBFS이며 피크 제한이 우선한다. 누락 파일은 조용한 기존 합성으로 fallback하므로 재질 음색은 잃지만 큰 소리가 새로 나지 않는다.
+
+실제 플레이어/분대 발소리, 좀비 발소리, WeaponController hitscan의 환경 충돌, ObjectBody의 일회성 파손에 연결한다. 적의 zombie_hit와 분리하며, 엄폐 사격막은 소유 본체의 재질로 해석한다. 배럴 폭발음/피해는 기존 경로다. 원격 Shot 이벤트는 충돌체·재질 정보를 보내지 않아 타 플레이어의 환경 명중은 이번에 재현하지 않는다(발소리와 동기화된 ObjectBreak 파손은 각 PC의 기존 호출에서 적용). 적 투사체/로켓/근접 명중·동적 물체끼리의 충돌·메시별 복합 재질은 범위 밖이다.
+
+무료 Kenney CC0 Impact Sounds 소재를 재편집했다. 흙/자갈/풀의 명중·파손 등 일부는 녹음 조합으로 설계한 소리이며 실제 해당 재질 현장 녹음이라고 주장하지 않는다. `AudioSurfaceCapture.tscn`은 A/B 34단발+7계열 10회 발소리+중첩1의42조건을 실제 Master에서 녹음한다. `tools/surfaces.py`는 최신 파일/구현/표면 데이터 해시를 검사하고 정규화 없는 청음 페이지를 만든다. [작업 기록](features/effects-audio/log/005-code-surface-audio.md).

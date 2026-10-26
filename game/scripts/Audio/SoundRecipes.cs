@@ -115,7 +115,22 @@ public static class SoundRecipes
         new("game_over", "게임 오버 (짧은 하강 악구)", SadTrombone, -2, 0, 1, Priority: 2, Bus: AudioSetup.CueBus),
         new("stage_clear", "스테이지 클리어 (부드러운 상승 악구)", Fanfare, -3, 0, 1, Priority: 2, Bus: AudioSetup.CueBus),
         new("ui_click", "UI 클릭", s => Click(s, .05f, 1600), -8, .03f, 2, Bus: AudioSetup.CueBus),
-    };
+    }.Concat(SurfaceDefinitions()).ToArray();
+
+    private static IEnumerable<SoundDef> SurfaceDefinitions()
+    {
+        foreach (string family in new[] { "stone", "metal", "wood", "soft", "soil", "gravel", "grass" })
+        {
+            if (family != "stone")
+                yield return new("surface_step_" + family, family + " 발소리", s => FallbackGain(PlayerStep(s), -2),
+                    -10, .06f, 3, Priority: 0, RestartWhenFull: false, NearCap: true, Variants: 2);
+            yield return new("surface_hit_" + family, family + " 표면 명중", s => FallbackGain(ZombieHit(s), -6),
+                -3, .05f, 3, Priority: 0, RestartWhenFull: false, NearCap: true, Variants: 2);
+            if (family is "stone" or "metal" or "wood" or "soft")
+                yield return new("surface_break_" + family, family + " 소품 파손", s => FallbackGain(Roll(s), -5),
+                    0, .04f, 2, Priority: 0, RestartWhenFull: false, NearCap: true, Variants: 2);
+        }
+    }
 
     public static SoundDef? Find(string id) => All.FirstOrDefault(d => d.Id == id);
 

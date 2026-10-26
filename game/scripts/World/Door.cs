@@ -25,6 +25,7 @@ public partial class Door : Node3D
         var door = new Door { Name = "Door", Position = center, Size = size, _stage = stage, _openOffset = openOffset };
         stage.AddChild(door);
         door._body = new StaticBody3D { CollisionLayer = Layers.World, CollisionMask = 0 };
+        SurfaceAudio.Tag(door._body, "runtime:door");
         door.AddChild(door._body);
         door._shape = new CollisionShape3D { Shape = new BoxShape3D { Size = size }, Position = Vector3.Up * size.Y * .5f };
         door._body.AddChild(door._shape);

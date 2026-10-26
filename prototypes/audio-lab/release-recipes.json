@@ -311,6 +311,698 @@
           "offset": 0
         }
       ]
+    },
+    {
+      "id": "surface_step_metal",
+      "seconds": 0.32,
+      "target_rms_db": -12,
+      "layers": [
+        {
+          "file": "kenney-footstep_concrete_000.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=100,lowpass=f=3400",
+          "gain_db": 0,
+          "offset": 0
+        },
+        {
+          "file": "kenney-impactPlate_light_000.ogg",
+          "start": 0,
+          "seconds": 0.22,
+          "speed": 0.94,
+          "filters": "highpass=f=450,lowpass=f=3200",
+          "gain_db": -12,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "surface_step_metal_2",
+      "seconds": 0.32,
+      "target_rms_db": -12,
+      "layers": [
+        {
+          "file": "kenney-footstep_concrete_001.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=100,lowpass=f=3400",
+          "gain_db": 0,
+          "offset": 0
+        },
+        {
+          "file": "kenney-impactPlate_light_001.ogg",
+          "start": 0,
+          "seconds": 0.22,
+          "speed": 0.94,
+          "filters": "highpass=f=450,lowpass=f=3200",
+          "gain_db": -12,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "surface_step_wood",
+      "seconds": 0.32,
+      "target_rms_db": -12,
+      "layers": [
+        {
+          "file": "kenney-footstep_wood_000.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=100,lowpass=f=3400",
+          "gain_db": 0,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "surface_step_wood_2",
+      "seconds": 0.32,
+      "target_rms_db": -12,
+      "layers": [
+        {
+          "file": "kenney-footstep_wood_001.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=100,lowpass=f=3400",
+          "gain_db": 0,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "surface_step_soft",
+      "seconds": 0.32,
+      "target_rms_db": -12,
+      "layers": [
+        {
+          "file": "kenney-footstep_carpet_000.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=100,lowpass=f=3400",
+          "gain_db": 0,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "surface_step_soft_2",
+      "seconds": 0.32,
+      "target_rms_db": -12,
+      "layers": [
+        {
+          "file": "kenney-footstep_carpet_001.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=100,lowpass=f=3400",
+          "gain_db": 0,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "surface_step_soil",
+      "seconds": 0.32,
+      "target_rms_db": -12,
+      "layers": [
+        {
+          "file": "kenney-footstep_snow_000.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=100,lowpass=f=3400",
+          "gain_db": 0,
+          "offset": 0
+        },
+        {
+          "file": "kenney-footstep_carpet_000.ogg",
+          "start": 0,
+          "seconds": 0.22,
+          "speed": 1,
+          "filters": "highpass=f=100,lowpass=f=4200",
+          "gain_db": -8,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "surface_step_soil_2",
+      "seconds": 0.32,
+      "target_rms_db": -12,
+      "layers": [
+        {
+          "file": "kenney-footstep_snow_001.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=100,lowpass=f=3400",
+          "gain_db": 0,
+          "offset": 0
+        },
+        {
+          "file": "kenney-footstep_carpet_001.ogg",
+          "start": 0,
+          "seconds": 0.22,
+          "speed": 1,
+          "filters": "highpass=f=100,lowpass=f=4200",
+          "gain_db": -8,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "surface_step_gravel",
+      "seconds": 0.32,
+      "target_rms_db": -12,
+      "layers": [
+        {
+          "file": "kenney-footstep_concrete_000.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=100,lowpass=f=3400",
+          "gain_db": 0,
+          "offset": 0
+        },
+        {
+          "file": "kenney-impactMining_000.ogg",
+          "start": 0,
+          "seconds": 0.2,
+          "speed": 1.25,
+          "filters": "highpass=f=1600,lowpass=f=5000",
+          "gain_db": -10,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "surface_step_gravel_2",
+      "seconds": 0.32,
+      "target_rms_db": -12,
+      "layers": [
+        {
+          "file": "kenney-footstep_concrete_001.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=100,lowpass=f=3400",
+          "gain_db": 0,
+          "offset": 0
+        },
+        {
+          "file": "kenney-impactMining_001.ogg",
+          "start": 0,
+          "seconds": 0.2,
+          "speed": 1.25,
+          "filters": "highpass=f=1600,lowpass=f=5000",
+          "gain_db": -10,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "surface_step_grass",
+      "seconds": 0.32,
+      "target_rms_db": -12,
+      "layers": [
+        {
+          "file": "kenney-footstep_grass_000.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=100,lowpass=f=3400",
+          "gain_db": 0,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "surface_step_grass_2",
+      "seconds": 0.32,
+      "target_rms_db": -12,
+      "layers": [
+        {
+          "file": "kenney-footstep_grass_001.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=100,lowpass=f=3400",
+          "gain_db": 0,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "surface_hit_stone",
+      "seconds": 0.32,
+      "layers": [
+        {
+          "file": "kenney-impactMining_000.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=120,lowpass=f=4300",
+          "gain_db": 0,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "surface_hit_stone_2",
+      "seconds": 0.32,
+      "layers": [
+        {
+          "file": "kenney-impactMining_001.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=120,lowpass=f=4300",
+          "gain_db": 0,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "surface_hit_metal",
+      "seconds": 0.32,
+      "layers": [
+        {
+          "file": "kenney-impactPlate_light_000.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=120,lowpass=f=4300",
+          "gain_db": 0,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "surface_hit_metal_2",
+      "seconds": 0.32,
+      "layers": [
+        {
+          "file": "kenney-impactPlate_light_001.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=120,lowpass=f=4300",
+          "gain_db": 0,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "surface_hit_wood",
+      "seconds": 0.32,
+      "layers": [
+        {
+          "file": "kenney-impactWood_medium_000.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=120,lowpass=f=4300",
+          "gain_db": 0,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "surface_hit_wood_2",
+      "seconds": 0.32,
+      "layers": [
+        {
+          "file": "kenney-impactWood_medium_001.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=120,lowpass=f=4300",
+          "gain_db": 0,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "surface_hit_soft",
+      "seconds": 0.32,
+      "layers": [
+        {
+          "file": "kenney-impactSoft_medium_000.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=120,lowpass=f=2200",
+          "gain_db": 0,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "surface_hit_soft_2",
+      "seconds": 0.32,
+      "layers": [
+        {
+          "file": "kenney-impactSoft_medium_001.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=120,lowpass=f=2200",
+          "gain_db": 0,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "surface_hit_soil",
+      "seconds": 0.32,
+      "layers": [
+        {
+          "file": "kenney-impactSoft_medium_000.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=120,lowpass=f=2200",
+          "gain_db": 0,
+          "offset": 0
+        },
+        {
+          "file": "kenney-footstep_snow_000.ogg",
+          "start": 0,
+          "seconds": 0.22,
+          "speed": 1,
+          "filters": "highpass=f=100,lowpass=f=4200",
+          "gain_db": -5,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "surface_hit_soil_2",
+      "seconds": 0.32,
+      "layers": [
+        {
+          "file": "kenney-impactSoft_medium_001.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=120,lowpass=f=2200",
+          "gain_db": 0,
+          "offset": 0
+        },
+        {
+          "file": "kenney-footstep_snow_001.ogg",
+          "start": 0,
+          "seconds": 0.22,
+          "speed": 1,
+          "filters": "highpass=f=100,lowpass=f=4200",
+          "gain_db": -5,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "surface_hit_gravel",
+      "seconds": 0.32,
+      "layers": [
+        {
+          "file": "kenney-impactMining_000.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1.15,
+          "filters": "highpass=f=120,lowpass=f=4300",
+          "gain_db": 0,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "surface_hit_gravel_2",
+      "seconds": 0.32,
+      "layers": [
+        {
+          "file": "kenney-impactMining_001.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1.15,
+          "filters": "highpass=f=120,lowpass=f=4300",
+          "gain_db": 0,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "surface_hit_grass",
+      "seconds": 0.32,
+      "layers": [
+        {
+          "file": "kenney-footstep_grass_000.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=120,lowpass=f=4300",
+          "gain_db": 0,
+          "offset": 0
+        },
+        {
+          "file": "kenney-impactSoft_medium_000.ogg",
+          "start": 0,
+          "seconds": 0.22,
+          "speed": 1,
+          "filters": "highpass=f=100,lowpass=f=4200",
+          "gain_db": -5,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "surface_hit_grass_2",
+      "seconds": 0.32,
+      "layers": [
+        {
+          "file": "kenney-footstep_grass_001.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=120,lowpass=f=4300",
+          "gain_db": 0,
+          "offset": 0
+        },
+        {
+          "file": "kenney-impactSoft_medium_001.ogg",
+          "start": 0,
+          "seconds": 0.22,
+          "speed": 1,
+          "filters": "highpass=f=100,lowpass=f=4200",
+          "gain_db": -5,
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "id": "surface_break_stone",
+      "seconds": 0.55,
+      "target_rms_db": -16,
+      "layers": [
+        {
+          "file": "kenney-impactMining_000.ogg",
+          "start": 0,
+          "seconds": 0.38,
+          "speed": 0.88,
+          "filters": "highpass=f=90,lowpass=f=3600",
+          "gain_db": 0,
+          "offset": 0
+        },
+        {
+          "file": "kenney-impactMining_002.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=100,lowpass=f=4200",
+          "gain_db": -7,
+          "offset": 0.1
+        }
+      ]
+    },
+    {
+      "id": "surface_break_stone_2",
+      "seconds": 0.55,
+      "target_rms_db": -16,
+      "layers": [
+        {
+          "file": "kenney-impactMining_001.ogg",
+          "start": 0,
+          "seconds": 0.38,
+          "speed": 0.88,
+          "filters": "highpass=f=90,lowpass=f=3600",
+          "gain_db": 0,
+          "offset": 0
+        },
+        {
+          "file": "kenney-impactMining_003.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=100,lowpass=f=4200",
+          "gain_db": -7,
+          "offset": 0.1
+        }
+      ]
+    },
+    {
+      "id": "surface_break_metal",
+      "seconds": 0.55,
+      "target_rms_db": -16,
+      "layers": [
+        {
+          "file": "kenney-impactMetal_heavy_000.ogg",
+          "start": 0,
+          "seconds": 0.38,
+          "speed": 0.88,
+          "filters": "highpass=f=90,lowpass=f=3600",
+          "gain_db": 0,
+          "offset": 0
+        },
+        {
+          "file": "kenney-impactTin_medium_002.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=100,lowpass=f=4200",
+          "gain_db": -7,
+          "offset": 0.1
+        }
+      ]
+    },
+    {
+      "id": "surface_break_metal_2",
+      "seconds": 0.55,
+      "target_rms_db": -16,
+      "layers": [
+        {
+          "file": "kenney-impactMetal_heavy_001.ogg",
+          "start": 0,
+          "seconds": 0.38,
+          "speed": 0.88,
+          "filters": "highpass=f=90,lowpass=f=3600",
+          "gain_db": 0,
+          "offset": 0
+        },
+        {
+          "file": "kenney-impactTin_medium_003.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=100,lowpass=f=4200",
+          "gain_db": -7,
+          "offset": 0.1
+        }
+      ]
+    },
+    {
+      "id": "surface_break_wood",
+      "seconds": 0.55,
+      "target_rms_db": -16,
+      "layers": [
+        {
+          "file": "kenney-impactWood_heavy_000.ogg",
+          "start": 0,
+          "seconds": 0.38,
+          "speed": 0.88,
+          "filters": "highpass=f=90,lowpass=f=3600",
+          "gain_db": 0,
+          "offset": 0
+        },
+        {
+          "file": "kenney-impactPlank_medium_002.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=100,lowpass=f=4200",
+          "gain_db": -7,
+          "offset": 0.1
+        }
+      ]
+    },
+    {
+      "id": "surface_break_wood_2",
+      "seconds": 0.55,
+      "target_rms_db": -16,
+      "layers": [
+        {
+          "file": "kenney-impactWood_heavy_001.ogg",
+          "start": 0,
+          "seconds": 0.38,
+          "speed": 0.88,
+          "filters": "highpass=f=90,lowpass=f=3600",
+          "gain_db": 0,
+          "offset": 0
+        },
+        {
+          "file": "kenney-impactPlank_medium_003.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=100,lowpass=f=4200",
+          "gain_db": -7,
+          "offset": 0.1
+        }
+      ]
+    },
+    {
+      "id": "surface_break_soft",
+      "seconds": 0.55,
+      "target_rms_db": -16,
+      "layers": [
+        {
+          "file": "kenney-impactSoft_heavy_000.ogg",
+          "start": 0,
+          "seconds": 0.38,
+          "speed": 0.88,
+          "filters": "highpass=f=90,lowpass=f=3600",
+          "gain_db": 0,
+          "offset": 0
+        },
+        {
+          "file": "kenney-footstep_carpet_002.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=100,lowpass=f=4200",
+          "gain_db": -7,
+          "offset": 0.1
+        }
+      ]
+    },
+    {
+      "id": "surface_break_soft_2",
+      "seconds": 0.55,
+      "target_rms_db": -16,
+      "layers": [
+        {
+          "file": "kenney-impactSoft_heavy_001.ogg",
+          "start": 0,
+          "seconds": 0.38,
+          "speed": 0.88,
+          "filters": "highpass=f=90,lowpass=f=3600",
+          "gain_db": 0,
+          "offset": 0
+        },
+        {
+          "file": "kenney-footstep_carpet_003.ogg",
+          "start": 0,
+          "seconds": 0.28,
+          "speed": 1,
+          "filters": "highpass=f=100,lowpass=f=4200",
+          "gain_db": -7,
+          "offset": 0.1
+        }
+      ]
     }
   ]
 }

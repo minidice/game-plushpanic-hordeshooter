@@ -630,6 +630,7 @@ public partial class WeaponController : Node
             if (hitOrNull is not { } hit) break;
             end = hit.Position;
             float falloff = def.FalloffAt(origin.DistanceTo(end), rangeScale);
+            if (hit.Collider is not Enemy) SurfaceAudio.Hit(Stage, hit.Collider, end, hit.Normal);
             switch (hit.Collider)
             {
                 case Enemy enemy when !enemy.IsDead:

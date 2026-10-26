@@ -4,6 +4,7 @@
 - [x] **A-26 사운드 9종 적용**: 무료 CC0 소재 편집·결과 악구, 발성 변형3개, 공유 ID 분리, 근거리/군중 믹스·결과 볼륨 처리. [작업·검증](features/effects-audio/log/002-art-sound-quality-rollout.md).
 - [x] **A-26 후속 검증**: 5분 통제 전투 음향·변형별 피격 하한·실제 상태효과 캡처 확인. 시체 누적 렌더 오류(I-41)는 남음. [검사·통합 기록](features/effects-audio/log/003-check-combat-soak-main-integration.md).
 - [x] **A-26 전투 반복음5종**: 소총·좀비 피격3변형, 장전 시작/완료·빈 탄창 녹음 편집, 상대 음량·27조건 출력 검사. [작업·검증](features/effects-audio/log/004-art-combat-sound-update.md).
+- [x] **A-26 재질 접촉음·데이터**: 7계열/15프리셋/93오브젝트 매핑, 발소리·환경 hitscan 명중·파손17종, Studio 속성 조회. [작업·검증](features/effects-audio/log/005-code-surface-audio.md).
 - [ ] **A-26 후속 청음**: 사용자 최종 음색 수락·종별 발성·장시간/실제 멀티플레이 환경, I-64 나머지 3D 상대 밸런스.
 > **2026-10-26부터 기록 방식이 바뀌었다**([decisions.md](decisions.md) T-26, [기록 문서 나누기](records-split-plan.md)). 새 기록의 본문 · 작업 기록은 [기능별 폴더](features/README.md)에 쓰고, 이 문서에는 짧은 줄만 추가한다. **이 문서의 기존 기록은 옮기지 않고 그대로 남아 있다**(앞으로만 새 구조, 6.4).
 

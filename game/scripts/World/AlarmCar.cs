@@ -23,6 +23,7 @@ public partial class AlarmCar : StaticBody3D
     public static AlarmCar Create(Stage stage, Vector3 center, Vector3 size, string color, Node3D? visual = null)
     {
         var car = new AlarmCar { _stage = stage, Name = "AlarmCar", Position = center, CollisionLayer = Layers.World, CollisionMask = 0 };
+        SurfaceAudio.Tag(car, "runtime:alarm_car");
         stage.AddChild(car);
         car.AddChild(new CollisionShape3D { Shape = new BoxShape3D { Size = size } });
         car._dash = Glow(new Color("ff3b30"), 0);

@@ -311,7 +311,7 @@ public partial class Enemy : CharacterBody3D
         if (_stepDistance < .9f) return;
         _stepDistance = Rng.RandfRange(-.2f, 0);
         if (GlobalPosition.DistanceSquaredTo(Stage.Player.GlobalPosition) < 16f * 16f)
-            Stage.Sfx.PlayAt("zombie_step", GlobalPosition, 0, Rng.RandfRange(.85f, 1.1f));
+            SurfaceAudio.Step(Stage, this, 0, Rng.RandfRange(.85f, 1.1f), zombie: true);
     }
 
     /// <summary>Walk to the beeping lure (shared flow field toward it), crowd around it, ignore the player.</summary>

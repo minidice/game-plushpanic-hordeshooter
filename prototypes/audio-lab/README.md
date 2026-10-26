@@ -61,3 +61,12 @@ Godot 경로는 PC별 설치 위치로 바꾼다. 캡처는 실제 오디오 장
 소총 레시피는 RMS 목표 -14dBFS를 지정하며 피크 -6dBFS 제한이 우선한다. 기존9종 설정/해시는 유지한다. 캡처 credits/오디오 구현/캡처 시나리오 해시가 현재 파일과 다르면 `--page`가 실패하므로 `AudioQualityCapture`를 먼저 재실행한다. 옛9종/5분 결과를 새5종의 최종 검증으로 간주하지 않는다.
 
 [추가 계획](../../doc/features/effects-audio/combat-sound-plan.md) · [추가 작업 기록](../../doc/features/effects-audio/log/004-art-combat-sound-update.md)
+
+
+## 재질 접촉음
+
+7계열/15프리셋, 새17종×2변형(34 WAV)을 추가했다. 기존21개는 불변이며 총55 WAV다. Kenney CC0 팩의 발소리/충돌 소스를 보존하고 기존 `release-recipes.json`/`release.py --install`로 재생성한다. 흙·자갈 등은 가공한 foley 조합이지 개별 재질 현장 녹음은 아니다.
+
+빌드/import 후 실제 오디오 장치에서 `res://tests/AudioSurfaceCapture.tscn`을 실행하고 `python prototypes/audio-lab/tools/surfaces.py`로 `output/surfaces.html`을 만든다. 34개 변형 단발, 7개 프리셋 발밑 접촉 발소리, 중첩1=42녹음이다. 추가 정규화 없이 실제 출력을 청취한다. 기존14종 페이지는 `AudioQualityCapture` 재실행 뒤 `release.py --page`로 갱신한다. 새 지문에는 SurfaceAudio/SurfaceProfiles/표면 JSON도 포함된다.
+
+[오브젝트 규격](../../doc/object-data-spec.md) · [작업 기록](../../doc/features/effects-audio/log/005-code-surface-audio.md)

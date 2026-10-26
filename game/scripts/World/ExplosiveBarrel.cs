@@ -36,6 +36,7 @@ public partial class ExplosiveBarrel : RigidBody3D
         Mat.Mesh(barrel, new CylinderMesh { TopRadius = .38f, BottomRadius = .38f, Height = 1.0f }, Vector3.Up * .5f, Mat.Solid("b8392e", .5f));
         Mat.Mesh(barrel, new CylinderMesh { TopRadius = .39f, BottomRadius = .39f, Height = .12f }, Vector3.Up * .62f, Mat.Solid("e8c547", .5f));
         barrel.NetId = ++stage.NextPropId;
+        SurfaceAudio.Tag(barrel, ObjectId);
         stage.AddChild(barrel);
         stage.Props.Add(barrel);
         return barrel;

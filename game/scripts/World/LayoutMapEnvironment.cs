@@ -69,7 +69,7 @@ public sealed partial class LayoutMap
         {
             var direction=to-at;
             var prop=Prop("route_sign",FloorAt(at),Mathf.RadToDeg(-Mathf.Atan2(direction.Y,direction.X)),solid:false);
-            if(prop!=null) Solid(FloorAt(at)+Vector3.Up, new Vector3(.2f,2,.2f),"",drawCargo:false);
+            if(prop!=null) Solid(FloorAt(at)+Vector3.Up, new Vector3(.2f,2,.2f),"",drawCargo:false,surfaceObject:"route_sign");
         }
         foreach(var p in new[]{new Vector2(65,-16),new Vector2(110,-36),new Vector2(179,-18),new Vector2(247,-55),new Vector2(438,-80),new Vector2(472,-103),new Vector2(496,-120),new Vector2(522,-134),new Vector2(612,-149)})
         {

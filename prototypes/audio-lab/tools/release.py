@@ -102,7 +102,8 @@ def page(clips, ffmpeg):
         assert capture['passed'], 'Current mixer capture failed'
         assert capture['soundManifestSha256'] == hashlib.sha256((REPO/'game/content/sounds/credits.json').read_bytes()).hexdigest(), 'Mixer capture predates installed assets; rerun AudioQualityCapture'
         audio_sources = ('scripts/Audio/SoundRecipes.cs', 'scripts/Audio/Sfx.cs',
-                         'scripts/Audio/AudioSetup.cs', 'tests/AudioPilotCapture.cs')
+                         'scripts/Audio/AudioSetup.cs', 'tests/AudioPilotCapture.cs',
+                         'scripts/Audio/SurfaceAudio.cs', 'scripts/Audio/SurfaceProfiles.cs', 'content/data/surface_profiles.json')
         assert capture.get('audioSourceSha256') == {
             path:hashlib.sha256((REPO/'game'/path).read_bytes()).hexdigest() for path in audio_sources
         }, 'Mixer capture predates audio implementation/scenario; rerun AudioQualityCapture'
@@ -127,6 +128,8 @@ def page(clips, ffmpeg):
         shutil.copyfile(index, pilot)
     if not pilot.exists():
         text = text.replace(' · <a href="pilot.html">이전 3종 시제품·변경 전 믹스</a>', '')
+    if (ROOT/'output/surfaces.html').exists():
+        text = text.replace('<h1>', '<p><a href="surfaces.html">재질별 소리 · 오브젝트 프리셋</a></p><h1>', 1)
     index.write_text(text, encoding='utf-8')
     for link in re.findall(r'(?:src|href)="([^"]+)"', text):
         assert (ROOT/'output'/link).is_file(), f'Broken page link: {link}'

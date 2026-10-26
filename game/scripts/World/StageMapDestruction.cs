@@ -57,6 +57,7 @@ public abstract partial class StageMap
         var footprint = (center, WallBounds(size, yaw));
         // The runtime kind stays interactive even when data removes destruction (an indestructible wall has NetId 0).
         var body = ObjectBody.Create(_stage, "BreachWall", rule, () => { _solids.Remove(footprint); _stage.RebuildFlow(); });
+        SurfaceAudio.Tag(body, "runtime:breach_wall");
         body.Position = at;
         body.Basis = basis;
         _stage.AddChild(body);

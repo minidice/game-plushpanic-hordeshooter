@@ -81,7 +81,7 @@ public sealed class StageTwoMap : StageMap
         Floor(-2, 20, -9, 9, "", draw: false);
         Wall(-2.4f, -2, -9.4f, 9.4f, 3f, "", drawWall: false);
         Wall(-2.4f, 20, -9.4f, -9, 3.4f, "", drawWall: false);
-        Wall(-2.4f, 20, 9, 9.4f, 1f, "", drawWall: false, interaction: WireFenceRule);
+        Wall(-2.4f, 20, 9, 9.4f, 1f, "", drawWall: false, interaction: WireFenceRule, surfaceObject: "wire_fence");
         // The step from the clearing's width to the road's.
         Wall(20, 20.4f, -9.4f, -7, 3.4f, "", drawWall: false);
         Wall(20, 20.4f, 7, 9.4f, 1f, "", drawWall: false);
@@ -149,8 +149,8 @@ public sealed class StageTwoMap : StageMap
         // One crossing: the bridge, scaled so its deck takes a small group abreast (L-9 bottleneck 3–4 m).
         Prop("timber_bridge", new Vector3((StreamX0 + StreamX1) / 2, -.375f * 1.5f, 0), 90, 1.5f, solid: false);
         Floor(StreamX0, StreamX1, -1.5f, 1.5f, "", draw: false);
-        Wall(StreamX0, StreamX1, -1.9f, -1.5f, 1f, "", drawWall: false);
-        Wall(StreamX0, StreamX1, 1.5f, 1.9f, 1f, "", drawWall: false);
+        Wall(StreamX0, StreamX1, -1.9f, -1.5f, 1f, "", drawWall: false, surfaceObject: "timber_bridge");
+        Wall(StreamX0, StreamX1, 1.5f, 1.9f, 1f, "", drawWall: false, surfaceObject: "timber_bridge");
         // The banks: nobody walks or falls into the water.
         Wall(StreamX0 - .4f, StreamX0, -7, -1.5f, 1f, "", drawWall: false);
         Wall(StreamX0 - .4f, StreamX0, 1.5f, 7, 1f, "", drawWall: false);
@@ -171,7 +171,7 @@ public sealed class StageTwoMap : StageMap
         WorkshopMounted(WorkshopArt.Kind.SafetyBoard,new Vector3(84.7f,1.15f,-6.22f));
         Floor(StreamX1, 100, -10, 10, "", draw: false);
         Wall(StreamX1, 100, -10.4f, -10, 3f, "", drawWall: false);
-        Wall(StreamX1, 100, 10, 10.4f, 1f, "", drawWall: false, interaction: WireFenceRule);
+        Wall(StreamX1, 100, 10, 10.4f, 1f, "", drawWall: false, interaction: WireFenceRule, surfaceObject: "wire_fence");
 
         // A checkpoint: barriers make a chicane, containers and a shed line the edges.
         Prop("concrete_barrier", new Vector3(75.5f, 0, -3.6f), 0);
@@ -184,9 +184,9 @@ public sealed class StageTwoMap : StageMap
         Prop("container_closed", new Vector3(86.5f, 0, 7.4f), 0);
         Prop("container_closed", new Vector3(93.6f, 0, -6.8f), 90);
         Prop("container_open", new Vector3(96.4f, 0, 7.6f), 180, 1, solid: false);
-        Solid(new Vector3(96.4f, 1.35f, 7.6f), new Vector3(6, 2.7f, 2.4f), "", drawCargo: false);
+        Solid(new Vector3(96.4f, 1.35f, 7.6f), new Vector3(6, 2.7f, 2.4f), "", drawCargo: false, surfaceObject: "container_open");
         Prop("utility_shed", new Vector3(83.6f, 0, -7.9f), 0, 1, solid: false);
-        Solid(new Vector3(83.6f, 1.4f, -7.9f), new Vector3(3.5f, 2.8f, 3.1f), "", drawCargo: false);
+        Solid(new Vector3(83.6f, 1.4f, -7.9f), new Vector3(3.5f, 2.8f, 3.1f), "", drawCargo: false, surfaceObject: "utility_shed");
         Prop("wooden_crate", new Vector3(89.6f, 0, 4.2f), 12);
         Prop("wooden_crate", new Vector3(90.5f, 0, 5.2f), -20);
         Prop("pallet", new Vector3(79.2f, 0, 8.4f), 30, 1, solid: false);

@@ -46,6 +46,7 @@ public sealed partial class LayoutMap : StageMap
     private ShaderMaterial GroundMaterial => _groundMaterial ??= ForestMaterial("res://shaders/stage2_ground.gdshader");
 
     public StageLayout Layout { get; }
+    public override SurfaceProfile SurfaceAt(Vector3 position) => SurfaceProfiles.Current.LayoutAt(Layout, position);
     /// <summary>Floor and blocker rectangles the grid was merged into (checks).</summary>
     public int FloorRects { get; private set; }
     public int VoidRects { get; private set; }
@@ -244,12 +245,12 @@ public sealed partial class LayoutMap : StageMap
         float y = FloorAt(center).Y;
         float x0 = center.X - HutSize.X / 2, x1 = center.X + HutSize.X / 2, z0 = center.Y - HutSize.Y / 2, z1 = center.Y + HutSize.Y / 2;
         float g0 = center.Y - HutDoorway / 2, g1 = center.Y + HutDoorway / 2;
-        RoomWall(x0, x1, z0, z0 + WallThick, y, draw: false);
-        RoomWall(x0, x1, z1 - WallThick, z1, y, draw: false);
+        RoomWall(x0, x1, z0, z0 + WallThick, y, draw: false, surfaceObject: "watch_post");
+        RoomWall(x0, x1, z1 - WallThick, z1, y, draw: false, surfaceObject: "watch_post");
         foreach (float x in new[] { x0, x1 - WallThick })
         {
-            RoomWall(x, x + WallThick, z0, g0, y, draw: false);
-            RoomWall(x, x + WallThick, g1, z1, y, draw: false);
+            RoomWall(x, x + WallThick, z0, g0, y, draw: false, surfaceObject: "watch_post");
+            RoomWall(x, x + WallThick, g1, z1, y, draw: false, surfaceObject: "watch_post");
         }
         Landmark("watch_post", new Vector3(center.X, y, center.Y));
         Lamp(new Vector3(center.X, y + 2.6f, center.Y), "b5e6c3", 3, 10, false);
@@ -364,11 +365,11 @@ public sealed partial class LayoutMap : StageMap
     }
 
     /// <summary>A plain graybox wall standing on the floor at height <paramref name="y"/>.</summary>
-    private void RoomWall(float x0, float x1, float z0, float z1, float y, bool draw = true)
+    private void RoomWall(float x0, float x1, float z0, float z1, float y, bool draw = true, string? surfaceObject = null)
     {
         var center = new Vector3((x0 + x1) / 2, y + WallHeight / 2, (z0 + z1) / 2);
         var size = new Vector3(x1 - x0, WallHeight, z1 - z0);
-        Solid(center, size, "", drawCargo: false);
+        Solid(center, size, "", drawCargo: false, surfaceObject: surfaceObject);
         if (draw) Mat.Box(_stage, center, size, Mat.Solid("6b7a68", .9f));
     }
 
@@ -401,7 +402,7 @@ public sealed partial class LayoutMap : StageMap
             {
                 Landmark("crane", at);
                 // Only the base is a walking obstacle; the boom must not block the whole yard.
-                Solid(at + Vector3.Up * 2, new Vector3(2.4f, 4, 2.4f), "", drawCargo: false);
+                Solid(at + Vector3.Up * 2, new Vector3(2.4f, 4, 2.4f), "", drawCargo: false, surfaceObject: "crane");
             }
             else if (marker.Label == "벙커 정문")
             {
