@@ -70,6 +70,12 @@ public partial class Player : CharacterBody3D
 
     public bool CritReady => IsLocal && FocusTarget != null && FocusTime >= CritFocusTime;
 
+    /// <summary>
+    /// One crit per focus (decisions.md C-32): every shot (a swing once it lands) spends the focus built so far, so the
+    /// next crit needs another 0.5 s on the target.
+    /// </summary>
+    public void SpendFocus() => FocusTime = 0;
+
     /// <summary>Movement while the aim of a throw or a lobbed weapon is up (decisions.md C-26).</summary>
     public const float LobAimMoveScale = .5f;
     /// <summary>

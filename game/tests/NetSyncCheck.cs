@@ -190,6 +190,8 @@ public partial class NetSyncCheck : Node
         var aim = target.GlobalPosition + Vector3.Up;
         for (int i = 0; i < 40 && IsInstanceValid(target) && !target.IsDead; i++)
         {
+            // Follow the monster: a sleeping one wanders, and a fixed point loses it (issues.md 2026-10-26).
+            aim = target.GlobalPosition + Vector3.Up;
             _client.Player.SetControls(Vector2.Zero, aim, true);
             await Frames(1);
         }
