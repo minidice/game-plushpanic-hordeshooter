@@ -369,9 +369,10 @@ public partial class WeaponController : Node
                 break;
             default:
                 var origin = _player.GlobalPosition + Vector3.Up * Player.AimHeight;
-                var end = Hitscan(def, origin, dir, def.Damage * _player.OutgoingDamage, def.HitPower, RangeScale(def), out bool crit);
+                var surfaces = new List<NetSurfaceHit>(NetSurfaceHit.MaxPerShot);
+                var end = Hitscan(def, origin, dir, def.Damage * _player.OutgoingDamage, def.HitPower, RangeScale(def), surfaces, out bool crit);
                 WeaponShotEffect.Play(Stage.Effects, def, origin, origin, end, crit, muzzleFlash: false);
-                Stage.Net?.OnShot(_player, def, origin, new[] { end }, _player.AimPoint);
+                Stage.Net?.OnShot(_player, def, origin, new[] { end }, _player.AimPoint, surfaces);
                 break;
         }
         _echoing = false;
@@ -534,17 +535,18 @@ public partial class WeaponController : Node
                     ? def.PelletSpread * (def.BaseSpread > 0 ? Mathf.Lerp(1, def.AimSpread / def.BaseSpread, state.AimProgress) : 1)
                     : state.Spread;
                 var ends = Stage.Net != null ? new System.Collections.Generic.List<Vector3>(pellets) : null;
+                var surfaces = new List<NetSurfaceHit>(NetSurfaceHit.MaxPerShot);
                 float rangeScale = RangeScale(def);
                 for (int i = 0; i < pellets; i++)
                 {
-                    var end = Hitscan(def, origin, Spread(dir, cone), def.Damage * _player.OutgoingDamage / pellets, def.HitPower / pellets, rangeScale, out bool crit);
+                    var end = Hitscan(def, origin, Spread(dir, cone), def.Damage * _player.OutgoingDamage / pellets, def.HitPower / pellets, rangeScale, surfaces, out bool crit);
                     anyCrit |= crit;
                     var from = MuzzlePosition;
                     if (origin.DistanceTo(end) < origin.DistanceTo(from)) from = origin;
                     WeaponShotEffect.Play(Stage.Effects, def, MuzzlePosition, from, end, crit, muzzleFlash: i == 0);
                     ends?.Add(end);
                 }
-                if (ends != null) Stage.Net!.OnShot(_player, def, MuzzlePosition, ends, _player.AimPoint);
+                if (ends != null) Stage.Net!.OnShot(_player, def, MuzzlePosition, ends, _player.AimPoint, surfaces);
                 Stage.Effects.Shell(MuzzlePosition, _player.Rig.GlobalTransform.Basis.X);
                 if (anyCrit) Stage.Effects.FloatingText(_player.AimPoint + Vector3.Up * .6f, "CRIT!", new Color("ffd65c"));
                 break;
@@ -594,7 +596,8 @@ public partial class WeaponController : Node
     /// One bullet (or pellet). Damage falls off past the effective range (both stretched by aiming, <paramref name="rangeScale"/>);
     /// it pierces up to <see cref="WeaponDefinition.Pierce"/> enemies, losing 20% each time; explosive rounds blow up where it stops.
     /// </summary>
-    private Vector3 Hitscan(WeaponDefinition def, Vector3 origin, Vector3 dir, float damage, float power, float rangeScale, out bool crit)
+    private Vector3 Hitscan(WeaponDefinition def, Vector3 origin, Vector3 dir, float damage, float power, float rangeScale,
+        List<NetSurfaceHit> surfaces, out bool crit)
     {
         crit = false;
         float range = def.MaxRange * rangeScale;
@@ -630,7 +633,14 @@ public partial class WeaponController : Node
             if (hitOrNull is not { } hit) break;
             end = hit.Position;
             float falloff = def.FalloffAt(origin.DistanceTo(end), rangeScale);
-            if (hit.Collider is not Enemy) SurfaceAudio.Hit(Stage, hit.Collider, end, hit.Normal);
+            // Host/offline contact only; the owner client waits for this result instead of guessing a material.
+            // A shotgun still resolves every pellet's damage, but shares one small audio budget for the shot.
+            if (Stage.Authoritative && hit.Collider is not (Enemy or Player or Corpse) && surfaces.Count < NetSurfaceHit.MaxPerShot)
+            {
+                var profile = SurfaceAudio.Resolve(Stage, hit.Collider, end, hit.Normal);
+                surfaces.Add(new NetSurfaceHit(profile, end));
+                SurfaceAudio.Hit(Stage, profile, end);
+            }
             switch (hit.Collider)
             {
                 case Enemy enemy when !enemy.IsDead:

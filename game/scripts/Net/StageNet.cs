@@ -286,12 +286,14 @@ public partial class StageNet : Node
     }
 
     /// <summary>Someone fired: hitscan ends, or the rocket/mortar/melee start. Owners already drew their own.</summary>
-    public void OnShot(Player shooter, WeaponDefinition def, Vector3 from, IReadOnlyList<Vector3> ends, Vector3 aim)
+    public void OnShot(Player shooter, WeaponDefinition def, Vector3 from, IReadOnlyList<Vector3> ends, Vector3 aim,
+        IReadOnlyList<NetSurfaceHit>? surfaces = null)
     {
         if (Role != NetRole.Host || shooter.PeerId == 0) return;
         _batch.Begin(NetEvent.Shot); _batch.W.I32(shooter.PeerId); _batch.W.U16(NetIds.Weapon(def.Id)); _batch.W.Pos(from); _batch.W.Pos(aim);
         _batch.W.U8(ends.Count);
         foreach (var end in ends) _batch.W.Pos(end);
+        NetSurfaceHit.Write(_batch.W, surfaces);
     }
 
     public void OnThrow(Player thrower, ThrowableDefinition def, Vector3 from, Vector3 target)
@@ -718,6 +720,9 @@ public partial class StageNet : Node
                 int n = r.U8();
                 var ends = new List<Vector3>(n);
                 for (int i = 0; i < n; i++) ends.Add(r.Pos());
+                var surfaces = NetSurfaceHit.Read(r);
+                // Owners predict the muzzle/tracer, but contacts always come from the host, once.
+                foreach (var hit in surfaces) SurfaceAudio.Hit(_stage, hit.Profile, hit.Position);
                 if (shooter == null || shooter == _stage.Player) break; // our own shots were drawn when we fired
                 shooter.Weapons.ShowNetShot(def, from, aim, ends);
                 break;

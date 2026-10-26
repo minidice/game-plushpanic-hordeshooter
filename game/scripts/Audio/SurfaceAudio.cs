@@ -36,8 +36,10 @@ public static class SurfaceAudio
     public static void Hit(Stage stage, GodotObject? collider, Vector3 position, Vector3 normal)
     {
         var profile = Resolve(stage,collider,position,normal);
-        stage.Sfx.PlayAt(profile.Hit,position,profile.HitDb);
+        Hit(stage,profile,position);
     }
+    public static void Hit(Stage stage, SurfaceProfile profile, Vector3 position) =>
+        stage.Sfx.PlayAt(profile.Hit,position,profile.HitDb);
     public static void Break(Stage stage, Node3D body, Vector3 position)
     {
         var profile = Resolve(stage,body,position,Vector3.Up);
