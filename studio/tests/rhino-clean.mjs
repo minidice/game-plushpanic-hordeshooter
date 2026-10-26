@@ -22,7 +22,7 @@ for(const weapon of ['club','knife','woodbow','mp5','ak47','m4']){
   check(result.members[0].brows===null,'rhino uses sculpted ridge, not new brow combinations');
 }
 for(const palette of ['red','green','slate'])await render({faction:'armed',palette,weapon:'m4',gear:1},palette);
-for(const [name,rotation,zoom] of [['front',0,1.15],['side',90,1.15],['game-distance',25,.65]])await render({rotation,zoom},name);
+for(const [name,rotation,zoom] of [['front',0,1.15],['side',90,1.15],['distant',25,.75]])await render({rotation,zoom},name);
 const pack=await render({mode:'pack',pack:'armed_rhino'},'pack');
 check(pack.members.length===10&&new Set(pack.members.map(m=>m.identity.palette)).size===1,'ten coherent actual pack members');
 check(await readFile(source,'utf8')===before,'render leaves source unchanged');

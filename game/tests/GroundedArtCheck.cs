@@ -17,7 +17,7 @@ public partial class GroundedArtCheck : Node
                 var def=CharacterCatalog.Player(species);var rig=CharacterRig.Create(def);AddChild(rig);
                 MeshInstance3D Part(string suffix)=>(MeshInstance3D)rig.Model.FindChild(species+"_"+suffix,true,false)!;
                 bool bird=AppearanceCatalog.IsBird(species);
-                string expectedModel=$"res://assets/characters/{species}/{species}-{(bird?"fitted":"clean")}.glb";
+                string expectedModel=$"res://assets/characters/{species}/{species}-clean.glb";
                 Check(def.Model!.ResourcePath==expectedModel,species+" exact reviewed model loaded by catalog");
                 Check(Part("vest_mesh").Mesh.SurfaceGetMaterial(0).ResourceName.StartsWith("custom_vest_fitted"),species+" wrapped vest material contract retained");
                 var tail=Part("tail_mesh");var tailHome=tail.Mesh;

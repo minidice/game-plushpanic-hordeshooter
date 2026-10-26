@@ -16,6 +16,7 @@ ModelScale = 1.0
 BodyNode = "goose_body"
 DeformNode = "goose_deform"
 HeadNode = "goose_head"
+HeadSpringScale = 0.05
 LeftFootNode = "goose_leftFoot"
 RightFootNode = "goose_rightFoot"
 WeaponNode = "goose_weapon"

@@ -19,8 +19,9 @@ parser.add_argument('--species',choices=['parrot','eagle','lion','tiger','reinde
 parser.add_argument('--review-name',help='Optional local evidence folder name')
 parser.add_argument('--capture-baseline',action='store_true')
 parser.add_argument('--label',default='after')
+parser.add_argument('--verify-baseline-hashes',action='store_true',help='Verify unselected assets against this isolated species review baseline')
 args=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
-output=build.OUT/(args.review_name or f'{args.species}-quality');output.mkdir(exist_ok=True)
+output=build.OUT/(args.review_name or f'{args.species}-quality');output.mkdir(parents=True,exist_ok=True)
 source=build.ASSETS/f'{args.species}.glb'
 if args.label=='before' and not args.capture_baseline:source=output/'before.glb'
 if args.capture_baseline:
@@ -58,9 +59,12 @@ build.render(args.species,f'{args.label}-vest-side',math.pi/2,outfit if args.spe
 bpy.context.scene.camera.data.ortho_scale=7
 build.render(args.species,f'{args.label}-gameplay',math.pi/4,outfit)
 (output/f'{args.label}-audit.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
-hashes=json.loads((output/'baseline-hashes.json').read_text(encoding='utf-8'))
-excluded={'reindeer.glb','zombie.glb'} if args.species in ['reindeer','zombie'] else {f'{args.species}.glb'}
-checked=[(name,digest) for name,digest in hashes.items() if name not in excluded]
-for name,digest in checked:
-    assert hashlib.sha256((build.ASSETS/name).read_bytes()).hexdigest()==digest,('other species changed',name)
-print(args.species.upper()+'_REVIEW_COMPLETE',args.label,json.dumps(report),f'OTHER_{len(checked)}_UNCHANGED')
+checked=[]
+if args.verify_baseline_hashes:
+    hashes=json.loads((output/'baseline-hashes.json').read_text(encoding='utf-8'))
+    excluded={'reindeer.glb','zombie.glb'} if args.species in ['reindeer','zombie'] else {f'{args.species}.glb'}
+    checked=[(name,digest) for name,digest in hashes.items() if name not in excluded]
+    for name,digest in checked:
+        assert hashlib.sha256((build.ASSETS/name).read_bytes()).hexdigest()==digest,('other species changed',name)
+print(args.species.upper()+'_REVIEW_COMPLETE',args.label,json.dumps(report),
+      f'OTHER_{len(checked)}_UNCHANGED' if args.verify_baseline_hashes else 'BASELINE_HASH_CHECK_NOT_REQUESTED')

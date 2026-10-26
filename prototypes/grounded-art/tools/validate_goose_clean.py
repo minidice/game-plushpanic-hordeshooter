@@ -3,6 +3,8 @@ import bpy
 import bmesh
 import hashlib
 import json
+import argparse
+import sys
 from pathlib import Path
 from mathutils import Vector
 
@@ -10,6 +12,10 @@ ROOT = Path(__file__).resolve().parents[3]
 SOURCE = ROOT / 'game/assets/characters/goose/goose-fitted.glb'
 TARGET = ROOT / 'game/assets/characters/goose/goose-clean.glb'
 OUT = ROOT / 'prototypes/grounded-art/output/goose-clean'
+OUT.mkdir(parents=True, exist_ok=True)
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--baseline-hashes', type=Path, help='Optional pre-edit immutable-before.json from a single-species build')
+args = parser.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [])
 
 
 def read(path):
@@ -105,10 +111,17 @@ for side in ('left', 'right'):
     arm = bounds(target[f'goose_{side}Arm_mesh'])
     check(arm[2][0] == source_bounds[f'goose_{side}Arm_mesh'][2][0], f'{side} wing lower extent')
 
-hashes = json.loads((OUT / 'immutable-before.json').read_text(encoding='utf-8'))
-check(all(Path(path).exists() and hashlib.sha256(Path(path).read_bytes()).hexdigest() == digest
-          for path, digest in hashes.items()), 'all other player GLBs byte identical')
-report = {'checks': len(checks), 'source_sha256': hashes[str(SOURCE)],
+if args.baseline_hashes:
+    hashes = json.loads(args.baseline_hashes.read_text(encoding='utf-8'))
+    def relocated(path):
+        normalized = path.replace('\\', '/')
+        marker = 'game/assets/characters/'
+        if marker not in normalized:
+            raise ValueError('Not a player model baseline path: ' + path)
+        return ROOT / marker / normalized.split(marker, 1)[1]
+    check(all(relocated(path).is_file() and hashlib.sha256(relocated(path).read_bytes()).hexdigest() == digest
+              for path, digest in hashes.items()), 'other player GLBs unchanged against supplied authoring baseline')
+report = {'checks': len(checks), 'source_sha256': hashlib.sha256(SOURCE.read_bytes()).hexdigest(),
           'target_sha256': hashlib.sha256(TARGET.read_bytes()).hexdigest(),
           'source_triangles': sum(item['triangles'] for item in original.values()),
           'target_triangles': sum(signature(obj)['triangles'] for obj in target.values()),

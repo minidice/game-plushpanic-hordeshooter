@@ -16,6 +16,7 @@ ModelScale = 1.0
 BodyNode = "duck_body"
 DeformNode = "duck_deform"
 HeadNode = "duck_head"
+HeadSpringScale = 0.05
 LeftFootNode = "duck_leftFoot"
 RightFootNode = "duck_rightFoot"
 WeaponNode = "duck_weapon"

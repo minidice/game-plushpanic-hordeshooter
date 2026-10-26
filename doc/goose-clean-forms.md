@@ -15,7 +15,7 @@
 | 검사 | 결과 |
 |---|---|
 | `blender --background --python-exit-code 1 --python prototypes/grounded-art/tools/build_goose_clean.py` | 생성 및 24장 렌더. 원본과 다른 플레이어 GLB 해시 유지 |
-| `blender --background --python-exit-code 1 --python prototypes/grounded-art/tools/validate_goose_clean.py` | 175개 계약 검사. 47→47 노드, 36,243→35,989 삼각형. 양발 닫힌 외향 단일 연결 표면/지면 밑면/두 재질 채널 포함 |
+| `blender --background --python-exit-code 1 --python prototypes/grounded-art/tools/validate_goose_clean.py` | 기본174개 계약 검사(제작 전 해시 비교를 명시하면175개). 47→47 노드, 36,243→35,989 삼각형. 양발 닫힌 외향 단일 연결 표면/지면 밑면/두 재질 채널 포함 |
 | `dotnet build game/HordeShooter.csproj --nologo -v q` / Godot `--headless --editor --import` | 최종 C# 빌드 0오류·0경고, GLB 임포트 성공 |
 | `ModularCustomization.tscn` / `WeaponGripCheck.tscn` / `ReloadPoseCheck.tscn` | 최종 GLB에서 각각 67 / 187 / 279 통과 |
 | `CustomizationToneCheck.tscn` (headless) | 87 통과. 별도 GPU 전용 `CharacterSurfaceCheck.tscn`은 이 종의 몸 메시가 원본과 좌표 동일함을 독립 Blender 검사로 확인했고 이번 가지에서 실행하지 않았다 |
@@ -29,3 +29,7 @@ Studio·게임 검사는 임시 프로젝트 이름 `Horde Shooter Art Review Go
 ## 남은 제약
 
 별도 머리/날개/발 피벗의 접합선과 기존 날개 전체 신장 방식은 유지되어 극단적인 포즈에서 넓은 깃 가장자리가 보일 수 있다. 경사면 발 IK, 개별 깃 손가락 관절, 장시간/실제 2 PC 플레이, 모든 무기 조합의 수동 아트 수락은 이번 검증 범위 밖이다. 렌더와 자동 검사는 개별 모델의 최종 미술 승인을 대신하지 않는다.
+
+통합 후 독립 검증기는 생성 output 없이 직접 실행할 수 있다. 다른 종 원본 해시 비교는 단일 종 제작 시에만 `-- --baseline-hashes prototypes/grounded-art/output/goose-clean/immutable-before.json`으로 요청한다. 이전 작업 폴더의 절대 경로 키도 현재 저장소의 모델 경로로 정규화한다. 두 조류를 합친 뒤에는 예전 단일 종 baseline의 다른 조류 해시가 다르므로 사용하지 않는다. [통합 결과](four-species-art.md).
+
+통합 실제 사격 뒤 확대에서 얼굴의 큰 반동이 작은 눈을 연속 몸통 속으로 이동시키는 문제를 발견했다. 거위/오리 리소스의 HeadSpringScale만0.05로 조정하고 몸/얼굴 마스크·저장·충돌/속도를 보존했다. 급가속·반전·정지·사격 및5개 커스텀 표본의 실제 눈/몸통 삼각형 가림 검사1,800개와 같은 Stage2 렌더 재검수로 확인했다. [원인·통합 결과](four-species-art.md).

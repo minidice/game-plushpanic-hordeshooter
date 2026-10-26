@@ -17,12 +17,12 @@
 - No sharedworkingdirectory betweenagents. Agent commits only itsownwork forcherrypick; parent integratesreviewedcommits andneverpushes.
 
 ## Tasks
-- [ ] Goose agent: own goose-clean.glb/.import, goose.tres, standalone build/validate_goose_clean.py, GooseCleanCheck/.tscn/.uid and speciesStudioQA/doc. Keep recognizable tallbody/slimmerbill; refine billroot/eye, featherhand grips, ankle/webbedfoot. Preserve bodyfacemasksurface ifneeded ratherthan breaking shader. Capture Blenderbeforeafter/profile and signalready forGPUqueue.
-- [ ] Duck agent: analogous duckfiles; lowwidebill/shortbroadbody contrast togoose, shalloweyes, shapedwingtips andflatwebbedfeet. Preserve savedface/billstyles, materials/pivots. No goosefileedits.
-- [ ] Tiger agent: own tiger_clean.py build(api) module dispatched from animal(kind), tiger.glb, independent validation/test/doc. Flattenjoinedmuzzle, smallalmond eyes, patterned continuous body(no raisedtubular tattoo stripes), cuppedroundears, taperedsmallhands andflatpaw/ankle. Reuse lion fixedpaw childcontract ifappropriate; parent coordinates CharacterWeaponGrip whitelist. Preserve palette names including ink/secondary mapping, moduleIDs and armed/hunter contracts. OtherGLBs unchanged.
-- [ ] Parent rhino: rhino_clean.py analogous; broadhead/heavyjaw+distincthorn, small eyes andears, stocky continuous torso, compactthickhands, toe/flatsole definition; preserve speciesheft withoutspherical parts. Existing combat remains.
-- [ ] Parent integrate modelcommits; reconcile sharedbuilderdispatch/runtime/tests/docs; privateStudio port independent from4323/4317. Import/build perworktree. Verify actualbase/gear/weapon/color/style extremes and defaultrestore; moving/fire/reload/melee actualStage2 captures; relevantregressions. No reference-onlymockups as gameplayevidence.
-- [ ] Readonly visual+code review; fixconcreteissues, update decisions/issues/checklist/specs; final comparison and limitations. Maincheckoutunchanged evidence; no mainmerge/push.
+- [x] Goose agent: own goose-clean.glb/.import, goose.tres, standalone build/validate_goose_clean.py, GooseCleanCheck/.tscn/.uid and speciesStudioQA/doc. Keep recognizable tallbody/slimmerbill; refine billroot/eye, featherhand grips, ankle/webbedfoot. Preserve bodyfacemasksurface ifneeded ratherthan breaking shader. Capture Blenderbeforeafter/profile and signalready forGPUqueue.
+- [x] Duck agent: analogous duckfiles; lowwidebill/shortbroadbody contrast togoose, shalloweyes, shapedwingtips andflatwebbedfeet. Preserve savedface/billstyles, materials/pivots. No goosefileedits.
+- [x] Tiger agent: own tiger_clean.py build(api) module dispatched from animal(kind), tiger.glb, independent validation/test/doc. Flattenjoinedmuzzle, smallalmond eyes, patterned continuous body(no raisedtubular tattoo stripes), cuppedroundears, taperedsmallhands andflatpaw/ankle. Reuse lion fixedpaw childcontract ifappropriate; parent coordinates CharacterWeaponGrip whitelist. Preserve palette names including ink/secondary mapping, moduleIDs and armed/hunter contracts. OtherGLBs unchanged.
+- [x] Parent rhino: rhino_clean.py analogous; broadhead/heavyjaw+distincthorn, small eyes andears, stocky continuous torso, compactthickhands, toe/flatsole definition; preserve speciesheft withoutspherical parts. Existing combat remains.
+- [x] Parent integrate modelcommits; reconcile sharedbuilderdispatch/runtime/tests/docs; privateStudio port independent from4323/4317. Import/build perworktree. Verify actualbase/gear/weapon/color/style extremes and defaultrestore; moving/fire/reload/melee actualStage2 captures; relevantregressions. No reference-onlymockups as gameplayevidence.
+- [x] Readonly visual+code review; fixconcreteissues, update decisions/issues/checklist/specs; final comparison and limitations. Maincheckoutunchanged evidence; no mainmerge/push.
 
 ## Verification focus
 - Preserve each species' namedpivots/material channels and source hashes; no unrelatedasset overwrite. Baseline andfinalsamecamera lighting silhouette/neutral/color views.
@@ -33,3 +33,6 @@
 
 ## Tools
 Blender C:/Util/Blender Foundation/Blender 5.2/blender.exe; Godot D:/Util/Godot/Godot_v4.7.2-stable_mono_win64/Godot_v4.7.2-stable_mono_win64_console.exe; Python D:/Util/Python314/python.exe; powershell loginfalse; explicitworkdirfor everycommand. Primary's originalreference images onlyreadonly ifneeded, artguidescaptureapproveddirection.
+
+## Result
+Completed in isolated integration branch; see doc/four-species-art.md for exact validation, review fixes and remaining art/playtest limits. No main merge or remote push.

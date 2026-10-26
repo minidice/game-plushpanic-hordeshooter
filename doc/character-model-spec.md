@@ -312,3 +312,7 @@ node prototypes/character-lab/tools/validate-game-roster.mjs
 ## 플레이어 오리 조형 후속 (2026-10-26)
 
 `duck.tres`는 새 `duck-clean.glb`를 읽는다. 독립 Blender 생성기 `build_duck_clean.py`가 읽기 전용 `duck-fitted.glb`를 입력으로 부리·눈·눈썹·날개·발 메시만 수정한다. 몸통 정점과 마스크 좌표, 전체 피벗/부모, 재질 채널과 장비는 동일하다. 날개는 기존 `CharacterGripSurface`의 변형 메시를 계속 사용하며 새 손/전완 런타임 경로를 추가하지 않는다. 발은 두 채널의 닫힌 단일 연결 표면으로 재구성한다. [검사·제약](duck-clean-forms.md).
+
+### 조류 얼굴 표시 진폭 (2026-10-26)
+
+거위/오리 clean 모델의 얼굴 Head는 연속 torso와 분리되어 있다. 기존 최대140mm 얼굴 이동이 눈을 몸 안에 넣으므로 두 종 리소스의 `HeadSpringScale=0.05`로 표시만 제한한다. 피벗/몸 마스크 좌표·커스텀 저장과 다른 종 스프링은 그대로다. `BirdFaceVisibilityCheck`와 같은 실제 Stage2 캡처에서 가속·반전·정지·사격 중 눈 노출을 확인했다. [통합 검수](four-species-art.md).

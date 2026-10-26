@@ -4,6 +4,7 @@ import math
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[3]
+bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.gltf(filepath=str(ROOT/'game/assets/common-monsters/tiger.glb'))
 objects=bpy.data.objects
 checks=0
