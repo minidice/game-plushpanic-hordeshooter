@@ -117,7 +117,7 @@ public partial class ToyTrain : Node3D
         _smoke = _model.FindChild("Smoke", true, false) as Node3D;
         // The model's front is −Z (I-88): look along the track.
         LookAt(GlobalPosition + Direction, Vector3.Up);
-        Stage.Sfx.PlayAt("honk", GlobalPosition + Vector3.Up, 2, 1.6f);
+        Stage.Sfx.PlayAt("honk_ability", GlobalPosition + Vector3.Up, 2, 1.6f);
     }
 
     public override void _PhysicsProcess(double delta)
@@ -203,7 +203,7 @@ public partial class JackBox : Node3D
         Popped = true;
         _model.Position = Vector3.Zero;
         var at = GlobalPosition;
-        Stage.Sfx.PlayAt("honk", at + Vector3.Up, 6, 1.3f);
+        Stage.Sfx.PlayAt("honk_ability", at + Vector3.Up, 6, 1.3f);
         Stage.Effects.Puff(at + Vector3.Up * .8f, PopRadius, new Color("ffd23f"));
         Stage.Effects.FloatingText(at + Vector3.Up * 2.6f, Loc.Text("fx_card_jack_box"), new Color("ffd23f"));
         if (By == null) return;

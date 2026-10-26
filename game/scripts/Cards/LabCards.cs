@@ -635,7 +635,7 @@ public partial class LabCards : Node
     {
         Honks++;
         var at = who.GlobalPosition;
-        Stage.Sfx.PlayAt("honk", at + Vector3.Up, 6, .8f);
+        Stage.Sfx.PlayAt("honk_ability", at + Vector3.Up, 6, .8f);
         Stage.Effects.Puff(at + Vector3.Up * .6f, HonkRadius, new Color("f3f4f1"));
         Stage.Effects.FloatingText(at + Vector3.Up * 2.8f, Loc.Text("fx_card_honk"), new Color("f3f4f1"));
         ShoveAround(at, HonkRadius, HonkPower, HonkDamage, null, who);
@@ -922,7 +922,7 @@ public partial class LabCards : Node
         var at = shooter.GlobalPosition;
         var aim = BeamAim;
         Beams++;
-        Stage.Sfx.PlayAt("honk", at + Vector3.Up, 10, .6f);
+        Stage.Sfx.PlayAt("honk_ability", at + Vector3.Up, 10, .6f);
         Stage.Effects.FloatingText(at + Vector3.Up * 3f, Loc.Text("fx_card_honk_beam"), new Color("ffd23f"));
         _view?.Flash(at, aim);
         float half = Mathf.DegToRad(VisionSystem.NormalHalfAngle);

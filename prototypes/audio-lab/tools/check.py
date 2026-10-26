@@ -58,7 +58,7 @@ def main():
     assert "autoplay" not in page
     for link in re.findall(r'(?:src|href)="([^"]+)"', page):
         assert (ROOT / "output" / link).is_file(), f"Broken preview link: {link}"
-    print("AUDIO_PILOT_CHECK_PASS 7 source hashes; 6 candidates; 9 RMS-matched clips; 11 listen captures; preview links")
+    print(f"AUDIO_PILOT_CHECK_PASS {len(manifest['files'])} source hashes; 6 candidates; 9 RMS-matched clips; 11 listen captures; preview links")
 
 
 if __name__ == "__main__":

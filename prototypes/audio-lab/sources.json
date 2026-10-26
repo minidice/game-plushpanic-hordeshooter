@@ -83,6 +83,30 @@
       "retrieved": "2026-10-27",
       "sha256": "7642a4fd43e547afe4f7adfadb3dabb681c0ff512f52c1674bae30a726841faf",
       "note": "Selected soft impacts; archive License.txt retained. Source page labels the pack as impact/foley."
+    },
+    {
+      "file": "kenney-impactWood_heavy_000.ogg",
+      "author": "Kenney",
+      "title": "Impact Sounds",
+      "page": "https://kenney.nl/assets/impact-sounds",
+      "download": "https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "retrieved": "2026-10-27",
+      "sha256": "15ff82332f342c30e469215539e1cc57e11b221aa2cf7e11e811d313a9927f3d",
+      "note": "Wood impact selected from the same CC0 archive; used with soft body impact."
+    },
+    {
+      "file": "air-release-preview.mp3",
+      "author": "davidlay1",
+      "title": "Air release",
+      "page": "https://freesound.org/people/davidlay1/sounds/416080/",
+      "download": "https://cdn.freesound.org/previews/416/416080_7175960-hq.mp3",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "retrieved": "2026-10-27",
+      "note": "Public HQ MP3 preview of a recorded shaving-cream can edited as pressure release. Not the original WAV; used as designed balloon air, not an actual balloon recording.",
+      "sha256": "e9f3f979e8640b12ac7908db628c4281ec03cec0c7567b51a05a12047b77d52e"
     }
   ]
 }

@@ -8,14 +8,16 @@ using System.Threading.Tasks;
 
 namespace HordeShooter.Tests;
 
-/// <summary>Test-only current-mixer capture. The capture precedes a quiet monitor effect;
-/// no game setting is saved and no candidate replaces a production sound.</summary>
+/// <summary>Test-only current-mixer capture. Capture precedes the quiet device monitor;
+/// the quality scene also enforces the final output ceiling. No setting is saved.</summary>
 public partial class AudioPilotCapture : Node
 {
     private AudioEffectCapture _capture = null!;
     private Stage _stage = null!;
     private readonly List<object> _reports = new();
-    private readonly string _out = ProjectSettings.GlobalizePath("res://output/audio-pilot");
+    [Export] public string OutputFolder { get; set; } = "audio-pilot";
+    [Export] public bool EnforceCeiling { get; set; }
+    private string _out => ProjectSettings.GlobalizePath("res://output/" + OutputFolder);
 
     public override async void _Ready()
     {
@@ -31,7 +33,9 @@ public partial class AudioPilotCapture : Node
             File.WriteAllText(Path.Combine(_out, "capture.json"), JsonSerializer.Serialize(new
             {
                 capturedUtc = DateTime.UtcNow, passed = !failed,
-                note = "Current Sfx and Stage listener; Ambience muted; capture before -80 dB monitor attenuation. PCM is clamped only on export; pre-PCM peaks are reported. No candidates applied.",
+                note = "Current Sfx and Stage listener; Ambience muted; capture before -80 dB monitor attenuation. PCM is clamped only on export; pre-PCM peaks are reported.",
+                enforceCeiling = EnforceCeiling,
+                loadedOverrides = _stage?.Sfx.Overridden.OrderBy(id => id).ToArray(),
                 recordings = _reports
             }, new JsonSerializerOptions { WriteIndented = true }));
         }
@@ -84,6 +88,36 @@ public partial class AudioPilotCapture : Node
             _stage.Sfx.Play("shot_rifle");
             _stage.Sfx.PlayAt("honk", ear);
         });
+        if (EnforceCeiling)
+        {
+            foreach (string id in new[] { "honk_long", "balloon_inflate", "balloon_pop", "bull_bonk", "game_over", "stage_clear" })
+                await Capture(id, 2.2, () =>
+                {
+                    if (id is "game_over" or "stage_clear") _stage.Sfx.Play(id);
+                    else _stage.Sfx.PlayAt(id, ear + Vector3.Right * .5f);
+                });
+            foreach (string state in new[] { "helium", "muffled" })
+            {
+                AudioSetup.SetHelium(state == "helium");
+                AudioSetup.SetMuffled(state == "muffled");
+                await Capture("crowd-" + state, 2.2, () =>
+                {
+                    for (int i = 0; i < 6; i++) _stage.Sfx.PlayAt("zombie_die", ear + Vector3.Right);
+                    for (int i = 0; i < 4; i++) _stage.Sfx.PlayAt("groan", ear + Vector3.Left);
+                    _stage.Sfx.Play("shot_rifle");
+                    _stage.Sfx.Play("stage_clear");
+                });
+            }
+            AudioSetup.SetHelium(false);
+            AudioSetup.SetMuffled(false);
+            await Capture("full-combat-stress", 2.2, () =>
+            {
+                foreach (string id in new[] { "shot_rifle", "explosion", "zombie_hit", "zombie_die", "bull_bonk", "balloon_pop", "groan" })
+                    for (int i = 0; i < 8; i++) _stage.Sfx.PlayAt(id, ear + Vector3.Right * (.5f + i * .2f));
+                _stage.Sfx.Play("honk_ability", 10);
+                _stage.Sfx.Play("game_over");
+            });
+        }
         AudioServer.RemoveBusEffect(master, AudioServer.GetBusEffectCount(master) - 1);
         AudioServer.RemoveBusEffect(master, AudioServer.GetBusEffectCount(master) - 1);
     }
@@ -128,6 +162,8 @@ public partial class AudioPilotCapture : Node
         _reports.Add(new { name, rate, frames = frames.Count, duration = frames.Count / (double)rate,
             peakDb, rmsDb = 20 * Math.Log10(Math.Sqrt(sum / (frames.Count * 2))), overFullScaleSamples = over });
         GD.Print($"CAPTURE {name} peak={peakDb:0.0} dBFS over={over} frames={frames.Count}");
+        if (EnforceCeiling && (over != 0 || peakDb > -.8f))
+            throw new InvalidOperationException($"Output ceiling exceeded: {name} {peakDb:0.0} dBFS");
         await ToSignal(GetTree().CreateTimer(.2), SceneTreeTimer.SignalName.Timeout);
     }
 

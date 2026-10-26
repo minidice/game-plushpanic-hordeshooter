@@ -1,13 +1,13 @@
-# 사운드 규격 — 합성 효과음과 교체 가이드
+# 사운드 규격 — 녹음·합성 효과음과 교체 가이드
 
 > **대상**: 사람과 AI 에이전트 모두.
-> **구현**: `game/scripts/Audio/` — `Synth.cs`(합성기), `SoundRecipes.cs`(효과음 레시피 — 현재 SoundRecipes.All 기준43종), `Sfx.cs`(재생), `AudioSetup.cs`(버스)
-> **들어보기**: `./Start-Game.ps1 -Test`를 실행하면 모든 효과음이 `game/output/sounds/<id>.wav`로 저장됩니다.
+> **구현**: `game/scripts/Audio/` — `Synth.cs`(합성기), `SoundRecipes.cs`(전체 등록 목록), `Sfx.cs`(파일/합성 로딩·재생), `AudioSetup.cs`(버스)
+> **들어보기**: 현재 로더 음원은 Studio `/sounds`, 9종 비교는 `prototypes/audio-lab/output/index.html`. `./Start-Game.ps1 -Test`는 fallback 합성 레시피를 `game/output/sounds/<id>.wav`로 내보내므로 현재 교체 음원과 구별합니다.
 
 ## 핵심 원칙
 
-- 프로젝트에는 **음원 파일이 하나도 없습니다.** 모든 효과음은 장면이 열릴 때 코드로 합성됩니다(노이즈, 파형, 엔벨로프, 필터). 결정적 시드라서 매번 같은 소리가 납니다.
-- **교체는 파일 하나로 합니다.** `game/content/sounds/<id>.ogg`(또는 `.wav`, `.mp3`)를 넣으면 같은 ID의 합성음 대신 그 파일을 씁니다. 코드 수정은 필요 없습니다. 음량, 음정 흔들림, 동시 재생 수는 레시피 설정을 그대로 따릅니다.
+- 요청한 9종은 배포 WAV12개(변형 포함)를 사용합니다. 나머지 효과와 파일 누락 시 fallback은 코드로 합성합니다(노이즈, 파형, 엔벨로프, 필터). 합성 레시피는 결정적 시드이며 실행당 한 번 생성해 공유합니다.
+- **교체는 파일 하나로 합니다.** `game/content/sounds/<id>.ogg`(또는 `.wav`, `.mp3`)를 넣으면 같은 ID의 합성음 대신 그 파일을 씁니다(우선순위 ogg→wav→mp3). 음량, 음정 흔들림, 동시 재생 수는 레시피 설정을 따릅니다. `SoundDef.Variants > 1`이면 `<id>_2.wav`부터 지정 개수까지 추가 로드합니다. 단발 재생은 직전 변형을 연속 선택하지 않고, 누락 변형은 건너뛰며 대표 파일도 없으면 합성으로 돌아갑니다. `Stream(id)`/Studio는 대표 파일을 반환합니다.
 - **귀는 거위에 있습니다.** `AudioListener3D`가 카메라(34m 위)가 아니라 플레이어 머리 높이에 있습니다. 그래서 등 뒤 좀비 발소리는 뒤에서, 왼쪽 소나는 왼쪽에서 들립니다. 화면 오른쪽이 오른쪽 귀입니다.
 
 ## 효과음 목록 (ID → 언제)
@@ -25,7 +25,8 @@
 | | `lure_beep` | 유인 폭탄 삑. 터질 때가 가까울수록 음이 올라감 |
 | 플레이어 | `step` | 0.75m마다 발소리 (좌우 음정이 번갈아 바뀌어 뒤뚱거림). 발바닥 툭(150Hz) + 짧은 스침(0.9~3.2kHz). 레시피 -12dB, `NearCap`(실제 걷기 최대 약 -20dB, 휘두르기 약 -5dB, 소총 0dB). 150Hz 툭 소리만으로는 작은 스피커에서 거의 안 들려 스침을 더함. 분대원은 추가 -5dB. 바닥 재질(물·금속 등)별 발소리는 아직 없음 — 재질이 생기면 같은 크기로 구별만 되게 |
 | | `roll` `heal` `pickup` | 구르기 / 치료 완료 / 줍기 |
-| | `honk` `honk_long` | 피격 시 "꽥"(0.4초 쿨다운) / 쓰러질 때 |
+| | `honk` `honk_long` | 피격의 짧은 거위 반응(0.4초 쿨다운, 2변형) / 쓰러질 때 긴 반응 |
+| 무기·카드 | `honk_ability` | 꽥 무기, 꽥 장전·광선, 경적 소품. 피격용 `honk`와 분리한 기존 능력 합성음 |
 | 좀비 | `zombie_step` | 깨어 있는 좀비가 16m 안에서 움직일 때. 레시피 -17dB(최대 약 -24dB), `NearCap` |
 | | `groan` | 1.2~3.2초마다 22m 안의 깨어 있는 좀비 하나가 신음 |
 | | `zombie_hit` `zombie_die` | 맞고 살아남음 / 쓰러짐 |
@@ -34,16 +35,17 @@
 | | `bull_snort` `bull_bonk` | 황소 돌진 예고 / 충돌 |
 | 스테이지 | `ambience_loop` | 밤바람 배경음 (Ambience 버스) |
 | | `door` `alarm_loop` `shutter` | 문 / 크레센도·차 경보 동안 사이렌(**작게**: 레시피 -20dB, 평균 약 -24dB로 좀비 신음보다 작고 앰비언스보다 큼) / 셔터 열림 |
-| | `stage_clear` `game_over` | 클리어 팡파르 / "빠밤빠밤…" 게임 오버 |
+| | `stage_clear` `game_over` | 부드러운 상승 / 짧은 하강 악구 |
 | UI | `ui_click` | 메뉴 선택 |
 
 ## 버스와 상태 효과 (`AudioSetup.cs`)
 
 | 버스 | 내용 | 효과 |
 |---|---|---|
-| `SFX` | 모든 효과음 | **헬륨 중독** 중 PitchShift ×1.55 (모든 소리가 높아짐), **섬광 실명** 중 LowPass 550Hz (먹먹해짐) |
+| `SFX` | 공간·행동 효과음 | **헬륨 중독** 중 PitchShift ×1.55, **섬광 실명** 중 LowPass 550Hz |
 | `Ambience` | 배경음 | 상태 효과의 영향을 받지 않음 |
-| `Master` 직행 | `ear_ring`, `game_over`, `stage_clear`, `ui_click` | 귀 울림과 결과 효과음은 헬륨·먹먹함에 묻히지 않게 효과를 거치지 않음 (`SoundDef.Bus`) |
+| `Cues` → `Master` | `ear_ring`, `game_over`, `stage_clear`, `ui_click` | 상태효과를 우회하며 `SfxVolume`(효과음 볼륨·음소거)을 따름 |
+| `Master` | 전체 합산 | HardLimiter ceiling -1 dB, pre-gain 0 dB, release 0.1초. 반복 초기화에도 하나만 설치. sample peak 초과 방지이며 true-peak/외부 장치 왜곡 검사는 별도 |
 
 스테이지를 나가면(재시작, 메뉴) 두 효과 모두 꺼집니다.
 
@@ -55,7 +57,7 @@
 
 ## 알려진 제약
 
-- 합성음이라 실제 녹음보다 단순합니다. 총소리는 "펑" 계열이고, 좀비 신음은 톱니파 웅얼거림입니다. 실제 음원으로 바꾸려면 위 교체 방법을 쓰세요.
+- 요청한 9종은 아래 파일 교체본을 사용합니다. 나머지 총·환경·능력음 등과 파일 누락 시 fallback은 기존 합성 레시피입니다. 모든 소리가 실사 녹음으로 교체된 것은 아닙니다.
 - 3D 재생기는 40개를 공유합니다. 소리마다 동시 재생 수(`MaxVoices`)와 우선순위(`Priority`: 0 군중, 1 보통, 2 반드시 들려야 함)가 있습니다.
   - 자기 한도에 차면 가장 오래된 재생을 다시 쓰고(연사), 소나·신음처럼 `RestartWhenFull = false`인 소리는 새 소리를 건너뜁니다.
   - 재생기가 다 차면 우선순위가 같거나 낮은 소리의 자리를 가져옵니다. 그래서 좀비 군중 소리 때문에 내 총소리나 폭발음이 빠지지 않습니다.
@@ -68,10 +70,10 @@
 
 3D 효과음은 `UnitSize` 7m, 로그 감쇠다. Godot의 로그 감쇠는 **20·ln(7 / 거리)** dB라서 7m 안에서는 오히려 커진다: 1.5m에서 약 +30dB, 3m +17dB, 7m 0dB, 20m -21dB, 48m -39dB. 결과는 3D 소리의 상한(`MaxDb`, 기본 +3dB)에서 잘린다. 그래서 **가까운 3D 소리는 레시피 음량과 관계없이 +3dB 근처**가 된다.
 
-- 레시피의 `NearCap: true`는 상한을 그 소리의 음량으로 낮춰 “가까워도 레시피보다 커지지 않게” 한다. 현재 `step`, `zombie_step`, `alarm_loop`, `melee_swing`, `honk`.
+- 레시피의 `NearCap: true`는 상한을 그 소리의 음량(호출부 추가 dB 포함)으로 낮춘다. `step`, `zombie_step`, `alarm_loop`, `melee_swing`, 수렵단9종에 이어 `honk`, `honk_ability`, `honk_long`, `groan`, `zombie_hit`, `zombie_die`, `balloon_inflate`, `balloon_pop`, `bull_bonk`에 적용한다.
 - 사격음(`shot_*`)도 총구 위치의 3D 소리라 지금은 +3dB 상한에 붙어 있다(I-64).
 
-### 실제 출력 기준표 (`AudioMixCheck`, 창 모드, SFX 버스 최대값)
+### 과거 실제 출력 기준표 (2026-10-20, `AudioMixCheck`, 창 모드, SFX 버스 최대값)
 
 음량을 말할 때는 **소총 사격 = 0dB** 기준으로 몇 dB 아래인지로 말한다. 3dB는 “조금”, 6dB는 “확실히”, 10dB는 “절반 정도로 들림”.
 
@@ -114,6 +116,26 @@
 
 ## 사운드 품질 비교 시제품 — 2026-10-27 (A-26)
 
-[설계](features/effects-audio/sound-quality-pilot.md) · [제작/재현](../prototypes/audio-lab/README.md). 피격·신음·사망 각 A/B를 무료 CC0 소재로 편집한다. 후보는 `prototypes/audio-lab/candidates/`에 있어 실제 게임 override 폴더와 분리되며, 현재 게임 효과음은 여전히 기존 합성음이다. 원본의 출처·라이선스·해시는 `sources.json`, 편집 수치는 `recipes.json`에 남긴다.
+[설계](features/effects-audio/sound-quality-pilot.md) · [제작/재현](../prototypes/audio-lab/README.md). 먼저 피격·신음·사망 각 A/B를 무료 CC0 소재로 편집했다. 후보는 `prototypes/audio-lab/candidates/`에 보존한다. 원본의 출처·라이선스·해시는 `sources.json`, 시제품 편집 수치는 `recipes.json`에 남긴다. 시제품 단계에는 게임을 바꾸지 않았으며 이후 적용은 아래와 같다.
 
 `tests/AudioPilotCapture.tscn`은 현재 Stage 리스너/Sfx를 통한 0.5·3·8m 단독음, 군중 사망, 신음·사망·사격 겹침의 Master 출력을 측정한다. 결과는 `output/audio-pilot/capture.json`과 unclamped `.f32le`. 청취 자료는 같은 float 원본을 공통 감쇠해 생성한다. 캡처 성공은 원래 믹스의 0 dBFS 초과가 없다는 뜻이 아니며, 클리핑 수치와 별개다. 기존 `AudioMixCheck`는 SFX 일부 행동만 보므로 이 군중 중첩 조건의 대체 검사가 아니다.
+
+## 사운드 품질 9종 게임 적용 — 2026-10-27 (A-26)
+
+`game/content/sounds/`에 mono PCM16 48 kHz 12파일(9종+변형3)을 배포한다. `.import`는 무압축·정규화 없음. 전부 source sample peak ≤ -6 dBFS, 최대50 ms RMS 목표 -18 dBFS 중 더 낮은 게인으로 제작한다. 48 kHz 변환이 원본 품질을 복원하지는 않는다. [배포 레시피](../prototypes/audio-lab/release-recipes.json) · [파일별 출처/해시](../game/content/sounds/credits.json).
+
+| ID | 길이(초) | 재생 dB / pitch jitter / 동시수 | 내용 |
+|---|---:|---|---|
+| honk | .29 / .34 | -2 / .04 / 2 | A/B 거위 반응 |
+| honk_long | .72 | -2 / .03 / 1 | 긴 거위 발성 편집 |
+| groan | 1.22 / .98 | +2 / .05 / 3, 초과 생략 | 저음 목 울림/짧은 발성. 파일 자체가 작으므로 +2 dB가 증폭 과다라는 뜻은 아님 |
+| zombie_die | .53 / .40 | -4 / .05 / 3, 초과 생략 | 짧은 발성+낙하 |
+| balloon_inflate | .78 | 0 / .03 / 2 | 녹음된 공기 압력 소재를 팽창감으로 편집 |
+| balloon_pop | .30 | 0 / .04 / 3 | 공기 파열+짧은 충격 |
+| bull_bonk | .52 | +1 / .04 / 3 | 저음 충격+목재 접촉 |
+| game_over | 1.65 | -2 / 0 / 1 | 직접 합성한 감쇠 악기 하강 악구 |
+| stage_clear | 1.45 | -3 / 0 / 1 | 직접 합성한 감쇠 악기 상승 악구 |
+
+발성 종별 분리는 후속이다. 아직 모든 플레이어는 거위 반응을 공유한다. 거위/공기는 공개 MP3 미리듣기 소스이며 녹음·압축 한계가 남는다. 사용자 기준 게임의 음원은 추출하지 않았다.
+
+검사: `AudioQualityCheck`는 로딩/변형/상한/군중 동시수/버스/효과음 볼륨/limiter 중복을 확인한다. `AudioQualityCapture`는 같은 캡처 코드에 `EnforceCeiling=true`, 출력 폴더 `audio-quality`를 사용하여 20조건(단독거리9, 군중2, 추가6종, 헬륨/먹먹함, 복합 전투)을 측정한다. 실신호·프레임 수·유한값·0 dBFS 초과0·피크≤-0.8 dBFS 허용오차가 필요하다. Master 최종 캡처와 limiter 이전 SFX의 `AudioMixCheck` 값은 구분한다. [실제 실행 결과와 제약](features/effects-audio/log/002-art-sound-quality-rollout.md).

@@ -4,13 +4,16 @@ namespace HordeShooter;
 
 /// <summary>
 /// Audio buses, created in code so they can be tweaked without the editor:
-///   SFX      — all effects. Carries a pitch shifter (helium) and a low-pass (flashbang) that start disabled.
+///   SFX      — world effects. Carries a pitch shifter (helium) and a low-pass (flashbang) that start disabled.
 ///   Ambience — background loops, kept out of the helium/blind effects.
+///   Cues     — result/UI/ear cues, follows effects volume but bypasses state effects.
+///   Master   — final sample-peak protection; individual voices still need authored headroom.
 /// </summary>
 public static class AudioSetup
 {
     public const string SfxBus = "SFX";
     public const string AmbienceBus = "Ambience";
+    public const string CueBus = "Cues";
     public const int PitchEffect = 0;
     public const int MuffleEffect = 1;
 
@@ -34,6 +37,18 @@ public static class AudioSetup
             AudioServer.SetBusName(amb, AmbienceBus);
             AudioServer.SetBusSend(amb, "Master");
         }
+        if (AudioServer.GetBusIndex(CueBus) < 0)
+        {
+            AudioServer.AddBus();
+            int cues = AudioServer.BusCount - 1;
+            AudioServer.SetBusName(cues, CueBus);
+            AudioServer.SetBusSend(cues, "Master");
+        }
+        bool hasLimiter = false;
+        for (int i = 0; i < AudioServer.GetBusEffectCount(0); i++)
+            hasLimiter |= AudioServer.GetBusEffect(0, i) is AudioEffectHardLimiter;
+        if (!hasLimiter)
+            AudioServer.AddBusEffect(0, new AudioEffectHardLimiter { CeilingDb = -1, PreGainDb = 0, Release = .1f });
         SetHelium(false);
         SetMuffled(false);
         GameSettings.ApplyAudio();

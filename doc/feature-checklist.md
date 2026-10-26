@@ -1,7 +1,8 @@
 # 게임 기능 체크리스트
 
 
-- [ ] **A-26 사운드 품질 개선**: 무료 소재 3종 A/B 비교 시제품6개·현재 믹스11조건 캡처 완료. 최종 청음 선택·게임 적용·나머지 6종은 후속. [범위](features/effects-audio/sound-quality-pilot.md) · [작업 기록](features/effects-audio/log/001-art-sound-quality-pilot.md).
+- [x] **A-26 사운드 9종 적용**: 무료 CC0 소재 편집·결과 악구, 발성 변형3개, 공유 ID 분리, 근거리/군중 믹스·결과 볼륨 처리. [작업·검증](features/effects-audio/log/002-art-sound-quality-rollout.md).
+- [ ] **A-26 후속 청음**: 사용자 최종 음색 수락·종별 발성·장시간/실제 멀티플레이 환경, I-64 나머지 3D 상대 밸런스.
 > **2026-10-26부터 기록 방식이 바뀌었다**([decisions.md](decisions.md) T-26, [기록 문서 나누기](records-split-plan.md)). 새 기록의 본문 · 작업 기록은 [기능별 폴더](features/README.md)에 쓰고, 이 문서에는 짧은 줄만 추가한다. **이 문서의 기존 기록은 옮기지 않고 그대로 남아 있다**(앞으로만 새 구조, 6.4).
 
 ### 2026-10-25 캐릭터 아트 방향 정정
