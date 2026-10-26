@@ -13,8 +13,10 @@ public partial class HunterCombatCheck : Node
     private bool ParrotReview => OS.GetCmdlineUserArgs().Contains("--parrot-stage2");
     private bool LionReview => OS.GetCmdlineUserArgs().Contains("--lion-stage2");
     private bool ReindeerReview => OS.GetCmdlineUserArgs().Contains("--reindeer-stage2");
-    private bool Stage2Review => ReindeerReview || ParrotReview || LionReview || OS.GetCmdlineUserArgs().Contains("--eagle-stage2");
-    private string ReviewSpecies => ReindeerReview ? "reindeer" : LionReview ? "lion" : ParrotReview ? "parrot" : "eagle";
+    private bool RhinoReview => OS.GetCmdlineUserArgs().Contains("--rhino-stage2");
+    private bool TigerReview => OS.GetCmdlineUserArgs().Contains("--tiger-stage2");
+    private bool Stage2Review => RhinoReview || TigerReview || ReindeerReview || ParrotReview || LionReview || OS.GetCmdlineUserArgs().Contains("--eagle-stage2");
+    private string ReviewSpecies => RhinoReview ? "rhino" : TigerReview ? "tiger" : ReindeerReview ? "reindeer" : LionReview ? "lion" : ParrotReview ? "parrot" : "eagle";
     private Vector3 TestPoint(float x) => Stage2Review ? new(x+8, _stage.Tiers.GroundY(new(x+8,0,-2))+.05f, -2) : new(x,.05f,0);
     private sealed class Field : StageMap
     {
@@ -52,7 +54,7 @@ public partial class HunterCombatCheck : Node
                 ModeOverride=GameMode.Scenario,SquadOverride=0,ArrivalOverride=false,NextStageOverride=false};
             AddChild(_stage);await Frames(4);_stage.Player.ManualControl=true;
             if (Stage2Review) await ReviewApproach();
-            if (Stage2Review && OS.GetCmdlineUserArgs().Contains("--brow-review")) await ReviewBrows();
+            if (Stage2Review && (OS.GetCmdlineUserArgs().Contains("--brow-review") || OS.GetCmdlineUserArgs().Contains("--form-review"))) await ReviewBrows();
             foreach(string weapon in new[]{"club","knife"}) await Melee(weapon);
             await Bow();GD.Print("HUNTER_COMBAT_PASS "+_checks);
         }
@@ -87,9 +89,10 @@ public partial class HunterCombatCheck : Node
                 var focus = enemy.GlobalPosition + Vector3.Up * 1.1f;
                 camera.Transform = saved;
                 enemy.Rig.Face(camera.GlobalPosition - enemy.GlobalPosition);
-                if (variant == 0) { await Frames(2); await Shot("brows-game-distance"); }
+                string reviewLabel=OS.GetCmdlineUserArgs().Contains("--form-review")?"form":"brows";
+                if (variant == 0) { await Frames(2); await Shot(reviewLabel+"-game-distance"); }
                 camera.GlobalPosition = focus + (camera.GlobalPosition-focus).Normalized()*5;
-                camera.LookAt(focus); await Frames(2); await Shot("brows-close-"+variant);
+                camera.LookAt(focus); await Frames(2); await Shot(reviewLabel+"-close-"+variant);
                 enemy.QueueFree(); await Frames(2);
             }
         }

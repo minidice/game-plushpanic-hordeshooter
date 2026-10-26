@@ -173,6 +173,10 @@ def animal(kind):
     if kind=='eagle':return eagle()
     if kind=='lion':return lion()
     if kind=='reindeer':return reindeer()
+    if kind=='rhino':
+        sys.path.insert(0,str(Path(__file__).resolve().parent))
+        from rhino_clean import build
+        return build(sys.modules[__name__])
     c=colors(kind);root,deform,head,left,right,arms=frame(kind)
     bird=kind in ['eagle','parrot']
     oval('plush_torso',(0,0,.78),(.38,.31,.49),c['primary'],deform,20,12)

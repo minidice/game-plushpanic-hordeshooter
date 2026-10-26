@@ -6,7 +6,7 @@ namespace HordeShooter.Tests;
 public partial class LionLimbCheck : Node
 {
     private int _checks;
-    private string Species => OS.GetCmdlineUserArgs().Contains("--reindeer") ? "reindeer" : "lion";
+    private string Species => OS.GetCmdlineUserArgs().Contains("--rhino") ? "rhino" : OS.GetCmdlineUserArgs().Contains("--tiger") ? "tiger" : OS.GetCmdlineUserArgs().Contains("--reindeer") ? "reindeer" : "lion";
     private void Check([System.Diagnostics.CodeAnalysis.DoesNotReturnIf(false)] bool ok,string message) { if(!ok)throw new Exception(message);_checks++; }
     private static Vector3[] Vertices(MeshInstance3D mesh) => Enumerable.Range(0,mesh.Mesh.GetSurfaceCount()).SelectMany(i=>mesh.Mesh.SurfaceGetArrays(i)[(int)Mesh.ArrayType.Vertex].AsVector3Array()).ToArray();
     private static float SurfaceDistance(MeshInstance3D mesh,Vector3 point)
@@ -60,7 +60,8 @@ public partial class LionLimbCheck : Node
                     var forearm=paw.GetNode<MeshInstance3D>("Forearm");
                     var shoulder=(Node3D)rig.Model.FindChild("common_"+Species+"_"+side+"Arm",true,false);
                     var wrist=paw.GetNode<Node3D>("Wrist");
-                    float shoulderDistance=SurfaceDistance(forearm,shoulder.GlobalPosition);
+                    var shoulderMarker=shoulder.GetNodeOrNull<Node3D>("common_"+Species+"_"+side+"Shoulder");
+                    float shoulderDistance=SurfaceDistance(forearm,shoulderMarker?.GlobalPosition??shoulder.GlobalPosition);
                     Check(shoulderDistance<.10f,$"forearm surface meets anatomical shoulder: {weapon}/{side} {shoulderDistance:F5} size={pawSize}");
                     Check(SurfaceDistance(forearm,wrist.GlobalPosition)<.10f,"forearm surface meets actual paw wrist");
                 }

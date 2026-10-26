@@ -15,7 +15,7 @@ import bpy
 spec=importlib.util.spec_from_file_location('common_builder',Path(__file__).with_name('build_common_monsters.py'))
 build=importlib.util.module_from_spec(spec);spec.loader.exec_module(build)
 parser=argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--species',choices=['parrot','eagle','lion','reindeer','zombie'],default='parrot')
+parser.add_argument('--species',choices=['parrot','eagle','lion','tiger','reindeer','rhino','zombie'],default='parrot')
 parser.add_argument('--review-name',help='Optional local evidence folder name')
 parser.add_argument('--capture-baseline',action='store_true')
 parser.add_argument('--label',default='after')
