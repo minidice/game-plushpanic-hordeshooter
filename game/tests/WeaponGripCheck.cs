@@ -17,9 +17,9 @@ public partial class WeaponGripCheck : Node
                 Require(rig.Model.FindChild(species+"_leftArm",true,false) is Node3D{Visible:false} && rig.Model.FindChild(species+"_rightArm",true,false) is Node3D{Visible:false},"static wings hidden while weapon is held");count++;
                 if(id=="m4")
                 {
-                    Require(rig.Weapon.Position.X>.4f&&!rig.UsesSupportGrip&&gun.LeftGrip is {Visible:false},species+" rifle held at side with spare wing free");count++;
+                    Require(gun.StockContact!=null&&rig.UsesSupportGrip&&gun.LeftGrip is {Visible:true},species+" shared shouldered rifle with support hand");count++;
                     rig.SetLocomotionPose(.2f,1,false);rig.Animate(.016f,1,0,0,Vector3.Zero);
-                    Require(rig.IsRunningCarry&&rig.Weapon.Basis.Z.Y>.7f&&rig.GripConnectionError<.002f,species+" run raises barrel while retaining grip");count++;
+                    Require(rig.IsRunningCarry&&rig.Weapon.Basis.Z.Y<-.3f&&rig.GripConnectionError<.002f,species+" run lowers barrel while retaining grip");count++;
                     rig.SetLocomotionPose(.016f,1,true);
                     Require(!rig.IsRunningCarry&&Math.Abs(rig.Weapon.Basis.Z.Y)<.001f&&rig.GripConnectionError<.002f,species+" firing lowers muzzle before shot update");count++;
                 }

@@ -29,7 +29,9 @@ public partial class CharacterRig
         BindHunterBowGeometry();
         _leftGripHome=built.LeftGrip?.Transform??Transform3D.Identity;
         _meleePoseTime=-1;
-        _supportGrip=built.Definition.Dual||built.Definition.Category==WeaponCategory.Heavy || (CommonAnimalArms && built.LeftGrip != null && built.Definition.Category != WeaponCategory.Melee);
+        _supportGrip=built.Definition.Dual||built.Definition.Category==WeaponCategory.Heavy ||
+            (HasAnimalArms&&built.LeftGrip!=null&&built.Pose is WeaponVisual.PoseFamily.Shouldered or WeaponVisual.PoseFamily.Pistol) ||
+            (CommonAnimalArms && built.LeftGrip != null && built.Definition.Category != WeaponCategory.Melee);
         if(_supportGrip||built.Definition.Category==WeaponCategory.Melee)_runningCarry=0;
         if(built.LeftGrip!=null)built.LeftGrip.Visible=_supportGrip;
         // The authored feather/paw tips form the hand; the old spherical palms would cover them.
@@ -81,13 +83,13 @@ public partial class CharacterRig
         arm.Scale=new Vector3(HasAnimalArms?1.45f:1,1,.72f);return arm;
     }
 
-    /// <summary>Gameplay supplies intent before shooting so a running muzzle is lowered before a shot is emitted.</summary>
+    /// <summary>Gameplay supplies intent before shooting so the carry muzzle returns to aim before emission.</summary>
     public void SetLocomotionPose(float dt,float movement,bool firing)
     {
-        bool canRaise=_heldWeapon!=null&&!_supportGrip&&_heldWeapon.Definition.Category!=WeaponCategory.Melee;
+        bool canCarry=_heldWeapon!=null&&(_heldWeapon.Pose is WeaponVisual.PoseFamily.Shouldered or WeaponVisual.PoseFamily.Pistol||!_supportGrip)&&_heldWeapon.Definition.Category!=WeaponCategory.Melee;
         _aimHold=firing?.18f:Mathf.Max(0,_aimHold-dt);
         bool aiming=firing||_aimHold>0;
-        float target=canRaise&&movement>.25f&&!aiming&&!ReloadPoseActive?1:0;
+        float target=canCarry&&movement>.25f&&!aiming&&!ReloadPoseActive?1:0;
         _runningCarry=aiming?0:Mathf.MoveToward(_runningCarry,target,dt*7);
         ApplyCarryPose(_carryKick);UpdateWeaponGrip();
     }
@@ -99,6 +101,7 @@ public partial class CharacterRig
         var def=_heldWeapon.Definition;
         if(def.Id=="woodbow"){ApplyHunterBowCarryPose();return;}
         if(def.Category==WeaponCategory.Melee){ApplyMeleeCarryPose();return;}
+        if(ApplySharedWeaponPose(kick))return;
         Vector3 at=def.Dual?new Vector3(0,.94f,.42f):_supportGrip?new Vector3(.12f,.91f,.43f):new Vector3(.54f,1.22f,.65f);
         at+=new Vector3(0,_runningCarry*.14f,-_runningCarry*.12f-kick*.065f);
         Weapon.Position=at;

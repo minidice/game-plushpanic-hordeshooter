@@ -5,6 +5,7 @@
 
 [resource]
 script = ExtResource("1_def")
+WeaponShoulderOffset = Vector3(0.005, 0.23, -0.05)
 Id = "goose"
 DisplayName = "name_character_goose"
 Description = "desc_character_goose"

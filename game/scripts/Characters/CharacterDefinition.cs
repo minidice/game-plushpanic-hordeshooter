@@ -49,6 +49,8 @@ public partial class CharacterDefinition : Resource
     [Export] public string RightFootNode { get; set; } = "";
     [Export] public string WeaponNode { get; set; } = "";
     [Export] public string MuzzleNode { get; set; } = "";
+    /// <summary>Legacy Arm-pivot to anatomical shoulder, mirrored on X for the left side. Explicit Shoulder markers take priority.</summary>
+    [Export] public Vector3 WeaponShoulderOffset { get; set; } = Vector3.Zero;
     /// <summary>Equipment parts (helmet, vest, pack). Hidden on the zombie version of this character.</summary>
     [Export] public string[] GearNodes { get; set; } = System.Array.Empty<string>();
     /// <summary>The gun that is part of the model. Hidden when the game attaches its own weapon, and on zombies.</summary>

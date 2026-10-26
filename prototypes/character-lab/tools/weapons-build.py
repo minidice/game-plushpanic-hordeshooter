@@ -7,6 +7,7 @@ import bpy
 import csv
 import json
 import math
+import sys
 from pathlib import Path
 from mathutils import Vector
 
@@ -273,6 +274,7 @@ records=[]; roots=[]
 families={'pistol':'pistol','smg':'compact smg','assault_rifle':'rifle','shotgun':'pump shotgun','bolt_sniper':'scoped sniper','dmr':'scoped sniper','lmg':'light machine gun','rocket_launcher':'rocket launcher','mortar':'mortar'}
 for row in rows:
     if row['type']=='melee': continue
+    if '--stocked-only' in sys.argv and row['type'] not in ['smg','assault_rifle','shotgun','bolt_sniper','dmr','lmg']: continue
     parts=[]
     scale=float(row['length_m'] or types[row['type']]['length_m'])
     ident=row['id']; kind=row['type']
@@ -307,8 +309,14 @@ for row in rows:
     muzzle=bpy.data.objects.new('Muzzle',None); bpy.context.collection.objects.link(muzzle)
     muzzle.location=V((0,.74,.62) if kind=='mortar' else (0,.08 if kind=='rocket_launcher' else .045 if kind=='pistol' else .038,1))
     muzzle.parent=root
+    stock_contact=None
+    if kind in ['smg','assault_rifle','shotgun','bolt_sniper','dmr','lmg']:
+        # Centre of the actual butt-pad rear face authored by stock(), in the same scaled coordinates.
+        stock_contact=bpy.data.objects.new('StockContact',None);bpy.context.collection.objects.link(stock_contact)
+        stock_contact.location=V((0,-.012,-.2325 if kind=='smg' else -.3525));stock_contact.parent=root
     bpy.ops.object.select_all(action='DESELECT')
     root.select_set(True); muzzle.select_set(True)
+    if stock_contact: stock_contact.select_set(True)
     for mesh in meshes: mesh.select_set(True)
     bpy.ops.export_scene.gltf(filepath=str(ASSETS/(ident+'.glb')),export_format='GLB',use_selection=True,export_yup=True,export_extras=True,export_animations=False)
     triangles=0
@@ -318,6 +326,7 @@ for row in rows:
     roots.append(root)
     # Subsequent exports must also have an exact Muzzle node name.
     muzzle.name=ident+'_Muzzle'
+    if stock_contact: stock_contact.name=ident+'_StockContact'
 
 # Preserve every CSV cell except model, including original comments and blanks.
 modelcol=original.splitlines()[0].split(',').index('model')

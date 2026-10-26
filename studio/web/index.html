@@ -12,7 +12,7 @@
         <div class="canvas"><img id="preview" alt="캐릭터 실제 게임 렌더" hidden><div id="placeholder">로컬 게임을 불러오는 중입니다…</div><span id="pending" hidden>변경 사항 렌더 중</span></div>
         <div class="preview-bottom"><div><h2 id="character-name">캐릭터</h2><p id="character-source">현재 작업 폴더의 게임 데이터</p></div><button id="reset">기본 모습으로</button></div>
         <div class="camera-controls"><label>회전 <input id="rotation" type="range" min="-180" max="180" value="-18"><output id="rotation-value">−18°</output></label><label>확대 <input id="zoom" type="range" min="0.75" max="1.45" step="0.01" value="1.15"><output id="zoom-value">1.15×</output></label></div>
-        <div class="visibility"><label><input id="gear" type="checkbox" checked> 장비 표시</label><label><input id="weapon" type="checkbox"> 무기 표시</label><span>게임 메뉴와 같은 조명 · 정지 화면</span></div>
+        <div class="visibility"><label><input id="gear" type="checkbox" checked> 장비 표시</label><label><input id="weapon" type="checkbox"> 무기 표시</label><label>무기 <select id="weapon-choice"></select></label><span>게임 메뉴와 같은 조명 · 정지 화면</span></div>
       </section>
       <aside class="editor"><div class="editor-head"><p class="eyebrow">APPEARANCE</p><h2>조합해 보기</h2><div id="species" class="species" aria-label="종 선택"></div></div><div id="tabs" class="tabs" role="tablist" aria-label="커스터마이징 부위"></div><div id="fields" class="fields" role="tabpanel"></div><p class="editor-note">이 화면에서만 바뀝니다.<br>게임 설정과 저장 파일은 변경하지 않습니다.</p></aside>
     </div>

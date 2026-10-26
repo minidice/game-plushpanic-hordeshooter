@@ -98,7 +98,8 @@ public partial class StudioPreview : Node
                 ReplaceRig(def);
                 _rig!.ApplyAppearance(profile);
                 _rig.HideBuiltInWeapon();
-                var weapon = WeaponVisual.Build(ArmoryCatalog.Weapon("m4"), _rig.HandColor);
+                string weaponId = data.TryGetProperty("weapon_id", out var chosenWeapon) ? chosenWeapon.GetString()! : "m4";
+                var weapon = WeaponVisual.Build(ArmoryCatalog.Weapon(weaponId), _rig.HandColor);
                 _rig.Weapon.AddChild(weapon.Root);
                 _rig.BindWeaponGrip(weapon);
                 _rig.SetPreviewVisibility(data.GetProperty("gear").GetBoolean(), data.GetProperty("weapon").GetBoolean());
@@ -114,7 +115,8 @@ public partial class StudioPreview : Node
                 for (int i = 0; i < 3; i++) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
                 await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
                 using var image = _viewport.GetTexture().GetImage();
-                Send(new { id, result = new { png = Convert.ToBase64String(image.SavePngToBuffer()), species } });
+                Send(new { id, result = new { png = Convert.ToBase64String(image.SavePngToBuffer()), species,
+                    weapon_id = weaponId, pose_family = weapon.Pose.ToString() } });
             }
             else throw new ArgumentException("Unknown Studio method");
         }

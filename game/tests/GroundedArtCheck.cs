@@ -38,7 +38,7 @@ public partial class GroundedArtCheck : Node
                 var built=WeaponVisual.Build(ArmoryCatalog.Weapon("m4"),rig.HandColor);rig.Weapon.AddChild(built.Root);rig.BindWeaponGrip(built);rig.HideBuiltInWeapon();
                 var arm=(MeshInstance3D)rig.FindChild("RightForearm",true,false)!;
                 bool rigidPaw=arm is CharacterLionPaw;
-                Check(arm.Mesh is ArrayMesh&&(bird?arm.MaterialOverride is ShaderMaterial:rigidPaw&&arm.Mesh==Part("rightPaw_mesh").Mesh&&arm.GetNode<MeshInstance3D>("Forearm").Mesh==Part("rightArm_mesh").Mesh),species+" held arm uses correct authored feather or rigid paw plus forearm");
+                Check(arm.Mesh is ArrayMesh&&(bird?arm.MaterialOverride is ShaderMaterial:rigidPaw&&arm.Mesh==Part("rightPaw_mesh").Mesh&&arm.GetNode<MeshInstance3D>("Forearm").Mesh.ResourcePath.Contains("mammal-arm-segments")&&arm.GetNode<MeshInstance3D>("UpperArm").GetActiveMaterial(0)==Part("rightArm_mesh").GetActiveMaterial(0)),species+" held arm uses correct authored feather or rigid paw plus forearm");
                 var edited=CharacterRig.Create(def);AddChild(edited);edited.ApplyAppearance(new AppearanceProfile{WingSize=1.25f,BodyWidth=.88f,BodyHeight=1.1f});
                 var editedGun=WeaponVisual.Build(ArmoryCatalog.Weapon("m4"),edited.HandColor);edited.Weapon.AddChild(editedGun.Root);edited.BindWeaponGrip(editedGun);
                 var editedArm=(MeshInstance3D)edited.FindChild("RightForearm",true,false)!;

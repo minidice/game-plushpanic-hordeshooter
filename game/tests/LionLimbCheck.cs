@@ -9,7 +9,7 @@ public partial class LionLimbCheck : Node
     private string Species => OS.GetCmdlineUserArgs().Contains("--rhino") ? "rhino" : OS.GetCmdlineUserArgs().Contains("--tiger") ? "tiger" : OS.GetCmdlineUserArgs().Contains("--reindeer") ? "reindeer" : "lion";
     private void Check([System.Diagnostics.CodeAnalysis.DoesNotReturnIf(false)] bool ok,string message) { if(!ok)throw new Exception(message);_checks++; }
     private static Vector3[] Vertices(MeshInstance3D mesh) => Enumerable.Range(0,mesh.Mesh.GetSurfaceCount()).SelectMany(i=>mesh.Mesh.SurfaceGetArrays(i)[(int)Mesh.ArrayType.Vertex].AsVector3Array()).ToArray();
-    private static float SurfaceDistance(MeshInstance3D mesh,Vector3 point)
+    internal static float SurfaceDistance(MeshInstance3D mesh,Vector3 point)
     {
         // Contact is with the triangle surface, not only its perimeter vertices (wide capped shoulders).
         var faces=mesh.Mesh.GetFaces();float distance=float.PositiveInfinity;
@@ -61,7 +61,7 @@ public partial class LionLimbCheck : Node
                     var shoulder=(Node3D)rig.Model.FindChild("common_"+Species+"_"+side+"Arm",true,false);
                     var wrist=paw.GetNode<Node3D>("Wrist");
                     var shoulderMarker=shoulder.GetNodeOrNull<Node3D>("common_"+Species+"_"+side+"Shoulder");
-                    float shoulderDistance=SurfaceDistance(forearm,shoulderMarker?.GlobalPosition??shoulder.GlobalPosition);
+                    float shoulderDistance=SurfaceDistance(paw.GetNode<MeshInstance3D>("UpperArm"),shoulderMarker?.GlobalPosition??shoulder.GlobalPosition);
                     Check(shoulderDistance<.10f,$"forearm surface meets anatomical shoulder: {weapon}/{side} {shoulderDistance:F5} size={pawSize}");
                     Check(SurfaceDistance(forearm,wrist.GlobalPosition)<.10f,"forearm surface meets actual paw wrist");
                 }
@@ -81,12 +81,12 @@ public partial class LionLimbCheck : Node
                 pawSize=size;rig.ApplyAppearance(new AppearanceProfile{WingSize=size});rig.Animate(0,0,0,0,Vector3.Zero);Sample();
             }
             var status=StatusVisualController.Attach(rig);status.SetStates(new[]{new StatusVisualState("poison",5,1)});
-            foreach(var mesh in paws.SelectMany(p=>new[]{p,p.GetNode<MeshInstance3D>("Forearm")}))
+            foreach(var mesh in paws.SelectMany(p=>new[]{p,p.GetNode<MeshInstance3D>("Forearm"),p.GetNode<MeshInstance3D>("UpperArm"),p.GetNode<MeshInstance3D>("RestArm")}))
                 Check(mesh.GetNode<MeshInstance3D>("StatusSurface").Mesh==mesh.Mesh,"status uses paw and forearm actual surfaces");
-            rig.FlashDeath();foreach(var mesh in paws.SelectMany(p=>new[]{p,p.GetNode<MeshInstance3D>("Forearm")}))Check(mesh.MaterialOverlay!=null,"hit flash includes paw and forearm");
+            rig.FlashDeath();foreach(var mesh in paws.SelectMany(p=>new[]{p,p.GetNode<MeshInstance3D>("Forearm"),p.GetNode<MeshInstance3D>("UpperArm"),p.GetNode<MeshInstance3D>("RestArm")}))Check(mesh.MaterialOverlay!=null,"hit flash includes paw and forearm");
             status.Clear();rig.Weapon.Visible=false;rig.UpdateWeaponGrip();Check(paws.All(p=>!p.IsVisibleInTree()),"holster hides complete limbs");
             rig.Weapon.Visible=true;rig.UpdateWeaponGrip();rig.ShowAs(VisionSystem.Visibility.Hidden);Check(paws.All(p=>!p.IsVisibleInTree()),"hidden limbs do not leak");
-            rig.ShowAs(VisionSystem.Visibility.Silhouette);foreach(var mesh in paws.SelectMany(p=>new[]{p,p.GetNode<MeshInstance3D>("Forearm")}))Check(mesh.MaterialOverride==CharacterRig.SilhouetteMaterial,"silhouette includes both surfaces");
+            rig.ShowAs(VisionSystem.Visibility.Silhouette);foreach(var mesh in paws.SelectMany(p=>new[]{p,p.GetNode<MeshInstance3D>("Forearm"),p.GetNode<MeshInstance3D>("UpperArm"),p.GetNode<MeshInstance3D>("RestArm")}))Check(mesh.MaterialOverride==CharacterRig.SilhouetteMaterial,"silhouette includes both surfaces");
         } finally {rig.Free();}
     }
 }

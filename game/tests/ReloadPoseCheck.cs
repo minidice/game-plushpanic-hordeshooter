@@ -36,8 +36,8 @@ public partial class ReloadPoseCheck : Node
                 Check(pouch.DistanceTo(port)>.15f,$"{species}/{id}/{profile}: hand travels between pouch and gun");
                 int ammo=state.Mag;state.CancelReload();
                 rig.SetLocomotionPose(0,0,true);rig.SetReloadPose(.2f,null);rig.Animate(0,0,0,0,Vector3.Zero);
-                Check(!rig.ReloadPoseActive && rig.Weapon.Transform.IsEqualApprox(idle) && built.LeftGrip.Transform.IsEqualApprox(leftHome) && !built.LeftGrip.Visible,
-                    $"{species}/{id}/{profile}: cancellation restores idle and hidden spare palm without drift");
+                Check(!rig.ReloadPoseActive && rig.Weapon.Transform.IsEqualApprox(idle) && built.LeftGrip.Transform.IsEqualApprox(leftHome) && built.LeftGrip.Visible == rig.UsesSupportGrip,
+                    $"{species}/{id}/{profile}: cancellation restores idle and support-hand visibility without drift");
                 Check(state.Mag==ammo,$"{species}/{id}/{profile}: pose never changes ammunition");
                 if(weapon.ShellReloadTime>0)
                 {

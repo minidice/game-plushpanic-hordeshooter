@@ -9,7 +9,12 @@ namespace HordeShooter;
 /// </summary>
 public static class WeaponVisual
 {
-    public sealed record Built(Node3D Root, List<Node3D> Muzzles, Node3D RightGrip, Node3D? LeftGrip, WeaponDefinition Definition);
+    public enum PoseFamily { Dedicated, Shouldered, Pistol, Dual }
+    public sealed record Built(Node3D Root, List<Node3D> Muzzles, Node3D RightGrip, Node3D? LeftGrip, WeaponDefinition Definition)
+    {
+        public Node3D? StockContact { get; init; }
+        public PoseFamily Pose { get; init; }
+    }
 
     public static Built Build(WeaponDefinition def, Color? handColor)
     {
@@ -33,7 +38,7 @@ public static class WeaponVisual
                 var grip = Grip(gun, side > 0 ? "GripRight" : "GripLeft", new Vector3(side * .035f, -.30f * def.Length, .04f * def.Length), handColor, side);
                 if(side > 0) rightGrip = grip; else leftGrip = grip;
             }
-            return new Built(root, muzzles, rightGrip!, leftGrip, def);
+            return new Built(root, muzzles, rightGrip!, leftGrip, def){Pose=PoseFamily.Dual};
         }
 
         if (def.LoadModel() is { } scene)
@@ -48,13 +53,22 @@ public static class WeaponVisual
         float l=def.Length;
         var right=new Vector3(.035f,-.09f*l,0);
         Vector3? left=new Vector3(-.035f,-.07f*l,.52f*l);
+        // Support the rear of the forend, leaving a bent support elbow with a shouldered stock.
+        if(def.Category is WeaponCategory.Rifle or WeaponCategory.Smg)left=new Vector3(-.035f,-.07f*l,.42f*l);
         if(def.Category==WeaponCategory.Pistol){right=new Vector3(.035f,-.30f*l,.04f*l);left=new Vector3(-.065f,-.31f*l,.075f*l);}
         else if(def.Category==WeaponCategory.Melee){right=new Vector3(.025f,0,.08f);left=null;}
         else if(def.Mode==FireMode.Lob){right=new Vector3(.10f*l,.17f*l,.05f*l);left=new Vector3(-.10f*l,.30f*l,.28f*l);}
         else if(def.Category==WeaponCategory.Heavy){right=new Vector3(.035f,-.09f*l,.16f*l);left=new Vector3(-.055f,-.02f*l,.46f*l);}
         rightGrip=Grip(root,"GripRight",right,handColor,1);
         if(left is {} support)leftGrip=Grip(root,"GripLeft",support,handColor,-1);
-        return new Built(root, muzzles, rightGrip, leftGrip, def);
+        bool stocked=def.Category is WeaponCategory.Smg or WeaponCategory.Rifle or WeaponCategory.Shotgun or WeaponCategory.Sniper or WeaponCategory.Lmg;
+        var contact=root.FindChild("StockContact",true,false) as Node3D;
+        if(stocked&&contact==null) {
+            // Procedural stock rear face. Imported models should author their own marker.
+            contact=new Node3D{Name="StockContact",Position=new Vector3(0,-.03f,-.25f)};root.AddChild(contact);
+        }
+        return new Built(root, muzzles, rightGrip, leftGrip, def){StockContact=contact,
+            Pose=stocked?PoseFamily.Shouldered:def.Category==WeaponCategory.Pistol?PoseFamily.Pistol:PoseFamily.Dedicated};
     }
 
     private static Node3D Gun(Node3D root, WeaponDefinition def)

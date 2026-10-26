@@ -55,9 +55,13 @@ public abstract partial class PlayerMammalCleanCheck : Node
                     // Inspect real vertices: a correct grip marker alone misses a stretched shoulder spike.
                     var shoulder=rig.Model.ToLocal(Part(k==0?"rightArm":"leftArm").GetParentNode3D().ToGlobal(new Vector3(k==0?.440f:-.440f,1.125f,.158f)));
                     var wrist=rig.Model.ToLocal(paw.GetNode<Node3D>("Wrist").GlobalPosition);
-                    var direction=wrist-shoulder;float length=direction.Length();
-                    var distances=Vertices(forearm).Select(v=>(rig.Model.ToLocal(forearm.ToGlobal(v))-shoulder).Dot(direction.Normalized())).ToArray();
-                    Check(distances.Min()>-.06f*size&&distances.Max()<length+.06f*size,$"forearm surface stays between anatomical shoulder and wrist: {weapon}/{k} size={size} min={distances.Min()} max={distances.Max()} length={length} shoulder={shoulder} wrist={wrist}");
+                    var elbow=rig.Model.ToLocal(paw.GetNode<Node3D>("Elbow").GlobalPosition);
+                    // Each real surface stays near its own anatomical endpoints; the whole arm now bends.
+                    foreach(var (section,from,to) in new[]{(paw.GetNode<MeshInstance3D>("UpperArm"),shoulder,elbow),(forearm,elbow,wrist)}) {
+                        var direction=to-from;float length=direction.Length();
+                        var distances=Vertices(section).Select(v=>(rig.Model.ToLocal(section.ToGlobal(v))-from).Dot(direction.Normalized())).ToArray();
+                        Check(distances.Min()>-.06f*size&&distances.Max()<length+.06f*size,$"arm section stays between its joints: {weapon}/{k} size={size} min={distances.Min()} max={distances.Max()} length={length}");
+                    }
                     Check(paw.GetActiveMaterial(0)==source.GetActiveMaterial(0),"owned source material follows live customization");
                 }
             }
@@ -89,7 +93,7 @@ public abstract partial class PlayerMammalCleanCheck : Node
             rig.SetPreviewVisibility(false,false);Check(!rig.WeaponArmsVisible&&Part("leftPaw_mesh").IsVisibleInTree(),"unarmed preview restores resting hands");
             rig.SetPreviewVisibility(true,true);Check(rig.WeaponArmsVisible&&!Part("leftPaw_mesh").IsVisibleInTree(),"equipped preview restores single active hands");
             var status=StatusVisualController.Attach(rig);status.SetStates(new[]{new StatusVisualState("burn",3)});
-            foreach(var mesh in paws.SelectMany(p=>new[]{p,p.GetNode<MeshInstance3D>("Forearm")}))Check(mesh.GetNode<MeshInstance3D>("StatusSurface").Mesh==mesh.Mesh,"status follows true hand and forearm");
+            foreach(var mesh in paws.SelectMany(p=>new[]{p,p.GetNode<MeshInstance3D>("Forearm"),p.GetNode<MeshInstance3D>("UpperArm"),p.GetNode<MeshInstance3D>("RestArm")}))Check(mesh.GetNode<MeshInstance3D>("StatusSurface").Mesh==mesh.Mesh,"status follows true hand and forearm");
             rig.FlashDeath();Check(paws.All(p=>p.MaterialOverlay!=null),"hit flash covers palms");
             rig.ShowAs(VisionSystem.Visibility.Hidden);Check(paws.All(p=>!p.IsVisibleInTree()),"hidden character has no orphan hands");
             rig.ShowAs(VisionSystem.Visibility.Visible);rig.ApplyAppearance(new AppearanceProfile());
