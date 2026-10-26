@@ -80,6 +80,8 @@
 
 거위 예시: `GearNodes = ["goose_helmet", "goose_beret", "goose_goggles", "goose_headset", "goose_vest", "goose_vestPadded", "goose_pack"]`, `BuiltInWeaponNode = "goose_weapon_mesh"`. 정적 날개·앞발은 `goose_leftArm`/`goose_rightArm`으로 분리한다. 무기를 장착하면 이 노드를 숨기고 손잡이에 연결되는 날개·앞발로 교체한다.
 
+2026-10-26 거위 현재 기본형은 `goose-clean.glb`이며 원본 `goose-fitted.glb`를 보존한다. 기존 노드/피벗·재질 채널·얼굴 마스크와 날개 무장 변형은 그대로 사용한다. [수정 메시 범위와 독립 재가져오기 검사](goose-clean-forms.md).
+
 외형 색상 채널은 `custom_body`, `custom_beak`, `custom_wing`, `custom_tail`, `custom_feet`, `custom_eyes`, `custom_hair`, `custom_hat`, `custom_vest`, `custom_pack` 재질 이름 접두사로 구분한다. 몸/꼬리는 원래 무늬를 보존하는 색조 곱셈이고 나머지는 선택색으로 교체한다. 새의 날개색이나 머리털 색을 지정하지 않으면 몸 색조를 따른다. 고글/헤드셋은 독립 착용, 조끼는 아래쪽을 감싸는 파우치형과 패딩형 중 선택한다. 종별 선택은 기존 외형 설정 파일에 저장한다.
 
 ## 3. 새 종 추가 절차 (예: 수달)
