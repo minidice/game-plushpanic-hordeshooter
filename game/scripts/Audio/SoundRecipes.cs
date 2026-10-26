@@ -11,7 +11,7 @@ namespace HordeShooter;
 /// <param name="NearCap">
 /// Positional only: never louder than <paramref name="VolumeDb"/>, however close. Godot's logarithmic falloff adds
 /// 20·ln(unit size / distance) — about +30 dB at the listener's feet — so without the cap a quiet recipe plays loud
-/// up close (I-63). Use it for frequent or constant sounds that must stay soft.
+/// up close (I-63/I-64). Enabled by default so authored and caller gains survive near the listener.
 /// </param>
 public sealed record SoundDef(
     string Id,
@@ -24,7 +24,7 @@ public sealed record SoundDef(
     int Priority = 1,
     bool RestartWhenFull = true,
     string Bus = AudioSetup.SfxBus,
-    bool NearCap = false,
+    bool NearCap = true,
     int Variants = 1);
 
 /// <summary>
@@ -55,7 +55,7 @@ public static class SoundRecipes
         new("shot_sniper", "저격총 발사", Sniper, 3, .04f, 3, Priority: 2),
         new("rocket_launch", "로켓 발사", RocketLaunch, 1, .05f, 3, Priority: 2),
         new("mortar_fire", "박격포 발사 (통 소리)", MortarFire, 0, .05f, 3),
-        new("mortar_whistle", "박격포탄 낙하 휘파람", MortarWhistle, -6, .03f, 4),
+        new("mortar_whistle", "박격포탄 낙하 휘파람", MortarWhistle, -6, .03f, 4, Priority: 2),
         // Played at the muzzle beside the listener: without the cap it rode the +3 dB ceiling like a gunshot.
         new("melee_swing", "근접 휘두르기", Swing, -1, .1f, 4, NearCap: true),
         new("pan_bong", "프라이팬 타격", PanBong, -1, .08f, 4),
@@ -76,9 +76,10 @@ public static class SoundRecipes
         new("hunter_bow_hit", "사냥꾼 화살 타격 (촉과 나무 진동)", HunterBowHit, -14, .05f, 3, NearCap: true),
 
         // ---------- explosions & throwables ----------
-        new("explosion", "폭발", Explosion, 4, .08f, 5, Priority: 2),
+        // Large blasts add +2 at the call site; keep that maximum at the former +3 near ceiling.
+        new("explosion", "폭발", Explosion, 1, .08f, 5, Priority: 2),
         new("glass_break", "화염병 깨짐", GlassBreak, -1, .08f, 3),
-        new("fire_loop", "불타는 소리 (반복)", FireLoop, -4, 0, 4, Loop: true),
+        new("fire_loop", "불타는 소리 (반복)", FireLoop, -4, 0, 4, Loop: true, Priority: 0, RestartWhenFull: false),
         new("flash_bang", "섬광탄 터짐", FlashBang, 3, .03f, 2),
         new("ear_ring", "귀 울림 (섬광 실명)", EarRing, -8, 0, 1, Priority: 2, Bus: AudioSetup.CueBus),
         new("lure_beep", "유인 폭탄 삑", s => Beep(s, 1760, .08f), -4, 0, 4, Priority: 2),
@@ -96,14 +97,15 @@ public static class SoundRecipes
         new("pickup", "줍기", s => Chime(s, new[] { 660f, 990f }, .16f, .05f), -8, .03f, 2),
 
         // ---------- zombies & specials ----------
-        new("zombie_step", "좀비 발소리 (질질, 작게)", ZombieStep, -17, .15f, 6, Priority: 0, NearCap: true),
+        new("zombie_step", "좀비 발소리 (질질, 작게)", ZombieStep, -17, .15f, 6, Priority: 0, RestartWhenFull: false, NearCap: true),
         new("groan", "좀비 신음 (목 울림)", Groan, 2, .05f, 3, Priority: 0, RestartWhenFull: false, NearCap: true, Variants: 2),
         new("zombie_hit", "좀비 피격 (짧은 접촉)", s => FallbackGain(ZombieHit(s), -4), -2, .05f, 3, Priority: 0, RestartWhenFull: false, NearCap: true, Variants: 3),
         new("zombie_die", "좀비 쓰러짐 (짧은 발성·낙하)", ZombieDie, -4, .05f, 3, Priority: 0, RestartWhenFull: false, NearCap: true, Variants: 2),
-        new("sonar", "소나 파문 (보이지 않는 적)", Sonar, -10, .04f, 4, RestartWhenFull: false),
+        new("sonar", "소나 파문 (보이지 않는 적)", Sonar, -10, .04f, 4, Priority: 2, RestartWhenFull: false),
         new("balloon_inflate", "풍선 부풂 (공기 압력)", BalloonInflate, 0, .03f, 2, NearCap: true),
         new("balloon_pop", "풍선 터짐 (공기 파열)", BalloonPop, 0, .04f, 3, NearCap: true),
-        new("bull_snort", "황소 콧김 (돌진 예고)", BullSnort, 0, .06f, 2),
+        // Boss telegraphs add up to +6; preserve that distinction without raising the old +3 cap.
+        new("bull_snort", "황소 콧김 (돌진 예고)", BullSnort, -3, .06f, 2, Priority: 2),
         new("bull_bonk", "황소 충돌 (둔탁한 타격)", BullBonk, 1, .04f, 3, NearCap: true),
 
         // ---------- stage ----------
@@ -111,7 +113,7 @@ public static class SoundRecipes
         // Heard, not blaring: monsters hear it 60 m away (spawn_rules.json), the player only needs to notice it (I-62).
         new("alarm_loop", "경보 사이렌 (반복, 작게)", Alarm, -20, 0, 1, Loop: true, NearCap: true),
         new("shutter", "셔터 열림", Shutter, -2, 0, 1),
-        new("ambience_loop", "밤바람 앰비언스 (반복)", Ambience, -16, 0, 1, Loop: true),
+        new("ambience_loop", "밤바람 앰비언스 (반복)", Ambience, -16, 0, 1, Loop: true, Priority: 0, RestartWhenFull: false),
         new("game_over", "게임 오버 (짧은 하강 악구)", SadTrombone, -2, 0, 1, Priority: 2, Bus: AudioSetup.CueBus),
         new("stage_clear", "스테이지 클리어 (부드러운 상승 악구)", Fanfare, -3, 0, 1, Priority: 2, Bus: AudioSetup.CueBus),
         new("ui_click", "UI 클릭", s => Click(s, .05f, 1600), -8, .03f, 2, Bus: AudioSetup.CueBus),
