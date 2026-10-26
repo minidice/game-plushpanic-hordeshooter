@@ -20,16 +20,26 @@ public static class GameSession
     public static StageCarry? Carry { get; set; }
 
     /// <summary>
-    /// Launch option <c>--stage2-draft</c> (Start-Game.ps1 -Stage2Draft): scenario Stage 2 is the size draft
-    /// (<see cref="LayoutMap"/>, decisions.md L-29) and a new run starts there, for playing it before it replaces today's
-    /// Stage 2. Single player only: a room's other PCs would build today's Stage 2.
+    /// Launch option <c>--large-stages</c> (Start-Game.ps1 -LargeStages): the scenario plays the large campaign drafts
+    /// (decisions.md L-30) — the urban Stage 1, the forest Stage 2 and the size draft as Stage 3 (<see cref="LayoutMap"/>),
+    /// joined by the safehouse hatches, before they replace today's Stage 1 and 2. Single player only: a room's other PCs
+    /// would build today's stages.
     /// </summary>
-    public static bool Stage2Draft { get; set; } = OS.GetCmdlineUserArgs().Contains("--stage2-draft");
+    public static bool LargeStages { get; set; } = OS.GetCmdlineUserArgs().Contains("--large-stages");
 
-    /// <summary>A new run from the menu or the room: back to Stage 1 (the draft's Stage 2 with --stage2-draft), nothing carried.</summary>
+    /// <summary>
+    /// Launch option <c>--stage3-draft</c> (Start-Game.ps1 -Stage3Draft; the old <c>--stage2-draft</c> still works): a new
+    /// run starts on the size draft, Stage 3 of the large campaign (L-29 → L-30).
+    /// </summary>
+    public static bool Stage3Draft { get; set; } = OS.GetCmdlineUserArgs().Any(a => a is "--stage3-draft" or "--stage2-draft");
+
+    /// <summary>Whether the scenario builds the large campaign's maps (<see cref="StageMap.Create"/>).</summary>
+    public static bool LargeCampaign => LargeStages || Stage3Draft;
+
+    /// <summary>A new run from the menu or the room: back to Stage 1 (Stage 3 with --stage3-draft), nothing carried.</summary>
     public static void StartCampaign()
     {
-        ScenarioStage = Stage2Draft ? 2 : 1;
+        ScenarioStage = Stage3Draft ? 3 : 1;
         Carry = null;
     }
 

@@ -67,7 +67,7 @@ public partial class SafehouseArtCheck : Node
     }
     private async Task Run()
     {
-        foreach (string id in new[] { "safehouse", "safehouse_door" })
+        foreach (string id in new[] { "safehouse_b", "safehouse_door" })
             Check(PropLibrary.Find(id) != null, id + " is registered");
         var map = new LayoutMap();
         _stage = new Stage { MapOverride = map, ModeOverride = GameMode.Scenario,
@@ -84,18 +84,19 @@ public partial class SafehouseArtCheck : Node
         foreach (var enemy in _stage.AllEnemies.ToList()) if (IsInstanceValid(enemy)) enemy.QueueFree();
         await Frames(2);
         Check(_stage.Objective == Objective.ReachSafehouse, "existing bridge objective advances to safehouse");
-        var house = Models(_stage, "safehouse").Single();
+        var house = Models(_stage, "safehouse_b").Single();
         var door = map.SafehouseDoor!;
         var leaf = Models(door, "safehouse_door").Single();
         var at = house.GlobalPosition;
         var blocker = door.FindChildren("*", "CollisionShape3D", true, false).OfType<CollisionShape3D>().Single();
         Check(Mathf.Abs(at.Y - 4.8f) < .01f, "safehouse pivot matches arrival plateau");
-        Check(PropLibrary.Find("safehouse")!.Collision.Kind == "none" && PropLibrary.Find("safehouse_door")!.Collision.Kind == "none", "game retains all collision ownership");
+        Check(PropLibrary.Find("safehouse_b")!.Collision.Kind == "none" && PropLibrary.Find("safehouse_door")!.Collision.Kind == "none", "game retains all collision ownership");
         Check(door.Size.DistanceTo(new Vector3(.3f, 2.4f, 2.6f)) < .001f, "door retains existing collider dimensions");
         Check(door.IsOpen && blocker.Disabled && !leaf.Visible, "initial door is open and hidden in wall pocket");
         Check(ClearVolume(house, new Aabb(at + new Vector3(-7.3f, .03f, -1.27f), new Vector3(1, 2.36f, 2.54f))), "actual GLB doorway remains clear below lintel");
         Check(ClearVolume(house, new Aabb(at + new Vector3(-6.35f, .03f, -5.35f), new Vector3(12.7f, 2.22f, 10.7f))), "actual GLB interior clears standing survivor bodies");
-        Check(map.SafehouseSwitch!.GlobalPosition.DistanceTo(at + new Vector3(-6.5f, 1.4f, 1.8f)) < .001f, "close interaction is on modeled red button");
+        // L-32: safehouse_b moved the button from the west wall (screen lower-left, its back to the camera) to the north wall.
+        Check(map.SafehouseSwitch!.GlobalPosition.DistanceTo(at + LayoutMap.SafehouseSwitchLocal) < .001f, "close interaction is on the modeled red button on the north wall");
         p.TeleportTo(door.GlobalPosition + Vector3.Left * 4 + Vector3.Up * .05f);
         p.SetControls(Vector2.Zero, at + Vector3.Up, false);
         _stage.Cam.Close = false;
@@ -159,7 +160,8 @@ public partial class SafehouseArtCheck : Node
         Check(!_stage.TryCloseSafehouse() && door.IsOpen && _stage.State == StageState.Playing, "enemy inside still prevents closing and clear");
         enemyInside.QueueFree();
         await Frames(2);
-        await Walk(p, at + new Vector3(-5.4f, 0, 1.8f), "modeled close button");
+        // In front of the north-wall button (L-32), on the floor.
+        await Walk(p, at + new Vector3(LayoutMap.SafehouseSwitchLocal.X, 0, LayoutMap.SafehouseSwitchLocal.Z + .6f), "modeled close button");
         _stage.Cam.SnapTo(p.GlobalPosition);
         await Frames(35);
         Check(_stage.FocusedInteractable == map.SafehouseSwitch, "standing by red button selects real E action");

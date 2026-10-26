@@ -3,8 +3,8 @@
   "placements": [
     { "map": "stage2", "id": "forest_side", "at": [29.5,0,3.5], "yaw": 0, "barrel": [29.5,0,5], "label": "Forest road side wall", "plain_panel": false },
     { "map": "stage2", "id": "yard_side", "at": [73,0,4.5], "yaw": 90, "barrel": [71.5,0,4.5], "label": "Container yard side wall", "plain_panel": false },
-    { "map": "stage2_draft", "id": "yard_west", "at": [288,1.2,-58], "yaw": 0, "barrel": [288,1.2,-56.5], "label": "West yard concrete partition", "plain_panel": true },
-    { "map": "stage2_draft", "id": "yard_workshop_side", "at": [340,1.2,-32], "yaw": 90, "barrel": [338.5,1.2,-32], "label": "Workshop side concrete partition", "plain_panel": true },
-    { "map": "stage2_draft", "id": "yard_east", "at": [412,1.2,-90], "yaw": 0, "barrel": [412,1.2,-88.5], "label": "East yard concrete partition", "plain_panel": true }
+    { "map": "stage3", "id": "yard_west", "at": [288,1.2,-58], "yaw": 0, "barrel": [288,1.2,-56.5], "label": "West yard concrete partition", "plain_panel": true },
+    { "map": "stage3", "id": "yard_workshop_side", "at": [340,1.2,-32], "yaw": 90, "barrel": [338.5,1.2,-32], "label": "Workshop side concrete partition", "plain_panel": true },
+    { "map": "stage3", "id": "yard_east", "at": [412,1.2,-90], "yaw": 0, "barrel": [412,1.2,-88.5], "label": "East yard concrete partition", "plain_panel": true }
   ]
 }

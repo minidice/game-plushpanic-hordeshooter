@@ -275,3 +275,10 @@ ui_objective_lower_bridge,협곡 펌프장에서 다리 내리기  [E]
 msg_stage_bridge_alarm,펌프 작동! 다리가 내려올 때까지 버티세요
 msg_stage_bridge_down,다리가 내려왔습니다! 사다리로 올라가 다리를 건너세요
 msg_stage_draft_start,벙커를 빠져나왔다 — 숲을 지나 협곡의 다리를 내리세요
+ui_hud_stage3,STAGE 3 · 협곡 감시소 길
+ui_objective_large1_shutter,창고 단지 북쪽 셔터 제어판으로 이동  [E]
+msg_stage_large2_start,배수로를 빠져나왔다 — 비탈을 내려가 벙커 철문을 여세요
+ui_objective_large2_gate,발전기 단의 제어판으로 벙커 철문 열기  [E]
+fmt_objective_hold_gate,철문이 올라갈 때까지 버티기  {0}초
+msg_stage_gate_alarm,발전기 가동! 철문이 올라갈 때까지 버티세요
+msg_stage_gate_open,철문이 열렸습니다! 산림 초소를 지나 언덕으로

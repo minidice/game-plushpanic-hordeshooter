@@ -21,12 +21,14 @@ public abstract partial class StageMap
 
     /// <summary>
     /// The map for a mode: Onslaught plays its open field, the scenario the stage it has reached (Stage 2 after the
-    /// Stage 1 exit, decisions.md L-14), the others Stage 1 (doc/mode-weapon-direction.md 10장).
+    /// Stage 1 exit, decisions.md L-14; the large campaign's layout maps with --large-stages, L-30), the others Stage 1
+    /// (doc/mode-weapon-direction.md 10장).
     /// </summary>
     public static StageMap Create(GameMode mode, int scenarioStage = 1) => mode switch
     {
         GameMode.Survivor => new OpenFieldMap(),
-        GameMode.Scenario when scenarioStage == 2 => GameSession.Stage2Draft ? new LayoutMap() : new StageTwoMap(),
+        GameMode.Scenario when GameSession.LargeCampaign => LayoutMap.ForStage(scenarioStage),
+        GameMode.Scenario when scenarioStage == 2 => new StageTwoMap(),
         _ => new StageOneLayout(),
     };
 

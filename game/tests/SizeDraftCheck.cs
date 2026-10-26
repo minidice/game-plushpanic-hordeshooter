@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 namespace HordeShooter.Tests;
 
 /// <summary>
-/// The Stage 2 size draft (decisions.md L-29, doc/map-expansion-plan.md 7.2 steps 3 and 5): builds <see cref="LayoutMap"/> from
-/// content/data/stages/stage2_layout.json with its encounters and supplies, checks every part of the layout was built,
+/// The size draft, Stage 3 of the large campaign (decisions.md L-29, L-30, doc/map-expansion-plan.md 7.2 steps 3 and 5): builds <see cref="LayoutMap"/> from
+/// content/data/stages/stage3_layout.json with its encounters and supplies, checks every part of the layout was built,
 /// follows the exit route and measures it (walking length, L-1 share on the main route, rides), times the flow field
 /// rebuilds on the big grid, checks the placement rules (supply budget on the tier floors, a monster way onto every raised
 /// space, the safe zone's no-place / no-wave radii and raid holds), plays the bridge mission (drop into the canyon, start
@@ -38,12 +38,12 @@ public partial class SizeDraftCheck : Node
 
     private async Task Run()
     {
-        // The launch option (--stage2-draft) puts the draft in Stage 2's place and starts a run there.
-        GameSession.Stage2Draft = true;
+        // The launch option (--stage3-draft, formerly --stage2-draft) starts a large-campaign run on the draft, now Stage 3 (L-30).
+        GameSession.Stage3Draft = true;
         GameSession.StartCampaign();
-        Check(GameSession.ScenarioStage == 2 && StageMap.Create(GameMode.Scenario, 2) is LayoutMap && StageMap.Create(GameMode.Survival) is not LayoutMap,
-            "with --stage2-draft a new scenario run starts on the draft as Stage 2 (other modes unchanged)");
-        GameSession.Stage2Draft = false;
+        Check(GameSession.ScenarioStage == 3 && StageMap.Create(GameMode.Scenario, 3) is LayoutMap { StageNumber: 3 } && StageMap.Create(GameMode.Survival) is not LayoutMap,
+            "with --stage3-draft a new scenario run starts on the draft as Stage 3 (other modes unchanged)");
+        GameSession.Stage3Draft = false;
         GameSession.StartCampaign();
         Check(GameSession.ScenarioStage == 1 && StageMap.Create(GameMode.Scenario, 2) is StageTwoMap, "without it, runs start at Stage 1 and Stage 2 is today's");
 
@@ -149,12 +149,12 @@ public partial class SizeDraftCheck : Node
         var map = _map;
         var set = map.Encounters!;
         var tiers = _stage.Tiers;
-        var spawnErrors = SpawnDatabase.Current.Errors.Where(e => e.Contains("stage2_draft")).ToList();
+        var spawnErrors = SpawnDatabase.Current.Errors.Where(e => e.Contains("stage3_encounters")).ToList();
         Check(spawnErrors.Count == 0, "the draft's encounters load without errors" + string.Join("; ", spawnErrors));
         Check(_stage.Director.EncounterErrors.Count == 0, "every wave entry and named monster stands on open floor" + string.Join("; ", _stage.Director.EncounterErrors));
         Check(set.SafeZones.Count == 1 && set.Raids != null && set.Groups.Any(g => g.After == "mission"),
             "the draft has a safe zone, timed raid rules and a way-back group for the mission");
-        var supplies = StageSupplies.Load(LayoutMap.Stage2SuppliesPath);
+        var supplies = StageSupplies.Load(LayoutMap.Stage3SuppliesPath);
         Check(supplies.Errors.Count == 0, "the draft's supply points load without errors" + string.Join("; ", supplies.Errors));
 
         // Budget (stage2-floorplan.md 5장, a 4-player team).

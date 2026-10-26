@@ -265,7 +265,8 @@ public partial class Stage2RouteCheck : Node
         await Visit(622, -145, "25-safehouse-approach");
         await Visit(633, -145, "26-safehouse-inside");
         await Supply(636, -141, "arrival-ammo");
-        await Walk(Ground(627.6f, -143.2f), "safehouse-button", .2f);
+        // safehouse_b: the button is on the north wall's inner face (L-32); stand on the floor in front of it.
+        await Walk(Ground(628.4f, -149.9f), "safehouse-button", .2f);
         for (int i = 0; i < 3600 && _stage.AllEnemies.Any(e => !e.IsDead && _map.NearSafehouse(e.GlobalPosition)); i++) { Drive(Vector3.Zero); await Frames(1); }
         await Shot("27-safehouse-button");
         await Use(_map.SafehouseSwitch!, "safehouse close");

@@ -1,0 +1,1526 @@
+{
+  "_comment": "Large Stage 2 (decisions.md L-30..L-32, doc/large-stages.md): the forest bunker road at the Stage 3 scale, a different structure from Stage 3 (it starts high and goes down to the bunker yard, then climbs the logging hill). World metres, x east, z toward the camera. Ladders climb north or east and every button faces the camera (L-32).",
+  "version": 1,
+  "stage": 2,
+  "next_stage": 3,
+  "theme": "forest",
+  "tier_height_m": 1.2,
+  "keys": {
+    "title": "ui_hud_stage2",
+    "route_start": "msg_stage_large2_start",
+    "crescendo_objective": "ui_objective_large2_gate",
+    "crescendo_hold": "fmt_objective_hold_gate",
+    "crescendo_alarm": "msg_stage_gate_alarm",
+    "crescendo_done": "msg_stage_gate_open"
+  },
+  "bounds": [
+    -10,
+    -170,
+    640,
+    40
+  ],
+  "regions": [
+    {
+      "id": "drain_exit",
+      "label": "A 배수로 출구",
+      "tier": 2,
+      "poly": [
+        [
+          -4,
+          -16
+        ],
+        [
+          34,
+          -16
+        ],
+        [
+          34,
+          14
+        ],
+        [
+          -4,
+          14
+        ]
+      ]
+    },
+    {
+      "id": "slope_high",
+      "label": "B 소나무 비탈",
+      "tier": 2,
+      "poly": [
+        [
+          32,
+          -32
+        ],
+        [
+          80,
+          -42
+        ],
+        [
+          80,
+          22
+        ],
+        [
+          32,
+          16
+        ]
+      ]
+    },
+    {
+      "id": "slope_mid",
+      "label": "",
+      "tier": 1,
+      "poly": [
+        [
+          80,
+          -48
+        ],
+        [
+          125,
+          -58
+        ],
+        [
+          125,
+          22
+        ],
+        [
+          80,
+          22
+        ]
+      ]
+    },
+    {
+      "id": "valley",
+      "label": "",
+      "tier": 0,
+      "poly": [
+        [
+          125,
+          -66
+        ],
+        [
+          172,
+          -74
+        ],
+        [
+          172,
+          24
+        ],
+        [
+          125,
+          24
+        ]
+      ]
+    },
+    {
+      "id": "cabin_ledge",
+      "label": "사냥 오두막(보상 분기)",
+      "tier": 2,
+      "poly": [
+        [
+          138,
+          -96
+        ],
+        [
+          164,
+          -96
+        ],
+        [
+          164,
+          -66
+        ],
+        [
+          138,
+          -66
+        ]
+      ]
+    },
+    {
+      "id": "ford",
+      "label": "C 개울 여울",
+      "tier": 0,
+      "poly": [
+        [
+          168,
+          -56
+        ],
+        [
+          208,
+          -64
+        ],
+        [
+          208,
+          -36
+        ],
+        [
+          168,
+          -28
+        ]
+      ]
+    },
+    {
+      "id": "bunker_yard",
+      "label": "D 벙커 연병장",
+      "tier": 0,
+      "poly": [
+        [
+          204,
+          -104
+        ],
+        [
+          356,
+          -118
+        ],
+        [
+          356,
+          -26
+        ],
+        [
+          204,
+          -32
+        ]
+      ]
+    },
+    {
+      "id": "gen_terrace",
+      "label": "발전기 단",
+      "tier": 1,
+      "poly": [
+        [
+          252,
+          -116
+        ],
+        [
+          300,
+          -122
+        ],
+        [
+          300,
+          -98
+        ],
+        [
+          252,
+          -94
+        ]
+      ]
+    },
+    {
+      "id": "gate_gap",
+      "label": "철문",
+      "tier": 0,
+      "poly": [
+        [
+          354,
+          -74
+        ],
+        [
+          366,
+          -74
+        ],
+        [
+          366,
+          -68
+        ],
+        [
+          354,
+          -68
+        ]
+      ]
+    },
+    {
+      "id": "ranger_post",
+      "label": "E 산림 초소",
+      "tier": 0,
+      "poly": [
+        [
+          364,
+          -84
+        ],
+        [
+          394,
+          -86
+        ],
+        [
+          394,
+          -58
+        ],
+        [
+          364,
+          -56
+        ]
+      ]
+    },
+    {
+      "id": "hill_low",
+      "label": "F 벌목장 언덕",
+      "tier": 0,
+      "poly": [
+        [
+          392,
+          -116
+        ],
+        [
+          452,
+          -124
+        ],
+        [
+          452,
+          -34
+        ],
+        [
+          392,
+          -44
+        ]
+      ]
+    },
+    {
+      "id": "hill_mid",
+      "label": "",
+      "tier": 1,
+      "poly": [
+        [
+          450,
+          -128
+        ],
+        [
+          496,
+          -134
+        ],
+        [
+          496,
+          -40
+        ],
+        [
+          450,
+          -32
+        ]
+      ]
+    },
+    {
+      "id": "log_deck",
+      "label": "통나무 더미 위",
+      "tier": 3,
+      "poly": [
+        [
+          466,
+          -132
+        ],
+        [
+          482,
+          -132
+        ],
+        [
+          482,
+          -120
+        ],
+        [
+          466,
+          -120
+        ]
+      ]
+    },
+    {
+      "id": "hill_top",
+      "label": "",
+      "tier": 2,
+      "poly": [
+        [
+          494,
+          -136
+        ],
+        [
+          542,
+          -140
+        ],
+        [
+          542,
+          -52
+        ],
+        [
+          494,
+          -40
+        ]
+      ]
+    },
+    {
+      "id": "pass",
+      "label": "G 고개 세이프하우스",
+      "tier": 2,
+      "poly": [
+        [
+          540,
+          -120
+        ],
+        [
+          614,
+          -124
+        ],
+        [
+          614,
+          -96
+        ],
+        [
+          540,
+          -92
+        ]
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "kind": "rock",
+      "climbable": true,
+      "line": [
+        [
+          138,
+          -66
+        ],
+        [
+          138,
+          -96
+        ],
+        [
+          164,
+          -96
+        ],
+        [
+          164,
+          -66
+        ]
+      ],
+      "note": "오두막 바위턱"
+    },
+    {
+      "kind": "rock",
+      "climbable": true,
+      "line": [
+        [
+          252,
+          -94
+        ],
+        [
+          300,
+          -98
+        ]
+      ],
+      "note": "발전기 단 앞 턱"
+    },
+    {
+      "kind": "wood",
+      "climbable": false,
+      "line": [
+        [
+          466,
+          -132
+        ],
+        [
+          482,
+          -132
+        ],
+        [
+          482,
+          -120
+        ],
+        [
+          466,
+          -120
+        ],
+        [
+          466,
+          -132
+        ]
+      ],
+      "note": "통나무 더미"
+    },
+    {
+      "kind": "rock",
+      "climbable": true,
+      "line": [
+        [
+          452,
+          -124
+        ],
+        [
+          452,
+          -34
+        ]
+      ]
+    },
+    {
+      "kind": "rock",
+      "climbable": true,
+      "line": [
+        [
+          496,
+          -134
+        ],
+        [
+          496,
+          -40
+        ]
+      ]
+    }
+  ],
+  "links": [
+    {
+      "type": "ramp",
+      "from": [
+        76,
+        -12
+      ],
+      "to": [
+        84,
+        -12
+      ],
+      "width": 10
+    },
+    {
+      "type": "drop",
+      "from": [
+        78,
+        6
+      ],
+      "to": [
+        84,
+        6
+      ],
+      "note": "비탈 지름길(2 → 1단, 한 방향)"
+    },
+    {
+      "type": "ramp",
+      "from": [
+        121,
+        -24
+      ],
+      "to": [
+        129,
+        -24
+      ],
+      "width": 10
+    },
+    {
+      "type": "drop",
+      "from": [
+        122,
+        8
+      ],
+      "to": [
+        128,
+        8
+      ]
+    },
+    {
+      "type": "ladder",
+      "from": [
+        150,
+        -61
+      ],
+      "to": [
+        150,
+        -70
+      ],
+      "note": "보상 분기: 오두막 바위턱(0 → 2단), 북쪽으로 오름"
+    },
+    {
+      "type": "zipline",
+      "from": [
+        160,
+        -84
+      ],
+      "to": [
+        192,
+        -46
+      ],
+      "note": "오두막 → 여울, 보상 분기 빠른 복귀"
+    },
+    {
+      "type": "ramp",
+      "from": [
+        276,
+        -90
+      ],
+      "to": [
+        276,
+        -100
+      ],
+      "width": 10,
+      "note": "발전기 단 경사로"
+    },
+    {
+      "type": "ramp",
+      "from": [
+        446,
+        -84
+      ],
+      "to": [
+        454,
+        -84
+      ],
+      "width": 10
+    },
+    {
+      "type": "ladder",
+      "from": [
+        446,
+        -108
+      ],
+      "to": [
+        454,
+        -108
+      ],
+      "note": "언덕 지름길(0 → 1단), 동쪽으로 오름"
+    },
+    {
+      "type": "ladder",
+      "from": [
+        474,
+        -116
+      ],
+      "to": [
+        474,
+        -124
+      ],
+      "note": "통나무 더미 위(1 → 3단)"
+    },
+    {
+      "type": "ramp",
+      "from": [
+        490,
+        -92
+      ],
+      "to": [
+        498,
+        -92
+      ],
+      "width": 10
+    },
+    {
+      "type": "ladder",
+      "from": [
+        490,
+        -60
+      ],
+      "to": [
+        498,
+        -60
+      ],
+      "note": "언덕 지름길(1 → 2단), 동쪽으로 오름"
+    }
+  ],
+  "routes": {
+    "main": [
+      [
+        8,
+        0
+      ],
+      [
+        32,
+        -4
+      ],
+      [
+        80,
+        -12
+      ],
+      [
+        125,
+        -24
+      ],
+      [
+        170,
+        -40
+      ],
+      [
+        206,
+        -50
+      ],
+      [
+        250,
+        -60
+      ],
+      [
+        300,
+        -66
+      ],
+      [
+        360,
+        -71
+      ],
+      [
+        379,
+        -71
+      ],
+      [
+        394,
+        -74
+      ],
+      [
+        450,
+        -84
+      ],
+      [
+        494,
+        -92
+      ],
+      [
+        540,
+        -100
+      ],
+      [
+        588,
+        -111
+      ]
+    ],
+    "mission": [
+      [
+        340,
+        -71
+      ],
+      [
+        290,
+        -86
+      ],
+      [
+        276,
+        -98
+      ],
+      [
+        276,
+        -110
+      ]
+    ],
+    "mission_return": [
+      [
+        276,
+        -110
+      ],
+      [
+        276,
+        -94
+      ],
+      [
+        300,
+        -80
+      ],
+      [
+        340,
+        -71
+      ]
+    ],
+    "reward_cabin": [
+      [
+        150,
+        -40
+      ],
+      [
+        150,
+        -61
+      ],
+      [
+        150,
+        -84
+      ],
+      [
+        160,
+        -84
+      ]
+    ],
+    "reward_deck": [
+      [
+        466,
+        -90
+      ],
+      [
+        474,
+        -116
+      ],
+      [
+        474,
+        -126
+      ]
+    ]
+  },
+  "zones": [
+    {
+      "id": "A",
+      "size": "small",
+      "label": "A 배수로 출구",
+      "poly": [
+        [
+          -4,
+          -16
+        ],
+        [
+          34,
+          -16
+        ],
+        [
+          34,
+          14
+        ],
+        [
+          -4,
+          14
+        ]
+      ]
+    },
+    {
+      "id": "B",
+      "size": "large",
+      "label": "B 소나무 비탈",
+      "poly": [
+        [
+          32,
+          -74
+        ],
+        [
+          172,
+          -74
+        ],
+        [
+          172,
+          24
+        ],
+        [
+          32,
+          24
+        ]
+      ]
+    },
+    {
+      "id": "B-cabin",
+      "size": "small",
+      "branch": true,
+      "label": "사냥 오두막(보상 분기)",
+      "poly": [
+        [
+          136,
+          -98
+        ],
+        [
+          166,
+          -98
+        ],
+        [
+          166,
+          -66
+        ],
+        [
+          136,
+          -66
+        ]
+      ]
+    },
+    {
+      "id": "C",
+      "size": "small",
+      "label": "C 개울 여울",
+      "poly": [
+        [
+          168,
+          -56
+        ],
+        [
+          208,
+          -64
+        ],
+        [
+          208,
+          -36
+        ],
+        [
+          168,
+          -28
+        ]
+      ]
+    },
+    {
+      "id": "D",
+      "size": "large",
+      "label": "D 벙커 연병장(철문 임무)",
+      "poly": [
+        [
+          204,
+          -122
+        ],
+        [
+          356,
+          -122
+        ],
+        [
+          356,
+          -26
+        ],
+        [
+          204,
+          -26
+        ]
+      ]
+    },
+    {
+      "id": "E",
+      "size": "small",
+      "label": "E 산림 초소(중간 안전 구역)",
+      "poly": [
+        [
+          354,
+          -86
+        ],
+        [
+          394,
+          -86
+        ],
+        [
+          394,
+          -56
+        ],
+        [
+          354,
+          -56
+        ]
+      ]
+    },
+    {
+      "id": "F",
+      "size": "large",
+      "label": "F 벌목장 언덕",
+      "poly": [
+        [
+          392,
+          -136
+        ],
+        [
+          542,
+          -136
+        ],
+        [
+          542,
+          -36
+        ],
+        [
+          392,
+          -36
+        ]
+      ]
+    },
+    {
+      "id": "F-deck",
+      "size": "small",
+      "branch": true,
+      "label": "통나무 더미(보상 분기)",
+      "poly": [
+        [
+          464,
+          -134
+        ],
+        [
+          484,
+          -134
+        ],
+        [
+          484,
+          -118
+        ],
+        [
+          464,
+          -118
+        ]
+      ]
+    },
+    {
+      "id": "G",
+      "size": "small",
+      "label": "G 고개 세이프하우스",
+      "poly": [
+        [
+          540,
+          -120
+        ],
+        [
+          614,
+          -124
+        ],
+        [
+          614,
+          -96
+        ],
+        [
+          540,
+          -92
+        ]
+      ]
+    }
+  ],
+  "markers": [
+    {
+      "type": "start",
+      "pos": [
+        8,
+        0
+      ],
+      "label": "배수로 해치(도착)"
+    },
+    {
+      "type": "noise",
+      "pos": [
+        232,
+        -44
+      ],
+      "label": "경보 트럭(실수로 켜면 웨이브)",
+      "label_offset": [
+        10,
+        16
+      ]
+    },
+    {
+      "type": "blocked",
+      "kind": "shutter",
+      "pos": [
+        360,
+        -71
+      ],
+      "label": "벙커 철문(임무로 열림)",
+      "label_offset": [
+        -30,
+        18
+      ]
+    },
+    {
+      "type": "mission",
+      "kind": "panel",
+      "pos": [
+        276,
+        -110
+      ],
+      "label": "발전기 제어판: 크레센도",
+      "label_offset": [
+        10,
+        -8
+      ]
+    },
+    {
+      "type": "safe_zone",
+      "pos": [
+        379,
+        -71
+      ],
+      "label": "중간 안전 구역: 산림 초소",
+      "label_offset": [
+        8,
+        22
+      ]
+    },
+    {
+      "type": "landmark",
+      "pos": [
+        326,
+        -110
+      ],
+      "label": "벙커 정문",
+      "label_offset": [
+        10,
+        -6
+      ]
+    },
+    {
+      "type": "safehouse",
+      "pos": [
+        597,
+        -111
+      ],
+      "label": "세이프하우스",
+      "label_offset": [
+        -40,
+        -18
+      ]
+    }
+  ],
+  "supplies": [
+    {
+      "kind": "start",
+      "pos": [
+        12,
+        6
+      ],
+      "label": "시작"
+    },
+    {
+      "kind": "optional",
+      "pos": [
+        150,
+        -86
+      ],
+      "label": "선택 1"
+    },
+    {
+      "kind": "main",
+      "pos": [
+        200,
+        -44
+      ],
+      "label": "주요 1"
+    },
+    {
+      "kind": "event",
+      "pos": [
+        284,
+        -110
+      ],
+      "label": "이벤트 보상"
+    },
+    {
+      "kind": "main",
+      "pos": [
+        379,
+        -73
+      ],
+      "label": "주요 2"
+    },
+    {
+      "kind": "optional",
+      "pos": [
+        474,
+        -127
+      ],
+      "label": "선택 2"
+    },
+    {
+      "kind": "main",
+      "pos": [
+        530,
+        -96
+      ],
+      "label": "주요 3"
+    },
+    {
+      "kind": "arrival",
+      "pos": [
+        600,
+        -108
+      ],
+      "label": "도착"
+    }
+  ],
+  "props": [
+    {
+      "id": "bunker_hatch",
+      "pos": [
+        8,
+        -3.5
+      ],
+      "yaw": 0,
+      "solid": false
+    },
+    {
+      "id": "sandbags",
+      "pos": [
+        22,
+        8
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "sandbags",
+      "pos": [
+        24,
+        -12
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "utility_shed",
+      "pos": [
+        151,
+        -90
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "boulder",
+      "pos": [
+        182,
+        -50
+      ],
+      "yaw": 27,
+      "solid": true
+    },
+    {
+      "id": "boulder",
+      "pos": [
+        196,
+        -38
+      ],
+      "yaw": 27,
+      "solid": true
+    },
+    {
+      "id": "boulder",
+      "pos": [
+        188,
+        -58
+      ],
+      "yaw": 27,
+      "solid": true
+    },
+    {
+      "id": "reeds",
+      "pos": [
+        176,
+        -34
+      ],
+      "yaw": 0,
+      "solid": false
+    },
+    {
+      "id": "reeds",
+      "pos": [
+        200,
+        -60
+      ],
+      "yaw": 0,
+      "solid": false
+    },
+    {
+      "id": "container_closed",
+      "pos": [
+        222,
+        -70
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "container_closed",
+      "pos": [
+        246,
+        -84
+      ],
+      "yaw": 90,
+      "solid": true
+    },
+    {
+      "id": "container_closed",
+      "pos": [
+        300,
+        -44
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "container_closed",
+      "pos": [
+        320,
+        -96
+      ],
+      "yaw": 90,
+      "solid": true
+    },
+    {
+      "id": "container_closed",
+      "pos": [
+        338,
+        -52
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "concrete_barrier",
+      "pos": [
+        232,
+        -68
+      ],
+      "yaw": 20,
+      "solid": true
+    },
+    {
+      "id": "concrete_barrier",
+      "pos": [
+        262,
+        -70
+      ],
+      "yaw": -15,
+      "solid": true
+    },
+    {
+      "id": "concrete_barrier",
+      "pos": [
+        288,
+        -76
+      ],
+      "yaw": 10,
+      "solid": true
+    },
+    {
+      "id": "concrete_barrier",
+      "pos": [
+        312,
+        -80
+      ],
+      "yaw": -20,
+      "solid": true
+    },
+    {
+      "id": "concrete_barrier",
+      "pos": [
+        340,
+        -88
+      ],
+      "yaw": 15,
+      "solid": true
+    },
+    {
+      "id": "concrete_barrier",
+      "pos": [
+        348,
+        -60
+      ],
+      "yaw": -10,
+      "solid": true
+    },
+    {
+      "id": "sandbags",
+      "pos": [
+        244,
+        -50
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "barrel",
+      "pos": [
+        246,
+        -49
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "sandbags",
+      "pos": [
+        330,
+        -80
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "barrel",
+      "pos": [
+        332,
+        -79
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "workshop_generator",
+      "pos": [
+        284,
+        -114
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "workshop_cablereel",
+      "pos": [
+        268,
+        -112
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "warning_sign",
+      "pos": [
+        214,
+        -96
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "warning_sign",
+      "pos": [
+        300,
+        -104
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "utility_shed",
+      "pos": [
+        410,
+        -100
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "fallen_log",
+      "pos": [
+        424,
+        -64
+      ],
+      "yaw": 35,
+      "solid": true
+    },
+    {
+      "id": "stump",
+      "pos": [
+        427,
+        -62
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "fallen_log",
+      "pos": [
+        462,
+        -60
+      ],
+      "yaw": 35,
+      "solid": true
+    },
+    {
+      "id": "stump",
+      "pos": [
+        465,
+        -58
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "fallen_log",
+      "pos": [
+        470,
+        -100
+      ],
+      "yaw": 35,
+      "solid": true
+    },
+    {
+      "id": "stump",
+      "pos": [
+        473,
+        -98
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "fallen_log",
+      "pos": [
+        510,
+        -70
+      ],
+      "yaw": 35,
+      "solid": true
+    },
+    {
+      "id": "stump",
+      "pos": [
+        513,
+        -68
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "fallen_log",
+      "pos": [
+        520,
+        -118
+      ],
+      "yaw": 35,
+      "solid": true
+    },
+    {
+      "id": "stump",
+      "pos": [
+        523,
+        -116
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "fallen_log",
+      "pos": [
+        436,
+        -100
+      ],
+      "yaw": 35,
+      "solid": true
+    },
+    {
+      "id": "stump",
+      "pos": [
+        439,
+        -98
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "sandbags",
+      "pos": [
+        560,
+        -112
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "sandbags",
+      "pos": [
+        604,
+        -100
+      ],
+      "yaw": 0,
+      "solid": true
+    }
+  ],
+  "lamps": [
+    [
+      24,
+      -8
+    ],
+    [
+      214,
+      -40
+    ],
+    [
+      262,
+      -50
+    ],
+    [
+      318,
+      -60
+    ],
+    [
+      346,
+      -78
+    ],
+    [
+      398,
+      -66
+    ],
+    [
+      530,
+      -86
+    ],
+    [
+      574,
+      -100
+    ]
+  ]
+}

@@ -71,7 +71,9 @@ public static class NetIds
                 (CommonRoster.DataPath, commonRosterJson ?? FileAccess.GetFileAsString(CommonRoster.DataPath)),
                 (SpawnDatabase.Stage1Path, FileAccess.GetFileAsString(SpawnDatabase.Stage1Path)),
                 (SpawnDatabase.Stage2Path, FileAccess.GetFileAsString(SpawnDatabase.Stage2Path)),
-                ("res://content/data/stages/stage2_draft_encounters.json", FileAccess.GetFileAsString("res://content/data/stages/stage2_draft_encounters.json")) })
+                (LayoutMap.Stage3EncountersPath, FileAccess.GetFileAsString(LayoutMap.Stage3EncountersPath)),
+                (LayoutMap.Stage1EncountersPath, FileAccess.GetFileAsString(LayoutMap.Stage1EncountersPath)),
+                (LayoutMap.Stage2EncountersPath, FileAccess.GetFileAsString(LayoutMap.Stage2EncountersPath)) })
             {
                 // Windows checkouts and exported Linux resources can use different line endings without changing data.
                 string normalized = text.Replace("\r\n", "\n").Replace('\r', '\n');

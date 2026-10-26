@@ -275,3 +275,10 @@ ui_objective_lower_bridge,Lower the bridge at the canyon pump house  [E]
 msg_stage_bridge_alarm,Pump running! Hold out until the bridge is down
 msg_stage_bridge_down,The bridge is down! Climb the ladder and cross
 msg_stage_draft_start,Out of the bunker — through the forest and lower the canyon bridge
+ui_hud_stage3,STAGE 3 · Canyon Watch Road
+ui_objective_large1_shutter,Go to the shutter panel on the depot's north side  [E]
+msg_stage_large2_start,Out of the drain — down the slope and open the bunker gate
+ui_objective_large2_gate,Open the bunker gate at the generator terrace panel  [E]
+fmt_objective_hold_gate,Hold out until the gate is up  {0}s
+msg_stage_gate_alarm,Generator running! Hold out until the gate is up
+msg_stage_gate_open,The gate is open! Through the ranger post and up the hill

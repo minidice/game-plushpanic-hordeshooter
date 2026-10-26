@@ -6,21 +6,33 @@ using System.Linq;
 namespace HordeShooter;
 
 /// <summary>
-/// A graybox stage built from layout data (decisions.md T-24 option B, L-29): the size draft of the new Stage 2
-/// (doc/map-expansion-plan.md 7.2 step 3). Regions become raised floors per height tier, merged into rectangles on the
+/// A graybox stage built from layout data (decisions.md T-24 option B, L-29): the size draft, now Stage 3 (L-30), and the
+/// large Stage 1 (urban) and Stage 2 (forest) drafts at the same scale (doc/map-expansion-plan.md 7.2 step 3). Regions become raised floors per height tier, merged into rectangles on the
 /// 1 m grid; everything outside every region is blocked by tall invisible walls; links become ramps, ladders, drop
 /// edges, ziplines and the gondola; climbable edges are painted for wall climbers. The size draft now has a first
 /// environment pass and Stage 2 landmark GLBs. Not the default in <see cref="StageMap.Create"/> yet:
-/// the current Stage 2 stays until this draft is accepted (L-29).
+/// the large stages run with --large-stages (or --stage3-draft) until they are accepted (L-30).
 /// Placement (7.2 step 5) reads two more files: encounters (areas, waiting groups, wave entries, the safe zone, timed
 /// raids, the mission's way back) and supply points. Markers build the beats: the raised bridge ("blocked") is the
 /// crescendo's door, the pump ("mission") its panel, a hut stands on the safe zone and the safehouse on its marker.
 /// </summary>
 public sealed partial class LayoutMap : StageMap
 {
-    public const string Stage2Path = "res://content/data/stages/stage2_layout.json";
-    public const string Stage2EncountersPath = "res://content/data/stages/stage2_draft_encounters.json";
-    public const string Stage2SuppliesPath = "res://content/data/stages/stage2_draft_supplies.json";
+    public const string Stage3Path = "res://content/data/stages/stage3_layout.json";
+    public const string Stage3EncountersPath = "res://content/data/stages/stage3_encounters.json";
+    public const string Stage3SuppliesPath = "res://content/data/stages/stage3_supplies.json";
+    public const string Stage1Path = "res://content/data/stages/stage1_large_layout.json";
+    public const string Stage1EncountersPath = "res://content/data/stages/stage1_large_encounters.json";
+    public const string Stage1SuppliesPath = "res://content/data/stages/stage1_large_supplies.json";
+    public const string Stage2Path = "res://content/data/stages/stage2_large_layout.json";
+    public const string Stage2EncountersPath = "res://content/data/stages/stage2_large_encounters.json";
+    public const string Stage2SuppliesPath = "res://content/data/stages/stage2_large_supplies.json";
+    /// <summary>Start room (`[임시]`): 12 × 8 m, the door on the east wall, the switch on the north wall (L-32).</summary>
+    public static readonly Vector2 StartRoomSize = new(12, 8);
+    /// <summary>Safehouse close switch in the room's frame: on the north wall's inner face near the west door (L-32, `safehouse_b`).</summary>
+    public static readonly Vector3 SafehouseSwitchLocal = new(-4.6f, 1.4f, -5.55f);
+    /// <summary>Mission panel: the wall stub stands this far behind the marker (north), the button faces the camera.</summary>
+    public const float PanelSetback = 1.4f;
     /// <summary>Safe-zone hut (`[임시]`, stage2-floorplan.md 4장): 12 × 10 m, a 3 m doorway at each end along X.</summary>
     public static readonly Vector2 HutSize = new(12, 10);
     public const float HutDoorway = 3f;
@@ -40,45 +52,79 @@ public sealed partial class LayoutMap : StageMap
     public Gondola? GondolaStation { get; private set; }
     private Vector3 _goal;
     private readonly string? _encountersPath, _suppliesPath;
-    private Door? _gate, _safehouseDoor;
-    private Interactable? _pump, _safehouseSwitch;
+    private Door? _gate, _safehouseDoor, _startDoor;
+    private Interactable? _pump, _safehouseSwitch, _startSwitch, _exit;
     private AlarmCar? _alarmTruck;
     private Rect2 _safehouseRoom;
     private readonly bool _hasDestructionExamples;
 
-    public LayoutMap(string path = Stage2Path, string? encounters = Stage2EncountersPath, string? supplies = Stage2SuppliesPath)
+    public LayoutMap(string path = Stage3Path, string? encounters = Stage3EncountersPath, string? supplies = Stage3SuppliesPath)
     {
         Layout = StageLayout.Load(path);
-        _hasDestructionExamples = path == Stage2Path;
+        _hasDestructionExamples = path == Stage3Path;
+        // The forest study's bounds and weights are Stage 3 coordinates.
+        ForestStudyEnabled = path == Stage3Path;
         _encountersPath = encounters;
         _suppliesPath = supplies;
     }
 
+    /// <summary>The large campaign's map for a scenario stage (L-30): 1 urban, 2 forest, 3 the size draft.</summary>
+    public static LayoutMap ForStage(int stage) => stage switch
+    {
+        1 => new LayoutMap(Stage1Path, Stage1EncountersPath, Stage1SuppliesPath),
+        2 => new LayoutMap(Stage2Path, Stage2EncountersPath, Stage2SuppliesPath),
+        _ => new LayoutMap(),
+    };
+
     public override Rect2 Area => Layout.Bounds;
-    public override string TitleKey => "ui_hud_stage2";
+    public override string TitleKey => Key("title", "ui_hud_stage3");
     public override bool HasRoute => true;
     public override Vector3 RouteGoal => _goal;
-    public override int StageNumber => 2;
-    public override Objective ScenarioStart => _gate != null ? Objective.ReachShutter : Objective.ReachSafehouse;
+    public override int StageNumber => Layout.Stage;
+    public override int NextStage => Mode == GameMode.Scenario ? Layout.NextStage : 0;
+    public override Objective ScenarioStart => _startDoor != null ? Objective.LeaveSafeRoom : _gate != null ? Objective.ReachShutter : Objective.ReachSafehouse;
     public override EncounterSet? Encounters => _encountersPath == null ? null : SpawnDatabase.Current.Load(_encountersPath);
-    public override IReadOnlyList<Door> Doors => new[] { _gate, _safehouseDoor }.OfType<Door>().ToArray();
+    public override IReadOnlyList<Door> Doors => new[] { _startDoor, _gate, _safehouseDoor }.OfType<Door>().ToArray();
+    public override Door? StartDoor => _startDoor;
+    public override Interactable? StartDoorSwitch => _startSwitch;
     public override Door? Shutter => _gate;
     public override AlarmCar? AlarmDevice => _alarmTruck;
     public override Interactable? ShutterPanel => _pump;
-    public override string CrescendoObjectiveKey => "ui_objective_lower_bridge";
-    public override string CrescendoHoldOutKey => "fmt_objective_hold_bridge";
-    public override string CrescendoAlarmKey => "msg_stage_bridge_alarm";
-    public override string CrescendoDoneKey => "msg_stage_bridge_down";
-    public override string RouteStartKey => "msg_stage_draft_start";
+    public override string CrescendoObjectiveKey => Key("crescendo_objective", "ui_objective_lower_bridge");
+    public override string CrescendoHoldOutKey => Key("crescendo_hold", "fmt_objective_hold_bridge");
+    public override string CrescendoAlarmKey => Key("crescendo_alarm", "msg_stage_bridge_alarm");
+    public override string CrescendoDoneKey => Key("crescendo_done", "msg_stage_bridge_down");
+    public override string RouteStartKey => Key("route_start", "msg_stage_draft_start");
+    public override Interactable? StageExit => _exit;
     public override Door? SafehouseDoor => _safehouseDoor;
     public override Interactable? SafehouseSwitch => _safehouseSwitch;
     public override bool InSafehouse(Vector3 p) => _safehouseDoor != null && _safehouseRoom.HasPoint(new Vector2(p.X, p.Z));
     public override bool NearSafehouse(Vector3 p) => _safehouseDoor != null && _safehouseRoom.Grow(.6f).HasPoint(new Vector2(p.X, p.Z));
     public override CameraView View => CameraView.Outdoor;
     public override Rect2? CameraBounds => Layout.Bounds;
+    private bool Urban => Layout.Theme == "urban";
+    private string Key(string name, string fallback) => Layout.Keys.TryGetValue(name, out var key) && key != "" ? key : fallback;
 
     public override void Light(Godot.Environment env, DirectionalLight3D key)
     {
+        if (Urban)
+        {
+            env.BackgroundColor = new Color("5f6670");
+            env.AmbientLightColor = new Color("c9c4bb");
+            env.AmbientLightEnergy = .6f;
+            env.TonemapExposure = 1.05f;
+            env.FogEnabled = true;
+            env.FogMode = Godot.Environment.FogModeEnum.Depth;
+            env.FogLightColor = new Color("8a8780");
+            env.FogDensity = .8f;
+            env.FogDepthCurve = 1.4f;
+            env.FogSkyAffect = 1;
+            key.Name = "Sun";
+            key.RotationDegrees = new Vector3(-38, -48, 0);
+            key.LightColor = new Color("f1e2c8");
+            key.LightEnergy = 1.15f;
+            return;
+        }
         env.BackgroundColor = new Color("5d6b78");
         env.AmbientLightColor = new Color("b9c6d2");
         env.AmbientLightEnergy = .55f;
@@ -142,15 +188,24 @@ public sealed partial class LayoutMap : StageMap
         PlayerStart = FloorAt(start) + Vector3.Up * .05f;
         var goal = Layout.FindMarker("safehouse")?.Pos ?? start;
         _goal = FloorAt(goal);
-        Landmark("floor_hatch", FloorAt(start));
-        Lamp(PlayerStart + Vector3.Up * 4, "ffe6b0", 3, 24, false);
+        if (Layout.FindMarker("start_room") is { } room) BuildStartRoom(room.Pos);
+        else
+        {
+            Landmark("floor_hatch", FloorAt(start));
+            Lamp(PlayerStart + Vector3.Up * 4, "ffe6b0", 3, 24, false);
+        }
 
-        if (Layout.FindMarker("blocked") is { } blocked && Layout.FindMarker("mission") is { } mission) BuildBridgeMission(blocked.Pos, mission.Pos);
+        if (Layout.FindMarker("blocked") is { } blocked && Layout.FindMarker("mission") is { } mission)
+        {
+            if (blocked.Kind == "shutter") BuildShutterMission(blocked.Pos, mission.Pos);
+            else BuildBridgeMission(blocked.Pos, mission.Pos);
+        }
         if (Layout.FindMarker("safe_zone") is { } zone) BuildHut(zone.Pos);
         if (Layout.FindMarker("safehouse") is { } safehouse) BuildSafehouse(safehouse.Pos);
         BuildLandmarks();
+        BuildDataProps();
         BuildEnvironment();
-        if (_hasDestructionExamples) PlaceDestructionExamples("stage2_draft");
+        if (_hasDestructionExamples) PlaceDestructionExamples("stage3");
         if (Mode == GameMode.Scenario && _suppliesPath != null) PlaceSupplies(StageSupplies.Load(_suppliesPath));
     }
 
@@ -212,14 +267,100 @@ public sealed partial class LayoutMap : StageMap
         RoomWall(x0, x0 + WallThick, z0, center.Y - door / 2, y, draw: false);
         RoomWall(x0, x0 + WallThick, center.Y + door / 2, z1, y, draw: false);
         var at = new Vector3(center.X, y, center.Y);
-        Landmark("safehouse", at);
+        // safehouse_b: the close button moved from the west wall (its back faces the camera) to the north wall (L-32).
+        Landmark("safehouse_b", at);
         _safehouseRoom = new Rect2(x0 + WallThick, z0 + WallThick, SafehouseSize.X - 2 * WallThick, SafehouseSize.Y - 2 * WallThick);
         var leaf = PropLibrary.Instance("safehouse_door");
         _safehouseDoor = Door.Create(_stage, new Vector3(x0 + WallThick / 2, y, center.Y), new Vector3(.3f, 2.4f, door), new Color("4f6b4a"), new Vector3(0, 0, 2.5f), open: true, visual: leaf);
         if (leaf != null) PropOcclusion.Attach(_stage, leaf);
-        _safehouseSwitch = Use(at + new Vector3(-6.5f, 1.4f, 1.8f), "ui_use_close_safehouse", () => _stage.TryCloseSafehouse());
+        _safehouseSwitch = Use(at + SafehouseSwitchLocal, "ui_use_close_safehouse", () => _stage.TryCloseSafehouse());
         _safehouseSwitch.Enabled = false;
         Lamp(new Vector3(center.X, y + 2.85f, center.Y), "b5e6c3", 3.6f, 12, false);
+        if (Layout.NextStage > 0)
+        {
+            // The large campaign goes on through a hatch in the safehouse floor (L-14), like Stage 1.
+            var hatch = at + new Vector3(3, 0, 1.5f);
+            Landmark("floor_hatch", hatch);
+            _exit = Use(hatch, "ui_use_next_stage", () => _stage.TakeStageExit());
+            _exit.Enabled = false;
+        }
+    }
+
+    /// <summary>
+    /// The large Stage 1's start room: shut in, the door on the east wall toward the route, the door switch on the north
+    /// wall's inner face so the camera sees it (L-32). The flow is the old Stage 1's: open the door, then the crescendo.
+    /// </summary>
+    private void BuildStartRoom(Vector2 center)
+    {
+        float y = FloorAt(center).Y;
+        float x0 = center.X - StartRoomSize.X / 2, x1 = center.X + StartRoomSize.X / 2, z0 = center.Y - StartRoomSize.Y / 2, z1 = center.Y + StartRoomSize.Y / 2;
+        const float door = 2.6f;
+        RoomWall(x0, x1, z0, z0 + WallThick, y);
+        RoomWall(x0, x0 + WallThick, z0, z1, y);
+        RoomWall(x1 - WallThick, x1, z0, center.Y - door / 2, y);
+        RoomWall(x1 - WallThick, x1, center.Y + door / 2, z1, y);
+        // The camera-side wall stays low so the room reads from above, like the old Stage 1's 1.1 m edge.
+        var low = new Vector3((x0 + x1) / 2, y + .55f, z1 - WallThick / 2);
+        Solid(low, new Vector3(x1 - x0, 1.1f, WallThick), "", drawCargo: false);
+        Mat.Box(_stage, low, new Vector3(x1 - x0, 1.1f, WallThick), Mat.Solid("6b7a68", .9f));
+        _startDoor = Door.Create(_stage, new Vector3(x1 - WallThick / 2, y, center.Y), new Vector3(.3f, 2.4f, door), new Color("4f6b4a"), new Vector3(0, 0, 2.5f));
+        _startSwitch = WallPanel(new Vector3(x1 - 2.2f, y, z0 + WallThick), "ui_use_open_door", _stage.LeaveSafeRoom);
+        Lamp(new Vector3(center.X, y + 2.6f, center.Y), "ffd6a0", 3.4f, 9, false);
+    }
+
+    /// <summary>
+    /// A wall button box (`wall_button_panel`) on a wall face that looks at the camera (+Z), its button 1.2 m up.
+    /// <paramref name="wallFace"/> is the point on the face at floor height; the interaction stands in front of the button.
+    /// </summary>
+    private Interactable WallPanel(Vector3 wallFace, string promptKey, Action action)
+    {
+        var panel = Prop("wall_button_panel", wallFace, solid: false);
+        if (panel != null) PropOcclusion.Attach(_stage, panel);
+        Lamp(wallFace + new Vector3(0, 2.2f, .5f), "ffb070", 1.4f, 5, true);
+        return Use(wallFace + new Vector3(0, 1.2f, .45f), promptKey, action);
+    }
+
+    /// <summary>
+    /// The urban mission (L-30): a roll-up shutter shuts the way on, and a wall panel north of the route raises it with a
+    /// crescendo — the old Stage 1's shutter beat at the large scale. The panel's wall stub stands behind the marker so the
+    /// button faces the camera (L-32).
+    /// </summary>
+    private void BuildShutterMission(Vector2 blocked, Vector2 panel)
+    {
+        var at = FloorAt(blocked);
+        var leaf = PropLibrary.Instance("shutter_leaf");
+        if (leaf != null) leaf.RotationDegrees = new Vector3(0, 90, 0);
+        _gate = Door.Create(_stage, at, new Vector3(.4f, 3.6f, 6f), new Color("8f9a96"), new Vector3(0, 3.4f, 0), visual: leaf);
+        if (leaf != null) PropOcclusion.Attach(_stage, leaf);
+        _gate.Name = "ShutterGate";
+        _gate.OpenSeconds = 1.2f;
+        foreach (float z in new[] { -3.4f, 3.4f })
+            RoomWall(at.X - .4f, at.X + .4f, at.Z + z - .4f, at.Z + z + .4f, at.Y);
+        var stand = FloorAt(panel);
+        var wall = new Vector3(stand.X, stand.Y, stand.Z - PanelSetback);
+        RoomWall(wall.X - 1.2f, wall.X + 1.2f, wall.Z - .4f, wall.Z, stand.Y);
+        _pump = WallPanel(wall, "ui_use_shutter", _stage.StartCrescendo);
+    }
+
+    private void BuildDataProps()
+    {
+        foreach (var spot in Layout.Props)
+        {
+            var at = FloorAt(spot.Pos);
+            if (spot.Id.StartsWith("workshop_"))
+            {
+                if (Enum.TryParse<WorkshopArt.Kind>(spot.Id["workshop_".Length..], true, out var kind)) WorkshopProp(kind, at);
+                else GD.PushWarning($"LayoutMap: unknown workshop prop {spot.Id}");
+                continue;
+            }
+            var prop = Prop(spot.Id, at, spot.Yaw, spot.Scale, spot.Solid);
+            if (prop != null) PropOcclusion.Attach(_stage, prop);
+        }
+        foreach (var lamp in Layout.Lamps)
+        {
+            Prop("streetlamp", FloorAt(lamp), 90, solid: false);
+            Lamp(FloorAt(lamp) + Vector3.Up * 3.6f, "ffe1ab", 1.1f, 9, false).Name = "EnvironmentLamp";
+        }
     }
 
     /// <summary>A plain graybox wall standing on the floor at height <paramref name="y"/>.</summary>
@@ -270,7 +411,8 @@ public sealed partial class LayoutMap : StageMap
             else if (marker.Type == "noise")
             {
                 var size = new Vector3(5.2f, 2, 2.2f);
-                _alarmTruck = AlarmCar.Create(_stage, at + Vector3.Up, size, "c7a35c", PropLibrary.Instance("alarm_truck"));
+                if (marker.Model == "car_wreck") size = new Vector3(4.4f, 1.5f, 1.9f);
+                _alarmTruck = AlarmCar.Create(_stage, at + Vector3.Up * size.Y / 2, size, "c7a35c", PropLibrary.Instance(marker.Model != "" ? marker.Model : "alarm_truck"));
                 BlockFlow(_alarmTruck.Position, size);
             }
         }
@@ -286,7 +428,7 @@ public sealed partial class LayoutMap : StageMap
             float thick = container ? .04f : deck ? .3f : top + .4f;
             var center = r.GetCenter();
             var mesh = Mat.Box(_stage, new Vector3(center.X, top - thick / 2, center.Y),
-                new Vector3(r.Size.X, thick, r.Size.Y), deck && !container ? Mat.Solid("8a6a46", .95f) : GroundMaterial);
+                new Vector3(r.Size.X, thick, r.Size.Y), deck && !container ? Mat.Solid("8a6a46", .95f) : Urban ? Mat.Solid(tier == 0 ? "5c5f60" : "8d8c84", .95f) : GroundMaterial);
             if (deck) mesh.Name = container ? "ContainerRoof" : RegionFootprint("watchtower") is { } tower && r.Intersects(tower) ? "WatchtowerDeck" : "BridgeDeck";
         }
         var span = new[] { BridgeFootprint(), RegionFootprint("watchtower"),RegionFootprint("stack_1"),RegionFootprint("stack_2"),RegionFootprint("stack_3") }
@@ -313,15 +455,23 @@ public sealed partial class LayoutMap : StageMap
                 // Whole cells across too: the cells painted as ramp and the wedge's body must be the same strip,
                 // or a walker on the ramp's side cell is led into the cliff beside it.
                 float side0 = Mathf.Round((alongX ? c.Edge.Y : c.Edge.X) - link.Width / 2), side1 = side0 + Mathf.Round(link.Width);
+                // Ramp cells stand on the low tier, so the flow would also step onto a ramp from its side, where the
+                // wedge's side is a wall but for its lowest 1.5 m: keep the flow off the strip beside the rest (the body is
+                // stopped there anyway).
+                float y = c.Low * TierMap.Height + 1, side = RampLength - 1.5f;
                 if (alongX)
                 {
                     float x0 = c.Up.X > 0 ? c.Edge.X - RampLength : c.Edge.X, x1 = c.Up.X > 0 ? c.Edge.X : c.Edge.X + RampLength;
                     Ramp(x0, x1, side0, side1, c.Low, c.Up, TierColors[Math.Clamp(c.Low, 0, TierColors.Length - 1)], smooth:true);
+                    float hx = c.Edge.X - c.Up.X * side / 2;
+                    foreach (float z in new[] { side0 - .5f, side1 + .5f }) BlockFlow(new Vector3(hx, y, z), new Vector3(side - .9f, 2, .8f));
                 }
                 else
                 {
                     float z0 = c.Up.Z > 0 ? c.Edge.Y - RampLength : c.Edge.Y, z1 = c.Up.Z > 0 ? c.Edge.Y : c.Edge.Y + RampLength;
                     Ramp(side0, side1, z0, z1, c.Low, c.Up, TierColors[Math.Clamp(c.Low, 0, TierColors.Length - 1)], smooth:true);
+                    float hz = c.Edge.Y - c.Up.Z * side / 2;
+                    foreach (float x in new[] { side0 - .5f, side1 + .5f }) BlockFlow(new Vector3(x, y, hz), new Vector3(.8f, 2, side - .9f));
                 }
                 break;
             }

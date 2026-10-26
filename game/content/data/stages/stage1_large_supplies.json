@@ -1,0 +1,211 @@
+{
+  "description": "Large Stage 1 supply points (decisions.md L-30, the 20-minute budget for a 4-player team, [임시]). Main points on the route (alley end, the guard post, the freight yard's far end); optional ones on the two reward branches (pharmacy, container top); the event reward by the shutter panel. Ammo piles only in main points, none within 10 m of the panel (L-12). The game lays each item on the floor of the tier it stands on.",
+  "points": [
+    {
+      "id": "saferoom_kit",
+      "kind": "start",
+      "area": "saferoom",
+      "items": [
+        {
+          "item": "ammo",
+          "at": [
+            3,
+            -2.5
+          ]
+        },
+        {
+          "item": "medkit",
+          "at": [
+            4.5,
+            -2.5
+          ]
+        },
+        {
+          "item": "weapon",
+          "id": "m4",
+          "at": [
+            2.5,
+            1.5
+          ]
+        },
+        {
+          "item": "weapon",
+          "id": "r870",
+          "at": [
+            4,
+            1.8
+          ]
+        },
+        {
+          "item": "throwable",
+          "id": "molotov",
+          "at": [
+            6,
+            2
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pharmacy",
+      "kind": "optional",
+      "area": "street",
+      "items": [
+        {
+          "item": "medkit",
+          "at": [
+            68,
+            -52
+          ]
+        },
+        {
+          "item": "throwable",
+          "id": "flashbang",
+          "at": [
+            70.5,
+            -52.5
+          ]
+        }
+      ]
+    },
+    {
+      "id": "alley_end",
+      "kind": "main",
+      "area": "alley",
+      "items": [
+        {
+          "item": "ammo",
+          "at": [
+            185,
+            -69
+          ]
+        },
+        {
+          "item": "medkit",
+          "at": [
+            186.5,
+            -69
+          ]
+        },
+        {
+          "item": "throwable",
+          "id": "frag",
+          "at": [
+            188,
+            -68.5
+          ]
+        }
+      ]
+    },
+    {
+      "id": "stack_top",
+      "kind": "optional",
+      "area": "depot",
+      "items": [
+        {
+          "item": "weapon",
+          "id": "mp5",
+          "at": [
+            268,
+            -102
+          ]
+        },
+        {
+          "item": "throwable",
+          "id": "molotov",
+          "at": [
+            270.5,
+            -102.5
+          ]
+        }
+      ]
+    },
+    {
+      "id": "panel_reward",
+      "kind": "event",
+      "area": "depot",
+      "items": [
+        {
+          "item": "weapon",
+          "id": "m249",
+          "at": [
+            306,
+            -112
+          ]
+        }
+      ]
+    },
+    {
+      "id": "guard_post",
+      "kind": "main",
+      "area": "post",
+      "items": [
+        {
+          "item": "ammo",
+          "at": [
+            358,
+            -92
+          ]
+        },
+        {
+          "item": "medkit",
+          "at": [
+            360,
+            -92.5
+          ]
+        }
+      ]
+    },
+    {
+      "id": "yard_end",
+      "kind": "main",
+      "area": "yard",
+      "items": [
+        {
+          "item": "ammo",
+          "at": [
+            509,
+            -112
+          ]
+        },
+        {
+          "item": "medkit",
+          "at": [
+            510.5,
+            -112
+          ]
+        },
+        {
+          "item": "weapon",
+          "id": "ak47",
+          "at": [
+            512,
+            -111
+          ]
+        },
+        {
+          "item": "throwable",
+          "id": "frag",
+          "at": [
+            513.5,
+            -112
+          ]
+        }
+      ]
+    },
+    {
+      "id": "arrival",
+      "kind": "arrival",
+      "area": "safehouse",
+      "items": [
+        {
+          "item": "ammo",
+          "at": [
+            617,
+            -131
+          ]
+        }
+      ]
+    }
+  ]
+}

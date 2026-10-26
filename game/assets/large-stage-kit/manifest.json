@@ -1,0 +1,242 @@
+{
+  "revision": 1,
+  "contract": "plushpanic_outdoor_v1",
+  "units": "metres",
+  "up_axis": "+Y",
+  "assets": [
+    {
+      "id": "safehouse_b",
+      "name": "Stage 2 도착 세이프하우스",
+      "category": "Large stage kit",
+      "note": "외벽14×12 m/두께0.4 m/높이2.6 m, 서쪽 입구2.6×2.4 m. 게임 바닥/벽 충돌 사용. 제어판 버튼 게임로컬(-4.6,1.4,-5.55), rear 반지붕 최저3.03 m.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [
+        "Occlude_Walls"
+      ],
+      "file": "safehouse_b.glb",
+      "dimensions_m": [
+        14.1615,
+        3.75,
+        12.0965
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 2632
+    },
+    {
+      "id": "wall_button_panel",
+      "name": "Wall button panel",
+      "category": "Large stage kit",
+      "note": "Wall backplate y=0; cabinet z=0.5..1.8. Button center game local (0,1.2,0.37). Envelope includes conduit and beacon; no wall collision.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [],
+      "file": "wall_button_panel.glb",
+      "dimensions_m": [
+        0.9,
+        1.99,
+        0.43
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 492
+    },
+    {
+      "id": "shutter_leaf",
+      "name": "Rolling shutter leaf",
+      "category": "Large stage kit",
+      "note": "6 x 3.6 m leaf; bottom-center pivot, opens by translation upward. Handles face Blender -Y.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [
+        "Occlude_Leaf"
+      ],
+      "file": "shutter_leaf.glb",
+      "dimensions_m": [
+        6.0,
+        3.6,
+        0.2
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 763
+    },
+    {
+      "id": "urban_rowhouse",
+      "name": "Boarded rowhouse",
+      "category": "Large stage kit",
+      "note": "12 x 10 m footprint, 7 m envelope including water tank. Brick first storey, plaster second storey. Keep ends at 2.4 m.",
+      "collision": {
+        "kind": "box",
+        "size": [
+          12,
+          7,
+          10
+        ],
+        "center": [
+          0,
+          3.5,
+          0
+        ]
+      },
+      "occlusion_parts": [
+        "Occlude_Upper"
+      ],
+      "file": "urban_rowhouse.glb",
+      "dimensions_m": [
+        12.034,
+        7.0,
+        10.017
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 2568
+    },
+    {
+      "id": "urban_shop",
+      "name": "Shuttered corner shop",
+      "category": "Large stage kit",
+      "note": "10 x 8 x 4.2 m complete envelope. Front wall y=-2.8, awning projects 1.2 m to y=-4; rear wall y=4. No lettering.",
+      "collision": {
+        "kind": "box",
+        "size": [
+          10,
+          4.2,
+          8
+        ],
+        "center": [
+          0,
+          2.1,
+          0
+        ]
+      },
+      "occlusion_parts": [
+        "Occlude_Upper"
+      ],
+      "file": "urban_shop.glb",
+      "dimensions_m": [
+        10.0,
+        4.2,
+        8.0
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 2568
+    },
+    {
+      "id": "urban_warehouse",
+      "name": "Sawtooth warehouse",
+      "category": "Large stage kit",
+      "note": "24 x 16 x 7.5 m envelope; three north-glazed sawtooth bays. Lower wall split exactly at 2.4 m. Closed six-metre front sliding door.",
+      "collision": {
+        "kind": "box",
+        "size": [
+          24,
+          7.5,
+          16
+        ],
+        "center": [
+          0,
+          3.75,
+          0
+        ]
+      },
+      "occlusion_parts": [
+        "Occlude_Upper"
+      ],
+      "file": "urban_warehouse.glb",
+      "dimensions_m": [
+        24.0,
+        7.5,
+        16.0825
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 3532
+    },
+    {
+      "id": "car_wreck",
+      "name": "Abandoned sedan",
+      "category": "Large stage kit",
+      "note": "4.4 x 1.9 x 1.5 m; slightly rolled body, flattened camera-side rear tyre. No roof alarm mount. Rear (-X): two Red tail lights (0.28 x 0.12 m); four corner Hazard indicators (0.14 x 0.1 m); one Red dash alarm lens (0.12 m) at the windshield base. Six palette materials; AlarmCar prefix binding.",
+      "collision": {
+        "kind": "box",
+        "size": [
+          4.4,
+          1.5,
+          1.9
+        ],
+        "center": [
+          0,
+          0.75,
+          0
+        ]
+      },
+      "occlusion_parts": [],
+      "file": "car_wreck.glb",
+      "dimensions_m": [
+        4.4,
+        1.4716,
+        1.903
+      ],
+      "bounds_min_y": -0.0,
+      "triangles": 1964
+    },
+    {
+      "id": "bus_wreck",
+      "name": "Abandoned bus",
+      "category": "Large stage kit",
+      "note": "11 x 2.6 x 3 m; six wheels, green stripe, broken opaque window holes and dented front bumper. Split at 1.4 m.",
+      "collision": {
+        "kind": "box",
+        "size": [
+          11,
+          3,
+          2.6
+        ],
+        "center": [
+          0,
+          1.5,
+          0
+        ]
+      },
+      "occlusion_parts": [
+        "Occlude_Upper"
+      ],
+      "file": "bus_wreck.glb",
+      "dimensions_m": [
+        11.0213,
+        3.0,
+        2.6
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 2168
+    },
+    {
+      "id": "dumpster",
+      "name": "Open-lid dumpster",
+      "category": "Large stage kit",
+      "note": "2 x 1.3 x 1.3 m envelope, including half-open rubber lid. Four wheels, hollow visible interior.",
+      "collision": {
+        "kind": "box",
+        "size": [
+          2,
+          1.3,
+          1.3
+        ],
+        "center": [
+          0,
+          0.65,
+          0
+        ]
+      },
+      "occlusion_parts": [],
+      "file": "dumpster.glb",
+      "dimensions_m": [
+        2.0,
+        1.2768,
+        1.3165
+      ],
+      "bounds_min_y": -0.0,
+      "triangles": 644
+    }
+  ]
+}

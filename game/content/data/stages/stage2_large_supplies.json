@@ -1,0 +1,204 @@
+{
+  "description": "Large Stage 2 supply points (decisions.md L-30, the 20-minute budget for a 4-player team, [임시]). Main points on the route (the ford, the ranger post, the hill top); optional ones on the two reward branches (hunting cabin ledge, log deck); the event reward by the generator panel. Ammo piles only in main points, none within 10 m of the panel (L-12). The game lays each item on the floor of the tier it stands on.",
+  "points": [
+    {
+      "id": "drain_kit",
+      "kind": "start",
+      "area": "drain",
+      "items": [
+        {
+          "item": "ammo",
+          "at": [
+            11,
+            6
+          ]
+        },
+        {
+          "item": "medkit",
+          "at": [
+            12.5,
+            6.5
+          ]
+        },
+        {
+          "item": "weapon",
+          "id": "m4",
+          "at": [
+            10,
+            8.5
+          ]
+        },
+        {
+          "item": "weapon",
+          "id": "r870",
+          "at": [
+            11.5,
+            8.8
+          ]
+        },
+        {
+          "item": "throwable",
+          "id": "molotov",
+          "at": [
+            13,
+            8.5
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cabin",
+      "kind": "optional",
+      "area": "slope",
+      "items": [
+        {
+          "item": "weapon",
+          "id": "mp5",
+          "at": [
+            149,
+            -84
+          ]
+        },
+        {
+          "item": "throwable",
+          "id": "flashbang",
+          "at": [
+            151.5,
+            -84.5
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ford_cache",
+      "kind": "main",
+      "area": "ford",
+      "items": [
+        {
+          "item": "ammo",
+          "at": [
+            199,
+            -44
+          ]
+        },
+        {
+          "item": "medkit",
+          "at": [
+            200.5,
+            -44
+          ]
+        },
+        {
+          "item": "throwable",
+          "id": "frag",
+          "at": [
+            202,
+            -43.5
+          ]
+        }
+      ]
+    },
+    {
+      "id": "generator_reward",
+      "kind": "event",
+      "area": "bunker",
+      "items": [
+        {
+          "item": "weapon",
+          "id": "m249",
+          "at": [
+            286,
+            -108
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ranger_post",
+      "kind": "main",
+      "area": "post",
+      "items": [
+        {
+          "item": "ammo",
+          "at": [
+            378,
+            -73
+          ]
+        },
+        {
+          "item": "medkit",
+          "at": [
+            380,
+            -73.5
+          ]
+        }
+      ]
+    },
+    {
+      "id": "log_deck",
+      "kind": "optional",
+      "area": "hill",
+      "items": [
+        {
+          "item": "weapon",
+          "id": "ak47",
+          "at": [
+            473,
+            -127
+          ]
+        },
+        {
+          "item": "throwable",
+          "id": "molotov",
+          "at": [
+            475.5,
+            -127.5
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hill_top",
+      "kind": "main",
+      "area": "hill",
+      "items": [
+        {
+          "item": "ammo",
+          "at": [
+            529,
+            -96
+          ]
+        },
+        {
+          "item": "medkit",
+          "at": [
+            530.5,
+            -96
+          ]
+        },
+        {
+          "item": "throwable",
+          "id": "frag",
+          "at": [
+            532,
+            -95.5
+          ]
+        }
+      ]
+    },
+    {
+      "id": "arrival",
+      "kind": "arrival",
+      "area": "pass",
+      "items": [
+        {
+          "item": "ammo",
+          "at": [
+            600,
+            -108
+          ]
+        }
+      ]
+    }
+  ]
+}

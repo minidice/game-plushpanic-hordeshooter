@@ -1,6 +1,6 @@
 # 레벨
 
-범위: 시나리오 맵 · 높이 단 · Stage 1 · 2. 관련 결정 ID: L-.
+범위: 시나리오 맵 · 높이 단 · Stage 1 · 2 · 3. 관련 결정 ID: L-.
 
 **옛 기록은 옮기지 않고 그대로 있다**(2026-10-26 결정, [기록 문서 나누기](../../records-split-plan.md) 6.4). 이 기능의 2026-10-26 이전 결정 · 이슈 · 확인 기록은 [decisions.md](../../decisions.md) · [issues.md](../../issues.md) · [feature-checklist.md](../../feature-checklist.md)에 있다.
 
@@ -13,6 +13,7 @@
 ## 상세 규격
 
 - [level-design-rules.md](../../level-design-rules.md)
+- [large-stages.md](../../large-stages.md): 큰 스테이지 시안 Stage 1 · 2 · 3 (L-30)
 - [scenario-level-design.md](../../scenario-level-design.md)
 - [map-expansion-plan.md](../../map-expansion-plan.md)
 - [elevation-tiers.md](../../elevation-tiers.md)

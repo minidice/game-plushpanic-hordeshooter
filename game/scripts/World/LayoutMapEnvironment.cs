@@ -5,23 +5,34 @@ using System.Linq;
 
 namespace HordeShooter;
 
-/// <summary>First environment pass of the Stage 2 draft. All terrain/link physics stays in LayoutMap.</summary>
+/// <summary>
+/// Environment pass of the layout maps. All terrain/link physics stays in LayoutMap. Every layout gets the generic parts
+/// (route paths, cliff rock, the edge fill, container stack shells); Stage 3 (the size draft) adds its hand-placed lists
+/// and forest study, the large forest Stage 2 a scattered forest, the urban Stage 1 buildings and fences beyond the edge.
+/// </summary>
 public sealed partial class LayoutMap
 {
     private void BuildEnvironment()
     {
         foreach(var body in _stage.GetChildren().OfType<StaticBody3D>().Where(n=>n.HasMeta("smooth_terrain_ramp") || n.GetChildren().OfType<MeshInstance3D>().Any(m=>m.Mesh is PrismMesh)))
-            foreach(var mesh in body.GetChildren().OfType<MeshInstance3D>())mesh.MaterialOverride=GroundMaterial;
-        BuildPaths();
-        BuildCliffFaces();
-        BuildBoundaryGroves();
+            foreach(var mesh in body.GetChildren().OfType<MeshInstance3D>())mesh.MaterialOverride=Urban?Mat.Solid("8d8c84",.95f):GroundMaterial;
         foreach (var region in Layout.Regions.Where(r=>r.Id.StartsWith("stack_")))
         {
             var box=RegionFootprint(region.Id)!.Value;
             var center=box.GetCenter();
             Landmark("container_stack_shell",new Vector3(center.X,(region.Tier-2)*TierMap.Height,center.Y));
         }
+        if(Urban){BuildUrbanBorders();return;}
+        BuildPaths();
+        BuildCliffFaces();
+        BuildBoundaryGroves();
+        if(Layout.Dressing=="stage3")BuildStage3Dressing();
+        else BuildForestScatter();
+    }
 
+    /// <summary>Stage 3's hand-placed dressing (written for its coordinates; other layouts place props by data).</summary>
+    private void BuildStage3Dressing()
+    {
         // Deliberate working groups, with a continuous open corridor between them.
         foreach (var (x,z,yaw) in new (float,float,float)[]{(266,-60,0),(302,-78,90),(345,-65,0),(398,-82,90),(420,-28,0)})
         {
@@ -51,7 +62,7 @@ public sealed partial class LayoutMap
         // Sign position and next destination are explicit: arrows cannot accidentally point into a cliff.
         foreach(var (at,to) in new (Vector2,Vector2)[]{
             (new(34,1),new(60,-6)),(new(62,-4),new(74,-12)),(new(107,-24),new(118,-31)),
-            (new(112,-47),new(118,-64)),(new(178,-38),new(184,-30)),(new(194,-8),new(188,-22)),
+            (new(112,-47),new(118,-64)),(new(178,-38),new(184,-30)),(new(194,-8),new(188,-16)),
             (new(181,-27),new(183,-40)),(new(220,-40),new(232,-52)),(new(247,-42),new(260,-46)),
             (new(341,-40),new(360,-14)),(new(431,-61),new(450,-78)),(new(468,-89),new(484,-99)),
             (new(494,-106),new(508,-118)),(new(523,-119),new(530,-128)),(new(603,-136),new(626,-145))})
@@ -86,6 +97,78 @@ public sealed partial class LayoutMap
         }
         Scatter("bit_grass_clump",grass,false);
         if(ForestStudyEnabled)BuildForestStudy();
+    }
+
+    /// <summary>A forest over the whole walkable layout, kept off the routes, links, markers and supply spots.</summary>
+    private void BuildForestScatter()
+    {
+        var grass=new List<Transform3D>();
+        var rng=new RandomNumberGenerator{Seed=(ulong)(24024+Layout.Stage)};
+        for(float x=Layout.Bounds.Position.X;x<Layout.Bounds.End.X;x+=9)for(float z=Layout.Bounds.Position.Y;z<Layout.Bounds.End.Y;z+=8)
+        {
+            var p=new Vector2(x+rng.RandfRange(-2,2),z+rng.RandfRange(-2,2));
+            if(Layout.TierAt(p)<0 || rng.Randf()<.55f || PathDistance(p)<9)continue;
+            EnvironmentProp(rng.Randf()<.75f?"pine_tall":"broadleaf",p,rng.Randf()*360);
+        }
+        for(float x=Layout.Bounds.Position.X;x<Layout.Bounds.End.X;x+=3.6f) for(float z=Layout.Bounds.Position.Y;z<Layout.Bounds.End.Y;z+=3.8f)
+        {
+            var p=new Vector2(x+rng.RandfRange(-1,1),z+rng.RandfRange(-1,1));
+            if(Layout.TierAt(p)<0 || PathDistance(p)<4 || !Flat(p,.7f) || rng.Randf()<.35f)continue;
+            grass.Add(new Transform3D(new Basis(Vector3.Up,rng.Randf()*Mathf.Tau),FloorAt(p)+Vector3.Up*.015f));
+        }
+        Scatter("bit_grass_clump",grass,false);
+    }
+
+    /// <summary>
+    /// The urban edge (L-30 Stage 1): beyond the far (north) edge a row of buildings, beyond the camera-side and west
+    /// edges low fences, so the invisible walls read as streets that go on. No collision (the edge walls already block).
+    /// </summary>
+    private void BuildUrbanBorders()
+    {
+        var buildings=new Dictionary<string,List<Transform3D>>();
+        var fences=new List<Transform3D>();
+        var rng=new RandomNumberGenerator{Seed=(ulong)(31031+Layout.Stage)};
+        var taken=new List<Rect2>();
+        Vector2? Nearest(Vector2 p,float reach)
+        {
+            Vector2? best=null;float distance=float.MaxValue;
+            for(int i=0;i<16;i++)for(float r=2;r<=reach;r+=2)
+            {
+                var q=p+Vector2.FromAngle(i*Mathf.Tau/16)*r;
+                if(Layout.TierAt(q)>=0 && r<distance){best=q;distance=r;}
+            }
+            return best;
+        }
+        foreach(var spot in Layout.Props)
+            if(PropLibrary.Find(spot.Id) is { } placed)taken.Add(new Rect2(spot.Pos-new Vector2(placed.Dimensions.X,placed.Dimensions.Z)/2,new Vector2(placed.Dimensions.X,placed.Dimensions.Z)));
+        string[] kinds={"urban_rowhouse","urban_rowhouse","urban_shop","urban_warehouse"};
+        for(float x=Layout.Bounds.Position.X+6;x<Layout.Bounds.End.X-6;x+=7)
+        for(float z=Layout.Bounds.Position.Y+6;z<Layout.Bounds.End.Y-6;z+=7)
+        {
+            var p=new Vector2(x,z);
+            if(Layout.TierAt(p)>=0 || Nearest(p,16) is not { } near)continue;
+            if(p.Y<near.Y-3)
+            {
+                string id=kinds[rng.RandiRange(0,kinds.Length-1)];
+                if(PropLibrary.Find(id) is not { } info)continue;
+                var size=new Vector2(info.Dimensions.X,info.Dimensions.Z);
+                var rect=new Rect2(p-size/2,size).Grow(1.5f);
+                bool clear=!taken.Any(r=>r.Intersects(rect));
+                // The whole footprint stays off the walkable ground.
+                for(int i=0;i<9 && clear;i++)clear=Layout.TierAt(rect.Position+rect.Size*new Vector2(i%3*.5f,i/3*.5f))<0;
+                if(!clear)continue;
+                taken.Add(rect);
+                if(!buildings.TryGetValue(id,out var list)){list=new();buildings.Add(id,list);}
+                list.Add(new Transform3D(Basis.Identity,new Vector3(p.X,FloorAt(near).Y-.05f,p.Y)));
+            }
+            else if(p.DistanceTo(near)<5)
+            {
+                var along=(near-p).Orthogonal().Normalized();
+                fences.Add(new Transform3D(new Basis(Vector3.Up,-Mathf.Atan2(along.Y,along.X)),new Vector3(p.X,FloorAt(near).Y-.05f,p.Y)));
+            }
+        }
+        foreach(var (id,list) in buildings)Scatter(id,list);
+        Scatter("wire_fence",fences);
     }
 
     private float PathDistance(Vector2 p)

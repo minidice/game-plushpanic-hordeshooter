@@ -1,6 +1,8 @@
-"""Draw a stage floor plan draft (JSON) as SVG and report route lengths and the L-1 ratio.
+"""Draw a stage floor plan draft (JSON) as SVG and report route lengths, the L-1 ratio and the zones (L-31).
 
-    python tools/floorplan/render_floorplan.py game/content/data/stages/stage2_layout.json doc/images/stage2-floorplan.svg
+    python tools/floorplan/render_floorplan.py game/content/data/stages/stage3_layout.json doc/images/stage3-floorplan.svg
+    python tools/floorplan/render_floorplan.py game/content/data/stages/stage1_large_layout.json doc/images/stage1-large-floorplan.svg
+    python tools/floorplan/render_floorplan.py game/content/data/stages/stage2_large_layout.json doc/images/stage2-large-floorplan.svg
 
 Plan view: x to the right, the far side (-z) up, the camera side (+z) down. Standard library only.
 """
@@ -11,9 +13,10 @@ from xml.sax.saxutils import escape
 
 SCALE = 3.0  # px per metre
 MARGIN = 40
-LEGEND_H = 250
+LEGEND_H = 272
 TIER_COLORS = ["#e9e3cf", "#d6cba4", "#bda97a", "#9c8657", "#7a6640"]
 VOID = "#3d4b40"
+ZONE_STYLE = {"large": ("#6a2c91", 3, "14,6"), "small": ("#0f7d74", 2, "5,4")}
 CAMERA_YAW_DEG = -30.0  # CameraRig.Yaw, decisions.md L-2
 
 
@@ -24,6 +27,19 @@ def load(path):
 
 def length(points):
     return sum(math.dist(a, b) for a, b in zip(points, points[1:]))
+
+
+def main_routes(routes):
+    return [routes[k] for k in ("main", "main_after_gondola") if k in routes]
+
+
+def main_walk(routes):
+    return sum(length(r) for r in main_routes(routes))
+
+
+def main_share(routes):
+    walk = main_walk(routes)
+    return sum(up_right_share(r) * length(r) for r in main_routes(routes)) / walk if walk else 0.0
 
 
 def up_right_share(points):
@@ -43,8 +59,9 @@ def up_right_share(points):
 
 
 class Plan:
-    def __init__(self, data):
+    def __init__(self, data, source=""):
         self.d = data
+        self.source = source
         x0, z0, x1, z1 = data["bounds"]
         self.x0, self.z0 = x0, z0
         self.w = (x1 - x0) * SCALE + MARGIN * 2
@@ -98,6 +115,10 @@ class Plan:
 
         for r in d["regions"]:
             self.add(f'<polygon points="{self.pts(r["poly"])}" fill="{TIER_COLORS[r["tier"]]}" stroke="#00000033" stroke-width="1"/>')
+        for z in d.get("zones", []):
+            color, width, dash = ZONE_STYLE[z["size"]]
+            self.add(f'<polygon points="{self.pts(z["poly"])}" fill="none" stroke="{color}" stroke-width="{width}" '
+                     f'stroke-dasharray="{dash}" opacity=".85"/>')
         for r in d["regions"]:
             cx = sum(p[0] for p in r["poly"]) / len(r["poly"])
             cz = sum(p[1] for p in r["poly"]) / len(r["poly"])
@@ -113,12 +134,14 @@ class Plan:
         self.screen_footprint((285, -60))
 
         rt = d["routes"]
-        self.polyline(rt["reward_tower"], "#2f6fb5", 3, "2,4")
-        self.polyline(rt["reward_workshop"], "#2f6fb5", 3, "2,4")
-        self.polyline(rt["mission"], "#e07b12", 3, "7,4", arrows=True)
-        self.polyline(rt["mission_return"], "#e07b12", 3, "7,4", arrows=True)
-        self.polyline(rt["main"], "#c8322a", 5, arrows=True)
-        self.polyline(rt["main_after_gondola"], "#c8322a", 5, arrows=True)
+        for name, points in rt.items():
+            if name.startswith("reward"):
+                self.polyline(points, "#2f6fb5", 3, "2,4")
+        for name in ("mission", "mission_return"):
+            if name in rt:
+                self.polyline(rt[name], "#e07b12", 3, "7,4", arrows=True)
+        for points in main_routes(rt):
+            self.polyline(points, "#c8322a", 5, arrows=True)
 
         for l in d["links"]:
             self.link(l)
@@ -126,12 +149,21 @@ class Plan:
             self.supply(s)
         for m in d["markers"]:
             self.marker(m)
-        for r in d["regions"]:
-            if r["label"]:
-                xs = [p[0] for p in r["poly"]]
-                zs = [p[1] for p in r["poly"]]
-                x, y = self.p(r.get("label_at", (min(xs) + 1, min(zs))))
-                self.text(x + 2, y + 15, r["label"], size=13, weight="bold")
+        if d.get("zones"):
+            for z in d["zones"]:
+                xs = [p[0] for p in z["poly"]]
+                zs = [p[1] for p in z["poly"]]
+                color = ZONE_STYLE[z["size"]][0]
+                x, y = self.p((min(xs), min(zs)))
+                size = "큰" if z["size"] == "large" else "작은"
+                self.text(x + 3, y + 15, f'{z["label"]} · {size} 구역', size=12, color=color, weight="bold")
+        else:
+            for r in d["regions"]:
+                if r["label"]:
+                    xs = [p[0] for p in r["poly"]]
+                    zs = [p[1] for p in r["poly"]]
+                    x, y = self.p(r.get("label_at", (min(xs) + 1, min(zs))))
+                    self.text(x + 2, y + 15, r["label"], size=13, weight="bold")
 
         self.orientation()
         self.legend()
@@ -243,19 +275,22 @@ class Plan:
         d = self.d
         y0 = self.map_h + 4
         x = MARGIN
-        self.text(x, y0 + 14, "Stage 2 평면도 (L-29 승인, 수치는 시작값) — game/content/data/stages/stage2_layout.json에서 생성", size=14, weight="bold", halo=False)
-        main = d["routes"]["main"] + d["routes"]["main_after_gondola"]
-        walk = length(d["routes"]["main"]) + length(d["routes"]["main_after_gondola"])
-        share = (up_right_share(d["routes"]["main"]) * length(d["routes"]["main"]) +
-                 up_right_share(d["routes"]["main_after_gondola"]) * length(d["routes"]["main_after_gondola"])) / walk
-        mission = length(d["routes"]["mission"]) + length(d["routes"]["mission_return"])
+        self.text(x, y0 + 14, f"Stage {d.get('stage', '?')} 평면도 (L-30 · L-31, 수치는 시작값) — {self.source}에서 생성", size=14, weight="bold", halo=False)
+        walk = main_walk(d["routes"])
+        share = main_share(d["routes"])
+        mission = length(d["routes"].get("mission", [])) + length(d["routes"].get("mission_return", []))
+        zones = d.get("zones", [])
+        large = sum(1 for z in zones if z["size"] == "large")
+        small = sum(1 for z in zones if z["size"] == "small")
         self.text(x, y0 + 34, f"주 경로 걷는 거리 약 {walk:.0f} m(곤돌라 제외) · 순수 이동 약 {walk / 4.4 / 60:.1f}분(4.4 m/s) · "
-                  f"L-1 우측 상단 비율(그린 경로 기준) {share:.0%} · 임무 왕복 약 {mission:.0f} m · 1단 = {d['tier_height_m']} m", size=11, halo=False)
+                  f"L-1 우측 상단 비율(그린 경로 기준) {share:.0%} · 임무 왕복 약 {mission:.0f} m · 큰 구역 {large} · 작은 구역 {small} · 1단 = {d['tier_height_m']} m", size=11, halo=False)
         rows = [
-            [("line", "#c8322a", ""), "주 경로"], [("line", "#e07b12", "7,4"), "임무 왕복(다리 내리기)"],
+            [("line", "#c8322a", ""), "주 경로"], [("line", "#e07b12", "7,4"), "임무 왕복"],
             [("line", "#2f6fb5", "2,4"), "보상 분기"], [("line", "#2e8b3e", ""), "경사로(단 오르내림)"],
             [("line", "#7a3e12", "6,3"), "좀비가 기어오르는 벽"], [("line", "#2b2b2b", ""), "못 오르는 벽(컨테이너 · 콘크리트)"],
             [("line", "#0aa5b8", "10,4"), "짚라인"], [("line", "#7d3fb8", "12,5"), "곤돌라"],
+            [("line", ZONE_STYLE["large"][0], ZONE_STYLE["large"][2]), "큰 구역(폭 40~100 m, L-31)"],
+            [("line", ZONE_STYLE["small"][0], ZONE_STYLE["small"][2]), "작은 구역(폭 12~30 m)"],
         ]
         for i, (sym, label) in enumerate(rows):
             cx = x + (i % 4) * 300
@@ -264,7 +299,7 @@ class Plan:
             dash_attr = f'stroke-dasharray="{dash}"' if dash else ""
             self.add(f'<line x1="{cx}" y1="{cy}" x2="{cx + 34}" y2="{cy}" stroke="{color}" stroke-width="4" {dash_attr}/>')
             self.text(cx + 42, cy + 4, label, size=11, halo=False)
-        cy = y0 + 118
+        cy = y0 + 140
         for i, (tier, color) in enumerate(enumerate(TIER_COLORS)):
             cx = x + i * 90
             self.add(f'<rect x="{cx}" y="{cy - 9}" width="22" height="16" fill="{color}" stroke="#0003"/>')
@@ -272,7 +307,7 @@ class Plan:
         self.add(f'<rect x="{x + 470}" y="{cy - 9}" width="22" height="16" fill="{VOID}"/>')
         self.text(x + 498, cy + 4, "갈 수 없음(외곽 · 협곡 · 숲)", size=10, halo=False)
         cy += 26
-        icons = "S 도착 해치 · + 중간 안전 구역(L-24) · ! 임무 장치 · ✕ 막힌 길 · ▼ 뛰어내리기(한 방향) · ‖ 사다리 · △ 랜드마크 · ◎ 소음 장치 · H 세이프하우스"
+        icons = "S 시작 · + 중간 안전 구역(L-24) · ! 임무 장치(카메라를 향함, L-32) · ✕ 막힌 길 · ▼ 뛰어내리기(한 방향) · ‖ 사다리(북 · 동으로 오름) · △ 랜드마크 · ◎ 소음 장치 · H 세이프하우스"
         self.text(x, cy + 4, icons, size=11, halo=False)
         cy += 22
         self.text(x, cy + 4, "보급: 회색 시작 · 도착 / 초록 주요 / 파랑 선택(보상 분기) / 노랑 이벤트 보상", size=11, halo=False)
@@ -283,15 +318,15 @@ class Plan:
 def main():
     src, dst = sys.argv[1], sys.argv[2]
     data = load(src)
-    svg = Plan(data).draw()
+    svg = Plan(data, src.replace("\\", "/")).draw()
     with open(dst, "w", encoding="utf-8") as f:
         f.write(svg)
     rt = data["routes"]
-    walk = length(rt["main"]) + length(rt["main_after_gondola"])
-    print(f"main walk {walk:.0f} m, mission {length(rt['mission']) + length(rt['mission_return']):.0f} m, "
-          f"tower spur {length(rt['reward_tower']):.0f} m, workshop spur {length(rt['reward_workshop']):.0f} m")
-    for name in ("main", "main_after_gondola"):
-        print(f"L-1 {name}: {up_right_share(rt[name]):.0%}")
+    spurs = ", ".join(f"{k} {length(v):.0f} m" for k, v in rt.items() if k.startswith("reward"))
+    print(f"main walk {main_walk(rt):.0f} m, mission {length(rt.get('mission', [])) + length(rt.get('mission_return', [])):.0f} m, {spurs}")
+    print(f"L-1 main: {main_share(rt):.0%}")
+    zones = data.get("zones", [])
+    print(f"zones: large {sum(1 for z in zones if z['size'] == 'large')}, small {sum(1 for z in zones if z['size'] == 'small')}")
 
 
 if __name__ == "__main__":

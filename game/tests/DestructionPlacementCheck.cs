@@ -18,9 +18,9 @@ public partial class DestructionPlacementCheck : Node
         int exit = 0;
         try
         {
-            Check(DestructionPlacements.Load("stage2").Count == 2 && DestructionPlacements.Load("stage2_draft").Count == 3, "five trial placements across both Stage 2 maps");
+            Check(DestructionPlacements.Load("stage2").Count == 2 && DestructionPlacements.Load("stage3").Count == 3, "five trial placements across both Stage 2 maps");
             await MapCheck("stage2", new StageTwoMap());
-            await MapCheck("stage2_draft", new LayoutMap());
+            await MapCheck("stage3", new LayoutMap());
             GD.Print("DESTRUCTION_PLACEMENT_CHECK_PASS " + _checks);
         }
         catch (Exception e) { GD.PushError(e.ToString()); GD.Print("DESTRUCTION_PLACEMENT_CHECK_FAIL " + e.Message); exit = 1; }
