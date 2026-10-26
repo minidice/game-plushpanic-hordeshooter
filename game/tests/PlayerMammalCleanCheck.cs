@@ -53,7 +53,7 @@ public abstract partial class PlayerMammalCleanCheck : Node
                     Check(paw.Transform.Basis.IsFinite()&&paw.GetNode<Node3D>("Forearm").Transform.Basis.IsFinite(),"finite hand/forearm pose");
                     var forearm=paw.GetNode<MeshInstance3D>("Forearm");
                     // Inspect real vertices: a correct grip marker alone misses a stretched shoulder spike.
-                    var shoulder=rig.Model.ToLocal(Part(k==0?"rightArm":"leftArm").GetParentNode3D().ToGlobal(new Vector3(k==0?.440f:-.440f,1.125f,.158f)));
+                    var shoulder=rig.Model.ToLocal(paw.GetParentNode3D().ToGlobal(((CharacterLionPaw)paw).PosedShoulder));
                     var wrist=rig.Model.ToLocal(paw.GetNode<Node3D>("Wrist").GlobalPosition);
                     var elbow=rig.Model.ToLocal(paw.GetNode<Node3D>("Elbow").GlobalPosition);
                     // Each real surface stays near its own anatomical endpoints; the whole arm now bends.

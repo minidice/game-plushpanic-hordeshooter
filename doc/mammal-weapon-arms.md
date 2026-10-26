@@ -42,3 +42,6 @@
 - [실행 계획](../docs/superpowers/plans/2026-10-26-mammal-weapon-arms.md), [팔 런타임](../game/scripts/Characters/CharacterLionPaw.cs), [파지 배치](../game/scripts/Characters/CharacterWeaponGrip.cs), [기존 손 계약](lion-limbs.md).
 
 검수용 임시 프로젝트명은 원본 바이트로 복원했고 독립4334 서버만 종료했다. 기존 사용자 설정/원래 main은 변경하지 않았으며 현재 작업은 `codex/mammal-weapon-arms`의 미커밋 변경이다.
+
+
+2026-10-26 후속: 위의0.36m 구간/자동 신장 정책은 표준 포유류 총기 자세에서 원본 비율 제한으로 교체했다. 제작 이력과 이전 결과는 보존하며 현재 계약은 [공통 자세 후속](shared-weapon-poses.md#2026-10-26-짧은-팔-비율-유지-후속)을 따른다. 전용 재장전/횡단은 도달 예외가 남는다.

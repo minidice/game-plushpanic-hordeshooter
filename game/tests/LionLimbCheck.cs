@@ -61,8 +61,8 @@ public partial class LionLimbCheck : Node
                     var shoulder=(Node3D)rig.Model.FindChild("common_"+Species+"_"+side+"Arm",true,false);
                     var wrist=paw.GetNode<Node3D>("Wrist");
                     var shoulderMarker=shoulder.GetNodeOrNull<Node3D>("common_"+Species+"_"+side+"Shoulder");
-                    float shoulderDistance=SurfaceDistance(paw.GetNode<MeshInstance3D>("UpperArm"),shoulderMarker?.GlobalPosition??shoulder.GlobalPosition);
-                    Check(shoulderDistance<.10f,$"forearm surface meets anatomical shoulder: {weapon}/{side} {shoulderDistance:F5} size={pawSize}");
+                    float shoulderDistance=SurfaceDistance(paw.GetNode<MeshInstance3D>("UpperArm"),paw.GetParentNode3D().ToGlobal(((CharacterLionPaw)paw).PosedShoulder));
+                    Check(shoulderDistance<.10f,$"forearm surface meets posed shoulder: {weapon}/{side} {shoulderDistance:F5} size={pawSize}");
                     Check(SurfaceDistance(forearm,wrist.GlobalPosition)<.10f,"forearm surface meets actual paw wrist");
                 }
             }

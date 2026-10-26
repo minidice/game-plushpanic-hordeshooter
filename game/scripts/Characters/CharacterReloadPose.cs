@@ -54,6 +54,9 @@ public partial class CharacterRig
         if (_heldWeapon?.LeftGrip is not { } left) return;
         left.Transform = _leftGripHome;
         left.Visible = _supportGrip || ReloadPoseActive;
+        // Rest the support palm near the rear of a long forend, preserving barrel length.
+        if(CompactGunPose && _heldWeapon.Pose==WeaponVisual.PoseFamily.Shouldered)
+            left.Position=new Vector3(left.Position.X,left.Position.Y,Mathf.Min(left.Position.Z,.32f));
         if (!ReloadPoseActive) return;
         var def = _heldWeapon.Definition;
         float length = def.Length;

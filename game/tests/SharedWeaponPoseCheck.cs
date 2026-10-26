@@ -32,10 +32,10 @@ public partial class SharedWeaponPoseCheck : Node
                     }
                     else Check(Mathf.Abs(rig.ToLocal(built.RightGrip.GlobalPosition).X)<.12f,"pistol hand near centre");
                     Check(rig.UsesSupportGrip&&built.LeftGrip!.Visible,"shared two-hand pose");
-                    Check(rig.GripConnectionError<.002f,"actual hand contacts");
+                    Check(rig.GripConnectionError<.002f,$"{id}/{weapon}/{profile.WingSize}: actual hand contacts {rig.GripConnectionError}");
                     var idle=rig.Weapon.Transform;
                     rig.SetLocomotionPose(.3f,1,false);rig.Animate(.016f,1,.2f,.1f,Vector3.Zero);
-                    Check(rig.IsRunningCarry&&rig.GripConnectionError<.002f,"moving two-hand carry contact");
+                    Check(rig.IsRunningCarry&&rig.GripConnectionError<.002f,$"{id}/{weapon}/{profile.WingSize}: moving two-hand carry contact {rig.GripConnectionError}");
                     rig.SetLocomotionPose(0,1,true);rig.Animate(0,0,0,0,Vector3.Zero);
                     Check(rig.Weapon.Transform.IsEqualApprox(idle)&&rig.GripConnectionError<.002f,"firing restores aim before emission");
                     var reload=new WeaponState(built.Definition,0,30);reload.StartReload();reload.Tick(built.Definition.ReloadTime*.45f,false);

@@ -136,6 +136,7 @@ public partial class CharacterRig
             }
         }
         Weapon.Visible=weapon;
+        ApplyCarryPose(_carryKick);
         SetPartVisible(Definition.Id+"_leftArm",!weapon||_heldWeapon==null);
         SetPartVisible(Definition.Id+"_rightArm",!weapon||_heldWeapon==null);
         UpdateWeaponGrip();
@@ -147,7 +148,7 @@ public partial class CharacterRig
         float drop=.14f*blend/Definition.ModelScale;
         Body.Position+=Vector3.Down*drop;
         Deform.Scale=Deform.Scale*new Vector3(1+.04f*blend,1-.08f*blend,1+.04f*blend);
-        Weapon.Position+=Vector3.Down*drop;
+        Weapon.Position+=Vector3.Down*drop*(CompactGunPose?CompactWeaponOverlayScale:1);
         UpdateWeaponGrip();
     }
     /// <summary>Short forward bound. The collider follows the ground; only the visual arcs upwards.</summary>
@@ -162,8 +163,9 @@ public partial class CharacterRig
         LeftFoot.Position=_leftHome.Origin+new Vector3(-.045f,arc*.04f,-arc*.17f);
         RightFoot.Position=_rightHome.Origin+new Vector3(.045f,arc*.04f,-arc*.17f);
         ApplyCarryPose(0);
-        Weapon.Position+=new Vector3(0,-arc*.08f,arc*.10f);
-        Weapon.Rotation+=new Vector3(-arc*.18f,0,0);
+        float gunMotion=CompactGunPose?CompactWeaponOverlayScale:1;
+        Weapon.Position+=new Vector3(0,-arc*.08f,arc*.10f)*gunMotion;
+        Weapon.Rotation+=new Vector3(-arc*.18f,0,0)*gunMotion;
         UpdateWeaponGrip();
     }
 }

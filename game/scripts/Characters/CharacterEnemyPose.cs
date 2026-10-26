@@ -97,7 +97,7 @@ public partial class CharacterRig
         // Armed specials use their existing connected hands for a short weapon shove.
         if (_heldWeapon != null)
         {
-            Weapon.Position += new Vector3(0, anticipation * .05f, (strike * .20f - anticipation * .12f) * _forwardSign);
+            Weapon.Position += new Vector3(0, anticipation * .05f, (strike * .20f - anticipation * .12f) * _forwardSign) * (CompactGunPose ? CompactWeaponOverlayScale : 1);
             UpdateWeaponGrip();
         }
     }

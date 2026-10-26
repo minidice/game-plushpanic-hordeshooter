@@ -321,3 +321,8 @@ node prototypes/character-lab/tools/validate-game-roster.mjs
 ### 2026-10-26 공통 무기 자세 계약
 
 분리된 GLB라도 같은 `CharacterWeaponPose`를 사용한다. 정지 Arm/Shoulder와 몸 배율은 캐릭터에서, `StockContact`·`GripRight`·`GripLeft`·`Muzzle`은 무기에서 읽는다. `StockContact`는 총의 후면 실제 표면이며 일반 GLB는 작성 필수다. 어깨 견착/권총/전용 자세 분기와 기존 형태별 팔 표면 연결을 분리한다. [현재 구현·제작 수치·예외·검수](shared-weapon-poses.md).
+
+
+### 2026-10-26 포유류 공통 짧은 팔 계약
+
+포유류6종의 기존 Shoulder/Wrist/Grip 및 Blender 공유 구간을 사용한다. 표준 소총·권총에서는 원본 Shoulder–Wrist 거리1.10배를 위팔/아래팔 합으로 유지하고 어깨를 같은 높이/몸통 반경 위에서 앞으로 이동한다. 모델40도 자세와 무기 역회전, 장착 총Z배율0.75~1 및 왼손 받침 위치로 접촉을 맞춘다. 원본 손/GLB/커스텀 저장은 유지하며 조류·전용 재장전/횡단 도달 처리와 구분한다. `PosedShoulder`는 실제 팔 구간 시작점이며 원래 기준점을 덮어쓰지 않는다. [수치·실제 검사·한계](shared-weapon-poses.md#2026-10-26-짧은-팔-비율-유지-후속).

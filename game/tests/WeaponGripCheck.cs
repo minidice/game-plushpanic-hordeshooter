@@ -19,7 +19,7 @@ public partial class WeaponGripCheck : Node
                 {
                     Require(gun.StockContact!=null&&rig.UsesSupportGrip&&gun.LeftGrip is {Visible:true},species+" shared shouldered rifle with support hand");count++;
                     rig.SetLocomotionPose(.2f,1,false);rig.Animate(.016f,1,0,0,Vector3.Zero);
-                    Require(rig.IsRunningCarry&&rig.Weapon.Basis.Z.Y<-.3f&&rig.GripConnectionError<.002f,species+" run lowers barrel while retaining grip");count++;
+                    Require(rig.IsRunningCarry&&rig.Weapon.Basis.Z.Y<-.2f&&rig.GripConnectionError<.002f,species+" run lowers barrel while retaining grip");count++;
                     rig.SetLocomotionPose(.016f,1,true);
                     Require(!rig.IsRunningCarry&&Math.Abs(rig.Weapon.Basis.Z.Y)<.001f&&rig.GripConnectionError<.002f,species+" firing lowers muzzle before shot update");count++;
                 }

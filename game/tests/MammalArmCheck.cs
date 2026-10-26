@@ -32,7 +32,10 @@ public partial class MammalArmCheck : Node
                 var anchor=arm.GetNodeOrNull<Node3D>((player?"":"common_")+species+"_"+side.ToLowerInvariant()+"Shoulder")??arm;
                 var parent=paw.GetParentNode3D();
                 var shoulderGlobal=arm.GetParentNode3D().GlobalTransform*homes[side]*(anchor==arm?Vector3.Zero:anchor.Position);
-                var shoulder=parent.ToLocal(shoulderGlobal);
+                var restShoulder=parent.ToLocal(shoulderGlobal);
+                var shoulder=paw.PosedShoulder;
+                shoulderGlobal=parent.ToGlobal(shoulder);
+                Check(Mathf.Abs(shoulder.Y-restShoulder.Y)<.0001f && Mathf.Abs(new Vector2(shoulder.X,shoulder.Z).Length()-new Vector2(restShoulder.X,restShoulder.Z).Length())<.0001f,"shoulder rolls on original torso radius at unchanged height");
                 var wrist=parent.ToLocal(paw.GetNode<Node3D>("Wrist").GlobalPosition);
                 var upper=paw.GetNode<MeshInstance3D>("UpperArm");var lower=paw.GetNode<MeshInstance3D>("Forearm");
                 var elbow=parent.ToLocal(paw.GetNode<Node3D>("Elbow").GlobalPosition);
@@ -50,7 +53,7 @@ public partial class MammalArmCheck : Node
                     float limit=(side=="Left"?.50f:.45f)*Mathf.Max(1,size);
                     Check(shoulder.DistanceTo(elbow)<limit&&elbow.DistanceTo(wrist)<limit,$"{species}/{weapon}/{side}/{size}: compact sections");
                 }
-                Check(LionLimbCheck.SurfaceDistance(upper,shoulderGlobal)<.10f,"upper surface reaches anatomical shoulder independently of wing size");
+                Check(LionLimbCheck.SurfaceDistance(upper,shoulderGlobal)<.10f,"upper surface reaches posed shoulder independently of wing size");
                 Check(LionLimbCheck.SurfaceDistance(upper,paw.GetNode<Node3D>("Elbow").GlobalPosition)<.10f&&LionLimbCheck.SurfaceDistance(lower,paw.GetNode<Node3D>("Elbow").GlobalPosition)<.10f,"both real surfaces meet elbow");
                 Check(LionLimbCheck.SurfaceDistance(lower,paw.GetNode<Node3D>("Wrist").GlobalPosition)<.10f,"lower surface meets wrist");
                 var source=(MeshInstance3D)arm.FindChild((player?"":"common_")+species+"_"+side.ToLowerInvariant()+"Arm_mesh",true,false);

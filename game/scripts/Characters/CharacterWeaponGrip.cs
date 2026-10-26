@@ -5,6 +5,7 @@ namespace HordeShooter;
 public partial class CharacterRig
 {
     private WeaponVisual.Built? _heldWeapon;
+    private Vector3 _heldWeaponScale=Vector3.One;
     private Node3D? _gripArms;
     private MeshInstance3D? _rightForearm, _leftForearm;
     private StandardMaterial3D? _gripMaterial;
@@ -13,6 +14,7 @@ public partial class CharacterRig
     private float _carryKick;
     private float _aimHold;
     private float _wingSize=1;
+    private bool CompactGunPose => _rightForearm is CharacterLionPaw && _heldWeapon?.Pose is WeaponVisual.PoseFamily.Shouldered or WeaponVisual.PoseFamily.Pistol;
     public bool IsRunningCarry => _runningCarry>.5f;
     public bool UsesSupportGrip => _supportGrip;
     private bool CommonAnimalArms => Definition.Id.StartsWith("common_") && Definition.Id != "common_zombie";
@@ -25,6 +27,7 @@ public partial class CharacterRig
     {
         ResetReloadPose();
         ResetHunterAttackPose();
+        if(!ReferenceEquals(_heldWeapon,built))_heldWeaponScale=built.Root.Scale;
         _heldWeapon=built;
         BindHunterBowGeometry();
         _leftGripHome=built.LeftGrip?.Transform??Transform3D.Identity;
@@ -98,6 +101,13 @@ public partial class CharacterRig
     {
         _carryKick=kick;
         if(_heldWeapon==null||!HasAnimalArms)return;
+        // Keep the authored short limbs: quarter-turn the body, counter-turn the gun,
+        // and fit only its held forward length. Preserve caller-provided model-scale compensation.
+        bool mammal=_rightForearm is CharacterLionPaw&&Weapon.Visible&&_heldWeapon.Root.Visible;
+        float stance=mammal&&_heldWeapon.Pose==WeaponVisual.PoseFamily.Shouldered?Mathf.DegToRad(CompactStanceDegrees):0;
+        Model.Rotation=new Vector3(0,(Definition.ModelFacesPositiveZ?0:Mathf.Pi)+stance,0);
+        _heldWeapon.Root.Scale=_heldWeaponScale*new Vector3(1,1,mammal&&_heldWeapon.Pose==WeaponVisual.PoseFamily.Shouldered
+            ?Mathf.Clamp(CompactHeldLength/Mathf.Max(.01f,_heldWeapon.Definition.Length),.75f,1):1);
         var def=_heldWeapon.Definition;
         if(def.Id=="woodbow"){ApplyHunterBowCarryPose();return;}
         if(def.Category==WeaponCategory.Melee){ApplyMeleeCarryPose();return;}
@@ -126,7 +136,8 @@ public partial class CharacterRig
         if(arm is CharacterLionPaw paw)
         {
             bool holding=target!=null&&IsInstanceValid(target);
-            paw.PosePaw(holding?_gripArms!.ToLocal(target!.GlobalPosition):Vector3.Zero,holding,_wingSize,_runningCarry);
+            bool compact=CompactGunPose;
+            paw.PosePaw(holding?_gripArms!.ToLocal(target!.GlobalPosition):Vector3.Zero,holding,_wingSize,_runningCarry,compact&&!ReloadPoseActive);
             return;
         }
         if(arm is CharacterAuthoredWing wing)
