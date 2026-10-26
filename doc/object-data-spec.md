@@ -146,6 +146,8 @@
 
 `StageMap.Prop`의 실제 단순 충돌체, Solid/작업장 소품/골판지, Door·AlarmCar·ExplosiveBarrel·파괴 벽에 태그를 붙인다. 별도 합성 충돌체인 작은 숲맵 컨테이너/창고/목교 난간, 큰맵 크레인/감시초소도 연결한다. 무충돌 장식 모델에 새 충돌은 만들지 않는다. 미등록 충돌체는 concrete fallback이며 각 메시의 면/복합 재질까지 자동 분석하지 않는다.
 
-Studio 오브젝트 속성에서 프리셋·계열·이벤트 ID·추가 게인·적용 범위와 원본 데이터를 조회한다. 이번 범위는 조회 및 JSON 값 편집이며 Studio 저장 폼 추가는 아니다. 물리/파괴 속성은 기존 항목에 별도로 표시된다.
+Studio 오브젝트 속성에서 프리셋·계열·이벤트 ID·추가 게인·적용 범위와 원본 데이터를 조회하고, 기존 프리셋 선택과 공용 추가 게인3개를 저장한다. 같은 프리셋을 쓰는 오브젝트 수와 지면/배치 사용처를 보여 준다. null 장식과 소환수는 편집 대상이 아니다. 물리/파괴 속성은 기존 항목에 별도로 표시된다.
+
+`GET /api/surfaces`가 원본 SHA256 버전을 반환하며 `POST`는 `revision, objectId, profileId, gains {step_db,hit_db,break_db}`만 받는다. 기존 ID·유한 -24..+6dB를 검증하고 알 수 없는 입력 필드를 거부한다. 오래된 버전/동시 저장은409, 잘못된 입력은400이다. 고정 JSON 파일을 원자적으로 교체하며 기존 ground/layout/기타 메타데이터와 HP는 유지한다. Studio는 저장 후 캐시를 다시 읽고, 실행 중 게임에는 재시작이 필요하다. 멀티 양쪽 데이터가 같아야 한다. 외부 편집기와의 경쟁은 낙관적 버전 검사로 다루며 외부 프로세스를 잠그지는 않는다. [편집·화면·검증](features/effects-audio/log/007-code-studio-surface-editor.md).
 
 [설계·계획](features/effects-audio/surface-audio-plan.md) · [변경·검증](features/effects-audio/log/005-code-surface-audio.md)

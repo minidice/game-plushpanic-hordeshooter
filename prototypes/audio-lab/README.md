@@ -50,7 +50,7 @@ Godot 경로는 PC별 설치 위치로 바꾼다. 캡처는 실제 오디오 장
 
 ## 적용 내용과 남은 작업
 
-`honk`/`honk_ability`를 분리하고, 소총/좀비 피격3변형·피격/신음/사망2변형은 연속 같은 변형 없이 재생한다. 대상 3D 효과의 근거리 상한·군중 제한·최종 limiter와 결과음 `Cues`의 효과음 볼륨 제어를 적용했다. I-64 중 나머지 3D 상대 밸런스, 사용자 최종 청음, 종별 발성과 장시간 멀티플레이 확인은 남았다. 무료 공개 MP3 소재의 압축/배경음 한계도 남는다.
+`honk`/`honk_ability`를 분리하고, 소총/좀비 피격3변형·피격/신음/사망2변형은 연속 같은 변형 없이 재생한다. 대상 3D 효과의 근거리 상한·군중 제한·최종 limiter와 결과음 `Cues`의 효과음 볼륨 제어를 적용했다. 후속으로 전체 NearCap 기본 적용과 거리별 믹스 검사를 추가했다. 사용자 최종 청음, 종별 발성과 실제 두 PC 멀티플레이 확인은 남았다. 무료 공개 MP3 소재의 압축/배경음 한계도 남는다.
 
 [적용 계획·진행](../../doc/features/effects-audio/sound-quality-rollout-plan.md) · [변경·검증 기록](../../doc/features/effects-audio/log/002-art-sound-quality-rollout.md)
 
@@ -70,3 +70,9 @@ Godot 경로는 PC별 설치 위치로 바꾼다. 캡처는 실제 오디오 장
 빌드/import 후 실제 오디오 장치에서 `res://tests/AudioSurfaceCapture.tscn`을 실행하고 `python prototypes/audio-lab/tools/surfaces.py`로 `output/surfaces.html`을 만든다. 34개 변형 단발, 7개 프리셋 발밑 접촉 발소리, 중첩1=42녹음이다. 추가 정규화 없이 실제 출력을 청취한다. 기존14종 페이지는 `AudioQualityCapture` 재실행 뒤 `release.py --page`로 갱신한다. 새 지문에는 SurfaceAudio/SurfaceProfiles/표면 JSON도 포함된다.
 
 [오브젝트 규격](../../doc/object-data-spec.md) · [작업 기록](../../doc/features/effects-audio/log/005-code-surface-audio.md)
+
+## 거리별 믹스·반복 전투 후속
+
+실제 장치에서 `AudioBalanceCapture.tscn`(69조건), `AudioBossGainCapture.tscn`(실제 보스 산탄1조건), `AudioCombatSoak.tscn`(실시간300초)을 순서대로 실행하고 `python prototypes/audio-lab/tools/followup.py`로 `output/followup.html`을 만든다. 비교 페이지의 지문이 오래되면 기존 Quality/Surface 캡처도 먼저 실행한다. 후속 페이지는 현재 구현/표면 데이터/manifest와 실제55 WAV 해시를 검사한다. 300초 전투는 기본·헬륨·먹먹함·후반 구간을20초씩 발췌하고 추가 정규화하지 않는다. 캡처/출처/표면 페이지를 만든 뒤 `release.py --page`를 실행하면 메인에 후속 링크가 나타난다.
+
+[통합 검사·실패/남은 제약](../../doc/features/effects-audio/log/009-check-surface-followup-integration.md). 최종 음색 승인이나 실제 두 PC 검사를 대신하지 않는다.

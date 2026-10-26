@@ -22,7 +22,16 @@ public partial class AudioBossGainCheck : Node
     {
         bool passed = false;
         try { await Run(); passed = true; GD.Print("AUDIO_BOSS_GAIN_PASS"); }
-        catch (Exception e) { GD.PushError(e.ToString()); GD.Print("AUDIO_BOSS_GAIN_FAIL " + e.Message); }
+        catch (Exception e)
+        {
+            GD.PushError(e.ToString()); GD.Print("AUDIO_BOSS_GAIN_FAIL " + e.Message);
+            if (CaptureOutput)
+            {
+                Directory.CreateDirectory(Output);
+                File.WriteAllText(Path.Combine(Output, "capture.json"), JsonSerializer.Serialize(new
+                    { passed = false, capturedUtc = DateTime.UtcNow, failure = e.ToString() }));
+            }
+        }
         if (_stage != null && IsInstanceValid(_stage)) _stage.Free();
         await Frame();
         QuitHygiene.Collect();

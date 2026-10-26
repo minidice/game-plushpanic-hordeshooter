@@ -21,7 +21,13 @@ public partial class AudioCombatSoak : Node
     {
         int exit = 0;
         try { await Run(); GD.Print("AUDIO_COMBAT_SOAK_PASS 300 seconds"); }
-        catch (Exception e) { GD.PushError(e.ToString()); exit = 1; }
+        catch (Exception e)
+        {
+            GD.PushError(e.ToString()); exit = 1;
+            Directory.CreateDirectory(_out);
+            File.WriteAllText(Path.Combine(_out, "report.json"), JsonSerializer.Serialize(new
+                { passed = false, capturedUtc = DateTime.UtcNow, failure = e.ToString() }));
+        }
         if (_stage != null && IsInstanceValid(_stage)) _stage.Free();
         await Frame();
         QuitHygiene.Collect();
@@ -64,13 +70,41 @@ public partial class AudioCombatSoak : Node
         double energy = 0, distance = 0;
         Vector3 lastPosition = player.Position;
         int wave = -1, hit = -1, minute = -1, lastReport = -1;
+        int arenaRecoveries = 0, waveRecenters = 0, intervalShots = 0, intervalHits = 0, intervalDeaths = 0;
+        var combatIntervals = new List<object>();
+        void CheckCombatInterval(int completedMinute)
+        {
+            int shots = _stage.Sfx.Played.GetValueOrDefault("shot_rifle");
+            int hits = _stage.Sfx.Played.GetValueOrDefault("zombie_hit");
+            int deaths = _stage.Sfx.Played.GetValueOrDefault("zombie_die");
+            int shotDelta = shots - intervalShots, hitDelta = hits - intervalHits, deathDelta = deaths - intervalDeaths;
+            Require(shotDelta > 50 && hitDelta > 5 && deathDelta > 0,
+                $"Minute {completedMinute} lost real combat coverage: shots={shotDelta}, hits={hitDelta}, deaths={deathDelta}");
+            combatIntervals.Add(new { minute = completedMinute, shots = shotDelta, hits = hitDelta, deaths = deathDelta });
+            intervalShots = shots; intervalHits = hits; intervalDeaths = deaths;
+        }
         ulong start = Time.GetTicksMsec();
         while (Time.GetTicksMsec() - start < Seconds * 1000)
         {
             double elapsed = (Time.GetTicksMsec() - start) / 1000.0;
+            Require(player.Position.IsFinite() && player.Velocity.IsFinite(), "Non-finite arena actor state");
+            // This controlled arena has a low fence. Bull launches can clear it even while invulnerable.
+            // Recover before freefall; ordinary death below the map is disabled by this fixture's invulnerability.
+            var arenaOffset = player.Position - center;
+            if (Math.Abs(arenaOffset.X) > 6 || Math.Abs(arenaOffset.Z) > 4.5f || player.Position.Y < -.25f || player.Position.Y > 3)
+            {
+                GD.Print($"SOAK_ARENA_RECOVERY {elapsed:0.0}s position={player.Position}");
+                arenaRecoveries++;
+                player.TeleportTo(center);
+                _stage.Cam.SnapTo(center + Vector3.Up);
+                lastPosition = player.Position;
+            }
             if ((int)(elapsed / 12) != wave)
             {
                 wave = (int)(elapsed / 12);
+                player.TeleportTo(center);
+                lastPosition = player.Position; // Authored wave setup is not measured as walking.
+                waveRecenters++;
                 foreach (var enemy in _stage.AllEnemies.ToArray())
                     if (IsInstanceValid(enemy) && !enemy.IsQueuedForDeletion()) enemy.QueueFree();
                 for (int i = 0; i < 8; i++)
@@ -94,6 +128,7 @@ public partial class AudioCombatSoak : Node
             int phase = (int)(elapsed / 60);
             if (phase != minute)
             {
+                if (minute >= 0) CheckCombatInterval(phase);
                 minute = phase;
                 if (phase == 2) player.ApplyHelium(55);
                 if (phase == 3) player.Blind(55);
@@ -102,15 +137,15 @@ public partial class AudioCombatSoak : Node
             var target = _stage.AllEnemies.Where(e => IsInstanceValid(e) && !e.IsQueuedForDeletion() && !e.IsDead)
                 .OrderBy(e => e.Position.DistanceSquaredTo(player.Position)).FirstOrDefault();
             Vector3 destination = center + new Vector3((float)Math.Cos(elapsed * .3) * 3, 0, (float)Math.Sin(elapsed * .3) * 2);
-            // SetControls takes screen-relative movement; convert using the same camera basis as gameplay.
+            // SetControls consumes world X/Z. Only ReadInput converts human screen-relative input.
             Vector3 delta = destination - player.Position;
-            var right = _stage.Cam.GroundMovement(Vector2.Right);
-            var down = _stage.Cam.GroundMovement(Vector2.Down);
-            var move = new Vector2(delta.Dot(right), delta.Dot(down)).LimitLength();
+            var move = new Vector2(delta.X, delta.Z).LimitLength();
             player.SetControls(move, target?.Position + Vector3.Up ?? center + Vector3.Right * 10, target != null);
             if (player.Gun.Mag == 0) player.PressReload();
             await Frame();
-            distance += player.Position.DistanceTo(lastPosition);
+            Require(player.Position.IsFinite() && player.Position.Y > -1 && player.Position.Y < 4,
+                "Actor escaped the controlled combat height");
+            distance += new Vector2(player.Position.X - lastPosition.X, player.Position.Z - lastPosition.Z).Length();
             lastPosition = player.Position;
             foreach (var sample in pre.GetBuffer(pre.GetFramesAvailable()))
                 for (int channel = 0; channel < 2; channel++)
@@ -138,7 +173,8 @@ public partial class AudioCombatSoak : Node
                 lastReport = report;
                 rows.Add(new { elapsed, frames, peakDb = Mathf.LinearToDb(afterPeak), afterOver, distance,
                     helium = AudioSetup.IsEffectOn(AudioSetup.PitchEffect), muffled = AudioSetup.IsEffectOn(AudioSetup.MuffleEffect),
-                    shots = _stage.Sfx.Played.GetValueOrDefault("shot_rifle"), deaths = _stage.Sfx.Played.GetValueOrDefault("zombie_die") });
+                    shots = _stage.Sfx.Played.GetValueOrDefault("shot_rifle"), deaths = _stage.Sfx.Played.GetValueOrDefault("zombie_die"),
+                    position = new[] { player.Position.X, player.Position.Y, player.Position.Z }, arenaRecoveries });
                 GD.Print($"SOAK_PROGRESS {elapsed:0}s shots={_stage.Sfx.Played.GetValueOrDefault("shot_rifle")} deaths={_stage.Sfx.Played.GetValueOrDefault("zombie_die")} peak={Mathf.LinearToDb(afterPeak):0.0} over={afterOver}");
                 if (report == 2 || report == 8)
                 {
@@ -148,6 +184,7 @@ public partial class AudioCombatSoak : Node
                 }
             }
         }
+        CheckCombatInterval(5);
         file.Position = 0;
         Header(wav, rate, checked((int)(frames * 4)));
         wav.Flush();
@@ -157,14 +194,25 @@ public partial class AudioCombatSoak : Node
         AudioServer.RemoveBusEffect(0, 0);
         var played = new Dictionary<string, int>(_stage.Sfx.Played);
         bool passed = frames >= Seconds * rate * .9 && afterPeak > .01 && afterPeak <= Mathf.DbToLinear(-.8f)
-            && afterOver == 0 && distance > 30 && played.GetValueOrDefault("shot_rifle") > 100
+            && afterOver == 0 && distance > 30 && distance < 2000 && played.GetValueOrDefault("shot_rifle") > 100
             && played.GetValueOrDefault("zombie_die") > 20 && played.GetValueOrDefault("honk") > 10;
         File.WriteAllText(Path.Combine(_out, "report.json"), JsonSerializer.Serialize(new { passed, seconds = Seconds,
+            capturedUtc = DateTime.UtcNow,
+            soundManifestSha256 = Fingerprint("content/sounds/credits.json"),
+            audioSourceSha256 = new[] { "scripts/Audio/SoundRecipes.cs", "scripts/Audio/Sfx.cs", "scripts/Audio/AudioSetup.cs",
+                "scripts/Audio/SurfaceAudio.cs", "scripts/Audio/SurfaceProfiles.cs", "content/data/surface_profiles.json",
+                "scripts/Weapons/WeaponController.cs", "scripts/Player/Player.cs", "scripts/Enemies/Enemy.cs",
+                "scripts/Enemies/BullEnemy.cs", "scripts/Enemies/BalloonEnemy.cs", "scripts/World/Stage.cs", "tests/AudioCombatSoak.cs" }
+                .ToDictionary(path => path, Fingerprint),
             recordedSeconds = frames / (double)rate, rate, frames, beforePeakDb = Mathf.LinearToDb(beforePeak), beforeOver,
             afterPeakDb = Mathf.LinearToDb(afterPeak), afterOver, rmsDb = 10 * Math.Log10(energy / Math.Max(1, frames * 2)),
-            distance, played, rows, note = "Controlled real-time combat in Stage 1; scripted controls, invulnerability/healing, periodic enemy replacement and ammo refill; ambience enabled. Human audition and campaign difficulty are not assessed." }, new JsonSerializerOptions { WriteIndented = true }));
+            distance, arenaRecoveries, waveRecenters, combatIntervals, played, rows,
+            note = "Controlled real-time combat in Stage 1; scripted world-XZ controls, invulnerability/healing, periodic enemy replacement/player recenter/ammo refill, bounded arena recovery; planar movement excludes teleports. Each minute requires fresh shots/hits/deaths; ambience enabled. Human audition and campaign difficulty are not assessed." }, new JsonSerializerOptions { WriteIndented = true }));
         Require(passed, "Capture completeness, headroom, movement or repeated-combat coverage failed; see report.json");
     }
+
+    private static string Fingerprint(string path) => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(
+        File.ReadAllBytes(ProjectSettings.GlobalizePath("res://" + path)))).ToLowerInvariant();
 
     private static void Header(BinaryWriter w, int rate, int bytes)
     {

@@ -5,7 +5,9 @@
 - [x] **A-26 후속 검증**: 5분 통제 전투 음향·변형별 피격 하한·실제 상태효과 캡처 확인. 시체 누적 렌더 오류(I-41)는 남음. [검사·통합 기록](features/effects-audio/log/003-check-combat-soak-main-integration.md).
 - [x] **A-26 전투 반복음5종**: 소총·좀비 피격3변형, 장전 시작/완료·빈 탄창 녹음 편집, 상대 음량·27조건 출력 검사. [작업·검증](features/effects-audio/log/004-art-combat-sound-update.md).
 - [x] **A-26 재질 접촉음·데이터**: 7계열/15프리셋/93오브젝트 매핑, 발소리·환경 hitscan 명중·파손17종, Studio 속성 조회. [작업·검증](features/effects-audio/log/005-code-surface-audio.md).
-- [ ] **A-26 후속 청음**: 사용자 최종 음색 수락·종별 발성·장시간/실제 멀티플레이 환경, I-64 나머지 3D 상대 밸런스.
+- [x] **A-26 재질 후속 구현**: 호스트 환경 명중음 동기화·Studio 프리셋/공용 게인 저장·전체 NearCap/경고 우선순위. [네트워크006](features/effects-audio/log/006-code-surface-network-audio.md) · [Studio007](features/effects-audio/log/007-code-studio-surface-editor.md) · [음량008](features/effects-audio/log/008-code-audio-balance-followup.md).
+- [x] **A-26 후속 통합 검증**: 실제 출력139조건·매분 전투가 유지된300초 검사, 출력 초과0. I-41 시체 누적 렌더 오류는 별도 남음. [통합009](features/effects-audio/log/009-check-surface-followup-integration.md).
+- [ ] **A-26 후속 청음**: 사용자 최종 음색·피로도 수락, 물리적으로 다른 두 PC/인터넷 실전 환경. 종별 발성·무기별 장전은 추가 제작 아이디어. [현재 범위·검증009](features/effects-audio/log/009-check-surface-followup-integration.md).
 > **2026-10-26부터 기록 방식이 바뀌었다**([decisions.md](decisions.md) T-26, [기록 문서 나누기](records-split-plan.md)). 새 기록의 본문 · 작업 기록은 [기능별 폴더](features/README.md)에 쓰고, 이 문서에는 짧은 줄만 추가한다. **이 문서의 기존 기록은 옮기지 않고 그대로 남아 있다**(앞으로만 새 구조, 6.4).
 
 ### 2026-10-25 캐릭터 아트 방향 정정

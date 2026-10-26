@@ -130,6 +130,8 @@ def page(clips, ffmpeg):
         text = text.replace(' · <a href="pilot.html">이전 3종 시제품·변경 전 믹스</a>', '')
     if (ROOT/'output/surfaces.html').exists():
         text = text.replace('<h1>', '<p><a href="surfaces.html">재질별 소리 · 오브젝트 프리셋</a></p><h1>', 1)
+    if (ROOT/'output/followup.html').exists():
+        text = text.replace('<h1>', '<p><a href="followup.html">거리별 음량 · 5분 반복 전투</a></p><h1>', 1)
     index.write_text(text, encoding='utf-8')
     for link in re.findall(r'(?:src|href)="([^"]+)"', text):
         assert (ROOT/'output'/link).is_file(), f'Broken page link: {link}'

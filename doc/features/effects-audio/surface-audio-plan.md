@@ -42,3 +42,5 @@
 
 - Task3 검증 완료: Surface242, Object30/Cover27/Destruction42/Compatibility14, Quality50/Level4/Mix15/Integration149. 실제 Surface42+Quality27 출력초과0. Studio93/렌더픽셀3, 페이지42/배포55 통과. 005 기록에 실패·수정·남은 제약 포함.
 - Final review: Critical0/Important0/Minor1. 길안내 표지판의 별도 기둥이 concrete로 남는 매핑 누락은 승인된 오브젝트 적용 범위에 직접 해당하므로 단일 연결을 수정했다. 최종 빌드/Surface242 회귀 통과. 모델/물리 변경 없음.
+
+- 후속 지시: 보류했던 Studio 저장·원격 환경 명중음과 전체 근거리 상한을 [별도 후속 계획](surface-followup-plan.md)으로 진행한다. 위 내용은 최초 범위의 이력이며 최신 상태는 [009 통합 기록](log/009-check-surface-followup-integration.md)을 따른다.
