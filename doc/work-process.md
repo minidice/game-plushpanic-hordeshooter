@@ -36,7 +36,7 @@ flowchart LR
 | `World/PropLibrary.cs` | 키트 폴더 5개 목록 |
 | `World/StageArt.cs` | `assets/environment/` 바닥 · 벽 셰이더 |
 
-**2026-10-26 개선 ②로 옮김**: 위 경로는 이제 [`game/content/data/asset_paths.json`](../game/content/data/asset_paths.json)에 있다. 종류는 `files`(파일 하나) · `patterns`(`{0}`에 카드 이름 · 모델 ID) · `folders`(키트 폴더) 셋이고, 코드는 `AssetPaths.File` · `Pattern` · `Folders`로 읽는다. 리소스를 옮기거나 이름을 바꾸면 이 목록만 고친다. `AssetPathsCheck`가 목록의 모든 경로가 실제로 있는지와, `scripts/`의 C# 소스에 `"res://assets` 직접 경로가 다시 생기지 않았는지 확인한다. 나머지 리소스는 원래대로 각 데이터(CSV · JSON · `.tres`)만 고치면 된다.
+**2026-10-26 개선 ②로 옮김**: 위 경로는 이제 [`game/content/data/asset_paths.json`](../game/content/data/asset_paths.json)에 있다. 종류는 `files`(파일 하나) · `patterns`(`{0}`에 카드 이름 · 모델 ID) · `folders`(키트 폴더) 셋이고, 코드는 `AssetPaths.File` · `Pattern` · `Folders`로 읽는다. 리소스를 옮기거나 이름을 바꾸면 이 목록만 고친다. (같은 날 `codex/mammal-weapon-arms`를 병합하며 `AssetPathsCheck`가 잡은 사자 팔 마디 모델 경로 `character.mammal_arm_segments`도 목록으로 옮김.) `AssetPathsCheck`가 목록의 모든 경로가 실제로 있는지와, `scripts/`의 C# 소스에 `"res://assets` 직접 경로가 다시 생기지 않았는지 확인한다. 나머지 리소스는 원래대로 각 데이터(CSV · JSON · `.tres`)만 고치면 된다.
 
 ### 1.3 여럿이 함께 고치는 파일 (지난 7일, 커밋 114개 기준)
 

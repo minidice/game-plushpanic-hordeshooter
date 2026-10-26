@@ -8,7 +8,8 @@
     "ui.vote_stamp": "res://assets/icons/ui/vote_stamp.png",
     "ui.vote_winner_frame": "res://assets/icons/ui/vote_winner_frame.png",
     "shader.factory_floor": "res://assets/environment/factory_floor.gdshader",
-    "shader.factory_wall": "res://assets/environment/factory_wall.gdshader"
+    "shader.factory_wall": "res://assets/environment/factory_wall.gdshader",
+    "character.mammal_arm_segments": "res://assets/characters/shared/mammal-arm-segments.glb"
   },
   "patterns": {
     "card_icon": "res://assets/icons/cards/card_{0}.png",

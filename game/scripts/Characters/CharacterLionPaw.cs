@@ -18,7 +18,7 @@ internal partial class CharacterLionPaw : MeshInstance3D
     {
         var result=new CharacterLionPaw{Name=name,Mesh=paw.Mesh,_rest=rest,_forearmRest=forearmRest,_shoulder=shoulder,_wrist=wrist,_grip=grip,_side=side,Transform=rest};
         CopyMaterials(paw,result);parent.AddChild(result);
-        var template=GD.Load<PackedScene>("res://assets/characters/shared/mammal-arm-segments.glb").Instantiate<Node3D>();
+        var template=GD.Load<PackedScene>(AssetPaths.File("character.mammal_arm_segments")).Instantiate<Node3D>();
         result._upperArm=Section("UpperArm");result._forearm=Section("Forearm");
         MeshInstance3D Section(string section) {
             var mesh=new MeshInstance3D{Name=section,Mesh=((MeshInstance3D)template.FindChild(section,true,false)).Mesh};
