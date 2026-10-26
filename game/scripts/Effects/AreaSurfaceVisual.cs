@@ -4,11 +4,11 @@ using System.Collections.Generic;
 
 namespace HordeShooter;
 
-/// <summary>Textured GPU cards, soft intersections and a flat-ground mask. No gameplay state.</summary>
+/// <summary>Textured GPU cards with soft intersections. Only the smoke specimen uses a ground mask.</summary>
 public partial class AreaSurfaceVisual : Node3D
 {
     private readonly List<(GpuParticles3D particles, StandardMaterial3D material, float alpha, bool flame)> _layers = new();
-    private ShaderMaterial _ground = null!;
+    private ShaderMaterial? _ground;
     private CombatEffectDefinition _def = null!;
     private float _radius;
     public const uint ParticleSeed = 6517;
@@ -27,17 +27,17 @@ public partial class AreaSurfaceVisual : Node3D
     private void Build()
     {
         bool fire = _def.Family == "fire";
-        _ground = new ShaderMaterial { Shader = GD.Load<Shader>("res://shaders/area_ground.gdshader") };
-        _ground.SetShaderParameter("flow", Texture("flow"));
-        _ground.SetShaderParameter("detail", Texture("detail"));
-        // Stable variation by world position, without consuming gameplay randomness.
-        int variant = (int)(Mathf.Abs(GlobalPosition.X * 17 + GlobalPosition.Z * 31)) % 3;
-        _ground.SetShaderParameter("scorch", Texture("scorch_" + variant));
-        _ground.SetShaderParameter("color", _def.Color);
-        _ground.SetShaderParameter("accent", _def.Accent);
-        _ground.SetShaderParameter("fire", fire);
-        var plane = CombatBurstEffect.Mesh(this, new PlaneMesh { Size = Vector2.One * _radius * 2 }, _ground);
-        plane.Position = Vector3.Up * .035f;
+        if (!fire)
+        {
+            _ground = new ShaderMaterial { Shader = GD.Load<Shader>("res://shaders/area_ground.gdshader") };
+            _ground.SetShaderParameter("flow", Texture("flow"));
+            _ground.SetShaderParameter("detail", Texture("detail"));
+            _ground.SetShaderParameter("color", _def.Color);
+            _ground.SetShaderParameter("accent", _def.Accent);
+            _ground.SetShaderParameter("fire", false);
+            var plane = CombatBurstEffect.Mesh(this, new PlaneMesh { Size = Vector2.One * _radius * 2 }, _ground);
+            plane.Position = Vector3.Up * .035f;
+        }
         if (fire)
         {
             Layer("Flames", true, Math.Max(1, _def.Lobes), _def.Opacity, _radius * .31f, Math.Max(.45f, _def.Rise * 1.65f), .75f, 1.25f);
@@ -96,9 +96,10 @@ public partial class AreaSurfaceVisual : Node3D
     public void Advance(float delta, float age, bool active, float remaining, float endFade = 1)
     {
         float grow = Mathf.SmoothStep(0, .32f, age);
-        _ground.SetShaderParameter("clock", age);
-        _ground.SetShaderParameter("active", active ? endFade : 0f);
-        _ground.SetShaderParameter("residue", active ? 0f : remaining);
+        // With no painted ground cue, fire must already read at hazard activation.
+        if (_def.Family == "fire") grow = .35f + .65f * grow;
+        _ground?.SetShaderParameter("clock", age);
+        _ground?.SetShaderParameter("active", active ? endFade : 0f);
         foreach (var (particles, material, alpha, flame) in _layers)
         {
             if (delta > 0) particles.RequestParticlesProcess(active ? delta : 0, active ? 0 : delta);

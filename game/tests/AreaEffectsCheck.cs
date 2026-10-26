@@ -145,13 +145,10 @@ public partial class AreaEffectsCheck : Node
 
     private async Task PauseAndResume()
     {
-        var sample = CombatSurfaceEffect.Create(_world, CombatEffectCatalog.Current.ForSource("fire_pool"), 3, 1);
-        var ground = Nodes<MeshInstance3D>(sample).Select(m => m.MaterialOverride).OfType<ShaderMaterial>()
-            .Single(m => m.Shader.ResourcePath.EndsWith("area_ground.gdshader"));
+        var sample = CombatSurfaceEffect.Create(_world, CombatEffectCatalog.Current.ForSource("fire_pool"), 3, .6f);
         for (int i=0;i<15;i++) await Frame();
         GetTree().Paused = true;
         for (int i=0;i<3;i++) await Frame();
-        float before = ground.GetShaderParameter("clock").AsSingle();
         await Capture("pause-before");
         byte[]? pixels = null;
         if (DisplayServer.GetName() != "headless")
@@ -159,7 +156,7 @@ public partial class AreaEffectsCheck : Node
             using var image = GetViewport().GetTexture().GetImage(); pixels = image.GetData();
         }
         for (int i=0;i<35;i++) await Frame();
-        Check(ground.GetShaderParameter("clock").AsSingle() == before && !sample.IsResidue, "pause freezes ground clock and active lifetime");
+        Check(!sample.IsResidue, "pause freezes active lifetime");
         await Capture("pause-after");
         if (pixels != null)
         {
@@ -167,8 +164,9 @@ public partial class AreaEffectsCheck : Node
             Check(pixels.SequenceEqual(image.GetData()), "paused rendered GPU particles remain pixel-identical");
         }
         GetTree().Paused = false;
-        for (int i=0;i<12;i++) await Frame();
-        Check(ground.GetShaderParameter("clock").AsSingle() > before && !sample.IsResidue, "resume continues from frozen time");
+        // Wait in real scene time: resumed fire must reach its harmless tail.
+        await ToSignal(GetTree().CreateTimer(.65), SceneTreeTimer.SignalName.Timeout);
+        Check(IsInstanceValid(sample) && sample.IsResidue, "resume advances fire into its harmless tail");
         sample.QueueFree(); await Frame(); await Frame();
     }
 }

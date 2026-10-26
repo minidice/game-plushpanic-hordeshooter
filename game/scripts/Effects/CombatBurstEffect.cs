@@ -15,7 +15,8 @@ public partial class CombatBurstEffect : Node3D
     private sealed record Part(MeshInstance3D Mesh, Vector3 Start, Vector3 Velocity, float Size, float Delay, int Kind, int Index);
     private readonly List<Part> _parts = new();
     private CombatEffectDefinition _def = null!;
-    private ShaderMaterial _hot = null!, _smoke = null!, _ring = null!;
+    private ShaderMaterial _hot = null!, _smoke = null!;
+    private ShaderMaterial? _ring;
     private OmniLight3D? _light;
     private float _age, _radius;
     public string EffectId => _def.Id;
@@ -60,9 +61,12 @@ public partial class CombatBurstEffect : Node3D
         var random = new RandomNumberGenerator { Seed = 7417 };
         _hot = Volume(_def.Color, _def.Accent, poison ? .12f : 1.4f);
         _smoke = Volume(_def.SmokeColor, _def.SmokeColor.Lightened(.18f), 0);
-        _ring = Ground(_def, 0);
-        var ring = Mesh(this, new PlaneMesh { Size = Vector2.One * _radius * 2 }, _ring);
-        ring.Position = new(0, floorOffset + .055f, 0);
+        if (_def.Family != "fire")
+        {
+            _ring = Ground(_def, 0);
+            var ring = Mesh(this, new PlaneMesh { Size = Vector2.One * _radius * 2 }, _ring);
+            ring.Position = new(0, floorOffset + .055f, 0);
+        }
         Vector3 directed = direction.LengthSquared() > .001f ? direction.Normalized() : Vector3.Zero;
         for (int i = 0; i < _def.Lobes; i++)
         {
@@ -107,7 +111,7 @@ public partial class CombatBurstEffect : Node3D
     private void UpdateVisual()
     {
         _hot.SetShaderParameter("clock", _age); _smoke.SetShaderParameter("clock", _age);
-        _ring.SetShaderParameter("clock", _age);
+        _ring?.SetShaderParameter("clock", _age);
         if (_light != null) _light.LightEnergy = _def.LightEnergy * Mathf.Pow(Mathf.Max(0, 1 - _age / .22f), 2);
         foreach (var part in _parts)
         {
