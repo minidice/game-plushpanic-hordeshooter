@@ -15,10 +15,13 @@ void fragment() {
     float d = texture(detail, UV * 3.0 + vec2(-clock * .035, clock * .022)).r;
     float edge = 1.0 - smoothstep(.75 + n * .18, 1.0, r);
     float wisps = smoothstep(.43, .69, n * .7 + d * .3);
-    // A faint continuous edge conveys the full damaging radius immediately.
-    float boundary = smoothstep(.955, .975, r) * (1.0 - smoothstep(.985, 1.0, r));
+    // Feather noisy heat into the ground; no continuous circle or bright rim.
+    // The final mask still contains the heat inside the actual hazard radius.
+    float heat_edge = (1.0 - smoothstep(.73, .99, r + (n - .5) * .14))
+        * (1.0 - smoothstep(.97, 1.0, r));
+    float heat = smoothstep(.30, .73, n * .7 + d * .3);
     vec4 charred = texture(scorch, UV);
-    float hot = active * (edge * (.035 + wisps * .24) + boundary * .32);
+    float hot = active * heat_edge * (.018 + heat * .25);
     float smoke = active * edge * wisps * .14;
     float ash = charred.a * residue * .42;
     ALBEDO = fire ? mix(charred.rgb, mix(color.rgb, accent.rgb, wisps * .6), step(.001, active)) : color.rgb;
