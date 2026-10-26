@@ -306,3 +306,7 @@ node prototypes/character-lab/tools/validate-game-roster.mjs
 ## 플레이어 라쿤 조형/파지 후속 (2026-10-26)
 
 `raccoon.tres`는 새 `raccoon-clean.glb`를 읽고 fitted 원본은 보존한다. 랫서판다와 같은 Paw/Paw_mesh/Wrist/Grip 및 별도 Shoulder 계약을 기존 Arm 아래 사용하며 런타임 고정 손 대상에 raccoon을 추가했다. 원본 피벗/몸 마스크 좌표/재질 채널/커스터마이징 키는 바꾸지 않는다. 라쿤 팔·손은 보조색이 아닌 기존 무늬색을 따른다. `PlayerMammalCleanCheck`는 두 종이 공유하고 기존 RedpandaCleanCheck와 새 RaccoonCleanCheck가 각각 종을 지정한다. [생성기·좌표·검증](raccoon-clean-forms.md).
+
+## 플레이어 오리 조형 후속 (2026-10-26)
+
+`duck.tres`는 새 `duck-clean.glb`를 읽는다. 독립 Blender 생성기 `build_duck_clean.py`가 읽기 전용 `duck-fitted.glb`를 입력으로 부리·눈·눈썹·날개·발 메시만 수정한다. 몸통 정점과 마스크 좌표, 전체 피벗/부모, 재질 채널과 장비는 동일하다. 날개는 기존 `CharacterGripSurface`의 변형 메시를 계속 사용하며 새 손/전완 런타임 경로를 추가하지 않는다. 발은 두 채널의 닫힌 단일 연결 표면으로 재구성한다. [검사·제약](duck-clean-forms.md).
