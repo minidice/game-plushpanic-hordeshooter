@@ -62,7 +62,8 @@ public partial class AreaSurfaceVisual : Node3D
         {
             var timeline = new ShaderMaterial { Shader = GD.Load<Shader>(flame
                 ? "res://shaders/area_flame_particles.gdshader" : "res://shaders/area_smoke_particles.gdshader") };
-            timeline.SetShaderParameter("root_radius", _radius * _def.Spread);
+            // Flame roots must reach the damaging edge; spread still controls decorative smoke/embers.
+            timeline.SetShaderParameter("root_radius", _radius * (flame ? .94f : _def.Spread));
             timeline.SetShaderParameter("root_count", amount);
             timeline.SetShaderParameter("card_height", height);
             timeline.SetShaderParameter("active_lifetime", _lifetime);

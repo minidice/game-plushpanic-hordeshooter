@@ -1,5 +1,7 @@
 # 게임 기능 체크리스트
 
+- [x] A-27/A-28/A-29 범위 보정: 실제 피해 반경에 가까운 전 방향 폭발 입자와 지속 불꽃 외곽 분포, 로켓 전방 편향 축소. 바닥 링/피해 변경 없음. [검사·렌더·제약](features/effects-audio/log/013-art-damage-reach.md).
+
 - [x] A-29 기존 기본/수류탄/로켓/박격포/유인 폭발을 반투명 카드 질감으로 확장. 바닥 링 제거, 기존 화염·연무·연료통과 피해/음향 보존. 공통 Studio/전투/부하 통합 검사. [통합 기록](features/effects-audio/log/012-check-effects-rollout.md).
 
 - [x] A-27/A-28 현재 화염·연무·연료통 외형 사용자 수락. 영역 효과의 실제 보스 예고/HUD·1/6/12중첩 및 낮은 렌더 비용 조건의 로컬 검수 완료. 실제 저사양/다인 장시간은 별도. [검사·제약](features/effects-audio/log/010-check-area-readability.md).

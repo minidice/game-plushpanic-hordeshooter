@@ -21,7 +21,7 @@ public partial class ImpactBurstVisual : Node3D
         var visual = new ImpactBurstVisual { Name = "ImpactBurst", _def = def, _radius = radius, _floorOffset = floorOffset,
             _profile = def.Id switch {
                 "grenade" => new(.20f, .23f, 0, .4f, 3.8f),
-                "rocket" => new(.30f, .34f, .65f, .55f, 3f),
+                "rocket" => new(.30f, .34f, .25f, .55f, 3f),
                 "mortar" => new(.24f, .28f, 0, 1.05f, 2.8f),
                 "lure" => new(.22f, .32f, 0, .45f, 1.5f),
                 _ => new(.25f, .30f, 0, .55f, 2.5f),
