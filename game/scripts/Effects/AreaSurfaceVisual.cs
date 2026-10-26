@@ -7,15 +7,16 @@ namespace HordeShooter;
 /// <summary>Textured GPU cards with soft intersections; no ground paint. Flame roots stay in place.</summary>
 public partial class AreaSurfaceVisual : Node3D
 {
-    private readonly List<(GpuParticles3D particles, StandardMaterial3D material, float alpha, bool flame)> _layers = new();
-    private ShaderMaterial? _flameMotion;
+    private readonly List<(GpuParticles3D particles, StandardMaterial3D material, float alpha)> _layers = new();
+    private readonly List<ShaderMaterial> _timelines = new();
     private CombatEffectDefinition _def = null!;
     private float _radius;
+    private float _lifetime;
     public const uint ParticleSeed = 6517;
 
-    public static AreaSurfaceVisual Create(Node3D parent, CombatEffectDefinition def, float radius)
+    public static AreaSurfaceVisual Create(Node3D parent, CombatEffectDefinition def, float radius, float lifetime)
     {
-        var visual = new AreaSurfaceVisual { Name = "AreaLayers", _def = def, _radius = radius };
+        var visual = new AreaSurfaceVisual { Name = "AreaLayers", _def = def, _radius = radius, _lifetime = lifetime };
         parent.AddChild(visual);
         visual.Build();
         return visual;
@@ -57,13 +58,17 @@ public partial class AreaSurfaceVisual : Node3D
         };
         if (ember) process.InitialVelocityMin = .6f;
         Material motion = process;
-        if (flame && !ember)
+        if (!ember)
         {
-            _flameMotion = new ShaderMaterial { Shader = GD.Load<Shader>("res://shaders/area_flame_particles.gdshader") };
-            _flameMotion.SetShaderParameter("root_radius", _radius * _def.Spread);
-            _flameMotion.SetShaderParameter("root_count", amount);
-            _flameMotion.SetShaderParameter("card_height", height);
-            motion = _flameMotion;
+            var timeline = new ShaderMaterial { Shader = GD.Load<Shader>(flame
+                ? "res://shaders/area_flame_particles.gdshader" : "res://shaders/area_smoke_particles.gdshader") };
+            timeline.SetShaderParameter("root_radius", _radius * _def.Spread);
+            timeline.SetShaderParameter("root_count", amount);
+            timeline.SetShaderParameter("card_height", height);
+            timeline.SetShaderParameter("active_lifetime", _lifetime);
+            timeline.SetShaderParameter("tail_seconds", _def.ResidueSeconds);
+            _timelines.Add(timeline);
+            motion = timeline;
         }
         var material = new StandardMaterial3D {
             ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
@@ -87,20 +92,20 @@ public partial class AreaSurfaceVisual : Node3D
         };
         AddChild(particles);
         particles.RequestParticlesProcess(warmup);
-        _layers.Add((particles, material, alpha, flame));
+        _layers.Add((particles, material, alpha));
     }
 
     // Explicit time keeps runtime pause and Studio's manual frame stepping equivalent.
-    public void Advance(float delta, float age, bool active, float remaining, float endFade = 1)
+    public void Advance(float delta, float age, bool active)
     {
-        float grow = Mathf.SmoothStep(0, .32f, age);
-        // With no painted ground cue, fire must already read at hazard activation.
-        if (_def.Family == "fire") grow = .35f + .65f * grow;
-        _flameMotion?.SetShaderParameter("clock", age);
-        foreach (var (particles, material, alpha, flame) in _layers)
+        foreach (var timeline in _timelines) timeline.SetShaderParameter("clock", age);
+        foreach (var (particles, material, alpha) in _layers)
         {
-            if (delta > 0) particles.RequestParticlesProcess(active ? delta : 0, active ? 0 : delta);
-            float visibility = active ? grow * endFade : flame ? 0 : remaining;
+            bool shaped = particles.ProcessMaterial is ShaderMaterial;
+            // Analytic slots keep processing through their individual fade, without a global cutoff.
+            if (delta > 0) particles.RequestParticlesProcess(active || shaped ? delta : 0, active || shaped ? 0 : delta);
+            float visibility = shaped ? 1 : Mathf.SmoothStep(0, .6f, age)
+                * (1 - Mathf.SmoothStep(Math.Max(0, _lifetime - .35f), _lifetime + Math.Min(.35f, _def.ResidueSeconds), age));
             var color = material.AlbedoColor;
             color.A = alpha * visibility;
             material.AlbedoColor = color;

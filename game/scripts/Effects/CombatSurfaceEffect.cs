@@ -31,7 +31,7 @@ public partial class CombatSurfaceEffect : Node3D
         bool fire = _def.Family == "fire";
         if (_def.Family is "fire" or "smoke")
         {
-            _area = AreaSurfaceVisual.Create(this, _def, Radius);
+            _area = AreaSurfaceVisual.Create(this, _def, Radius, _life);
             return;
         }
         _ground = CombatBurstEffect.Ground(_def, fire ? 1 : 2);
@@ -61,8 +61,7 @@ public partial class CombatSurfaceEffect : Node3D
         if (_age >= _life + _def.ResidueSeconds) { QueueFree(); return; }
         if (_area != null)
         {
-            _area.Advance((float)delta, _age, !IsResidue, 1 - Mathf.Clamp((_age - _life) / Math.Max(.001f, _def.ResidueSeconds), 0, 1),
-                _def.Family == "smoke" ? Mathf.Clamp((_life - _age) / .6f, 0, 1) : 1);
+            _area.Advance((float)delta, _age, !IsResidue);
             return;
         }
         UpdateVisual();
@@ -71,15 +70,15 @@ public partial class CombatSurfaceEffect : Node3D
     public void ReleaseResidue(Node3D owner)
     {
         if (_def.ResidueSeconds <= 0 || IsQueuedForDeletion()) return;
-        _age = _life;
+        _age = Math.Max(_age, _life);
         Reparent(owner, true);
         foreach (var old in owner.GetChildren().OfType<CombatSurfaceEffect>().Where(n => n != this && n.IsResidue && !n.IsQueuedForDeletion()).SkipLast(MaxResidues - 1))
             old.QueueFree();
-        _area?.Advance(0, _age, false, 1);
+        _area?.Advance(0, _age, false);
     }
     private void UpdateVisual()
     {
-        if (_area != null) { _area.Advance(0, _age, true, 1); return; }
+        if (_area != null) { _area.Advance(0, _age, true); return; }
         bool fire = _def.Family == "fire";
         float fade = Mathf.Clamp((_life - _age) / .3f, 0, 1);
         _ground.SetShaderParameter("clock", _age); _ground.SetShaderParameter("fade", fade);

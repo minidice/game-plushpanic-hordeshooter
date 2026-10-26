@@ -4,6 +4,7 @@
 - [x] A-27 외형 후속: 지속 화염의 원 테두리를 제거하고 불규칙한 열기 경계로 변경. [렌더·검사](features/effects-audio/log/005-art-fire-ground-without-ring.md).
 - [x] A-27 최신 외형: 화염의 바닥 그림·그을음·착탄 링을 제거하고 불꽃/불티/연기만 표시. [렌더·검사](features/effects-audio/log/006-art-fire-without-ground.md).
 - [x] A-27 후속: 안개 바닥 그림 제거, 지속 불꽃의 위치를 고정하고 모양/밝기만 변화. [렌더·검사](features/effects-audio/log/007-art-stable-flames-and-unpainted-fog.md).
+- [x] A-27 최신 연출: 중앙부터 화염/연무가 퍼지고 입자별로 높이·농도가 다르게 사그라듦. 피해 종료와 잔여 시각 분리. [렌더·검사](features/effects-audio/log/008-art-center-spread-and-staggered-fade.md).
 
 - [x] **A-26 사운드 9종 적용**: 무료 CC0 소재 편집·결과 악구, 발성 변형3개, 공유 ID 분리, 근거리/군중 믹스·결과 볼륨 처리. [작업·검증](features/effects-audio/log/002-art-sound-quality-rollout.md).
 - [x] **A-26 후속 검증**: 5분 통제 전투 음향·변형별 피격 하한·실제 상태효과 캡처 확인. 시체 누적 렌더 오류(I-41)는 남음. [검사·통합 기록](features/effects-audio/log/003-check-combat-soak-main-integration.md).
