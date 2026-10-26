@@ -6,7 +6,7 @@ Run from the repository root:
 python prototypes/effects/tools/generate_area_textures.py
 ```
 
-Dependencies: NumPy and Pillow. The generator writes seven original PNGs and a hash manifest under `game/assets/effects/area/`. It checks transparent atlas borders and the flame's closed time seam. Rerunning with the same NumPy/Pillow versions produces identical PNG hashes. Runtime imports must retain mipmaps and alpha-border correction; commit `.import` and shader/script `.uid` alongside the resources.
+Dependencies: NumPy and Pillow; verified versions are pinned in `requirements.txt`. The generator writes seven original PNGs and a hash manifest under `game/assets/effects/area/`. It checks transparent atlas borders and the flame's closed time seam. Rerunning with the same NumPy/Pillow versions produces identical PNG hashes. Runtime imports must retain mipmaps and alpha-border correction; commit `.import` and shader/script `.uid` alongside the resources.
 
 - Smoke: four512px variants packed2×2, grayscale brightness with soft alpha; runtime color is `smoke_color`.
 - Flame: sixteen128px frames packed4×4. Time loops at2π; start frame and speed vary per particle.

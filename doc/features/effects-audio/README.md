@@ -14,5 +14,7 @@
 
 - [status-visuals.md](../../status-visuals.md)
 - [sound-spec.md](../../sound-spec.md)
+- [vfx-quality.md](../../vfx-quality.md): 폭발·화염·독·연무 공통 정의와 현재 렌더 계약.
+- [A-27 화염·연무 구현](log/004-code-area-effects.md): 반투명 카드/무해한 잔흔, 실제 검사·렌더·성능 및 평면/벽 제약.
 
 - [A-26 사운드 품질 시제품](sound-quality-pilot.md): 무료 소재 3종 A/B부터. [작업 기록](log/001-art-sound-quality-pilot.md).
