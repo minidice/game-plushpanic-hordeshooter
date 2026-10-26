@@ -1,0 +1,200 @@
+{
+  "recipe": "prototypes/audio-lab/release-recipes.json",
+  "files": {
+    "honk.wav": {
+      "sha256": "315d2ef8bf7ad953c58d2f0fea370efeddc3681776447e55e568bb666ae29d70",
+      "sources": [
+        "geese-preview.mp3"
+      ],
+      "original_arrangement": false
+    },
+    "honk_2.wav": {
+      "sha256": "06d6ee8cd134f9c8381f2b23e3d25b812911109733af7a12c5e86a177ad51ca1",
+      "sources": [
+        "geese-preview.mp3"
+      ],
+      "original_arrangement": false
+    },
+    "groan.wav": {
+      "sha256": "d134726389eaf7c57343e109227957ab9af27f8b79932d480bdaf1bd05da864f",
+      "sources": [
+        "zombie-16.wav"
+      ],
+      "original_arrangement": false
+    },
+    "groan_2.wav": {
+      "sha256": "2a902e02b86a695139a356cc13699baee16fac5ba9d0b238bc015a2b836c2dcf",
+      "sources": [
+        "zombie-18.wav"
+      ],
+      "original_arrangement": false
+    },
+    "zombie_die.wav": {
+      "sha256": "cde4439c4b653c59121455ef92fa26feb4448f613edff0e52239027c435a52af",
+      "sources": [
+        "zombie-24.wav",
+        "kenney-impactSoft_heavy_000.ogg"
+      ],
+      "original_arrangement": false
+    },
+    "zombie_die_2.wav": {
+      "sha256": "313cac73d38236c1f1700ebc903ab18896170063482bb6892ebf8aa493fe0410",
+      "sources": [
+        "zombie-11.wav",
+        "kenney-impactSoft_medium_001.ogg"
+      ],
+      "original_arrangement": false
+    },
+    "honk_long.wav": {
+      "sha256": "af23b4d5d4f708f32fd49e40bb3811bbede187acccdaa74e4d3faac9acef0a5f",
+      "sources": [
+        "geese-preview.mp3"
+      ],
+      "original_arrangement": false
+    },
+    "balloon_inflate.wav": {
+      "sha256": "128437b0d9354d1de28f70f0b8df15ad99a0ebee38950336cd5d2ceec0b2c2fa",
+      "sources": [
+        "air-release-preview.mp3"
+      ],
+      "original_arrangement": false
+    },
+    "balloon_pop.wav": {
+      "sha256": "e5ae7f685f0daa2b2f5f14f0bb490a83164552f44c898c58f173d327b17fecf7",
+      "sources": [
+        "air-release-preview.mp3",
+        "kenney-impactSoft_medium_001.ogg"
+      ],
+      "original_arrangement": false
+    },
+    "bull_bonk.wav": {
+      "sha256": "7be3729f47cf6223983eebf4146321d7e88472eecad80c863abf006e0a6c6dc3",
+      "sources": [
+        "kenney-impactSoft_heavy_000.ogg",
+        "kenney-impactWood_heavy_000.ogg"
+      ],
+      "original_arrangement": false
+    },
+    "game_over.wav": {
+      "sha256": "45aa80049d85b68a495f618fc992d0da35c7e1255ea4ac8e9f38f17f522802b4",
+      "sources": [],
+      "original_arrangement": true
+    },
+    "stage_clear.wav": {
+      "sha256": "fc4b25121281f385a77e7a2422ccd20d79e4b0bc195cb05f1f0977a51364c832",
+      "sources": [],
+      "original_arrangement": true
+    }
+  },
+  "sources": [
+    {
+      "file": "geese-preview.mp3",
+      "author": "Navadaux",
+      "title": "Geese Honking",
+      "page": "https://freesound.org/people/Navadaux/sounds/554039/",
+      "download": "https://cdn.freesound.org/previews/554/554039_5576856-lq.mp3",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "retrieved": "2026-10-27",
+      "sha256": "9077c0fcf71978bc0d875d8f23771c40a0b7e90456179c8189bc9f75857dddbd",
+      "note": "Public low-quality MP3 preview, not the login-only original; recorded geese with field ambience."
+    },
+    {
+      "file": "zombie-16.wav",
+      "author": "artisticdude",
+      "title": "Zombies Sound Pack",
+      "page": "https://opengameart.org/content/zombies-sound-pack",
+      "download": "https://opengameart.org/sites/default/files/zombies.zip",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "retrieved": "2026-10-27",
+      "sha256": "637f8d26b186005246a279fb19def56c81eebcf144c2346460ac1e4fc0075fc7",
+      "note": "Original 24-bit stereo WAV files, selected from the archive. Source page does not document the recording/processing chain."
+    },
+    {
+      "file": "zombie-18.wav",
+      "author": "artisticdude",
+      "title": "Zombies Sound Pack",
+      "page": "https://opengameart.org/content/zombies-sound-pack",
+      "download": "https://opengameart.org/sites/default/files/zombies.zip",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "retrieved": "2026-10-27",
+      "sha256": "91c33adaf9efa32d87c364eb2a679833a24ac5586c52f675f3e9cf8cedfde199",
+      "note": "Original 24-bit stereo WAV files, selected from the archive. Source page does not document the recording/processing chain."
+    },
+    {
+      "file": "zombie-11.wav",
+      "author": "artisticdude",
+      "title": "Zombies Sound Pack",
+      "page": "https://opengameart.org/content/zombies-sound-pack",
+      "download": "https://opengameart.org/sites/default/files/zombies.zip",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "retrieved": "2026-10-27",
+      "sha256": "edbe930f09f61f034c90b80a6f5b06757fbea2a8f2b9ccdc263ed9246b33a400",
+      "note": "Original 24-bit stereo WAV files, selected from the archive. Source page does not document the recording/processing chain."
+    },
+    {
+      "file": "zombie-24.wav",
+      "author": "artisticdude",
+      "title": "Zombies Sound Pack",
+      "page": "https://opengameart.org/content/zombies-sound-pack",
+      "download": "https://opengameart.org/sites/default/files/zombies.zip",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "retrieved": "2026-10-27",
+      "sha256": "3776a39a471c215f26115290837012084fc07f37e20b4808ce76f5dafe98f2fb",
+      "note": "Original 24-bit stereo WAV files, selected from the archive. Source page does not document the recording/processing chain."
+    },
+    {
+      "file": "kenney-impactSoft_heavy_000.ogg",
+      "author": "Kenney",
+      "title": "Impact Sounds",
+      "page": "https://kenney.nl/assets/impact-sounds",
+      "download": "https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "retrieved": "2026-10-27",
+      "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1",
+      "note": "Selected soft impacts; archive License.txt retained. Source page labels the pack as impact/foley."
+    },
+    {
+      "file": "kenney-impactSoft_medium_001.ogg",
+      "author": "Kenney",
+      "title": "Impact Sounds",
+      "page": "https://kenney.nl/assets/impact-sounds",
+      "download": "https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "retrieved": "2026-10-27",
+      "sha256": "7642a4fd43e547afe4f7adfadb3dabb681c0ff512f52c1674bae30a726841faf",
+      "note": "Selected soft impacts; archive License.txt retained. Source page labels the pack as impact/foley."
+    },
+    {
+      "file": "kenney-impactWood_heavy_000.ogg",
+      "author": "Kenney",
+      "title": "Impact Sounds",
+      "page": "https://kenney.nl/assets/impact-sounds",
+      "download": "https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "retrieved": "2026-10-27",
+      "sha256": "15ff82332f342c30e469215539e1cc57e11b221aa2cf7e11e811d313a9927f3d",
+      "note": "Wood impact selected from the same CC0 archive; used with soft body impact."
+    },
+    {
+      "file": "air-release-preview.mp3",
+      "author": "davidlay1",
+      "title": "Air release",
+      "page": "https://freesound.org/people/davidlay1/sounds/416080/",
+      "download": "https://cdn.freesound.org/previews/416/416080_7175960-hq.mp3",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "retrieved": "2026-10-27",
+      "note": "Public HQ MP3 preview of a recorded shaving-cream can edited as pressure release. Not the original WAV; used as designed balloon air, not an actual balloon recording.",
+      "sha256": "e9f3f979e8640b12ac7908db628c4281ec03cec0c7567b51a05a12047b77d52e"
+    }
+  ],
+  "note": "CC0-derived edits. Original additive arrangements for game_over and stage_clear are project-authored, with no external music sample."
+}

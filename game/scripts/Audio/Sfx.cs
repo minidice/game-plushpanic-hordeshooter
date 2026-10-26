@@ -20,6 +20,8 @@ public partial class Sfx : Node
     public int Pool2DSize { get; init; } = 10;
 
     private readonly Dictionary<string, AudioStream> _streams = new();
+    private readonly Dictionary<string, AudioStream[]> _variants = new();
+    private readonly Dictionary<string, int> _lastVariant = new();
     private readonly Dictionary<string, SoundDef> _defs = new();
     private readonly List<AudioStreamPlayer3D> _players3D = new();
     private readonly List<AudioStreamPlayer> _players2D = new();
@@ -38,6 +40,15 @@ public partial class Sfx : Node
         {
             _defs[def.Id] = def;
             _streams[def.Id] = LoadOverride(def) ?? Cached(def);
+            var variants = new List<AudioStream> { _streams[def.Id] };
+            if (Overridden.Contains(def.Id))
+                for (int i = 2; i <= def.Variants; i++)
+                {
+                    var path = $"{OverrideDir}/{def.Id}_{i}.wav";
+                    if (ResourceLoader.Exists(path) && ResourceLoader.Load<AudioStream>(path) is { } variant)
+                        variants.Add(variant);
+                }
+            _variants[def.Id] = variants.ToArray();
         }
         for (int i = 0; i < Pool3DSize; i++)
         {
@@ -54,6 +65,17 @@ public partial class Sfx : Node
     }
 
     public AudioStream Stream(string id) => _streams[id];
+
+    private AudioStream NextStream(string id)
+    {
+        var variants = _variants[id];
+        if (variants.Length == 1) return variants[0];
+        int next = _lastVariant.TryGetValue(id, out int last)
+            ? (last + 1 + _rng.RandiRange(0, variants.Length - 2)) % variants.Length
+            : _rng.RandiRange(0, variants.Length - 1);
+        _lastVariant[id] = next;
+        return variants[next];
+    }
 
     /// <summary>Godot's default cap for positional voices; sounds without <see cref="SoundDef.NearCap"/> keep it.</summary>
     private const float DefaultMaxDb = 3f;
@@ -158,7 +180,7 @@ public partial class Sfx : Node
         if (!TryGetDef(id, out var def)) return null;
         var player = Pick(_players2D, id, def);
         if (player == null) return null;
-        player.Stream = _streams[id];
+        player.Stream = NextStream(id);
         player.Bus = def.Bus;
         player.VolumeDb = def.VolumeDb + volumeDb;
         player.PitchScale = pitch * (1 + _rng.RandfRange(-def.PitchJitter, def.PitchJitter));
@@ -212,7 +234,7 @@ public partial class Sfx : Node
 
     private void Start(AudioStreamPlayer3D player, string id, SoundDef def, float volumeDb, float pitch)
     {
-        player.Stream = _streams[id];
+        player.Stream = NextStream(id);
         player.Bus = def.Bus;
         player.VolumeDb = def.VolumeDb + volumeDb;
         player.MaxDb = def.NearCap ? player.VolumeDb : DefaultMaxDb;

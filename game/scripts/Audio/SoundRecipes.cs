@@ -24,7 +24,8 @@ public sealed record SoundDef(
     int Priority = 1,
     bool RestartWhenFull = true,
     string Bus = AudioSetup.SfxBus,
-    bool NearCap = false);
+    bool NearCap = false,
+    int Variants = 1);
 
 /// <summary>
 /// Every sound effect as a synthesis recipe. Ids are what gameplay code asks for; see doc/sound-spec.md.
@@ -71,7 +72,7 @@ public static class SoundRecipes
         new("glass_break", "화염병 깨짐", GlassBreak, -1, .08f, 3),
         new("fire_loop", "불타는 소리 (반복)", FireLoop, -4, 0, 4, Loop: true),
         new("flash_bang", "섬광탄 터짐", FlashBang, 3, .03f, 2),
-        new("ear_ring", "귀 울림 (섬광 실명)", EarRing, -8, 0, 1, Priority: 2, Bus: "Master"),
+        new("ear_ring", "귀 울림 (섬광 실명)", EarRing, -8, 0, 1, Priority: 2, Bus: AudioSetup.CueBus),
         new("lure_beep", "유인 폭탄 삑", s => Beep(s, 1760, .08f), -4, 0, 4, Priority: 2),
 
         // ---------- player ----------
@@ -80,21 +81,22 @@ public static class SoundRecipes
         new("step", "플레이어 발소리 (발바닥 툭 + 스침)", PlayerStep, -12, .12f, 3, NearCap: true),
         new("roll", "구르기", Roll, -4, .08f, 2),
         // Played at the listener's own head: it rode the +3 dB ceiling as loud as a rifle shot. Half as loud now (I-74).
-        new("honk", "피격 비명 (꽥)", s => Honk(s, .28f, 330, 260), -3, .1f, 2, Priority: 2, NearCap: true),
-        new("honk_long", "쓰러질 때 비명", s => Honk(s, .9f, 360, 180), 0, .03f, 1, Priority: 2),
+        new("honk", "피격 (짧은 거위 반응)", s => Honk(s, .28f, 330, 260), -1, .04f, 2, Priority: 2, NearCap: true, Variants: 2),
+        new("honk_ability", "무기·카드 경적", s => Honk(s, .28f, 330, 260), -3, .1f, 2, Priority: 2, NearCap: true),
+        new("honk_long", "쓰러질 때 긴 거위 반응", s => Honk(s, .9f, 360, 180), -2, .03f, 1, Priority: 2, NearCap: true),
         new("heal", "치료 완료", s => Chime(s, new[] { 660f, 880f, 1320f }, .6f, .08f), -6, 0, 1),
         new("pickup", "줍기", s => Chime(s, new[] { 660f, 990f }, .16f, .05f), -8, .03f, 2),
 
         // ---------- zombies & specials ----------
         new("zombie_step", "좀비 발소리 (질질, 작게)", ZombieStep, -17, .15f, 6, Priority: 0, NearCap: true),
-        new("groan", "좀비 신음", Groan, -7, .15f, 4, Priority: 0, RestartWhenFull: false),
-        new("zombie_hit", "좀비 피격 (솜 퍽)", ZombieHit, -6, .15f, 6, Priority: 0),
-        new("zombie_die", "좀비 쓰러짐 (뿅 + 삑)", ZombieDie, -4, .12f, 6, Priority: 0),
+        new("groan", "좀비 신음 (목 울림)", Groan, 2, .05f, 3, Priority: 0, RestartWhenFull: false, NearCap: true, Variants: 2),
+        new("zombie_hit", "좀비 피격 (솜 퍽)", ZombieHit, -6, .15f, 6, Priority: 0, NearCap: true),
+        new("zombie_die", "좀비 쓰러짐 (짧은 발성·낙하)", ZombieDie, -4, .05f, 3, Priority: 0, RestartWhenFull: false, NearCap: true, Variants: 2),
         new("sonar", "소나 파문 (보이지 않는 적)", Sonar, -10, .04f, 4, RestartWhenFull: false),
-        new("balloon_inflate", "풍선 부풂", BalloonInflate, -3, .05f, 2),
-        new("balloon_pop", "풍선 터짐", BalloonPop, 2, .05f, 3),
+        new("balloon_inflate", "풍선 부풂 (공기 압력)", BalloonInflate, 0, .03f, 2, NearCap: true),
+        new("balloon_pop", "풍선 터짐 (공기 파열)", BalloonPop, 0, .04f, 3, NearCap: true),
         new("bull_snort", "황소 콧김 (돌진 예고)", BullSnort, 0, .06f, 2),
-        new("bull_bonk", "황소 충돌", BullBonk, 2, .06f, 3),
+        new("bull_bonk", "황소 충돌 (둔탁한 타격)", BullBonk, 1, .04f, 3, NearCap: true),
 
         // ---------- stage ----------
         new("door", "문 미끄러짐", Door, -4, .04f, 2),
@@ -102,9 +104,9 @@ public static class SoundRecipes
         new("alarm_loop", "경보 사이렌 (반복, 작게)", Alarm, -20, 0, 1, Loop: true, NearCap: true),
         new("shutter", "셔터 열림", Shutter, -2, 0, 1),
         new("ambience_loop", "밤바람 앰비언스 (반복)", Ambience, -16, 0, 1, Loop: true),
-        new("game_over", "게임 오버 (빠밤빠밤...)", SadTrombone, -2, 0, 1, Priority: 2, Bus: "Master"),
-        new("stage_clear", "스테이지 클리어", Fanfare, -3, 0, 1, Priority: 2, Bus: "Master"),
-        new("ui_click", "UI 클릭", s => Click(s, .05f, 1600), -8, .03f, 2, Bus: "Master"),
+        new("game_over", "게임 오버 (짧은 하강 악구)", SadTrombone, -2, 0, 1, Priority: 2, Bus: AudioSetup.CueBus),
+        new("stage_clear", "스테이지 클리어 (부드러운 상승 악구)", Fanfare, -3, 0, 1, Priority: 2, Bus: AudioSetup.CueBus),
+        new("ui_click", "UI 클릭", s => Click(s, .05f, 1600), -8, .03f, 2, Bus: AudioSetup.CueBus),
     };
 
     public static SoundDef? Find(string id) => All.FirstOrDefault(d => d.Id == id);

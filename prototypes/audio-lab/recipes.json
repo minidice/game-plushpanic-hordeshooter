@@ -1,0 +1,19 @@
+{
+  "sample_rate": 48000,
+  "candidates": [
+    {"id":"honk-a","group":"honk","label":"A · 짧은 거위 반응","seconds":0.29,"layers":[
+      {"file":"geese-preview.mp3","start":0.76,"seconds":0.29,"speed":1.03,"filters":"highpass=f=260,lowpass=f=3300,equalizer=f=1800:t=q:w=1.2:g=-3","gain_db":0}]},
+    {"id":"honk-b","group":"honk","label":"B · 낮고 둔탁한 거위 반응","seconds":0.34,"layers":[
+      {"file":"geese-preview.mp3","start":4.22,"seconds":0.29,"speed":0.9,"filters":"highpass=f=230,lowpass=f=2600,equalizer=f=1400:t=q:w=1:g=-4","gain_db":0}]},
+    {"id":"groan-a","group":"groan","label":"A · 낮은 목 울림","seconds":1.22,"layers":[
+      {"file":"zombie-16.wav","start":0.08,"seconds":1.08,"speed":0.9,"filters":"highpass=f=95,lowpass=f=2700,equalizer=f=420:t=q:w=0.8:g=-2","gain_db":0}]},
+    {"id":"groan-b","group":"groan","label":"B · 짧고 거친 발성","seconds":0.98,"layers":[
+      {"file":"zombie-18.wav","start":0.03,"seconds":0.95,"speed":1.02,"filters":"highpass=f=140,lowpass=f=3400,equalizer=f=2300:t=q:w=1.2:g=-3","gain_db":0}]},
+    {"id":"zombie_die-a","group":"zombie_die","label":"A · 짧은 발성 + 무거운 낙하","seconds":0.53,"layers":[
+      {"file":"zombie-24.wav","start":0,"seconds":0.32,"speed":0.95,"filters":"highpass=f=100,lowpass=f=2400","gain_db":-4},
+      {"file":"kenney-impactSoft_heavy_000.ogg","start":0,"seconds":0.38,"speed":0.9,"filters":"highpass=f=65,lowpass=f=1800","gain_db":0,"offset":0.09}]},
+    {"id":"zombie_die-b","group":"zombie_die","label":"B · 짧고 건조한 마무리","seconds":0.4,"layers":[
+      {"file":"zombie-11.wav","start":0.07,"seconds":0.24,"speed":1.05,"filters":"highpass=f=160,lowpass=f=2900","gain_db":-5},
+      {"file":"kenney-impactSoft_medium_001.ogg","start":0,"seconds":0.29,"speed":1,"filters":"highpass=f=90,lowpass=f=2200","gain_db":0,"offset":0.07}]}
+  ]
+}

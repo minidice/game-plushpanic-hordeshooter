@@ -104,6 +104,7 @@ public static class GameSettings
     {
         SetBus("Master", MasterVolume);
         SetBus(AudioSetup.SfxBus, SfxVolume);
+        SetBus(AudioSetup.CueBus, SfxVolume);
         SetBus(AudioSetup.AmbienceBus, AmbienceVolume);
     }
 

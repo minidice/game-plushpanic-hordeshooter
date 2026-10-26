@@ -14,3 +14,5 @@
 
 - [status-visuals.md](../../status-visuals.md)
 - [sound-spec.md](../../sound-spec.md)
+
+- [A-26 사운드 품질 시제품](sound-quality-pilot.md): 무료 소재 3종 A/B부터. [작업 기록](log/001-art-sound-quality-pilot.md).

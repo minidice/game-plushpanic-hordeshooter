@@ -12,3 +12,11 @@
 - 재발 방지 · 검사 경로:
 - 남은 제약:
 -->
+
+## I-41 화면 안 시체 누적 — 추가 관찰, 2026-10-27
+
+- 과거 시체 보존 정책과 기존 제약은 [전체 이슈 I-41](../../issues.md)에 유지한다.
+- 증상: 사운드 검증용 5분 통제 전투에서 같은 장소에 시체가 누적된 후, 약240초 이후 Godot가 `Too many instances using shader instance variables`와 `global_shader_uniforms.instance_buffer_pos.has(p_instance)` 오류를 기록했다. 최종 녹음은 299.989초·초과샘플0이었지만 게임 전체 무오류 통과는 아니다.
+- 확인된 원인: 엔진 메시지는 shader instance 버퍼 부족을 가리킨다. 시체 누적과 함께 발생했으나 정확한 mesh/리소스별 사용량과 사운드 변경 전 동일 조건 비교는 미측정이다. 시체/렌더 코드·제한값은 이 사운드 작업에서 수정하지 않았다.
+- 해결 상태: 기존 제약 유지·미해결. 사운드 믹스 작업과 분리한 후속 렌더/시체 부하 조사 대상이다. 강제 삭제나 버퍼 증량을 임의로 적용하지 않았다.
+- 재현/검사: 창 모드 `AudioCombatSoak.tscn`, `output/soak-combat.log`, 60/240초 PNG. [정확한 조건·수치](../effects-audio/log/003-check-combat-soak-main-integration.md). 무적·체력 회복·탄약 보충·적 교체가 있는 통제 조건으로 일반 캠페인 난이도와는 다르다.
