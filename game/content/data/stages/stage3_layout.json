@@ -1,7 +1,7 @@
 {
-  "_comment": "Stage 2 layout (doc/stage2-floorplan.md, decisions.md L-29). World metres, x east, z toward the camera (+z = camera side, -z = far side). The map data format, first version (T-24 option B): LayoutMap builds the size draft from it; tools/floorplan/render_floorplan.py draws the plan. label/label_at/label_offset are drawing hints only.",
+  "_comment": "Stage 3 layout: the size draft, formerly Stage 2 (doc/stage2-floorplan.md, decisions.md L-29, L-30). World metres, x east, z toward the camera (+z = camera side, -z = far side). The map data format, first version (T-24 option B): LayoutMap builds the size draft from it; tools/floorplan/render_floorplan.py draws the plan. label/label_at/label_offset are drawing hints only.",
   "version": 1,
-  "stage": 2,
+  "stage": 3,
   "tier_height_m": 1.2,
   "bounds": [
     -10,
@@ -17,19 +17,19 @@
       "poly": [
         [
           0,
-          -18
+          -14
         ],
         [
           40,
-          -18
+          -14
         ],
         [
           40,
-          18
+          14
         ],
         [
           0,
-          18
+          14
         ]
       ]
     },
@@ -208,6 +208,29 @@
       "label_at": [
         186,
         15
+      ]
+    },
+    {
+      "id": "return_ledge",
+      "label": "",
+      "tier": 2,
+      "poly": [
+        [
+          185,
+          -26
+        ],
+        [
+          191,
+          -26
+        ],
+        [
+          191,
+          -18
+        ],
+        [
+          185,
+          -18
+        ]
       ]
     },
     {
@@ -436,19 +459,19 @@
       "poly": [
         [
           585,
-          -162
+          -158
         ],
         [
           648,
-          -162
+          -158
         ],
         [
           648,
-          -124
+          -128
         ],
         [
           585,
-          -124
+          -128
         ]
       ],
       "label_at": [
@@ -649,6 +672,29 @@
         ]
       ],
       "note": "감시탑 기둥"
+    },
+    {
+      "kind": "rock",
+      "climbable": true,
+      "line": [
+        [
+          185,
+          -26
+        ],
+        [
+          191,
+          -26
+        ],
+        [
+          191,
+          -18
+        ],
+        [
+          185,
+          -18
+        ]
+      ],
+      "note": "복귀 바위턱"
     }
   ],
   "links": [
@@ -765,13 +811,13 @@
       "type": "ladder",
       "from": [
         188,
-        -22
+        -15
       ],
       "to": [
-        183,
-        -22
+        188,
+        -21
       ],
-      "note": "임무 복귀: 긴 사다리(0 → 2단). 다리 북쪽: 다리 칸은 한 단(2)이라 그 밑으로는 못 지나감"
+      "note": "임무 복귀: 긴 사다리(0 → 2단), 협곡 서쪽 바위턱으로 북쪽으로 오름(L-32). 다리 북쪽: 다리 칸은 위 단(2)이라 그 밑으로는 못 지나감"
     },
     {
       "type": "ladder",
@@ -926,14 +972,18 @@
       ],
       [
         194,
-        -20
+        -14
       ],
       [
         188,
-        -22
+        -15
       ],
       [
-        183,
+        188,
+        -21
+      ],
+      [
+        184,
         -22
       ],
       [
@@ -1163,6 +1213,253 @@
       "label_offset": [
         8,
         14
+      ]
+    }
+  ],
+  "next_stage": 0,
+  "dressing": "stage3",
+  "keys": {
+    "title": "ui_hud_stage3"
+  },
+  "zones": [
+    {
+      "id": "A",
+      "size": "small",
+      "label": "A 도착 벙커 공터",
+      "poly": [
+        [
+          0,
+          -14
+        ],
+        [
+          40,
+          -14
+        ],
+        [
+          40,
+          14
+        ],
+        [
+          0,
+          14
+        ]
+      ]
+    },
+    {
+      "id": "B",
+      "size": "large",
+      "label": "B 숲 오르막 · 서쪽 둑",
+      "poly": [
+        [
+          40,
+          -25
+        ],
+        [
+          165,
+          -72
+        ],
+        [
+          185,
+          -72
+        ],
+        [
+          185,
+          -12
+        ],
+        [
+          40,
+          18
+        ]
+      ]
+    },
+    {
+      "id": "B-tower",
+      "size": "small",
+      "branch": true,
+      "label": "감시탑(보상 분기)",
+      "poly": [
+        [
+          106,
+          -80
+        ],
+        [
+          127,
+          -80
+        ],
+        [
+          127,
+          -62
+        ],
+        [
+          106,
+          -62
+        ]
+      ]
+    },
+    {
+      "id": "C",
+      "size": "small",
+      "label": "C 협곡과 다리(펌프 임무, 다리 4 m 병목)",
+      "poly": [
+        [
+          185,
+          -95
+        ],
+        [
+          215,
+          -95
+        ],
+        [
+          215,
+          35
+        ],
+        [
+          185,
+          35
+        ]
+      ]
+    },
+    {
+      "id": "D",
+      "size": "small",
+      "label": "D 동쪽 둑 · 산림 감시소(중간 안전 구역)",
+      "poly": [
+        [
+          215,
+          -62
+        ],
+        [
+          255,
+          -62
+        ],
+        [
+          255,
+          -34
+        ],
+        [
+          215,
+          -34
+        ]
+      ]
+    },
+    {
+      "id": "E",
+      "size": "large",
+      "label": "E 벌목 · 컨테이너 야적장",
+      "poly": [
+        [
+          255,
+          -100
+        ],
+        [
+          436,
+          -108
+        ],
+        [
+          436,
+          -40
+        ],
+        [
+          405,
+          -5
+        ],
+        [
+          255,
+          -5
+        ]
+      ]
+    },
+    {
+      "id": "E-workshop",
+      "size": "small",
+      "branch": true,
+      "label": "정비 창고(보상 분기)",
+      "poly": [
+        [
+          340,
+          -30
+        ],
+        [
+          372,
+          -30
+        ],
+        [
+          372,
+          -5
+        ],
+        [
+          340,
+          -5
+        ]
+      ]
+    },
+    {
+      "id": "EF",
+      "size": "small",
+      "label": "야적장 → 고지 경사로(폭 8 m 병목)",
+      "poly": [
+        [
+          436,
+          -86
+        ],
+        [
+          452,
+          -86
+        ],
+        [
+          452,
+          -62
+        ],
+        [
+          436,
+          -62
+        ]
+      ]
+    },
+    {
+      "id": "F",
+      "size": "large",
+      "label": "F 벙커 고지 오르막",
+      "poly": [
+        [
+          452,
+          -112
+        ],
+        [
+          538,
+          -150
+        ],
+        [
+          538,
+          -82
+        ],
+        [
+          452,
+          -56
+        ]
+      ]
+    },
+    {
+      "id": "G",
+      "size": "small",
+      "label": "G 건너편 고지",
+      "poly": [
+        [
+          585,
+          -158
+        ],
+        [
+          648,
+          -158
+        ],
+        [
+          648,
+          -128
+        ],
+        [
+          585,
+          -128
+        ]
       ]
     }
   ]

@@ -1,0 +1,1681 @@
+{
+  "_comment": "Large Stage 1 (decisions.md L-30..L-32, doc/large-stages.md): the warehouse district at the Stage 3 scale. Urban theme: asphalt floors, buildings and fences beyond the edge. World metres, x east, z toward the camera. Zones are the plan's large/small zones (L-31); ladders climb north or east and every button faces the camera (L-32).",
+  "version": 1,
+  "stage": 1,
+  "next_stage": 2,
+  "theme": "urban",
+  "tier_height_m": 1.2,
+  "keys": {
+    "title": "ui_hud_stage",
+    "route_start": "msg_stage_start",
+    "crescendo_objective": "ui_objective_large1_shutter",
+    "crescendo_hold": "fmt_objective_hold_out",
+    "crescendo_alarm": "msg_stage_alarm",
+    "crescendo_done": "msg_stage_shutter_open"
+  },
+  "bounds": [
+    -10,
+    -178,
+    640,
+    30
+  ],
+  "regions": [
+    {
+      "id": "saferoom_lot",
+      "label": "A 세이프룸",
+      "tier": 0,
+      "poly": [
+        [
+          -4,
+          -10
+        ],
+        [
+          18,
+          -10
+        ],
+        [
+          18,
+          10
+        ],
+        [
+          -4,
+          10
+        ]
+      ]
+    },
+    {
+      "id": "main_street",
+      "label": "B 상가 거리",
+      "tier": 0,
+      "poly": [
+        [
+          16,
+          -32
+        ],
+        [
+          150,
+          -64
+        ],
+        [
+          150,
+          16
+        ],
+        [
+          16,
+          16
+        ]
+      ]
+    },
+    {
+      "id": "pharmacy",
+      "label": "약국 분기",
+      "tier": 0,
+      "poly": [
+        [
+          56,
+          -36
+        ],
+        [
+          82,
+          -42
+        ],
+        [
+          82,
+          -62
+        ],
+        [
+          56,
+          -56
+        ]
+      ]
+    },
+    {
+      "id": "plaza_terrace",
+      "label": "광장 계단참",
+      "tier": 1,
+      "poly": [
+        [
+          100,
+          -52
+        ],
+        [
+          128,
+          -58
+        ],
+        [
+          128,
+          -44
+        ],
+        [
+          100,
+          -38
+        ]
+      ]
+    },
+    {
+      "id": "alley",
+      "label": "C 골목",
+      "tier": 0,
+      "poly": [
+        [
+          146,
+          -64
+        ],
+        [
+          202,
+          -84
+        ],
+        [
+          202,
+          -64
+        ],
+        [
+          146,
+          -46
+        ]
+      ]
+    },
+    {
+      "id": "depot",
+      "label": "D 창고 단지",
+      "tier": 0,
+      "poly": [
+        [
+          196,
+          -112
+        ],
+        [
+          336,
+          -132
+        ],
+        [
+          336,
+          -40
+        ],
+        [
+          196,
+          -52
+        ]
+      ]
+    },
+    {
+      "id": "dock_1",
+      "label": "하역장",
+      "tier": 1,
+      "poly": [
+        [
+          217,
+          -112
+        ],
+        [
+          241,
+          -112
+        ],
+        [
+          241,
+          -104
+        ],
+        [
+          217,
+          -104
+        ]
+      ]
+    },
+    {
+      "id": "stack_1",
+      "label": "",
+      "tier": 2,
+      "poly": [
+        [
+          262,
+          -108
+        ],
+        [
+          276,
+          -108
+        ],
+        [
+          276,
+          -96
+        ],
+        [
+          262,
+          -96
+        ]
+      ]
+    },
+    {
+      "id": "gate_gap",
+      "label": "셔터",
+      "tier": 0,
+      "poly": [
+        [
+          334,
+          -92
+        ],
+        [
+          346,
+          -92
+        ],
+        [
+          346,
+          -86
+        ],
+        [
+          334,
+          -86
+        ]
+      ]
+    },
+    {
+      "id": "guard_post",
+      "label": "E 경비 초소",
+      "tier": 0,
+      "poly": [
+        [
+          344,
+          -100
+        ],
+        [
+          374,
+          -102
+        ],
+        [
+          374,
+          -78
+        ],
+        [
+          344,
+          -78
+        ]
+      ]
+    },
+    {
+      "id": "freight_yard",
+      "label": "F 화물 야적장",
+      "tier": 0,
+      "poly": [
+        [
+          372,
+          -142
+        ],
+        [
+          522,
+          -160
+        ],
+        [
+          522,
+          -72
+        ],
+        [
+          372,
+          -66
+        ]
+      ]
+    },
+    {
+      "id": "stack_2",
+      "label": "",
+      "tier": 2,
+      "poly": [
+        [
+          420,
+          -128
+        ],
+        [
+          434,
+          -128
+        ],
+        [
+          434,
+          -116
+        ],
+        [
+          420,
+          -116
+        ]
+      ]
+    },
+    {
+      "id": "stack_3",
+      "label": "",
+      "tier": 2,
+      "poly": [
+        [
+          470,
+          -142
+        ],
+        [
+          484,
+          -142
+        ],
+        [
+          484,
+          -130
+        ],
+        [
+          470,
+          -130
+        ]
+      ]
+    },
+    {
+      "id": "ramp_up",
+      "label": "G 고가 진입로",
+      "tier": 1,
+      "poly": [
+        [
+          522,
+          -130
+        ],
+        [
+          552,
+          -136
+        ],
+        [
+          552,
+          -112
+        ],
+        [
+          522,
+          -106
+        ]
+      ]
+    },
+    {
+      "id": "overpass",
+      "label": "",
+      "tier": 2,
+      "poly": [
+        [
+          550,
+          -138
+        ],
+        [
+          592,
+          -146
+        ],
+        [
+          592,
+          -120
+        ],
+        [
+          550,
+          -112
+        ]
+      ]
+    },
+    {
+      "id": "safehouse_deck",
+      "label": "H 세이프하우스",
+      "tier": 2,
+      "poly": [
+        [
+          590,
+          -147
+        ],
+        [
+          634,
+          -148
+        ],
+        [
+          634,
+          -120
+        ],
+        [
+          590,
+          -119
+        ]
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "kind": "container",
+      "climbable": false,
+      "line": [
+        [
+          262,
+          -108
+        ],
+        [
+          276,
+          -108
+        ],
+        [
+          276,
+          -96
+        ],
+        [
+          262,
+          -96
+        ],
+        [
+          262,
+          -108
+        ]
+      ]
+    },
+    {
+      "kind": "container",
+      "climbable": false,
+      "line": [
+        [
+          420,
+          -128
+        ],
+        [
+          434,
+          -128
+        ],
+        [
+          434,
+          -116
+        ],
+        [
+          420,
+          -116
+        ],
+        [
+          420,
+          -128
+        ]
+      ]
+    },
+    {
+      "kind": "container",
+      "climbable": false,
+      "line": [
+        [
+          470,
+          -142
+        ],
+        [
+          484,
+          -142
+        ],
+        [
+          484,
+          -130
+        ],
+        [
+          470,
+          -130
+        ],
+        [
+          470,
+          -142
+        ]
+      ]
+    },
+    {
+      "kind": "concrete",
+      "climbable": true,
+      "line": [
+        [
+          217,
+          -104
+        ],
+        [
+          241,
+          -104
+        ]
+      ],
+      "note": "하역장 앞 턱"
+    },
+    {
+      "kind": "concrete",
+      "climbable": true,
+      "line": [
+        [
+          100,
+          -38
+        ],
+        [
+          128,
+          -44
+        ]
+      ],
+      "note": "광장 계단참 앞 턱"
+    }
+  ],
+  "links": [
+    {
+      "type": "ramp",
+      "from": [
+        114,
+        -36
+      ],
+      "to": [
+        114,
+        -46
+      ],
+      "width": 8,
+      "note": "광장 계단참"
+    },
+    {
+      "type": "ramp",
+      "from": [
+        229,
+        -100
+      ],
+      "to": [
+        229,
+        -108
+      ],
+      "width": 8,
+      "note": "하역장 경사로"
+    },
+    {
+      "type": "ladder",
+      "from": [
+        269,
+        -92
+      ],
+      "to": [
+        269,
+        -99
+      ],
+      "note": "컨테이너 위(0 → 2단), 북쪽으로 오름"
+    },
+    {
+      "type": "ladder",
+      "from": [
+        427,
+        -112
+      ],
+      "to": [
+        427,
+        -119
+      ],
+      "note": "컨테이너 위(0 → 2단)"
+    },
+    {
+      "type": "ladder",
+      "from": [
+        477,
+        -126
+      ],
+      "to": [
+        477,
+        -133
+      ],
+      "note": "컨테이너 위(0 → 2단)"
+    },
+    {
+      "type": "ladder",
+      "from": [
+        236,
+        -100
+      ],
+      "to": [
+        236,
+        -107
+      ],
+      "note": "하역장 옆 사다리(0 → 1단)"
+    },
+    {
+      "type": "ramp",
+      "from": [
+        518,
+        -118
+      ],
+      "to": [
+        526,
+        -118
+      ],
+      "width": 10
+    },
+    {
+      "type": "ramp",
+      "from": [
+        546,
+        -124
+      ],
+      "to": [
+        554,
+        -124
+      ],
+      "width": 10
+    }
+  ],
+  "routes": {
+    "main": [
+      [
+        6,
+        0
+      ],
+      [
+        16,
+        0
+      ],
+      [
+        40,
+        -6
+      ],
+      [
+        80,
+        -16
+      ],
+      [
+        120,
+        -30
+      ],
+      [
+        150,
+        -54
+      ],
+      [
+        198,
+        -73
+      ],
+      [
+        240,
+        -80
+      ],
+      [
+        290,
+        -86
+      ],
+      [
+        340,
+        -89
+      ],
+      [
+        359,
+        -89
+      ],
+      [
+        374,
+        -91
+      ],
+      [
+        420,
+        -100
+      ],
+      [
+        470,
+        -110
+      ],
+      [
+        522,
+        -118
+      ],
+      [
+        552,
+        -124
+      ],
+      [
+        590,
+        -130
+      ],
+      [
+        607,
+        -134
+      ]
+    ],
+    "mission": [
+      [
+        330,
+        -89
+      ],
+      [
+        312,
+        -100
+      ],
+      [
+        300,
+        -117
+      ]
+    ],
+    "mission_return": [
+      [
+        300,
+        -117
+      ],
+      [
+        314,
+        -104
+      ],
+      [
+        330,
+        -89
+      ]
+    ],
+    "reward_pharmacy": [
+      [
+        66,
+        -14
+      ],
+      [
+        69,
+        -50
+      ]
+    ],
+    "reward_stack": [
+      [
+        262,
+        -84
+      ],
+      [
+        269,
+        -92
+      ],
+      [
+        269,
+        -102
+      ]
+    ]
+  },
+  "zones": [
+    {
+      "id": "A",
+      "size": "small",
+      "label": "A 세이프룸",
+      "poly": [
+        [
+          -4,
+          -10
+        ],
+        [
+          18,
+          -10
+        ],
+        [
+          18,
+          10
+        ],
+        [
+          -4,
+          10
+        ]
+      ]
+    },
+    {
+      "id": "B",
+      "size": "large",
+      "label": "B 상가 거리",
+      "poly": [
+        [
+          16,
+          -64
+        ],
+        [
+          150,
+          -64
+        ],
+        [
+          150,
+          16
+        ],
+        [
+          16,
+          16
+        ]
+      ]
+    },
+    {
+      "id": "B-pharmacy",
+      "size": "small",
+      "branch": true,
+      "label": "약국(보상 분기)",
+      "poly": [
+        [
+          54,
+          -64
+        ],
+        [
+          84,
+          -64
+        ],
+        [
+          84,
+          -42
+        ],
+        [
+          54,
+          -42
+        ]
+      ]
+    },
+    {
+      "id": "C",
+      "size": "small",
+      "label": "C 골목",
+      "poly": [
+        [
+          146,
+          -64
+        ],
+        [
+          202,
+          -84
+        ],
+        [
+          202,
+          -64
+        ],
+        [
+          146,
+          -46
+        ]
+      ]
+    },
+    {
+      "id": "D",
+      "size": "large",
+      "label": "D 창고 단지(셔터 임무)",
+      "poly": [
+        [
+          196,
+          -132
+        ],
+        [
+          336,
+          -132
+        ],
+        [
+          336,
+          -40
+        ],
+        [
+          196,
+          -40
+        ]
+      ]
+    },
+    {
+      "id": "E",
+      "size": "small",
+      "label": "E 경비 초소(중간 안전 구역)",
+      "poly": [
+        [
+          334,
+          -100
+        ],
+        [
+          374,
+          -100
+        ],
+        [
+          374,
+          -78
+        ],
+        [
+          334,
+          -78
+        ]
+      ]
+    },
+    {
+      "id": "F",
+      "size": "large",
+      "label": "F 화물 야적장",
+      "poly": [
+        [
+          372,
+          -160
+        ],
+        [
+          522,
+          -160
+        ],
+        [
+          522,
+          -66
+        ],
+        [
+          372,
+          -66
+        ]
+      ]
+    },
+    {
+      "id": "G",
+      "size": "small",
+      "label": "G 고가 진입로",
+      "poly": [
+        [
+          522,
+          -130
+        ],
+        [
+          592,
+          -146
+        ],
+        [
+          592,
+          -120
+        ],
+        [
+          522,
+          -106
+        ]
+      ]
+    },
+    {
+      "id": "H",
+      "size": "small",
+      "label": "H 세이프하우스",
+      "poly": [
+        [
+          590,
+          -147
+        ],
+        [
+          634,
+          -148
+        ],
+        [
+          634,
+          -120
+        ],
+        [
+          590,
+          -119
+        ]
+      ]
+    }
+  ],
+  "markers": [
+    {
+      "type": "start",
+      "pos": [
+        6,
+        0
+      ],
+      "label": "세이프룸"
+    },
+    {
+      "type": "start_room",
+      "pos": [
+        6,
+        0
+      ],
+      "label": ""
+    },
+    {
+      "type": "noise",
+      "pos": [
+        64,
+        -6
+      ],
+      "label": "경보 차(실수로 켜면 웨이브)",
+      "model": "car_wreck",
+      "label_offset": [
+        10,
+        16
+      ]
+    },
+    {
+      "type": "blocked",
+      "kind": "shutter",
+      "pos": [
+        340,
+        -89
+      ],
+      "label": "셔터(임무로 열림)",
+      "label_offset": [
+        -20,
+        18
+      ]
+    },
+    {
+      "type": "mission",
+      "kind": "panel",
+      "pos": [
+        300,
+        -117
+      ],
+      "label": "셔터 제어판: 크레센도",
+      "label_offset": [
+        10,
+        -8
+      ]
+    },
+    {
+      "type": "safe_zone",
+      "pos": [
+        359,
+        -89
+      ],
+      "label": "중간 안전 구역: 경비 초소",
+      "label_offset": [
+        8,
+        22
+      ]
+    },
+    {
+      "type": "landmark",
+      "pos": [
+        452,
+        -146
+      ],
+      "label": "크레인",
+      "label_offset": [
+        10,
+        -6
+      ]
+    },
+    {
+      "type": "safehouse",
+      "pos": [
+        615,
+        -134
+      ],
+      "label": "세이프하우스",
+      "label_offset": [
+        -40,
+        -18
+      ]
+    }
+  ],
+  "supplies": [
+    {
+      "kind": "start",
+      "pos": [
+        4,
+        -2
+      ],
+      "label": "시작"
+    },
+    {
+      "kind": "optional",
+      "pos": [
+        69,
+        -52
+      ],
+      "label": "선택 1"
+    },
+    {
+      "kind": "main",
+      "pos": [
+        186,
+        -70
+      ],
+      "label": "주요 1"
+    },
+    {
+      "kind": "optional",
+      "pos": [
+        269,
+        -102
+      ],
+      "label": "선택 2"
+    },
+    {
+      "kind": "event",
+      "pos": [
+        305,
+        -112
+      ],
+      "label": "이벤트 보상"
+    },
+    {
+      "kind": "main",
+      "pos": [
+        359,
+        -92
+      ],
+      "label": "주요 2"
+    },
+    {
+      "kind": "main",
+      "pos": [
+        510,
+        -112
+      ],
+      "label": "주요 3"
+    },
+    {
+      "kind": "arrival",
+      "pos": [
+        618,
+        -131
+      ],
+      "label": "도착"
+    }
+  ],
+  "props": [
+    {
+      "id": "urban_rowhouse",
+      "pos": [
+        30,
+        -42
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "urban_rowhouse",
+      "pos": [
+        44,
+        -45
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "urban_shop",
+      "pos": [
+        69,
+        -67
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "urban_rowhouse",
+      "pos": [
+        92,
+        -54
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "urban_warehouse",
+      "pos": [
+        138,
+        -69
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "urban_shop",
+      "pos": [
+        100,
+        -6
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "bus_wreck",
+      "pos": [
+        78,
+        8
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "car_wreck",
+      "pos": [
+        36,
+        10
+      ],
+      "yaw": 14,
+      "solid": true
+    },
+    {
+      "id": "car_wreck",
+      "pos": [
+        56,
+        10
+      ],
+      "yaw": -8,
+      "solid": true
+    },
+    {
+      "id": "car_wreck",
+      "pos": [
+        126,
+        9
+      ],
+      "yaw": 6,
+      "solid": true
+    },
+    {
+      "id": "car_wreck",
+      "pos": [
+        142,
+        -20
+      ],
+      "yaw": 80,
+      "solid": true
+    },
+    {
+      "id": "car_wreck",
+      "pos": [
+        30,
+        -16
+      ],
+      "yaw": 90,
+      "solid": true
+    },
+    {
+      "id": "dumpster",
+      "pos": [
+        50,
+        12
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "dumpster",
+      "pos": [
+        120,
+        13
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "dumpster",
+      "pos": [
+        88,
+        -32
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "concrete_barrier",
+      "pos": [
+        106,
+        -47
+      ],
+      "yaw": 12,
+      "solid": true
+    },
+    {
+      "id": "concrete_barrier",
+      "pos": [
+        121,
+        -51
+      ],
+      "yaw": 12,
+      "solid": true
+    },
+    {
+      "id": "car_wreck",
+      "pos": [
+        166,
+        -68
+      ],
+      "yaw": 20,
+      "solid": true
+    },
+    {
+      "id": "car_wreck",
+      "pos": [
+        182,
+        -76
+      ],
+      "yaw": -15,
+      "solid": true
+    },
+    {
+      "id": "dumpster",
+      "pos": [
+        172,
+        -70
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "dumpster",
+      "pos": [
+        188,
+        -76
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "dumpster",
+      "pos": [
+        158,
+        -52
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "urban_warehouse",
+      "pos": [
+        229,
+        -122
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "urban_warehouse",
+      "pos": [
+        300,
+        -134
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "container_closed",
+      "pos": [
+        250,
+        -66
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "container_closed",
+      "pos": [
+        284,
+        -56
+      ],
+      "yaw": 90,
+      "solid": true
+    },
+    {
+      "id": "container_closed",
+      "pos": [
+        312,
+        -64
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "container_closed",
+      "pos": [
+        210,
+        -86
+      ],
+      "yaw": 90,
+      "solid": true
+    },
+    {
+      "id": "pallet",
+      "pos": [
+        258,
+        -62
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "wooden_crate",
+      "pos": [
+        258,
+        -60.5
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "pallet",
+      "pos": [
+        292,
+        -58
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "wooden_crate",
+      "pos": [
+        292,
+        -56.5
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "pallet",
+      "pos": [
+        320,
+        -59
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "wooden_crate",
+      "pos": [
+        320,
+        -57.5
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "sandbags",
+      "pos": [
+        326,
+        -80
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "barrel",
+      "pos": [
+        328,
+        -79
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "sandbags",
+      "pos": [
+        326,
+        -98
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "barrel",
+      "pos": [
+        328,
+        -97
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "container_closed",
+      "pos": [
+        392,
+        -90
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "barrel",
+      "pos": [
+        388,
+        -88
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "container_closed",
+      "pos": [
+        402,
+        -122
+      ],
+      "yaw": 90,
+      "solid": true
+    },
+    {
+      "id": "barrel",
+      "pos": [
+        398,
+        -120
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "container_closed",
+      "pos": [
+        452,
+        -94
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "barrel",
+      "pos": [
+        448,
+        -92
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "container_closed",
+      "pos": [
+        492,
+        -128
+      ],
+      "yaw": 90,
+      "solid": true
+    },
+    {
+      "id": "barrel",
+      "pos": [
+        488,
+        -126
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "container_closed",
+      "pos": [
+        506,
+        -94
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "barrel",
+      "pos": [
+        502,
+        -92
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "wooden_crate",
+      "pos": [
+        440,
+        -84
+      ],
+      "yaw": 15,
+      "solid": true
+    },
+    {
+      "id": "pallet",
+      "pos": [
+        442,
+        -82.5
+      ],
+      "yaw": 10,
+      "solid": true
+    },
+    {
+      "id": "wooden_crate",
+      "pos": [
+        482,
+        -104
+      ],
+      "yaw": 15,
+      "solid": true
+    },
+    {
+      "id": "pallet",
+      "pos": [
+        484,
+        -102.5
+      ],
+      "yaw": 10,
+      "solid": true
+    },
+    {
+      "id": "wooden_crate",
+      "pos": [
+        412,
+        -106
+      ],
+      "yaw": 15,
+      "solid": true
+    },
+    {
+      "id": "pallet",
+      "pos": [
+        414,
+        -104.5
+      ],
+      "yaw": 10,
+      "solid": true
+    },
+    {
+      "id": "concrete_barrier",
+      "pos": [
+        560,
+        -134
+      ],
+      "yaw": -10,
+      "solid": true
+    },
+    {
+      "id": "concrete_barrier",
+      "pos": [
+        576,
+        -137
+      ],
+      "yaw": -10,
+      "solid": true
+    },
+    {
+      "id": "concrete_barrier",
+      "pos": [
+        568,
+        -116
+      ],
+      "yaw": -10,
+      "solid": true
+    },
+    {
+      "id": "sandbags",
+      "pos": [
+        600,
+        -142
+      ],
+      "yaw": 0,
+      "solid": true
+    }
+  ],
+  "lamps": [
+    [
+      26,
+      -22
+    ],
+    [
+      70,
+      6
+    ],
+    [
+      118,
+      -24
+    ],
+    [
+      160,
+      -60
+    ],
+    [
+      206,
+      -64
+    ],
+    [
+      252,
+      -72
+    ],
+    [
+      318,
+      -76
+    ],
+    [
+      366,
+      -80
+    ],
+    [
+      400,
+      -84
+    ],
+    [
+      446,
+      -96
+    ],
+    [
+      496,
+      -104
+    ],
+    [
+      534,
+      -112
+    ],
+    [
+      566,
+      -120
+    ],
+    [
+      598,
+      -126
+    ]
+  ]
+}

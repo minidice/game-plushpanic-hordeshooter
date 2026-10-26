@@ -1,5 +1,5 @@
 {
-  "description": "Stage 2 size draft encounters (decisions.md L-29, doc/stage2-floorplan.md 4-6장, map-expansion-plan.md 7.2 step 5). Replaces stage2_encounters.json once the draft replaces today's Stage 2. Areas run along +X (the zones A-G). Entering area N fills area N+1. Hidden entries stand on every tier the route passes, so upper tiers get arrivals too. safe_zones: the forest watch post (L-24) - nothing waits within no_place_m, no wave within no_wave_m, timed raids hold while a person is within inside_m. raids: timed mobs and specials only in the travel zones (stage2-floorplan.md 6장). Groups with after = mission are placed when the bridge comes down, on the way back from the pump (L-27). All counts and radii are [임시] starting values.",
+  "description": "Stage 3 encounters: the size draft, formerly Stage 2 (decisions.md L-29, L-30, doc/stage2-floorplan.md 4-6장, map-expansion-plan.md 7.2 step 5). Replaces stage2_encounters.json once the draft replaces today's Stage 2. Areas run along +X (the zones A-G). Entering area N fills area N+1. Hidden entries stand on every tier the route passes, so upper tiers get arrivals too. safe_zones: the forest watch post (L-24) - nothing waits within no_place_m, no wave within no_wave_m, timed raids hold while a person is within inside_m. raids: timed mobs and specials only in the travel zones (stage2-floorplan.md 6장). Groups with after = mission are placed when the bridge comes down, on the way back from the pump (L-27). All counts and radii are [임시] starting values.",
   "areas": [
     { "id": "clearing", "x0": -10, "x1": 40 },
     { "id": "forest", "x0": 40, "x1": 165 },
@@ -66,7 +66,7 @@
     { "kind": "hidden", "at": [476, -64] }, { "kind": "hidden", "at": [480, -123] }, { "kind": "hidden", "at": [500, -74] },
     { "kind": "hidden", "at": [505, -148] }, { "kind": "hidden", "at": [536, -84] }, { "kind": "hidden", "at": [536, -148] },
 
-    { "kind": "hidden", "at": [588, -160] }, { "kind": "hidden", "at": [646, -126] }
+    { "kind": "hidden", "at": [588, -155] }, { "kind": "hidden", "at": [646, -131] }
   ],
   "protected": [[6, -2]],
   "safe_zones": [

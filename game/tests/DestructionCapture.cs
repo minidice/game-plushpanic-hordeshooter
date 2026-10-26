@@ -53,7 +53,7 @@ public partial class DestructionCapture : Node
         await Frames(4);
         foreach (var enemy in _stage.AllEnemies.ToArray()) if (IsInstanceValid(enemy)) enemy.QueueFree();
         _stage.Player.ManualControl = true; _stage.Player.Invulnerable = true;
-        var placement = DestructionPlacements.Load("stage2_draft").Single(p => p.Id == "yard_west");
+        var placement = DestructionPlacements.Load("stage3").Single(p => p.Id == "yard_west");
         if (placement.At.DistanceTo(new Vector3(288, 1.2f, -58)) > .01f) throw new InvalidOperationException("Capture placement changed.");
         var wall = _stage.Breakables.Single(b => b.HasMeta("destruction_placement") && b.GetMeta("destruction_placement").AsString() == placement.Id);
         var barrel = _stage.Props.OfType<ExplosiveBarrel>().Single(b => b.HasMeta("destruction_placement") && b.GetMeta("destruction_placement").AsString() == placement.Id);

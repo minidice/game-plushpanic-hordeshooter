@@ -1,0 +1,893 @@
+{
+  "description": "Large Stage 2 encounters (decisions.md L-30, doc/large-stages.md). Areas run along +X (the zones). Entering area N fills area N+1. Hidden entries stand inside every region the route reaches, on its own tier, so raised spaces get arrivals too. safe_zones: the middle safe zone (L-24). raids: timed mobs and specials only in the large travel zones. Groups with after = mission are placed when the shutter opens, on the way back from the panel (L-27). All counts and radii are [임시] starting values.",
+  "areas": [
+    {
+      "id": "drain",
+      "x0": -10,
+      "x1": 32
+    },
+    {
+      "id": "slope",
+      "x0": 32,
+      "x1": 170
+    },
+    {
+      "id": "ford",
+      "x0": 170,
+      "x1": 206
+    },
+    {
+      "id": "bunker",
+      "x0": 206,
+      "x1": 364
+    },
+    {
+      "id": "post",
+      "x0": 364,
+      "x1": 394
+    },
+    {
+      "id": "hill",
+      "x0": 394,
+      "x1": 542
+    },
+    {
+      "id": "pass",
+      "x0": 542,
+      "x1": 640
+    }
+  ],
+  "groups": [
+    {
+      "area": "slope",
+      "reaction": "dormant",
+      "count": 6,
+      "rect": [
+        36,
+        78,
+        -28,
+        14
+      ]
+    },
+    {
+      "area": "slope",
+      "reaction": "dormant",
+      "count": 7,
+      "rect": [
+        84,
+        122,
+        -44,
+        16
+      ]
+    },
+    {
+      "area": "slope",
+      "reaction": "watcher",
+      "count": 2,
+      "rect": [
+        90,
+        122,
+        -40,
+        -10
+      ]
+    },
+    {
+      "area": "slope",
+      "reaction": "dormant",
+      "count": 7,
+      "rect": [
+        128,
+        168,
+        -60,
+        16
+      ]
+    },
+    {
+      "area": "slope",
+      "reaction": "watcher",
+      "count": 3,
+      "rect": [
+        130,
+        168,
+        -64,
+        -30
+      ]
+    },
+    {
+      "area": "slope",
+      "reaction": "dormant",
+      "count": 3,
+      "rect": [
+        140,
+        162,
+        -94,
+        -72
+      ]
+    },
+    {
+      "area": "slope",
+      "reaction": "watcher",
+      "special": 1,
+      "at": [
+        110,
+        -30
+      ]
+    },
+    {
+      "area": "ford",
+      "reaction": "dormant",
+      "count": 5,
+      "rect": [
+        172,
+        204,
+        -58,
+        -32
+      ]
+    },
+    {
+      "area": "bunker",
+      "reaction": "dormant",
+      "count": 8,
+      "rect": [
+        210,
+        260,
+        -96,
+        -36
+      ]
+    },
+    {
+      "area": "bunker",
+      "reaction": "watcher",
+      "count": 2,
+      "rect": [
+        220,
+        260,
+        -80,
+        -40
+      ]
+    },
+    {
+      "area": "bunker",
+      "reaction": "dormant",
+      "count": 8,
+      "rect": [
+        262,
+        310,
+        -92,
+        -34
+      ]
+    },
+    {
+      "area": "bunker",
+      "reaction": "watcher",
+      "count": 3,
+      "rect": [
+        256,
+        296,
+        -114,
+        -100
+      ]
+    },
+    {
+      "area": "bunker",
+      "reaction": "dormant",
+      "count": 7,
+      "rect": [
+        312,
+        352,
+        -110,
+        -32
+      ]
+    },
+    {
+      "area": "bunker",
+      "reaction": "dormant",
+      "special": 0,
+      "at": [
+        300,
+        -50
+      ]
+    },
+    {
+      "area": "bunker",
+      "reaction": "watcher",
+      "count": 6,
+      "rect": [
+        318,
+        350,
+        -86,
+        -60
+      ],
+      "after": "mission"
+    },
+    {
+      "area": "bunker",
+      "reaction": "dormant",
+      "count": 3,
+      "rect": [
+        300,
+        330,
+        -100,
+        -88
+      ],
+      "after": "mission"
+    },
+    {
+      "area": "hill",
+      "reaction": "dormant",
+      "count": 8,
+      "rect": [
+        398,
+        448,
+        -110,
+        -48
+      ]
+    },
+    {
+      "area": "hill",
+      "reaction": "watcher",
+      "count": 2,
+      "rect": [
+        404,
+        448,
+        -100,
+        -60
+      ]
+    },
+    {
+      "area": "hill",
+      "reaction": "dormant",
+      "count": 7,
+      "rect": [
+        454,
+        494,
+        -124,
+        -44
+      ]
+    },
+    {
+      "area": "hill",
+      "reaction": "watcher",
+      "count": 2,
+      "rect": [
+        466,
+        482,
+        -132,
+        -120
+      ]
+    },
+    {
+      "area": "hill",
+      "reaction": "dormant",
+      "count": 7,
+      "rect": [
+        498,
+        538,
+        -132,
+        -56
+      ]
+    },
+    {
+      "area": "hill",
+      "reaction": "watcher",
+      "count": 3,
+      "rect": [
+        500,
+        538,
+        -120,
+        -70
+      ]
+    },
+    {
+      "area": "hill",
+      "reaction": "watcher",
+      "special": 1,
+      "at": [
+        520,
+        -80
+      ]
+    },
+    {
+      "area": "pass",
+      "reaction": "dormant",
+      "count": 4,
+      "rect": [
+        546,
+        580,
+        -116,
+        -96
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "kind": "hidden",
+      "at": [
+        15.0,
+        -13.5
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        45.1,
+        -32.2
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        67.1,
+        -37.2
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        78.0,
+        -24.6
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        67.1,
+        18.2
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        45.0,
+        15.2
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        34.2,
+        2.8
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        34.3,
+        -19.0
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        92.0,
+        -48.1
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        113.1,
+        -53.1
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        123.5,
+        -42.7
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        113.0,
+        19.6
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        92.0,
+        19.6
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        81.8,
+        -34.6
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        137.4,
+        -65.6
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        170.7,
+        -59.6
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        169.7,
+        -13.7
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        170.6,
+        9.7
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        159.6,
+        21.6
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        137.4,
+        21.6
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        127.2,
+        -11.0
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        126.5,
+        -52.7
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        140.5,
+        -81.0
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        188.0,
+        -34.5
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        218.9,
+        -104.0
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        243.8,
+        -105.7
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        316.4,
+        -112.6
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        341.3,
+        -115.3
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        353.7,
+        -105.4
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        353.5,
+        -83.1
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        353.5,
+        -60.8
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        353.7,
+        -38.5
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        341.3,
+        -27.9
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        316.3,
+        -29.4
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        291.9,
+        -30.9
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        268.1,
+        -31.9
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        243.7,
+        -32.3
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        218.8,
+        -32.8
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        206.5,
+        -68.1
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        206.4,
+        -91.3
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        286.3,
+        -118.7
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        297.5,
+        -109.7
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        286.1,
+        -98.6
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        265.7,
+        -96.8
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        254.5,
+        -105.3
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        407.9,
+        -115.7
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        436.2,
+        -119.6
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        449.7,
+        -68.7
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        436.2,
+        -38.9
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        407.9,
+        -43.8
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        393.9,
+        -102.4
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        462.1,
+        -127.1
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        483.9,
+        -130.1
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        493.6,
+        -76.1
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        483.9,
+        -40.4
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        462.1,
+        -36.4
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        451.3,
+        -46.2
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        451.4,
+        -114.0
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        506.6,
+        -134.6
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        529.4,
+        -136.6
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        540.6,
+        -126.9
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        539.6,
+        -85.7
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        540.4,
+        -64.9
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        529.3,
+        -51.4
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        506.6,
+        -45.4
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        495.3,
+        -54.1
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        495.5,
+        -122.0
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        554.6,
+        -119.5
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        577.0,
+        -119.5
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        599.5,
+        -122.0
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        611.5,
+        -109.9
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        599.4,
+        -96.5
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        577.0,
+        -96.5
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        554.5,
+        -94.0
+      ]
+    }
+  ],
+  "protected": [
+    [
+      8,
+      0
+    ]
+  ],
+  "safe_zones": [
+    {
+      "at": [
+        379,
+        -71
+      ],
+      "inside_m": 8,
+      "no_place_m": 15,
+      "no_wave_m": 25
+    }
+  ],
+  "raids": {
+    "areas": [
+      "slope",
+      "bunker",
+      "hill"
+    ],
+    "mob_min_s": 90,
+    "mob_max_s": 120,
+    "special_min_s": 60,
+    "special_max_s": 90,
+    "start_delay_s": 60,
+    "after_crescendo_s": 45
+  },
+  "common_profiles": {
+    "zombie": {
+      "default_pack": "zombie_street",
+      "areas": {}
+    },
+    "animals": {
+      "default_pack": "hunter_eagle_green",
+      "areas": {
+        "slope": {
+          "pack": "hunter_eagle_green"
+        },
+        "ford": {
+          "pack": "hunter_tiger"
+        },
+        "bunker": {
+          "pack": "hunter_lion"
+        },
+        "hill": {
+          "pack": "hunter_reindeer"
+        }
+      }
+    },
+    "armed": {
+      "default_pack": "armed_parrot",
+      "areas": {
+        "slope": {
+          "pack": "armed_parrot"
+        },
+        "ford": {
+          "pack": "armed_tiger"
+        },
+        "bunker": {
+          "pack": "armed_lion"
+        },
+        "hill": {
+          "pack": "armed_rhino",
+          "faction_exception": true
+        }
+      }
+    }
+  }
+}

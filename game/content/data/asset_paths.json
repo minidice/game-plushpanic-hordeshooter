@@ -23,7 +23,8 @@
       "res://assets/stage-props",
       "res://assets/edge-kit",
       "res://assets/ground-bits",
-      "res://assets/stage2-props"
+      "res://assets/stage2-props",
+      "res://assets/large-stage-kit"
     ]
   }
 }

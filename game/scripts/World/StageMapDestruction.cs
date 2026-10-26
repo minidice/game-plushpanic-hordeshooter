@@ -25,7 +25,7 @@ public static class DestructionPlacements
         {
             string map = row.GetProperty("map").GetString()!, id = row.GetProperty("id").GetString()!;
             float yaw = row.GetProperty("yaw").GetSingle();
-            if (map is not ("stage2" or "stage2_draft") || string.IsNullOrWhiteSpace(id) || !ids.Add(map + ":" + id)
+            if (map is not ("stage2" or "stage3") || string.IsNullOrWhiteSpace(id) || !ids.Add(map + ":" + id)
                 || yaw is not (0 or 90)) throw new FormatException("Invalid or duplicate destruction placement: " + map + ":" + id);
             Vector3 Point(string key)
             {

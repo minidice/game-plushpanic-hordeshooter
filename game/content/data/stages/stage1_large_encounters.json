@@ -1,0 +1,810 @@
+{
+  "description": "Large Stage 1 encounters (decisions.md L-30, doc/large-stages.md). Areas run along +X (the zones). Entering area N fills area N+1. Hidden entries stand inside every region the route reaches, on its own tier, so raised spaces get arrivals too. safe_zones: the middle safe zone (L-24). raids: timed mobs and specials only in the large travel zones. Groups with after = mission are placed when the shutter opens, on the way back from the panel (L-27). All counts and radii are [임시] starting values.",
+  "areas": [
+    {
+      "id": "saferoom",
+      "x0": -10,
+      "x1": 16
+    },
+    {
+      "id": "street",
+      "x0": 16,
+      "x1": 150
+    },
+    {
+      "id": "alley",
+      "x0": 150,
+      "x1": 198
+    },
+    {
+      "id": "depot",
+      "x0": 198,
+      "x1": 344
+    },
+    {
+      "id": "post",
+      "x0": 344,
+      "x1": 374
+    },
+    {
+      "id": "yard",
+      "x0": 374,
+      "x1": 522
+    },
+    {
+      "id": "overpass",
+      "x0": 522,
+      "x1": 592
+    },
+    {
+      "id": "safehouse",
+      "x0": 592,
+      "x1": 640
+    }
+  ],
+  "groups": [
+    {
+      "area": "street",
+      "reaction": "dormant",
+      "count": 6,
+      "rect": [
+        24,
+        60,
+        -28,
+        12
+      ]
+    },
+    {
+      "area": "street",
+      "reaction": "dormant",
+      "count": 7,
+      "rect": [
+        64,
+        100,
+        -38,
+        12
+      ]
+    },
+    {
+      "area": "street",
+      "reaction": "watcher",
+      "count": 2,
+      "rect": [
+        70,
+        110,
+        -30,
+        0
+      ]
+    },
+    {
+      "area": "street",
+      "reaction": "dormant",
+      "count": 7,
+      "rect": [
+        104,
+        146,
+        -54,
+        10
+      ]
+    },
+    {
+      "area": "street",
+      "reaction": "watcher",
+      "count": 3,
+      "rect": [
+        120,
+        146,
+        -56,
+        -30
+      ]
+    },
+    {
+      "area": "street",
+      "reaction": "dormant",
+      "count": 3,
+      "rect": [
+        58,
+        80,
+        -56,
+        -44
+      ]
+    },
+    {
+      "area": "street",
+      "reaction": "watcher",
+      "special": 1,
+      "at": [
+        128,
+        -20
+      ]
+    },
+    {
+      "area": "alley",
+      "reaction": "dormant",
+      "count": 6,
+      "rect": [
+        152,
+        196,
+        -76,
+        -52
+      ]
+    },
+    {
+      "area": "alley",
+      "reaction": "watcher",
+      "count": 2,
+      "rect": [
+        170,
+        196,
+        -78,
+        -64
+      ]
+    },
+    {
+      "area": "depot",
+      "reaction": "dormant",
+      "count": 8,
+      "rect": [
+        202,
+        250,
+        -100,
+        -56
+      ]
+    },
+    {
+      "area": "depot",
+      "reaction": "watcher",
+      "count": 2,
+      "rect": [
+        210,
+        250,
+        -96,
+        -60
+      ]
+    },
+    {
+      "area": "depot",
+      "reaction": "dormant",
+      "count": 8,
+      "rect": [
+        252,
+        300,
+        -110,
+        -50
+      ]
+    },
+    {
+      "area": "depot",
+      "reaction": "watcher",
+      "count": 2,
+      "rect": [
+        262,
+        276,
+        -108,
+        -96
+      ]
+    },
+    {
+      "area": "depot",
+      "reaction": "dormant",
+      "count": 6,
+      "rect": [
+        302,
+        332,
+        -120,
+        -46
+      ]
+    },
+    {
+      "area": "depot",
+      "reaction": "dormant",
+      "special": 0,
+      "at": [
+        270,
+        -76
+      ]
+    },
+    {
+      "area": "depot",
+      "reaction": "watcher",
+      "count": 6,
+      "rect": [
+        300,
+        330,
+        -100,
+        -80
+      ],
+      "after": "mission"
+    },
+    {
+      "area": "depot",
+      "reaction": "dormant",
+      "count": 3,
+      "rect": [
+        316,
+        332,
+        -116,
+        -100
+      ],
+      "after": "mission"
+    },
+    {
+      "area": "yard",
+      "reaction": "dormant",
+      "count": 8,
+      "rect": [
+        378,
+        420,
+        -130,
+        -72
+      ]
+    },
+    {
+      "area": "yard",
+      "reaction": "watcher",
+      "count": 2,
+      "rect": [
+        390,
+        420,
+        -110,
+        -80
+      ]
+    },
+    {
+      "area": "yard",
+      "reaction": "dormant",
+      "count": 8,
+      "rect": [
+        422,
+        470,
+        -140,
+        -80
+      ]
+    },
+    {
+      "area": "yard",
+      "reaction": "watcher",
+      "count": 2,
+      "rect": [
+        420,
+        434,
+        -128,
+        -116
+      ]
+    },
+    {
+      "area": "yard",
+      "reaction": "dormant",
+      "count": 8,
+      "rect": [
+        472,
+        518,
+        -150,
+        -90
+      ]
+    },
+    {
+      "area": "yard",
+      "reaction": "watcher",
+      "count": 2,
+      "rect": [
+        470,
+        484,
+        -142,
+        -130
+      ]
+    },
+    {
+      "area": "yard",
+      "reaction": "watcher",
+      "special": 1,
+      "at": [
+        490,
+        -120
+      ]
+    },
+    {
+      "area": "overpass",
+      "reaction": "dormant",
+      "count": 4,
+      "rect": [
+        526,
+        550,
+        -128,
+        -110
+      ]
+    },
+    {
+      "area": "overpass",
+      "reaction": "watcher",
+      "count": 4,
+      "rect": [
+        556,
+        588,
+        -138,
+        -118
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "kind": "hidden",
+      "at": [
+        51.5,
+        -38.5
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        147.5,
+        -23.7
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        147.6,
+        2.0
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        136.7,
+        14.8
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        114.7,
+        14.3
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        93.3,
+        13.6
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        72.7,
+        13.6
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        29.3,
+        14.8
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        18.5,
+        -19.9
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        79.6,
+        -51.4
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        58.4,
+        -46.6
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        114.0,
+        -52.5
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        125.6,
+        -50.5
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        102.4,
+        -45.5
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        185.6,
+        -60.3
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        209.9,
+        -112.5
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        255.1,
+        -118.0
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        277.0,
+        -121.3
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        322.4,
+        -128.8
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        333.8,
+        -119.3
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        333.5,
+        -74.8
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        333.7,
+        -52.6
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        322.3,
+        -42.5
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        299.4,
+        -44.9
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        277.0,
+        -47.4
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        255.1,
+        -49.4
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        232.8,
+        -50.8
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        209.8,
+        -52.2
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        198.5,
+        -96.5
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        219.5,
+        -108.0
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        386.7,
+        -142.3
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        411.3,
+        -144.8
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        435.3,
+        -147.1
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        458.8,
+        -150.1
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        482.9,
+        -153.6
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        507.5,
+        -157.0
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        519.8,
+        -147.8
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        519.6,
+        -126.4
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        519.5,
+        -105.2
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        519.6,
+        -83.8
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        507.4,
+        -72.8
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        482.8,
+        -72.3
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        458.8,
+        -71.9
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        435.2,
+        -70.9
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        411.2,
+        -69.4
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        386.6,
+        -67.9
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        374.4,
+        -128.7
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        427.0,
+        -125.5
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        477.0,
+        -139.5
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        537.0,
+        -130.5
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        537.0,
+        -111.5
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        571.0,
+        -139.5
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        571.0,
+        -118.5
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        602.6,
+        -145.3
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        621.5,
+        -145.8
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        631.5,
+        -133.9
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        621.4,
+        -121.7
+      ]
+    },
+    {
+      "kind": "hidden",
+      "at": [
+        602.5,
+        -121.2
+      ]
+    }
+  ],
+  "protected": [
+    [
+      6,
+      0
+    ]
+  ],
+  "safe_zones": [
+    {
+      "at": [
+        359,
+        -89
+      ],
+      "inside_m": 8,
+      "no_place_m": 15,
+      "no_wave_m": 25
+    }
+  ],
+  "raids": {
+    "areas": [
+      "street",
+      "depot",
+      "yard"
+    ],
+    "mob_min_s": 90,
+    "mob_max_s": 120,
+    "special_min_s": 60,
+    "special_max_s": 90,
+    "start_delay_s": 60,
+    "after_crescendo_s": 45
+  },
+  "common_profiles": {
+    "zombie": {
+      "default_pack": "zombie_street",
+      "areas": {}
+    },
+    "animals": {
+      "default_pack": "hunter_eagle",
+      "areas": {
+        "street": {
+          "pack": "hunter_eagle"
+        },
+        "alley": {
+          "pack": "hunter_tiger"
+        },
+        "depot": {
+          "pack": "hunter_lion"
+        },
+        "yard": {
+          "pack": "hunter_reindeer"
+        }
+      }
+    },
+    "armed": {
+      "default_pack": "armed_eagle",
+      "areas": {
+        "street": {
+          "pack": "armed_parrot"
+        },
+        "alley": {
+          "pack": "armed_tiger"
+        },
+        "depot": {
+          "pack": "armed_lion"
+        },
+        "yard": {
+          "pack": "armed_reindeer"
+        },
+        "overpass": {
+          "pack": "armed_rhino"
+        }
+      }
+    }
+  }
+}
