@@ -633,4 +633,10 @@
 
 - [x] 중간 부풀음 제거·완만한 기본 곡선·3구간 지연 굽힘. 두 clean GLB와 런타임 스타일 생성기를 일치시키고 원래 밝은 끝/2색 채널 보존.
 - [x] 짧은 꼬리/조류 유지, 크기·모양·색·기본 복원과 상태이상/피격/숨김 검증. 실제 Stage2 이동·회전·정지 및 Studio 렌더 확인.
-- [ ] 별도 전체 Integration의 사격 처치 항목 실패 원인 확인. main 통합 단독 재검증149개는 통과했지만 이전 실패 원인은 미확정이다. [결과·재현·경고](mammal-tail-quality.md).
+- [ ] 별도 전체 Integration의 사격 처치 항목 실패 원인 확인. main 통합 단독 재검증149개는 통과했지만 이전 실패 원인은 미확정이다. 2026-10-26 `NetSyncCheck` 파티원 사격 처치도 4회 중 1회 실패(C-30 퍼짐 추정, issues.md 해당 기록). [결과·재현·경고](mammal-tail-quality.md).
+
+### 이번 변경 확인 기록 — 2026-10-26 (종료 ObjectDB 경고 I-17 해결)
+
+- 원인: 재생 중인 반복 소리(밤바람 · 경보)를 오디오 서버가 쥔 채 종료. `QuitHygiene.Collect`에서 모든 소리를 멈추고 80 ms 기다리게 고침. C# 빌드 경고·오류 0.
+- `--verbose` 확인: `Integration` 수정 전 2회 모두 4개(AudioStreamWAV 2 + AudioStreamPlaybackWAV 2, 같은 ID) → 수정 후 3회 0, 일반 실행 149 · 0. `WeaponHandlingCheck` 36 · `ModeCheck` 147 · `SpawnCheck` 41 · `CardLabCheck` 172 · `ReloadPoseCheck` 279(이전 6개, 2회) · `CorpseTierCheck` 36(이전 11개, 2회) · `NetSyncCheck` 32(3회) 모두 경고 0.
+- 별도: `NetSyncCheck`가 같은 날 한 번 "파티원 사격 처치"에서 실패(종료 처리와 무관, 이어서 3회 통과). 사격 처치 미확정 항목에 함께 적음.
