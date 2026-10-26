@@ -21,7 +21,7 @@ async function render(change,file){
   await writeFile(new URL(file+'.json',out),JSON.stringify({...result,png:undefined},null,2));
   return result;
 }
-for(const species of ['parrot','eagle','lion']){
+for(const species of ['parrot','eagle','lion','reindeer']){
   const images=new Set();
   for(let variant=0;variant<10;variant++){
     const result=await render({species,variant},`${species}-${variant}`);

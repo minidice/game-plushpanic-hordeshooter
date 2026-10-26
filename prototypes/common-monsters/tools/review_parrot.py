@@ -15,7 +15,7 @@ import bpy
 spec=importlib.util.spec_from_file_location('common_builder',Path(__file__).with_name('build_common_monsters.py'))
 build=importlib.util.module_from_spec(spec);spec.loader.exec_module(build)
 parser=argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--species',choices=['parrot','eagle','lion'],default='parrot')
+parser.add_argument('--species',choices=['parrot','eagle','lion','reindeer','zombie'],default='parrot')
 parser.add_argument('--review-name',help='Optional local evidence folder name')
 parser.add_argument('--capture-baseline',action='store_true')
 parser.add_argument('--label',default='after')
@@ -41,23 +41,26 @@ silhouette=build.mat('QA silhouette','101820')
 emission=silhouette.node_tree.nodes.new('ShaderNodeEmission')
 emission.inputs['Color'].default_value=(.008,.012,.018,1)
 silhouette.node_tree.links.new(emission.outputs[0],silhouette.node_tree.nodes.get('Material Output').inputs['Surface'])
+outfit=('Outfit_Jeans','Outfit_Shirt','Outfit_Stains') if args.species=='zombie' else ()
 for mode in ['color','neutral','silhouette']:
     for obj in meshes:
         obj.data.materials.clear()
         for material in materials[obj.name]:obj.data.materials.append(material if mode=='color' else neutral if mode=='neutral' else silhouette)
         for poly,index in zip(obj.data.polygons,material_indices[obj.name]):poly.material_index=index
     views=[('front',0),('quarter',math.pi/4),('side',math.pi/2),('back',math.pi)] if mode=='color' else [('quarter',math.pi/4),('side',math.pi/2)]
-    for view,angle in views:build.render(args.species,f'{args.label}-{mode}-{view}',angle)
+    for view,angle in views:build.render(args.species,f'{args.label}-{mode}-{view}',angle,outfit)
 for obj in meshes:
     obj.data.materials.clear()
     for material in materials[obj.name]:obj.data.materials.append(material)
     for poly,index in zip(obj.data.polygons,material_indices[obj.name]):poly.material_index=index
-build.render(args.species,f'{args.label}-vest-quarter',math.pi/4,('Gear_Vest',))
-build.render(args.species,f'{args.label}-vest-side',math.pi/2,('Gear_Vest',))
+build.render(args.species,f'{args.label}-vest-quarter',math.pi/4,outfit if args.species=='zombie' else ('Gear_Vest',))
+build.render(args.species,f'{args.label}-vest-side',math.pi/2,outfit if args.species=='zombie' else ('Gear_Vest',))
 bpy.context.scene.camera.data.ortho_scale=7
-build.render(args.species,f'{args.label}-gameplay',math.pi/4)
+build.render(args.species,f'{args.label}-gameplay',math.pi/4,outfit)
 (output/f'{args.label}-audit.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
 hashes=json.loads((output/'baseline-hashes.json').read_text(encoding='utf-8'))
-for name,digest in hashes.items():
-    if name!=f'{args.species}.glb':assert hashlib.sha256((build.ASSETS/name).read_bytes()).hexdigest()==digest,('other species changed',name)
-print(args.species.upper()+'_REVIEW_COMPLETE',args.label,json.dumps(report),'OTHER_SIX_UNCHANGED')
+excluded={'reindeer.glb','zombie.glb'} if args.species in ['reindeer','zombie'] else {f'{args.species}.glb'}
+checked=[(name,digest) for name,digest in hashes.items() if name not in excluded]
+for name,digest in checked:
+    assert hashlib.sha256((build.ASSETS/name).read_bytes()).hexdigest()==digest,('other species changed',name)
+print(args.species.upper()+'_REVIEW_COMPLETE',args.label,json.dumps(report),f'OTHER_{len(checked)}_UNCHANGED')

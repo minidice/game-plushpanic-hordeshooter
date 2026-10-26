@@ -13,6 +13,7 @@ public partial class CharacterRig
     private int _tailStyleBuilt;
     private Mesh? _defaultTailMesh;
     private Transform3D _defaultTailTransform;
+    private CharacterTailSkin? _tailSkin;
 
     private void PrepareTail()
     {
@@ -37,17 +38,15 @@ public partial class CharacterRig
         tail.Transform=Transform3D.Identity;
         if(tail.FindChild(_tailSpecies+"_tail_mesh",true,false) is MeshInstance3D mesh && mesh.Mesh!=null)
         {
-            // Published mammal defaults are closed authored surfaces. Birds retain their runtime
-            // default; alternate styles remain procedural with the same palette and attachment.
+            // Canonical default also replaces legacy mammal variants, retaining their palette.
             var materials=new Material[mesh.Mesh.GetSurfaceCount()];
             for(int i=0;i<materials.Length;i++)materials[i]=mesh.GetActiveMaterial(i);
-            if(AppearanceCatalog.IsBird(_tailSpecies))
-            {
-                mesh.Mesh=CharacterTailMesh.Build(_tailSpecies,materials);
-                mesh.Transform=Transform3D.Identity;
-            }
+            mesh.Mesh=CharacterTailMesh.Build(_tailSpecies,materials);
+            mesh.Transform=Transform3D.Identity;
             _defaultTailMesh=mesh.Mesh;_defaultTailTransform=mesh.Transform;
             _tailMesh=mesh;
+            if(!AppearanceCatalog.IsBird(_tailSpecies))
+            {_tailSkin=new CharacterTailSkin(mesh);_tailSkin.Configure(_tailSpecies,0);}
         }
         _tailMotionHome=_tailMotion.Transform;
     }
@@ -63,6 +62,8 @@ public partial class CharacterRig
         _tailMesh.Transform=style==0?_defaultTailTransform:Transform3D.Identity;
         for(int i=0;i<overrides.Length;i++)_tailMesh.SetSurfaceOverrideMaterial(i,overrides[i]);
         _tailStyleBuilt=style;
+        _tailSkin?.Configure(_tailSpecies,style);
+        // Configure clears only skin history. Rigid tail phase/smoothing survive live style changes.
     }
 
     private void UpdateTail(float dt,float movement)
@@ -71,8 +72,15 @@ public partial class CharacterRig
         _tailClock+=Mathf.Max(0,dt);
         _tailMove=Mathf.Lerp(_tailMove,Mathf.Clamp(movement,0,1),1-Mathf.Exp(-Mathf.Max(0,dt)*8));
         bool bird=AppearanceCatalog.IsBird(_tailSpecies);
+        bool skinned=_tailSkin!=null&&_tailStyleBuilt!=3;
+        if(skinned)
+        {
+            _tailSkin!.Step(dt,Mathf.Clamp(movement,0,1),_clock,Rotation.Y,GlobalPosition);
+            if(dt<=0){_tailMotion.Transform=_tailMotionHome;_tailClock=_tailMove=0;return;}
+        }
         float yaw=Mathf.Sin(_tailClock*1.9f)*.018f+Mathf.Sin(_clock-.9f)*_tailMove*(bird?.035f:.075f);
         float pitch=Mathf.Cos(_clock-.9f)*_tailMove*(bird?.018f:.03f);
+        if(skinned){yaw=Mathf.Sin(_clock-.9f)*_tailMove*.015f;pitch*=.35f;}
         _tailMotion.Transform=_tailMotionHome;
         _tailMotion.RotateObjectLocal(Vector3.Up,yaw);
         _tailMotion.RotateObjectLocal(Vector3.Right,pitch);
@@ -82,5 +90,6 @@ public partial class CharacterRig
     {
         if(_tailMotion!=null)_tailMotion.Transform=_tailMotionHome;
         _tailClock=_tailMove=0;
+        _tailSkin?.Reset();
     }
 }

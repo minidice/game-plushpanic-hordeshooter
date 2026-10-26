@@ -48,17 +48,19 @@ public partial class CharacterRig
     private MeshInstance3D MakeForearm(string name)
     {
         string side=name=="RightForearm"?"right":"left";
-        if(Definition.Id=="common_lion" && Model.FindChild("common_lion_"+side+"Paw_mesh",true,false) is MeshInstance3D {Mesh:not null} paw)
+        if((Definition.Id is "common_lion" or "common_reindeer" or "redpanda" or "raccoon") && Model.FindChild(Definition.Id+"_"+side+"Paw_mesh",true,false) is MeshInstance3D {Mesh:not null} paw)
         {
-            var forearm=(MeshInstance3D)Model.FindChild("common_lion_"+side+"Arm_mesh",true,false);
+            var forearm=(MeshInstance3D)Model.FindChild(Definition.Id+"_"+side+"Arm_mesh",true,false);
             var pivot=forearm.GetParentNode3D();
             var home=_featureHomes.TryGetValue(pivot,out var authored)?authored:pivot.Transform;
             var shoulder=InRig(_gripArms!).AffineInverse()*InRig(pivot.GetParentNode3D())*home;
+            // Some player Arm pivots sit mid-arm for customization; use the authored anatomical shoulder for stretching.
+            var shoulderPoint=pivot.GetNodeOrNull<Node3D>(Definition.Id+"_"+side+"Shoulder") is { } anchor?shoulder*anchor.Position:shoulder.Origin;
             var pawNode=paw.GetParentNode3D();
             var pawHome=shoulder*pawNode.Transform;
-            var wrist=pawNode.GetNode<Node3D>("common_lion_"+side+"Wrist");
-            var grip=pawNode.GetNode<Node3D>("common_lion_"+side+"Grip");
-            return CharacterLionPaw.Create(_gripArms!,paw,pawHome*paw.Transform,forearm,shoulder*forearm.Transform,shoulder.Origin,pawHome*wrist.Position,pawHome*grip.Position,name,side=="right"?1:-1);
+            var wrist=pawNode.GetNode<Node3D>(Definition.Id+"_"+side+"Wrist");
+            var grip=pawNode.GetNode<Node3D>(Definition.Id+"_"+side+"Grip");
+            return CharacterLionPaw.Create(_gripArms!,paw,pawHome*paw.Transform,forearm,shoulder*forearm.Transform,shoulderPoint,pawHome*wrist.Position,pawHome*grip.Position,name,side=="right"?1:-1);
         }
         if((Definition.Id is "common_parrot" or "common_eagle")&&Model.FindChild(Definition.Id+"_"+side+"Arm_mesh",true,false) is MeshInstance3D {Mesh:not null} wing)
         {

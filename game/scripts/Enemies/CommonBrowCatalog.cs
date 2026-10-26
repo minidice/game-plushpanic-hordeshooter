@@ -33,7 +33,7 @@ public sealed class CommonBrowCatalog
         {
             using (var json = JsonDocument.Parse(text)) { Duplicates(json.RootElement); var root = json.RootElement; Required(root, "version", "presets", "species"); foreach (var p in root.GetProperty("presets").EnumerateArray()) Required(p,"id","label","shape","width","thickness","angle","left_height","right_height","left_angle","right_angle"); foreach (var a in root.GetProperty("species").EnumerateArray()) Required(a,"id","left","right","yaw"); }
             var d = JsonSerializer.Deserialize<CommonBrowDocument>(text, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower, UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow }) ?? throw new FormatException("empty catalog");
-            if (d.Version != 1 || d.Presets == null || d.Presets.Length != 10 || d.Species == null || d.Species.Length != 3) throw new FormatException("requires version 1, ten presets and three species");
+            if (d.Version != 1 || d.Presets == null || d.Presets.Length != 10 || d.Species == null || d.Species.Length != 4) throw new FormatException("requires version 1, ten presets and four species");
             if (d.Presets.Any(p => p == null) || d.Species.Any(s => s == null)) throw new FormatException("null entries");
             if (d.Presets.Select(p => p.Id).Distinct().Count() != 10) throw new FormatException("duplicate preset id");
             foreach (var p in d.Presets)
@@ -45,7 +45,7 @@ public sealed class CommonBrowCatalog
             var species = new Dictionary<string,CommonBrowAttachment>();
             foreach (var s in d.Species)
             {
-                if (s.Id is not ("parrot" or "eagle" or "lion") || !species.TryAdd(s.Id,s) || !Coordinates(s.Left) || !Coordinates(s.Right) || !Bound(s.Yaw,0,65)) throw new FormatException("invalid species attachment");
+                if (s.Id is not ("parrot" or "eagle" or "lion" or "reindeer") || !species.TryAdd(s.Id,s) || !Coordinates(s.Left) || !Coordinates(s.Right) || !Bound(s.Yaw,0,65)) throw new FormatException("invalid species attachment");
                 if (s.Left[0] >= 0 || s.Right[0] <= 0) throw new FormatException("left/right attachment signs");
             }
             c.Presets = d.Presets; c.Species = species;

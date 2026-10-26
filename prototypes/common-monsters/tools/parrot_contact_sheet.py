@@ -4,7 +4,7 @@ from pathlib import Path
 from PIL import Image,ImageDraw
 
 parser=argparse.ArgumentParser()
-parser.add_argument('--species',choices=['parrot','eagle','lion'],default='parrot')
+parser.add_argument('--species',choices=['parrot','eagle','lion','reindeer','zombie'],default='parrot')
 parser.add_argument('--review-name',help='Optional local evidence folder name')
 args=parser.parse_args()
 folder=Path(__file__).resolve().parents[1]/'output'/(args.review_name or f'{args.species}-quality')

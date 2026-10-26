@@ -172,6 +172,7 @@ def animal(kind):
     if kind=='parrot':return parrot()
     if kind=='eagle':return eagle()
     if kind=='lion':return lion()
+    if kind=='reindeer':return reindeer()
     c=colors(kind);root,deform,head,left,right,arms=frame(kind)
     bird=kind in ['eagle','parrot']
     oval('plush_torso',(0,0,.78),(.38,.31,.49),c['primary'],deform,20,12)
@@ -666,6 +667,60 @@ def lion():
     return root
 
 
+def reindeer():
+    """Continuous deer neck, split weight-bearing hooves and spreading tapered antlers."""
+    c=colors('reindeer');root,deform,head,left,right,arms=frame('reindeer')
+    for sign,arm in zip([-1,1],arms):arm.location=(sign*.34,0,1.055)
+    body=[(.18,.11,.13,.02),(.30,.23,.21,.015),(.48,.32,.275,0),(.70,.365,.30,0),
+          (.90,.35,.285,.01),(1.08,.29,.24,.02),(1.25,.235,.205,.025),(1.36,.20,.18,.025)]
+    loft('deer_continuous_body',body,c['primary'],deform,32)
+    loft('deer_head_neck',[(1.10,.20,.18,.025),(1.24,.25,.22,.02),(1.39,.345,.285,.015),
+         (1.55,.385,.30,.015),(1.69,.35,.27,.025),(1.80,.265,.21,.03),
+         (1.86,.14,.12,.035),(1.88,.008,.008,.035)],c['primary'],head,32)
+    # One long muzzle with a narrow nasal bridge, no paired cheek cushions.
+    oval('long_deer_muzzle',(0,-.295,1.34),(.235,.32,.155),c['secondary'],head,24,12)
+    oval('deer_nose',(0,-.575,1.36),(.128,.055,.072),c['ink'],head,16,8)
+    for sign,foot,arm in zip([-1,1],[left,right],arms):
+        oval('deer_eye',(sign*.245,-.247,1.565),(.037,.023,.046),c['eye'],head,12,8)
+        feather('pointed_deer_ear',[(sign*.27,.015,1.70),(sign*.43,.015,1.77),(sign*.59,.025,1.86)],
+                [.055,.115,.002],[.04,.052,.002],c['primary'],head,10)
+        feather('inner_deer_ear',[(sign*.34,-.035,1.745),(sign*.44,-.038,1.79),(sign*.55,-.021,1.845)],
+                [.02,.058,.001],[.008,.012,.001],c['pink'],head,8)
+        tube('antler_main_beam',[(sign*.22,.045,1.78),(sign*.25,.045,1.97),(sign*.36,.06,2.13),
+             (sign*.50,.075,2.27),(sign*.66,.09,2.34)],[.061,.051,.039,.025,.002],c['horn'],head,10)
+        tube('antler_inner_tine',[(sign*.27,.045,2.01),(sign*.16,.015,2.13),(sign*.13,-.015,2.27)],
+             [.039,.025,.001],c['horn'],head,10)
+        tube('antler_crown_tine',[(sign*.40,.065,2.17),(sign*.40,.045,2.29),(sign*.38,.03,2.37)],
+             [.030,.018,.001],c['horn'],head,10)
+        tube('antler_outer_tine',[(sign*.48,.075,2.25),(sign*.66,.045,2.23),(sign*.75,.025,2.31)],
+             [.025,.017,.001],c['horn'],head,10)
+        tube('deer_lower_leg',[(sign*.20,.015,.49),(sign*.22,-.015,.24),(sign*.22,-.035,.11)],
+             [.108,.083,.072],c['primary'],foot,12)
+        for split in [-1,1]:
+            parrot_box('split_flat_hoof',(sign*.22+split*.052,-.10,.075),(.094,.265,.15),c['mane'],foot,bevel=.018)
+        forearm=feather('deer_forearm',[(sign*.34,0,1.055),(sign*.43,-.025,.91),(sign*.465,-.07,.735)],
+                [.105,.102,.075],[.105,.10,.072],c['primary'],arm,12)
+        forearm.name=arm.name+'_mesh'
+        side='left' if sign<0 else 'right'
+        paw_node=empty(f'common_reindeer_{side}Paw');parent_world(paw_node,arm)
+        wrist=empty(f'common_reindeer_{side}Wrist',paw_node);wrist.location=(sign*.465,-.07,.735)
+        grip=empty(f'common_reindeer_{side}Grip',paw_node);grip.location=(sign*.465,-.09,.69)
+        hand=oval('compact_deer_hand',(sign*.465,-.09,.695),(.083,.09,.095),c['primary'],paw_node,12,8)
+        hand.name=paw_node.name+'_mesh'
+    feather('short_deer_tail',[(0,.235,.70),(0,.36,.68),(0,.43,.61)],[.065,.09,.002],[.06,.06,.001],c['secondary'],deform,10)
+    vest=empty('Gear_Vest',deform)
+    loft('fitted_deer_vest',[(z,rx+.025,ry+.028,cy) for z,rx,ry,cy in body[2:6]],c['vest'],vest,32)
+    for sign in [-1,1]:
+        parrot_box('rectangular_deer_pouch',(sign*.16,-.33,.74),(.215,.105,.255),c['vest'],vest,sign*.28)
+        parrot_box('pouch_lid',(sign*.16,-.385,.84),(.22,.03,.065),c['vest'],vest,sign*.28,.008)
+        parrot_box('pouch_fastener',(sign*.16,-.404,.79),(.035,.012,.045),c['ink'],vest,sign*.28,.004)
+        tube('vest_shoulder',[(sign*.21,-.19,1.025),(sign*.26,0,1.12),(sign*.21,.23,1.025)],[.032]*3,c['vest'],vest,8)
+    parrot_box('vest_closure',(0,-.34,.77),(.022,.018,.38),c['ink'],vest,bevel=.005)
+    glasses=empty('Gear_Glasses',head)
+    for sign in [-1,1]:oval('legacy_lens',(sign*.245,-.275,1.565),(.09,.015,.085),c['ink'],glasses,12,8)
+    return root
+
+
 def trousers(module,c,style):
     shell('trouser_waist',module,c['pants'],.40,.69,rx=.40,ry=.325)
     for s in [-1,1]:
@@ -686,7 +741,8 @@ def zombie():
     bpy.ops.import_scene.gltf(filepath=str(ROOT/'game/assets/enemies/humanoid/humanoid.glb'))
     root=bpy.data.objects['humanoid_root'];root.name='Root'
     deform=bpy.data.objects['Deform'];head=bpy.data.objects['Head']
-    # Keep the recognizable source face, ear silhouette, asymmetry, teeth and mitten arms.
+    # Retain the source human skull, ears, crooked hair and teeth. Separate its
+    # disconnected semantic surfaces only to reduce the oversized eye/cheek pieces.
     bpy.data.objects.remove(bpy.data.objects['Deform_mesh'],do_unlink=True)
     replacements={'infected_skin':c['skin'],'infected_cloth':c['skin'],'infected_trim':c['ink'],
                   'infected_cream':c['cream'],'infected_ink':c['ink'],'infected_mouth':mat('fixed_mouth','5E3D46')}
@@ -695,33 +751,89 @@ def zombie():
         if obj.type=='MESH':
             for i,m in enumerate(obj.data.materials):obj.data.materials[i]=replacements.get(m.name,m)
             for p in obj.data.polygons:p.use_smooth=True
-    oval('plush_human_torso',(0,0,.78),(.38,.31,.49),c['skin'],deform,20,12)
-    for s in [-1,1]:oval('bare_leg',(s*.20,0,.34),(.16,.21,.24),c['skin'],deform,16,10)
-    # Visible sewn scar is fabric repair, not a body tattoo; jaw patch is skin-toned.
-    oval('soft_lower_jaw',(0,-.255,1.11),(.25,.11,.11),c['skin'],head,16,10)
-    for s in [-1,1]:
-        oval('human_eye_glint',(s*.19-.018,-.438,1.51),(.014,.009,.018),c['glint'],head,8,6)
+    source=bpy.data.objects['Head_mesh']
+    bpy.ops.object.select_all(action='DESELECT');source.select_set(True);bpy.context.view_layer.objects.active=source
+    bpy.ops.object.mode_set(mode='EDIT');bpy.ops.mesh.select_all(action='SELECT');bpy.ops.mesh.separate(type='LOOSE');bpy.ops.object.mode_set(mode='OBJECT')
+    for piece in list(bpy.context.selected_objects):
+        coords=[piece.matrix_world@v.co for v in piece.data.vertices]
+        center=sum(coords,Vector())/len(coords)
+        material=piece.data.materials[piece.data.polygons[0].material_index].name
+        # The white pinpoints and round cheek blush are disconnected source pieces.
+        if material=='fixed_cream' and center.y<-.48 and center.z>1.40:
+            bpy.data.objects.remove(piece,do_unlink=True);continue
+        if material=='fixed_mouth' and center.y<-.30 and center.z<1.32 and abs(center.x)>.19:
+            bpy.data.objects.remove(piece,do_unlink=True);continue
+        # Retain uneven human eyes, but make the sclera and socket shallow planes.
+        if center.y<-.34 and center.z>1.30 and abs(center.x)>.05 and material in ('fixed_ink','fixed_cream'):
+            width=.52 if material=='fixed_cream' else .58
+            height=.52 if material=='fixed_cream' else .60
+            # Separate source eye shells had different depths. Moving each by the
+            # same offset left the pupil floating ahead of the white in profile.
+            eye_depth=(-.375 if material=='fixed_cream' else
+                       -.384 if center.y<-.45 else
+                       -.363 if center.z<1.55 else center.y+.04)
+            for v in piece.data.vertices:
+                world=piece.matrix_world@v.co
+                world.x=center.x+(world.x-center.x)*width
+                world.z=center.z+(world.z-center.z)*height
+                world.y=eye_depth+(world.y-center.y)*.28
+                v.co=piece.matrix_world.inverted()@world
+        if material=='fixed_ink' and center.z<1.27 and abs(center.x)<.10:
+            # Mouth opening, not an oversized second eye.
+            for v in piece.data.vertices:
+                world=piece.matrix_world@v.co
+                world.x=center.x+(world.x-center.x)*.77
+                world.z=center.z+(world.z-center.z)*.57
+                world.y=center.y+(world.y-center.y)*.40+.022
+                v.co=piece.matrix_world.inverted()@world
+        if material=='fixed_cream' and center.z<1.27:
+            for v in piece.data.vertices:
+                world=piece.matrix_world@v.co
+                world.x=center.x+(world.x-center.x)*.72
+                world.z=center.z+(world.z-center.z)*.72
+                world.y=center.y+(world.y-center.y)*.45+.058
+                v.co=piece.matrix_world.inverted()@world
+        if material=='common_skin' and center.z<1.27 and center.y<-.10:
+            # Broad source lower jaw sits closer to the skull under head motion.
+            for v in piece.data.vertices:
+                world=piece.matrix_world@v.co
+                world.y=center.y+(world.y-center.y)*.85+.015
+                v.co=piece.matrix_world.inverted()@world
+    oval('human_torso',(0,0,.78),(.38,.31,.49),c['skin'],deform,20,12)
+    # Neck overlap stays inside the original human jaw during its maximum idle motion.
+    oval('human_neck',(0,.015,1.13),(.205,.18,.25),c['skin'],deform,16,10)
+    for sign,side in [(-1,'left'),(1,'right')]:
+        oval('bare_human_leg',(sign*.20,0,.34),(.145,.185,.25),c['skin'],deform,16,10)
+        arm=bpy.data.objects[f'common_zombie_{side}Arm']
+        bpy.data.objects.remove(bpy.data.objects[f'common_zombie_{side}Arm_mesh'],do_unlink=True)
+        tube('human_smooth_arm',[(sign*.31,0,1.035),(sign*.415,-.09,.83),(sign*.44,-.22,.66)],
+             [.115,.095,.073],c['skin'],arm,12)
+        parrot_box('compact_human_hand',(sign*.44,-.255,.61),(.15,.16,.19),c['skin'],arm,bevel=.045)
+        oval('human_thumb',(sign*.38,-.29,.635),(.04,.055,.062),c['skin'],arm,10,7)
+        foot=bpy.data.objects['LeftFoot' if sign<0 else 'RightFoot']
+        bpy.data.objects.remove(bpy.data.objects[foot.name+'_mesh'],do_unlink=True)
+        parrot_box('flat_human_foot',(sign*.22,-.075,.075),(.235,.32,.15),c['ink'],foot,bevel=.025)
     for name,style in [('Jeans','jeans'),('Chinos','chinos'),('Torn','torn')]:
         m=empty('Outfit_'+name,deform);trousers(m,c,style)
         if style=='chinos':
             for s in [-1,1]:tube('pressed_crease',[(s*.20,-.234,.20),(s*.20,-.24,.49)],[.005,.005],c['seam'],m,5)
     shirt=empty('Outfit_Shirt',deform)
-    shell('short_shirt',shirt,c['cloth'],.66,1.11,rx=.397,ry=.327)
+    shell('short_shirt',shirt,c['cloth'],.63,1.11,rx=.38,ry=.31)
     for s in [-1,1]:
-        oval('shirt_cap_sleeve',(s*.34,0,1.04),(.16,.22,.125),c['cloth'],shirt,12,8)
-    tube('shirt_hem',[(-.27,-.25,.68),(0,-.337,.68),(.27,-.25,.68)],[.011]*3,c['seam'],shirt,6)
+        oval('shirt_fitted_sleeve',(s*.35,-.005,1.01),(.115,.15,.105),c['cloth'],shirt,12,8)
+    tube('shirt_hem',[(-.27,-.245,.64),(0,-.319,.64),(.27,-.245,.64)],[.006]*3,c['seam'],shirt,6)
     overalls=empty('Outfit_Overalls',deform);trousers(overalls,c,'jeans')
-    shell('overall_bib',overalls,c['pants'],.62,.94,rx=.397,ry=.327)
+    shell('overall_bib',overalls,c['pants'],.62,.94,rx=.38,ry=.31)
     for s in [-1,1]:
         tube('overall_strap',[(s*.17,-.32,.84),(s*.23,-.21,1.08),(s*.23,.15,1.10),(s*.17,.31,.80)],[.043]*4,c['pants'],overalls,8)
         oval('brass_button',(s*.17,-.344,.89),(.024,.012,.024),c['gold'],overalls,8,6)
     patch('bib_pocket',[(-.105,-.345,.78),(.105,-.345,.78),(.105,-.34,.88),(-.105,-.34,.88)],c['cloth'],overalls)
     suit=empty('Outfit_Suit',deform);trousers(suit,c,'chinos')
-    shell('suit_jacket',suit,c['cloth'],.57,1.11,rx=.405,ry=.337)
+    shell('suit_jacket',suit,c['cloth'],.57,1.11,rx=.39,ry=.32)
     patch('shirt_front',[(-.11,-.33,1.045),(.11,-.33,1.045),(.07,-.357,.76),(-.07,-.357,.76)],c['cream'],suit)
     for s in [-1,1]:
         patch('folded_lapel',[(s*.09,-.35,1.06),(s*.22,-.30,.96),(s*.08,-.364,.80),(s*.13,-.352,.98)],c['pants'],suit)
-        oval('jacket_sleeve',(s*.35,0,1.03),(.18,.23,.16),c['cloth'],suit,12,8)
+        oval('jacket_sleeve',(s*.35,-.005,1.01),(.125,.16,.115),c['cloth'],suit,12,8)
     patch('crooked_tie',[(-.025,-.369,1.02),(.025,-.369,1.02),(.05,-.372,.80),(.0,-.373,.75),(-.025,-.372,.80)],c['accent'],suit)
     stains=empty('Outfit_Stains',deform)
     for x,z,r in [(-.17,.82,.065),(.15,.97,.045),(.11,.73,.037)]:
@@ -730,7 +842,7 @@ def zombie():
     pattern=empty('Outfit_Pattern',deform)
     for z in [.74,.84,.94,1.04]:
         # Surface-fitted narrow horizontal knit bands, distinct from marks on skin.
-        shell('knit_band',pattern,c['accent'],z,z+.016,rx=.406,ry=.337,steps=1)
+        shell('knit_band',pattern,c['accent'],z,z+.016,rx=.39,ry=.32,steps=1)
     eye=empty('Gear_Eyepatch',head)
     oval('fabric_eyepatch',(.19,-.418,1.47),(.13,.035,.13),c['ink'],eye,16,10)
     tube('eyepatch_strap',[(-.43,-.22,1.58),(.04,-.411,1.51),(.42,-.30,1.42)],[.015]*3,c['ink'],eye,6)
@@ -869,6 +981,6 @@ def build_one(kind,reports,no_render):
             for title,mods in [('chinos',('Outfit_Chinos','Outfit_Shirt','Outfit_Pattern')),
                                ('torn',('Outfit_Torn','Outfit_Shirt','Outfit_Stains')),
                                ('overalls',('Outfit_Overalls',)),('suit',('Outfit_Suit',)),
-                               ('bare',('Outfit_Shirt',)),('eyepatch',('Outfit_Jeans','Outfit_Shirt','Gear_Eyepatch'))]:render(kind,title,math.pi/4,mods)
+                               ('bare',('Outfit_Shirt',)),('pattern',('Outfit_Jeans','Outfit_Shirt','Outfit_Pattern'))]:render(kind,title,math.pi/4,mods)
     print('COMMON_ASSET_AUDIT',json.dumps(reports[-1]))
 if __name__=='__main__':main()

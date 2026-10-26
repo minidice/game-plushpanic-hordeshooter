@@ -12,8 +12,9 @@ public partial class HunterCombatCheck : Node
     private int _checks;
     private bool ParrotReview => OS.GetCmdlineUserArgs().Contains("--parrot-stage2");
     private bool LionReview => OS.GetCmdlineUserArgs().Contains("--lion-stage2");
-    private bool Stage2Review => ParrotReview || LionReview || OS.GetCmdlineUserArgs().Contains("--eagle-stage2");
-    private string ReviewSpecies => LionReview ? "lion" : ParrotReview ? "parrot" : "eagle";
+    private bool ReindeerReview => OS.GetCmdlineUserArgs().Contains("--reindeer-stage2");
+    private bool Stage2Review => ReindeerReview || ParrotReview || LionReview || OS.GetCmdlineUserArgs().Contains("--eagle-stage2");
+    private string ReviewSpecies => ReindeerReview ? "reindeer" : LionReview ? "lion" : ParrotReview ? "parrot" : "eagle";
     private Vector3 TestPoint(float x) => Stage2Review ? new(x+8, _stage.Tiers.GroundY(new(x+8,0,-2))+.05f, -2) : new(x,.05f,0);
     private sealed class Field : StageMap
     {

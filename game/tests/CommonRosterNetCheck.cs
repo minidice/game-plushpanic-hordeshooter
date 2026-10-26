@@ -171,7 +171,7 @@ public partial class CommonRosterNetCheck : Node
         {
             var a = host.Rig.Head?.GetNodeOrNull<MeshInstance3D>(brow);
             var b = remote.Rig.Head?.GetNodeOrNull<MeshInstance3D>(brow);
-            bool supported = id.Species is "parrot" or "eagle" or "lion";
+            bool supported = id.Species is "parrot" or "eagle" or "lion" or "reindeer";
             Check(supported ? a != null && b != null && a.Transform.IsEqualApprox(b.Transform)
                 && a.Mesh.GetFaces().SequenceEqual(b.Mesh.GetFaces()) : a == null && b == null,
                 "birth eyebrow geometry and transform match " + id.Species + " " + brow);

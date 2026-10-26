@@ -1,20 +1,20 @@
 # 일반 동물 눈썹 조합
 
-2026-10-25 · A-25 / C-31 후속. 사용자가 요청한 **앵무새·독수리·사자 눈썹 조합**을 구현했다. 작은 검은 눈과 매끈한 얼굴을 유지하면서 인상을 구분하는 외형 요소다. 성격 AI나 전투 능력을 뜻하지 않는다.
+2026-10-25 · A-25 / C-31 후속. 사용자가 요청한 **앵무새·독수리·사자 눈썹 조합**을 시작으로 순록까지 확대했다. 작은 검은 눈과 매끈한 얼굴을 유지하면서 인상을 구분하는 외형 요소다. 성격 AI나 전투 능력을 뜻하지 않는다.
 
 ## 공통 데이터와 적용
 
-- 데이터: [`common_brows.json`](../game/content/data/common_brows.json), 스키마 version 1. `presets` 10개와 `species` 3개를 사용한다.
+- 데이터: [`common_brows.json`](../game/content/data/common_brows.json), 스키마 version 1. `presets` 10개와 `species` 4개를 사용한다.
 - 프리셋은 `shape`(straight/arched/tapered), `width`, `thickness`, `angle`, 좌우 `height`/`angle` 차이로 구성한다. 길이 단위는 모델 로컬 미터, 각도는 도 단위다. 차분함·집중·호기심·엄격함·부드러움·의심·경계·단호함·느긋함·익살 10종이며 모두 눈썹이 있다.
 - 종별 `left`/`right`는 **Godot Head 로컬 좌표**, `yaw`는 얼굴 곡면에 맞추는 좌우 회전이다. Blender 월드 좌표를 그대로 넣지 않는다. 모양과 조합값은 공통, 부착 위치는 종별이다.
 - 기존 `CommonIdentity.Variant` 0–9가 같은 순서의 눈썹 프리셋을 고른다. 무리의 기존 10개 외형 셔플과 생성 시 네트워크 정체성을 재사용하며 매 프레임/피격/늦은 합류에 다시 뽑지 않는다. 눈썹과 배색 미세 변형은 현재 같은 개체 번호에 묶인다.
 - [`CommonBrowCatalog`](../game/scripts/Enemies/CommonBrowCatalog.cs)는 누락/중복/알 수 없는 필드, 지원하지 않는 모양·종, 범위 밖 수치와 중복 프리셋을 거부한다. `width` .055–.15, `thickness` .006–.025, 기본 각도 ±25°, 좌우 높이 ±.012, 좌우 각도 ±12°는 입력 검증 한계이며 전체 범위의 아트 적합성을 보증하지 않는다. 출고 조합값은 JSON의 검수된 10종이다.
 - [`CommonAppearance`](../game/scripts/Enemies/CommonAppearance.cs)에서 상태이상 부착 전에 두 눈썹을 Head 자식으로 만든다. 낮은 돌출의 곡면 띠 메시와 무광 고정 어두운 재질을 공유한다. 프리셋당 메시 1개(16삼각형), 개체당 두 MeshInstance/32삼각형이며 매 프레임 생성하지 않는다. 기존 모델 GLB를 재내보내지 않는 런타임 외형 모듈이다.
-- 기존 머리 동작·피격·상태 표면·시야 숨김에 따른다. 플레이어와 나머지 4종에는 추가하지 않는다. 충돌/전투/장구류 정책은 변경하지 않는다.
+- 기존 머리 동작·피격·상태 표면·시야 숨김에 따른다. 플레이어와 나머지 3종(호랑이·코뿔소·인간 감염체)에는 추가하지 않는다. 충돌/전투/장구류 정책은 변경하지 않는다.
 
 ## Studio
 
-일반 몬스터 조합 → 세 종 중 하나 선택 → **개체 외형 프리셋**에서 이름을 선택 → 조합 렌더. 10마리 보기에서는 기존 무리 생성기가 개체 번호를 배정한다.
+일반 몬스터 조합 → 네 종 중 하나 선택 → **개체 외형 프리셋**에서 이름을 선택 → 조합 렌더. 10마리 보기에서는 기존 무리 생성기가 개체 번호를 배정한다.
 
 카탈로그 API는 `brows`와 `brow_source`, 렌더 결과 개체는 실제 해석된 `brows.preset`/`brows.attachment`를 반환한다. 브라우저가 별도로 눈썹을 그리지 않고 실제 Enemy 초기화 경로를 사용한다. 원본 데이터 영역에서도 조합값을 확인할 수 있다. JSON 변경 뒤 **로컬 데이터 다시 읽기**로 렌더러를 재시작한다. `CommonBrowCatalog.Reload()`는 새 카탈로그를 만들 뿐 이미 생성한 개체를 자동 변경하지 않는다.
 
@@ -58,3 +58,9 @@ node studio/tests/common-brows.mjs
 - Blender 원본 GLB 재가져오기 앵무새69·독수리60·사자74 통과. 최초 세 종 통합 인자는 해당 조합 이름의 audit 파일이 없어 실패했으며, 실제로 생성해 둔 종별 audit로 다시 실행해 통과했다. 재생성이나 GLB 수정은 하지 않았다.
 - Studio 눈썹151·공통 roster82 통과. 문서 상대 경로500개 확인. 직전 구현에서 검수한 30조합 및 실제 Stage2 세 종 각각42검사의 모델/런타임을 그대로 통합한다. 이번에는 수동 플레이·장시간 성능·실제2PC를 추가 실행한 것이 아니다.
 - 로그: `game/output/animal-main-integration/`, `prototypes/common-monsters/output/animal-main-<species>.log`, `studio/output/animal-main-brows.log`, `studio/output/animal-main-roster.log`.
+
+## 순록 확대 — 2026-10-25 후속
+
+공통10프리셋과 Variant 매핑은 유지하고 `reindeer` 부착점만 추가했다. Head 로컬 좌우 `(±.20,.46,.25)`, yaw30°. 작은 눈 위의 얼굴 면에 붙이고 뿔/귀와 겹치지 않는 위치로 조정했다. 인간 감염체의 기존 얼굴 눈썹은 GLB에 남으며 동물 공통 모듈 대상은 아니다.
+
+최종 CommonBrow503·Studio199·localhost ENet130, 실제 Stage2 순록42 통과. 위 세 종의 과거 검사 수치는 당시 이력이며 현재4종 검증과 구분한다. [순록·감염체 모델/검증·한계](reindeer-zombie-clean-forms.md).

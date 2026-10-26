@@ -1,12 +1,12 @@
 # Common monster source and verification
 
-Current art target (2026-10-25): [clean stylized animals with grounded equipment](../../doc/character-art-direction.md). Do not use plush/stuffed-toy styling as the character brief. Parrot is the first revised asset; padded shapes in other species still describe earlier iterations.
+Current art target (2026-10-25): [clean stylized animals with grounded equipment](../../doc/character-art-direction.md). Do not use plush/stuffed-toy styling as the character brief. Parrot, eagle, lion, reindeer and the human infected have received the revised forms; tiger and rhino still use earlier iterations. See [reindeer/zombie evidence and limits](../../doc/reindeer-zombie-clean-forms.md).
 
 2026-10-25. This is the reproducible Blender source for the six animal species and the
 refined existing human infected. The original humanoid GLB is imported read-only: its
 asymmetric face, teeth, ears and arm geometry remain the visual identity. Its former
 baked clothing is replaced by a rounded skin torso, short legs and selectable garments.
-The existing face receives smooth surface normals, a soft lower jaw and small eye highlights.
+The current infected pass retains the asymmetric human face with shallow eyes, a smaller attached mouth/teeth, compact hands and flat soles; it removes detached glint beads.
 
 ## Rebuild
 
@@ -152,3 +152,9 @@ Studio attack QA accepts `STUDIO_SPECIES=lion`; default remains eagle and output
 Other six current GLBs remain unchanged. Review scripts accept `--review-name lion-clean-forms` for current style evidence,
 preserving historical lion-limbs images. Existing head spring scale1 is retained after actual tilt/offset review.
 [Current style and validation](../../doc/lion-clean-forms.md), [limb contract history](../../doc/lion-limbs.md).
+
+## Reindeer / human infected clean forms (2026-10-25)
+
+Use `build_common_monsters.py -- --species reindeer zombie` followed by the same selection in `validate_common_monsters.py`; add Blender `--python-exit-code 1` for reliable failure exit codes. Selected generation preserves the other species GLBs. `review_parrot.py` and `parrot_contact_sheet.py` also accept `--species reindeer` or `zombie`; zombie before/after uses the same Jeans+Shirt+Stains outfit.
+
+Lion and reindeer now preserve authored rigid hands and separate forearms via CharacterLionPaw. Each `common_<species>_<side>Paw` contains `Paw_mesh`, `Wrist`, `Grip`. Runtime hides the rest arms before creating the equipped arm; it must not add capsule hands over them. Reindeer Head-local brow attachment is in common_brows.json, not baked in GLB. Human infected remains unarmed with its ten existing outfit presets. [Coordinates, checks and remaining limits](../../doc/reindeer-zombie-clean-forms.md).

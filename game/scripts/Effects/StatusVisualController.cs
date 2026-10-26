@@ -140,6 +140,14 @@ public partial class StatusVisualController : Node3D
         foreach (var (source, layer) in _surfaces)
         {
             if (!IsInstanceValid(source) || !IsInstanceValid(layer)) continue;
+            if(layer.Mesh!=source.Mesh)layer.Mesh=source.Mesh;
+            if(layer.Skin!=source.Skin)
+            {
+                layer.Skin=source.Skin;
+                layer.Skeleton=source.Skin!=null&&source.GetNodeOrNull<Skeleton3D>(source.Skeleton) is { } skeleton
+                    ?layer.GetPathTo(skeleton):new NodePath("");
+            }
+            layer.CustomAabb=source.CustomAabb;
             layer.Visible = Displayed && SurfaceId != null && !Rig.HitFlashing;
             if (CharacterGripSurface.IsSurface(source))
                 foreach (string key in new[] { "grip_surface", "grip", "side", "wing_size", "running", "holding", "bird" })

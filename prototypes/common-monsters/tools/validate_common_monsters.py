@@ -96,6 +96,61 @@ for record in expected:
             check(sole_area>.02,f'lion {foot} planar ground-contact area: {sole_area:.5f} m2')
             check(min(v.z for v in vertices)>-.0002,f'lion {foot} no below-floor geometry')
             print('LION_SOLE_AREA',foot,sole_area)
+    if species=='reindeer':
+        head=bpy.data.objects['Head_mesh']
+        horn=[head.matrix_world@head.data.vertices[i].co for p in head.data.polygons
+              if head.data.materials[p.material_index].name=='fixed_horn' for i in p.vertices]
+        check(horn and max(v.z for v in horn)>2.32,'reindeer tall tapered antler crowns')
+        check(max(v.x for v in horn)-min(v.x for v in horn)>1.40,'reindeer spreading antler branches')
+        check({m.name for m in head.data.materials}.isdisjoint({'fixed_glint','fixed_cream'}),
+              'reindeer small unringed eyes and unified muzzle')
+        check(counts['base']<8000,'reindeer base crowd budget')
+        for side in ['left','right']:
+            arm=bpy.data.objects[f'common_reindeer_{side}Arm']
+            paw=bpy.data.objects[f'common_reindeer_{side}Paw']
+            hand=bpy.data.objects[f'common_reindeer_{side}Paw_mesh']
+            forearm=bpy.data.objects[f'common_reindeer_{side}Arm_mesh']
+            wrist=bpy.data.objects[f'common_reindeer_{side}Wrist']
+            grip=bpy.data.objects[f'common_reindeer_{side}Grip']
+            check(paw.parent==arm and hand.parent==paw and forearm.parent==arm,
+                  f'reindeer {side} rigid grip hand and separate forearm')
+            check(wrist.parent==paw and grip.parent==paw and
+                  .035<(wrist.matrix_world.translation-grip.matrix_world.translation).length<.08,
+                  f'reindeer {side} compact wrist/grip anchors')
+            check({m.name for m in hand.data.materials}=={'common_primary'},
+                  f'reindeer {side} palette-colored small hand')
+        for foot in ['LeftFoot','RightFoot']:
+            mesh=bpy.data.objects[foot+'_mesh']
+            points=[mesh.matrix_world@v.co for v in mesh.data.vertices]
+            sole_area=sum((points[p.vertices[1]]-points[p.vertices[0]]).cross(
+                points[p.vertices[2]]-points[p.vertices[0]]).length*.5 for p in mesh.data.polygons
+                if len(p.vertices)==3 and all(abs(points[i].z)<.0002 for i in p.vertices))
+            check(sole_area>.025,f'reindeer {foot} flat split hoof sole: {sole_area:.5f} m2')
+            print('REINDEER_SOLE_AREA',foot,sole_area)
+    if species=='zombie':
+        head=bpy.data.objects['Head_mesh']
+        check('fixed_glint' not in {m.name for m in head.data.materials},'zombie reduced source eye highlights')
+        check(counts['base']<8000,'zombie base crowd budget')
+        mouth_layers={}
+        for material in ['fixed_ink','fixed_cream']:
+            indices={i for p in head.data.polygons if head.data.materials[p.material_index].name==material
+                     for i in p.vertices}
+            mouth_layers[material]=[head.matrix_world@head.data.vertices[i].co for i in indices
+                                    if 1.08<(head.matrix_world@head.data.vertices[i].co).z<1.27]
+        check(all(mouth_layers.values()),'zombie mouth and tooth surfaces retained')
+        mouth_y=sum(p.y for p in mouth_layers['fixed_ink'])/len(mouth_layers['fixed_ink'])
+        tooth_y=sum(p.y for p in mouth_layers['fixed_cream'])/len(mouth_layers['fixed_cream'])
+        check(abs(mouth_y-tooth_y)<.02,f'zombie teeth lie within shallow mouth depth: {mouth_y:.3f}/{tooth_y:.3f}')
+        for foot in ['LeftFoot','RightFoot']:
+            foot_meshes=[o for o in meshes if o.parent and o.parent.name==foot]
+            check(len(foot_meshes)==1,f'zombie {foot} one authored shoe mesh')
+            mesh=foot_meshes[0]
+            points=[mesh.matrix_world@v.co for v in mesh.data.vertices]
+            sole_area=sum((points[p.vertices[1]]-points[p.vertices[0]]).cross(
+                points[p.vertices[2]]-points[p.vertices[0]]).length*.5 for p in mesh.data.polygons
+                if len(p.vertices)==3 and all(abs(points[i].z)<.0002 for i in p.vertices))
+            check(sole_area>.025,f'zombie {foot} flat shoe sole: {sole_area:.5f} m2')
+            print('ZOMBIE_SOLE_AREA',foot,sole_area)
     if species=='eagle':
         for foot in ['LeftFoot','RightFoot']:
             mesh=bpy.data.objects.get(foot+'_mesh')

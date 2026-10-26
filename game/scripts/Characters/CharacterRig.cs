@@ -5,7 +5,7 @@ namespace HordeShooter;
 
 /// <summary>
 /// Visual half of a character: instantiates the model from a <see cref="CharacterDefinition"/>, finds its
-/// movable parts, and animates them procedurally (no skeleton). Missing parts are replaced with empty
+/// movable parts, and animates them procedurally (a tail-only skin for long mammal tails). Missing parts are replaced with empty
 /// pivots, so any GLB — or none at all — can be dropped in.
 ///
 /// Hierarchy: Rig (yaw, set by owner) → Pose (fallback body) → Model (forward fix + scale) → parts.

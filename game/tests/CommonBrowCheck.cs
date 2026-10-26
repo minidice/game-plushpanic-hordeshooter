@@ -28,7 +28,7 @@ public partial class CommonBrowCheck : Node
         Bad(j=>j["presets"]![0]!.AsObject().Remove("angle")); Bad(j=>j["species"]![0]!["left"]![1]=9);
         Bad(j=>j["species"]![0]!["id"]="human"); Bad(j=>j["species"]![0]!.AsObject().Remove("yaw"));
         Check(CommonBrowCatalog.FromText("{\"version\":1,\"version\":1}").Errors.Count>0,"duplicate property rejected");
-        foreach(var species in new[]{"parrot","eagle","lion"})
+        foreach(var species in new[]{"parrot","eagle","lion","reindeer"})
         foreach(var palette in CommonRoster.Current.Palettes.Keys)
         foreach(int variant in Enumerable.Range(0,10))
         {
@@ -40,7 +40,7 @@ public partial class CommonBrowCheck : Node
             Check(brows[0].Mesh==brows[1].Mesh,"shared pair geometry");
             rig.QueueFree();
         }
-        foreach(string s in new[]{"human","tiger","reindeer","rhino"})
+        foreach(string s in new[]{"human","tiger","rhino"})
         {
             var id=new CommonIdentity(s=="human"?"zombie":"hunter",s,"ochre",s=="human"?"unarmed":"club");
             var rig=CharacterRig.Create(CommonRoster.Current.LookFor(id));AddChild(rig);CommonRoster.Current.Apply(rig,id);Check(Brows(rig).Length==0,"unsupported absent");rig.QueueFree();

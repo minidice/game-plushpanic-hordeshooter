@@ -239,7 +239,7 @@ node prototypes/character-lab/tools/validate-game-roster.mjs
 
 ## 8. 꼬리·공격 자세·피격 표시 보완
 
-꼬리는 원래 뒤쪽 장착점을 기준으로 별도 피벗에서 움직이고 이동 중 작은 흔들림만 준다. 2026-10-23 포유류 기본형은 연결 표면과 끝마개를 복원한 `*-fitted.glb`를 사용한다. 새 기본형과 다른 꼬리 모양은 `CharacterTailMesh`가 생성한다. 줄무늬는 서로 맞닿은 면의 재질 구분이며 겹친 껍질이 아니다. 꼬리 색·크기·모양 변경과 기본형 복원을 유지한다. fitted 파일에는 기본 포유류 표면 보정이 포함되지만, 다른 모양과 흔들림은 여전히 런타임 기능이다.
+꼬리는 원래 뒤쪽 장착점을 유지한다. 2026-10-26 라쿤·랫서판다의 긴 스타일0/1/2/4는 중간 부풀음 없는 단면·완만한 기본 곡선으로 바꾸고, 고정 루트와3개 굽힘 구간이 끝까지 지연을 전달하는 꼬리 전용 GPU 스킨을 사용한다. 정지하면 잦아들며 Studio 정적 미리보기와 초기화는 중립 자세로 복원한다. 짧은 스타일3·조류는 기존 형상/움직임을 유지한다. 기본 `*-clean.glb`의 Blender 프로파일과 `CharacterTailMesh`의 런타임 형상을 맞추며 예전 감염 변형에도 적용한다. 줄무늬는 서로 맞닿은 면의 재질 구분이며 겹친 껍질이 아니다. 꼬리 색·크기·스타일ID/기본형 복원 계약은 유지한다. 전신 리그나 꼬리 충돌 물리는 추가하지 않는다. [수치·검사·제약](mammal-tail-quality.md).
 
 날개·앞발과 기본 조끼의 현재 게임 적용 계약은 [아트 적용 기록](grounded-art-integration.md)을 따른다. 몸 폭·키는 기존 `Model.Scale`, 날개 크기는 원본 표면에 한 번 적용한다. `FitRoot` 편집용 계층을 게임에 중첩하지 않는다. `CharacterGripSurface`와 공통 변형 셰이더가 한손/양손·달리기·재장전·근접 손잡이를 따르며 피격과 실루엣도 같은 변형을 쓴다.
 
@@ -296,3 +296,13 @@ node prototypes/character-lab/tools/validate-game-roster.mjs
 ## 로컬 웹 검수 시제품 (2026-10-24, T-25)
 
 [`studio/`](../studio/)에서 현재 게임의 `AppearanceEditor` 선택지/범위와 `CharacterRig`·`AppearanceProfile`을 사용한다. 웹은 편집 UI만 제공하며 실제 Forward+ 셰이더로 900×900 정지 이미지를 만든다. 임시 조합은 저장하지 않으며 기존 인게임 저장 규칙과 모델/색/체형 수치를 변경하지 않는다. 조명은 게임 메뉴의 커스터마이징 기준이며 전투 맵별 조명은 별도다. [실행·데이터 계약·검증·제약](studio-prototype.md).
+
+## 플레이어 랫서판다 조형/파지 후속 (2026-10-26)
+
+`redpanda.tres`는 `redpanda-clean.glb`를 읽는다. 원본 `redpanda-fitted.glb`는 재현 입력으로 보존하며 몸통 정점·마스크 좌표·기존 노드/피벗/색 채널을 유지한다. Blender 생성기는 `prototypes/grounded-art/tools/build_redpanda_clean.py`, 독립 재가져오기 검사는 `validate_redpanda_clean.py`다.
+
+새 `redpanda_<left|right>Paw`/`Paw_mesh`/`Wrist`/`Grip`은 기존 Arm 아래에 있고 `Arm_mesh`는 전완이다. `CharacterWeaponGrip`은 사자·순록의 `CharacterLionPaw`를 재사용한다. 새 Arm 자식 `redpanda_<side>Shoulder`는 실제 어깨를 명시한다. 커스터마이징 피벗을 어깨로 가정하지 않으며 해당 노드가 없을 때만 이전 피벗을 사용한다. 손은 균일 크기, 전완만 어깨에서 손목까지 길이 변화. 현재 색을 적용한 원본 재질과 메시를 공유하고 장착 시 원본 팔은 숨긴다. [좌표·커스텀 계약·검증·제약](redpanda-clean-forms.md).
+
+## 플레이어 라쿤 조형/파지 후속 (2026-10-26)
+
+`raccoon.tres`는 새 `raccoon-clean.glb`를 읽고 fitted 원본은 보존한다. 랫서판다와 같은 Paw/Paw_mesh/Wrist/Grip 및 별도 Shoulder 계약을 기존 Arm 아래 사용하며 런타임 고정 손 대상에 raccoon을 추가했다. 원본 피벗/몸 마스크 좌표/재질 채널/커스터마이징 키는 바꾸지 않는다. 라쿤 팔·손은 보조색이 아닌 기존 무늬색을 따른다. `PlayerMammalCleanCheck`는 두 종이 공유하고 기존 RedpandaCleanCheck와 새 RaccoonCleanCheck가 각각 종을 지정한다. [생성기·좌표·검증](raccoon-clean-forms.md).

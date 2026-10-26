@@ -75,3 +75,17 @@
 ## 작업 시작점
 
 먼저 원본 거위·군장과 관련 생성기의 출력 경로·노드 구조를 읽는다. 기존 자료의 필요한 부분만 이 폴더에 복사한 뒤 기준 렌더를 만든다. 첫 후보에서 모든 종과 배경 전체를 동시에 변경하지 않는다.
+
+## 랫서판다 후속 통합 (2026-10-26)
+
+사용자 후속 승인으로 위 초기 시제품 제한과 별개로 랫서판다 개선을 게임에 연결했다. `tools/build_redpanda_clean.py`는 게임의 `redpanda-fitted.glb`를 읽고 별도 `redpanda-clean.glb`만 생성한다. Blender `--background --python-exit-code 1 --python`으로 실행하고 `tools/validate_redpanda_clean.py`로 독립 재가져오기 검사한다. `.blend`와 전후24장·검사 결과는 무시되는 `output/redpanda-clean/`에 생성된다.
+
+기존 `publish_game_models.py`가 만드는 fitted 모델과 새 clean 산출물은 다른 경로다. fitted 원본을 다시 출판했다면 그 뒤 clean 생성/검수를 재실행하고, `game/content/characters/redpanda.tres`의 clean 참조를 유지한다. 원본·다른 플레이어 GLB는 덮어쓰지 않는다. [게임 연결·커스텀 계약과 실행 검증](../../doc/redpanda-clean-forms.md).
+
+## 라쿤 후속 통합 (2026-10-26)
+
+`tools/build_raccoon_clean.py`는 읽기 전용 `raccoon-fitted.glb`에서 별도 `game/assets/characters/raccoon/raccoon-clean.glb`를 생성한다. 독립 `tools/validate_raccoon_clean.py`로 검사한다. 둘 다 Blender `--background --python-exit-code 1 --python`으로 실행한다. 전후24장/.blend/검사 로그는 무시되는 `output/raccoon-clean/`에 기록한다. 다른 종의 생성기를 실행하지 않는다. fitted를 재출판했다면 clean 생성/검수를 그 뒤 재실행하고 `.tres`의 clean 연결을 유지한다. [기술 계약·실행 결과](../../doc/raccoon-clean-forms.md).
+
+## 긴 꼬리 후속 (2026-10-26)
+
+두 clean 생성기는 `tools/mammal_tail_profile.py`로 꼬리만 재구성한다. 거의 일정한 단면·완만한 곡선·밝은 끝은 런타임 `CharacterTailMesh`와 같은 계약이며, `tools/validate_mammal_tail.py`가 실제 재가져온 단면/끝 재질/닫힌 표면을 검사한다. 게임의 지연 굽힘은 꼬리 전용 런타임 스킨이 담당한다. `tools/render_mammal_tails.py`는 `game/output/mammal-tails`에 실제 GLB 비교 렌더를 만든다. [형상·움직임·재현·검증 한계](../../doc/mammal-tail-quality.md).
