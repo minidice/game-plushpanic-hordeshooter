@@ -306,7 +306,7 @@ public partial class BossEnemy : BullEnemy
             Stage.AddChild(projectile);
             Stage.Net?.OnEnemyProjectile(this, from, from + dir * skill.Range);
         }
-        Stage.Sfx.PlayAt("shot_shotgun", from, 3, .7f);
+        Stage.Sfx.PlayAt("shot_shotgun", from, 1, .7f);
         Stage.Cam.AddShake(.25f);
         After("recoil", RecoilSeconds);
     }
