@@ -1,0 +1,88 @@
+{
+  "files": [
+    {
+      "file": "geese-preview.mp3",
+      "author": "Navadaux",
+      "title": "Geese Honking",
+      "page": "https://freesound.org/people/Navadaux/sounds/554039/",
+      "download": "https://cdn.freesound.org/previews/554/554039_5576856-lq.mp3",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "retrieved": "2026-10-27",
+      "sha256": "9077c0fcf71978bc0d875d8f23771c40a0b7e90456179c8189bc9f75857dddbd",
+      "note": "Public low-quality MP3 preview, not the login-only original; recorded geese with field ambience."
+    },
+    {
+      "file": "zombie-16.wav",
+      "author": "artisticdude",
+      "title": "Zombies Sound Pack",
+      "page": "https://opengameart.org/content/zombies-sound-pack",
+      "download": "https://opengameart.org/sites/default/files/zombies.zip",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "retrieved": "2026-10-27",
+      "sha256": "637f8d26b186005246a279fb19def56c81eebcf144c2346460ac1e4fc0075fc7",
+      "note": "Original 24-bit stereo WAV files, selected from the archive. Source page does not document the recording/processing chain."
+    },
+    {
+      "file": "zombie-18.wav",
+      "author": "artisticdude",
+      "title": "Zombies Sound Pack",
+      "page": "https://opengameart.org/content/zombies-sound-pack",
+      "download": "https://opengameart.org/sites/default/files/zombies.zip",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "retrieved": "2026-10-27",
+      "sha256": "91c33adaf9efa32d87c364eb2a679833a24ac5586c52f675f3e9cf8cedfde199",
+      "note": "Original 24-bit stereo WAV files, selected from the archive. Source page does not document the recording/processing chain."
+    },
+    {
+      "file": "zombie-11.wav",
+      "author": "artisticdude",
+      "title": "Zombies Sound Pack",
+      "page": "https://opengameart.org/content/zombies-sound-pack",
+      "download": "https://opengameart.org/sites/default/files/zombies.zip",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "retrieved": "2026-10-27",
+      "sha256": "edbe930f09f61f034c90b80a6f5b06757fbea2a8f2b9ccdc263ed9246b33a400",
+      "note": "Original 24-bit stereo WAV files, selected from the archive. Source page does not document the recording/processing chain."
+    },
+    {
+      "file": "zombie-24.wav",
+      "author": "artisticdude",
+      "title": "Zombies Sound Pack",
+      "page": "https://opengameart.org/content/zombies-sound-pack",
+      "download": "https://opengameart.org/sites/default/files/zombies.zip",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "retrieved": "2026-10-27",
+      "sha256": "3776a39a471c215f26115290837012084fc07f37e20b4808ce76f5dafe98f2fb",
+      "note": "Original 24-bit stereo WAV files, selected from the archive. Source page does not document the recording/processing chain."
+    },
+    {
+      "file": "kenney-impactSoft_heavy_000.ogg",
+      "author": "Kenney",
+      "title": "Impact Sounds",
+      "page": "https://kenney.nl/assets/impact-sounds",
+      "download": "https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "retrieved": "2026-10-27",
+      "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1",
+      "note": "Selected soft impacts; archive License.txt retained. Source page labels the pack as impact/foley."
+    },
+    {
+      "file": "kenney-impactSoft_medium_001.ogg",
+      "author": "Kenney",
+      "title": "Impact Sounds",
+      "page": "https://kenney.nl/assets/impact-sounds",
+      "download": "https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "retrieved": "2026-10-27",
+      "sha256": "7642a4fd43e547afe4f7adfadb3dabb681c0ff512f52c1674bae30a726841faf",
+      "note": "Selected soft impacts; archive License.txt retained. Source page labels the pack as impact/foley."
+    }
+  ]
+}

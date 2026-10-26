@@ -111,3 +111,9 @@
 ## 수렵단3무기 전용음 — 2026-10-25
 
 `hunter_club_raise/swing/hit`, `hunter_knife_ready/swing/hit`, `hunter_bow_draw/release/hit`를 SoundRecipes에 추가. 각 무기의 준비/궤적/실제 접촉을 구별하며 소리9개 모두 근거리 상한·동시 발음 제한을 적용한다. 활 당김1.2초는 실제 스트림 길이를 종족별 준비시간에 맞춘 피치로 재생. Studio 사운드 목록은 같은 등록 데이터에서 자동 인식한다. [상세 타이밍·검증·범위](hunter-weapon-presentation.md).
+
+## 사운드 품질 비교 시제품 — 2026-10-27 (A-26)
+
+[설계](features/effects-audio/sound-quality-pilot.md) · [제작/재현](../prototypes/audio-lab/README.md). 피격·신음·사망 각 A/B를 무료 CC0 소재로 편집한다. 후보는 `prototypes/audio-lab/candidates/`에 있어 실제 게임 override 폴더와 분리되며, 현재 게임 효과음은 여전히 기존 합성음이다. 원본의 출처·라이선스·해시는 `sources.json`, 편집 수치는 `recipes.json`에 남긴다.
+
+`tests/AudioPilotCapture.tscn`은 현재 Stage 리스너/Sfx를 통한 0.5·3·8m 단독음, 군중 사망, 신음·사망·사격 겹침의 Master 출력을 측정한다. 결과는 `output/audio-pilot/capture.json`과 unclamped `.f32le`. 청취 자료는 같은 float 원본을 공통 감쇠해 생성한다. 캡처 성공은 원래 믹스의 0 dBFS 초과가 없다는 뜻이 아니며, 클리핑 수치와 별개다. 기존 `AudioMixCheck`는 SFX 일부 행동만 보므로 이 군중 중첩 조건의 대체 검사가 아니다.
