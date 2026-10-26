@@ -98,8 +98,16 @@ public partial class AudioPilotCapture : Node
                 });
             foreach (string state in new[] { "helium", "muffled" })
             {
-                AudioSetup.SetHelium(state == "helium");
-                AudioSetup.SetMuffled(state == "muffled");
+                // Stage updates the buses from player status every physics frame.
+                // Setting just a bus flag would test a state that immediately disappears.
+                if (state == "helium") _stage.Player.ApplyHelium(4);
+                else _stage.Player.Blind(4);
+                await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+                await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+                await Frame();
+                if (AudioSetup.IsEffectOn(AudioSetup.PitchEffect) != (state == "helium") ||
+                    AudioSetup.IsEffectOn(AudioSetup.MuffleEffect) != (state == "muffled"))
+                    throw new InvalidOperationException("Stage did not retain requested audio state: " + state);
                 await Capture("crowd-" + state, 2.2, () =>
                 {
                     for (int i = 0; i < 6; i++) _stage.Sfx.PlayAt("zombie_die", ear + Vector3.Right);
@@ -107,6 +115,10 @@ public partial class AudioPilotCapture : Node
                     _stage.Sfx.Play("shot_rifle");
                     _stage.Sfx.Play("stage_clear");
                 });
+                if (AudioSetup.IsEffectOn(AudioSetup.PitchEffect) != (state == "helium") ||
+                    AudioSetup.IsEffectOn(AudioSetup.MuffleEffect) != (state == "muffled"))
+                    throw new InvalidOperationException("Audio state expired during capture: " + state);
+                await ToSignal(GetTree().CreateTimer(2), SceneTreeTimer.SignalName.Timeout);
             }
             AudioSetup.SetHelium(false);
             AudioSetup.SetMuffled(false);
@@ -160,7 +172,8 @@ public partial class AudioPilotCapture : Node
         File.WriteAllBytes(Path.Combine(_out, name + ".f32le"), floats);
         float peakDb = Mathf.LinearToDb(peak);
         _reports.Add(new { name, rate, frames = frames.Count, duration = frames.Count / (double)rate,
-            peakDb, rmsDb = 20 * Math.Log10(Math.Sqrt(sum / (frames.Count * 2))), overFullScaleSamples = over });
+            peakDb, rmsDb = 20 * Math.Log10(Math.Sqrt(sum / (frames.Count * 2))), overFullScaleSamples = over,
+            helium = AudioSetup.IsEffectOn(AudioSetup.PitchEffect), muffled = AudioSetup.IsEffectOn(AudioSetup.MuffleEffect) });
         GD.Print($"CAPTURE {name} peak={peakDb:0.0} dBFS over={over} frames={frames.Count}");
         if (EnforceCeiling && (over != 0 || peakDb > -.8f))
             throw new InvalidOperationException($"Output ceiling exceeded: {name} {peakDb:0.0} dBFS");

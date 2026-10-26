@@ -77,12 +77,25 @@ public partial class AudioMixCheck : Node
 
         // Getting hit: the honk is a warning, not a blast (I-74).
         player.SetControls(Vector2.Zero, player.GlobalPosition, false);
-        await Frames(40);
-        player.Invulnerable = false;
-        float hit = await Peak(40, () => { if (player.Health == player.MaxHealth) player.TakeDamage(1, Vector3.Left, 0); });
-        player.Invulnerable = true;
-        GD.Print($"mix peak dB: hit honk {hit:0.0}");
-        Check(hit < shot - 4 && hit > shot - 14, $"the hit honk sits clearly under a rifle shot ({hit:0.0} vs {shot:0.0})");
+        // Two alternating files at both pitch-range endpoints: one random take can miss a quiet variant.
+        foreach (float pitch in new[] { .96f, 1.04f })
+            for (int take = 0; take < 2; take++)
+            {
+                await Frames(40);
+                player.Heal(player.MaxHealth);
+                player.Invulnerable = false;
+                float hit = await Peak(40, () =>
+                {
+                    if (player.Health != player.MaxHealth) return;
+                    player.TakeDamage(1, Vector3.Left, 0);
+                    foreach (var voice in stage.Sfx.GetChildren().OfType<AudioStreamPlayer3D>())
+                        if (voice.Playing && (string)voice.GetMeta("sound", "") == "honk") voice.PitchScale = pitch;
+                });
+                player.Invulnerable = true;
+                GD.Print($"mix peak dB: hit honk {hit:0.0}, pitch={pitch}, take={take}");
+                Check(hit < shot - 4 && hit > shot - 14,
+                    $"the hit honk sits clearly under a rifle shot ({hit:0.0} vs {shot:0.0}, pitch={pitch}, take={take})");
+            }
 
         // The car siren right next to you: noticeable, never blaring (I-62).
         player.SetControls(Vector2.Zero, player.GlobalPosition, false);

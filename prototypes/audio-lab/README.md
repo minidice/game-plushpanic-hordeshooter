@@ -21,6 +21,8 @@ python prototypes/audio-lab/tools/release.py --page
 
 `AudioQualityCheck.tscn`, `AudioLevelCheck.tscn`, 창 모드 `AudioMixCheck.tscn`도 별도 실행한다. Godot 실행은 한 번에 하나씩 끝낸다.
 
+5분 반복 전투 확인은 창 모드 `res://tests/AudioCombatSoak.tscn`을 `--max-fps 60`으로 실행한다. `game/output/audio-combat-soak/`에 최종 출력 `combat.wav`, 발생 횟수/피크/프레임 `report.json`, 60초·240초 렌더를 저장한다. 이동/사격을 자동 조작하고 무적·체력 회복·탄약 보충·적 교체를 쓰므로 사람의 한 판 플레이나 최종 청음 평가가 아니다. 앰비언스를 포함하며 실제 플레이어 상태이상으로 헬륨·먹먹함을 적용한다.
+
 Godot 경로는 PC별 설치 위치로 바꾼다. 캡처는 실제 오디오 장치가 필요하며 headless 무음은 실패다. 실제 Stage/Sfx/리스너를 사용한 자동 통제 장면이고, 일반 플레이 한 판 녹화는 아니다. 배경음은 끄고 Master 캡처 **뒤**에 -80 dB 모니터 감쇠를 붙인다. 출력 폴더 `game/output/audio-quality`의 WAV는 최종 limiter를 지난 실제 출력이며 추가 정규화 없이 비교 페이지의 `output/release-mix`에 복사한다. 설정은 저장하지 않는다.
 
 ### 이전 시제품 기록

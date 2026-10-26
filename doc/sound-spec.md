@@ -126,7 +126,7 @@
 
 | ID | 길이(초) | 재생 dB / pitch jitter / 동시수 | 내용 |
 |---|---:|---|---|
-| honk | .29 / .34 | -2 / .04 / 2 | A/B 거위 반응 |
+| honk | .29 / .34 | -1 / .04 / 2 | A/B 거위 반응. 양 끝 피치 검사에서 작은 변형의 식별 여유를 확보하도록 1 dB 보정 |
 | honk_long | .72 | -2 / .03 / 1 | 긴 거위 발성 편집 |
 | groan | 1.22 / .98 | +2 / .05 / 3, 초과 생략 | 저음 목 울림/짧은 발성. 파일 자체가 작으므로 +2 dB가 증폭 과다라는 뜻은 아님 |
 | zombie_die | .53 / .40 | -4 / .05 / 3, 초과 생략 | 짧은 발성+낙하 |
@@ -139,3 +139,5 @@
 발성 종별 분리는 후속이다. 아직 모든 플레이어는 거위 반응을 공유한다. 거위/공기는 공개 MP3 미리듣기 소스이며 녹음·압축 한계가 남는다. 사용자 기준 게임의 음원은 추출하지 않았다.
 
 검사: `AudioQualityCheck`는 로딩/변형/상한/군중 동시수/버스/효과음 볼륨/limiter 중복을 확인한다. `AudioQualityCapture`는 같은 캡처 코드에 `EnforceCeiling=true`, 출력 폴더 `audio-quality`를 사용하여 20조건(단독거리9, 군중2, 추가6종, 헬륨/먹먹함, 복합 전투)을 측정한다. 실신호·프레임 수·유한값·0 dBFS 초과0·피크≤-0.8 dBFS 허용오차가 필요하다. Master 최종 캡처와 limiter 이전 SFX의 `AudioMixCheck` 값은 구분한다. [실제 실행 결과와 제약](features/effects-audio/log/002-art-sound-quality-rollout.md).
+
+상태효과 조건은 `Player.ApplyHelium`/`Blind`로 실제 상태를 적용하고, 물리 프레임 이후 및 캡처 종료 시 버스 활성 여부를 검사한다. Stage가 상태를 매 프레임 갱신하므로 버스 직접 토글만으로 검증하지 않는다. `AudioCombatSoak.tscn`은 별도로 기본 Stage1에서 300초 통제 전투·앰비언스·이동·사격·피격·군중 반복의 최종 출력과 전투 발생량을 검사한다. [검사 보완·메인 통합 기록](features/effects-audio/log/003-check-combat-soak-main-integration.md).
