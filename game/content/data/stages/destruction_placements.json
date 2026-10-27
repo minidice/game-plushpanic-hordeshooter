@@ -1,6 +1,8 @@
 {
-  "description": "Temporary side-lane breach-wall trials. at/barrel are [x,y,z] metres; yaw is 0 or 90 degrees. Each barrel is a real explosive barrel. plain_panel adds one intact matching panel along the wall's local +X. All routes remain usable before destruction.",
+  "description": "Breach walls: side-lane trials (Stage 2, 3) and the large Stage 1 barrel lesson (gate: closes the way on until broken; the route flows count it open; panels: intact panels at these multiples of the wall width along local +X, pacing-pressure-plan.md 4.4). at/barrel are [x,y,z] metres; yaw is 0 or 90 degrees. Each barrel is a real explosive barrel. plain_panel adds one intact matching panel along the wall's local +X. All routes remain usable before destruction.",
   "placements": [
+    { "map": "stage1_large", "id": "alley_gate", "at": [152,0,-55.5], "yaw": 90, "barrel": [150.5,0,-55.5], "label": "C alley mouth barricade: shoot the barrel to get through (barrel lesson)", "plain_panel": false, "panels": [-2,-1,1,2], "gate": true },
+    { "map": "stage1_large", "id": "ramp_nook", "at": [535,1.2,-107.6], "yaw": 0, "barrel": [535,1.2,-109.1], "label": "G ramp side nook: blow the wall for the cache behind", "plain_panel": false, "gate": true },
     { "map": "stage2", "id": "forest_side", "at": [29.5,0,3.5], "yaw": 0, "barrel": [29.5,0,5], "label": "Forest road side wall", "plain_panel": false },
     { "map": "stage2", "id": "yard_side", "at": [73,0,4.5], "yaw": 90, "barrel": [71.5,0,4.5], "label": "Container yard side wall", "plain_panel": false },
     { "map": "stage3", "id": "yard_west", "at": [288,1.2,-58], "yaw": 0, "barrel": [288,1.2,-56.5], "label": "West yard concrete partition", "plain_panel": true },

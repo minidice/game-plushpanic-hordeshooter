@@ -8,8 +8,9 @@ namespace HordeShooter;
 /// <summary>
 /// One row of content/data/party_scaling.csv (menu-multiplayer-plan.md 4장, decisions.md M-5): how a party of this many
 /// people changes the monsters. Commons change in number, health and damage; named and bosses only in health and damage.
+/// <see cref="Players"/> can be a fraction: an AI squadmate counts as half a person (M-34).
 /// </summary>
-public sealed record PartyScale(int Players, float CommonCount, float CommonHp, float CommonDamage, float NamedHp, float NamedDamage)
+public sealed record PartyScale(float Players, float CommonCount, float CommonHp, float CommonDamage, float NamedHp, float NamedDamage)
 {
     public static readonly PartyScale Baseline = new(4, 1, 1, 1, 1, 1);
     public float Hp(MonsterTier tier) => tier == MonsterTier.Common ? CommonHp : NamedHp;
@@ -35,13 +36,21 @@ public static class PartyScaling
         }
     }
 
-    /// <summary>The row for <paramref name="people"/> (clamped to the table: 1 below, the largest above).</summary>
-    public static PartyScale For(int people)
+    /// <summary>
+    /// The row for <paramref name="people"/> (clamped to the table: 1 below, the largest above). Between two rows (1.5 = one
+    /// person and an AI squadmate, M-34) every percentage is interpolated.
+    /// </summary>
+    public static PartyScale For(float people)
     {
         var rows = Rows;
         if (rows.Count == 0) return PartyScale.Baseline;
         people = Mathf.Clamp(people, rows[0].Players, rows[^1].Players);
-        return rows.LastOrDefault(r => r.Players <= people) ?? rows[0];
+        var low = rows.LastOrDefault(r => r.Players <= people) ?? rows[0];
+        var high = rows.FirstOrDefault(r => r.Players >= people) ?? rows[^1];
+        if (high.Players <= low.Players) return low;
+        float t = (people - low.Players) / (high.Players - low.Players);
+        return new PartyScale(people, Mathf.Lerp(low.CommonCount, high.CommonCount, t), Mathf.Lerp(low.CommonHp, high.CommonHp, t),
+            Mathf.Lerp(low.CommonDamage, high.CommonDamage, t), Mathf.Lerp(low.NamedHp, high.NamedHp, t), Mathf.Lerp(low.NamedDamage, high.NamedDamage, t));
     }
 
     public static List<PartyScale> FromText(string text, List<string> errors)

@@ -47,7 +47,7 @@
     { "id": "dormant_pack", "name": "잠든 무리", "kind": "enemy", "status": "built", "desc": "가만히 있는 무리 — 소리 내지 않고 지나가거나 먼저 친다.", "refs": ["spawn-design 2장"] },
     { "id": "watcher_pack", "name": "경계형 무리", "kind": "enemy", "status": "built", "desc": "보면 깨어나 달려드는 무리(시야 14 m).", "refs": ["spawn-design 2장"] },
     { "id": "special_enemy", "name": "특수 적", "kind": "enemy", "status": "built", "desc": "대응을 흔드는 특수 몬스터(돌진 등).", "refs": ["monster-design-guide"] },
-    { "id": "timed_raid", "name": "시간 습격", "kind": "enemy", "status": "built", "desc": "큰 이동 구역에서 90~120초마다 무리가 덮친다.", "refs": ["L-29"] },
+    { "id": "timed_raid", "name": "시간 습격", "kind": "enemy", "status": "built", "desc": "큰 이동 구역에서 주기적으로 무리가 덮친다(Stage 1: 45~75초, 뒤 · 옆 두 방향에서 몇 마리씩).", "refs": ["L-29"] },
     { "id": "gun_enemies", "name": "총기 적", "kind": "enemy", "status": "built", "desc": "조준 전조 뒤 쏘는 무장단(사선 · 엄폐 판단).", "refs": ["C-31"] },
     { "id": "gun_stronghold", "name": "총기 적 거점", "kind": "space", "status": "planned", "desc": "총기 적이 모이는 교전 공간(진지 · 높이 차 · 증원 입구 · 경보), 인원 보정으로 1인 5~6 ~ 6인 14~17.", "refs": ["D-15"] },
     { "id": "patrol", "name": "순찰대", "kind": "enemy", "status": "planned", "desc": "1~3마리가 정해진 구역을 돌거나 진입로를 경계한다.", "refs": ["direction/details/ai.md"] },

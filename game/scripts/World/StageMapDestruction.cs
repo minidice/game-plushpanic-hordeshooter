@@ -6,8 +6,18 @@ using System.Text.Json;
 
 namespace HordeShooter;
 
-/// <summary>Explicit trial placements, shared by map construction and placement checks. Heights are floor heights.</summary>
-public sealed record DestructionPlacement(string Map, string Id, Vector3 At, float Yaw, Vector3 Barrel, string Label, bool PlainPanel);
+/// <summary>
+/// Explicit placements, shared by map construction and placement checks. Heights are floor heights. <see cref="Panels"/>
+/// are intact panels at these multiples of the wall width along the wall's local +X (the old plain_panel is [1]).
+/// A <see cref="Gate"/> closes the way on until it breaks (the barrel lesson, pacing-pressure-plan.md 4.4): the stage's
+/// route flows count it as open, like a door.
+/// </summary>
+public sealed record DestructionPlacement(string Map, string Id, Vector3 At, float Yaw, Vector3 Barrel, string Label, bool PlainPanel,
+    int[] Panels, bool Gate)
+{
+    public DestructionPlacement(string map, string id, Vector3 at, float yaw, Vector3 barrel, string label, bool plainPanel)
+        : this(map, id, at, yaw, barrel, label, plainPanel, plainPanel ? new[] { 1 } : System.Array.Empty<int>(), false) { }
+}
 
 public static class DestructionPlacements
 {
@@ -25,7 +35,7 @@ public static class DestructionPlacements
         {
             string map = row.GetProperty("map").GetString()!, id = row.GetProperty("id").GetString()!;
             float yaw = row.GetProperty("yaw").GetSingle();
-            if (map is not ("stage2" or "stage3") || string.IsNullOrWhiteSpace(id) || !ids.Add(map + ":" + id)
+            if (map is not ("stage1_large" or "stage2" or "stage3") || string.IsNullOrWhiteSpace(id) || !ids.Add(map + ":" + id)
                 || yaw is not (0 or 90)) throw new FormatException("Invalid or duplicate destruction placement: " + map + ":" + id);
             Vector3 Point(string key)
             {
@@ -33,8 +43,13 @@ public static class DestructionPlacements
                 if (values.Length != 3 || values.Any(v => !float.IsFinite(v))) throw new FormatException(id + ": invalid " + key);
                 return new Vector3(values[0], values[1], values[2]);
             }
+            bool plain = row.GetProperty("plain_panel").GetBoolean();
+            var panels = row.TryGetProperty("panels", out var list) ? list.EnumerateArray().Select(v => v.GetInt32()).ToArray()
+                : plain ? new[] { 1 } : System.Array.Empty<int>();
+            if (panels.Contains(0) || panels.Distinct().Count() != panels.Length) throw new FormatException(id + ": panels must be distinct non-zero offsets");
+            bool gate = row.TryGetProperty("gate", out var g) && g.GetBoolean();
             result.Add(new DestructionPlacement(map, id, Point("at"), yaw, Point("barrel"),
-                row.GetProperty("label").GetString()!, row.GetProperty("plain_panel").GetBoolean()));
+                row.GetProperty("label").GetString()!, plain, panels, gate));
         }
         return result;
     }
@@ -46,7 +61,7 @@ public abstract partial class StageMap
     /// A removable 3.2 m middle with permanent 0.8 m shoulders. Only the middle's footprint is removed on break;
     /// no full-width invisible wall remains behind the opening. The art is based at floor height, as are kit props.
     /// </summary>
-    protected ObjectBody BreachWall(Vector3 at, float yaw = 0)
+    protected ObjectBody BreachWall(Vector3 at, float yaw = 0, bool gate = false)
     {
         if (yaw is not (0 or 90)) throw new ArgumentOutOfRangeException(nameof(yaw), "Breach walls support 0 or 90 degrees.");
         var rule = ObjectInteractions.Current.ForId("runtime:breach_wall")
@@ -56,13 +71,15 @@ public abstract partial class StageMap
         var center = at + Vector3.Up * size.Y / 2;
         var footprint = (center, WallBounds(size, yaw));
         // The runtime kind stays interactive even when data removes destruction (an indestructible wall has NetId 0).
-        var body = ObjectBody.Create(_stage, "BreachWall", rule, () => { _solids.Remove(footprint); _stage.RebuildFlow(); });
+        // A gate is stamped with the doors, so the route flows (no doors) see the way on; the others are plain solids.
+        var walls = gate ? _gates : _solids;
+        var body = ObjectBody.Create(_stage, "BreachWall", rule, () => { walls.Remove(footprint); _stage.RebuildFlow(); });
         SurfaceAudio.Tag(body, "runtime:breach_wall");
         body.Position = at;
         body.Basis = basis;
         _stage.AddChild(body);
         body.AddChild(new CollisionShape3D { Shape = new BoxShape3D { Size = size }, Position = Vector3.Up * size.Y / 2 });
-        if (rule.BlocksMovement) _solids.Add(footprint);
+        if (rule.BlocksMovement) walls.Add(footprint);
         BreakableWallArt.Create(body);
         KitProps.Add(body);
 
@@ -80,20 +97,22 @@ public abstract partial class StageMap
     {
         foreach (var placement in DestructionPlacements.Load(map))
         {
-            var wall = BreachWall(placement.At, placement.Yaw);
+            var wall = BreachWall(placement.At, placement.Yaw, placement.Gate);
             wall.Name = "BreachWall_" + placement.Id;
             wall.SetMeta("destruction_placement", placement.Id);
             var barrel = ExplosiveBarrel.Create(_stage, placement.Barrel);
             barrel.SetMeta("destruction_placement", placement.Id);
-            if (!placement.PlainPanel) continue;
             var basis = new Basis(Vector3.Up, Mathf.DegToRad(placement.Yaw));
-            var at = placement.At + basis * Vector3.Right * BreakableWallArt.Width;
-            var size = new Vector3(BreakableWallArt.Width, BreakableWallArt.Height, BreakableWallArt.Thickness);
-            var solid = Solid(at + Vector3.Up * size.Y / 2, WallBounds(size, placement.Yaw), "", drawCargo: false);
-            solid.Name = "ConcretePanel_" + placement.Id;
-            var visual = BreakableWallArt.Create(solid, cracked: false);
-            visual.Position = Vector3.Down * size.Y / 2;
-            visual.Basis = basis;
+            foreach (int offset in placement.Panels)
+            {
+                var at = placement.At + basis * Vector3.Right * BreakableWallArt.Width * offset;
+                var size = new Vector3(BreakableWallArt.Width, BreakableWallArt.Height, BreakableWallArt.Thickness);
+                var solid = Solid(at + Vector3.Up * size.Y / 2, WallBounds(size, placement.Yaw), "", drawCargo: false);
+                solid.Name = "ConcretePanel_" + placement.Id;
+                var visual = BreakableWallArt.Create(solid, cracked: false);
+                visual.Position = Vector3.Down * size.Y / 2;
+                visual.Basis = basis;
+            }
         }
     }
 

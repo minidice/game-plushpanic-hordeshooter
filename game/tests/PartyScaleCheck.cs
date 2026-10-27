@@ -50,7 +50,7 @@ public partial class PartyScaleCheck : Node
     {
         // ---------- the table ----------
         var rows = PartyScaling.Rows;
-        Check(PartyScaling.Errors.Count == 0 && rows.Select(r => r.Players).SequenceEqual(new[] { 1, 2, 3, 4, 5, 6 }),
+        Check(PartyScaling.Errors.Count == 0 && rows.Select(r => r.Players).SequenceEqual(new[] { 1f, 2f, 3f, 4f, 5f, 6f }),
             "party_scaling.csv loads: one row for each of 1 to 6 people");
         var one = PartyScaling.For(1);
         var six = PartyScaling.For(6);
@@ -66,13 +66,16 @@ public partial class PartyScaleCheck : Node
 
         // ---------- who counts ----------
         var stage = await NewStage(null, squad: 1);
-        Check(stage.Players.Count == 2 && stage.PartySize == 1, "an AI squadmate is not a person: alone with one is a party of 1");
+        Check(stage.Players.Count == 2 && Mathf.IsEqualApprox(stage.PartySize, 1.5f), $"an AI squadmate counts as half a person (M-34): alone with one is 1.5 ({stage.PartySize})");
+        var oneAndHalf = PartyScaling.For(1.5f);
+        Check(Mathf.IsEqualApprox(oneAndHalf.CommonCount, .6f) && Mathf.IsEqualApprox(oneAndHalf.CommonHp, .85f) && Mathf.IsEqualApprox(oneAndHalf.NamedHp, .585f),
+            $"1.5 people sit halfway between the 1- and 2-person rows (commons {oneAndHalf.CommonCount:0.00}, health {oneAndHalf.CommonHp:0.00})");
         Check(stage.Party == PartyScale.Baseline, "a test scene keeps the data's numbers unless it sets a party");
         stage.PartyOverride = stage.PartySize;
-        Check(stage.Party == one, "counted, that is the 1-person row (the running game scene counts the same way)");
+        Check(stage.Party == oneAndHalf, "counted, that is the 1.5 row (the running game scene counts the same way)");
         stage.PartyOverride = null;
         stage.AddRemoteSurvivor(CharacterCatalog.Player("duck"), stage.Map.PlayerStart + new Vector3(1.6f, 0, 0), 7);
-        Check(stage.PartySize == 2, "another person's survivor counts");
+        Check(Mathf.IsEqualApprox(stage.PartySize, 2.5f), $"another person's survivor counts as a whole person ({stage.PartySize})");
 
         // ---------- the start fill ----------
         var baseline = await NewStage(4);

@@ -96,6 +96,15 @@ public sealed class RaidRules
     public float SpecialMax { get; init; } = 90;
     public float StartDelay { get; init; } = 60;
     public float AfterCrescendo { get; init; } = 45;
+    /// <summary>Commons in one timed mob, before the party scaling (4 people = as written).</summary>
+    public int MobCountMin { get; init; } = 8;
+    public int MobCountMax { get; init; } = 12;
+    /// <summary>Rest after a peak (intensity high or the leader hurt): no timed mob for this long (L4D 30-45 s, Alien Swarm 25-40 s).</summary>
+    public float RestMin { get; init; } = 10;
+    public float RestMax { get; init; } = 10;
+    /// <summary>Walking into a raid area brings its first mob this soon (0 = keep the running timer). pacing-pressure-plan.md 4.2.</summary>
+    public float FirstInAreaMin { get; init; }
+    public float FirstInAreaMax { get; init; }
 }
 
 /// <summary>One stage's encounters (content/data/stages/&lt;stage&gt;_encounters.json).</summary>
@@ -358,6 +367,9 @@ public sealed class SpawnDatabase
                     MobMin = j.Float("mob_min_s", 90), MobMax = j.Float("mob_max_s", 120),
                     SpecialMin = j.Float("special_min_s", 60), SpecialMax = j.Float("special_max_s", 90),
                     StartDelay = j.Float("start_delay_s", 60), AfterCrescendo = j.Float("after_crescendo_s", 45),
+                    MobCountMin = j.Int("mob_count_min", 8), MobCountMax = j.Int("mob_count_max", 12),
+                    RestMin = j.Float("rest_min_s", 10), RestMax = j.Float("rest_max_s", 10),
+                    FirstInAreaMin = j.Float("first_in_area_min_s", 0), FirstInAreaMax = j.Float("first_in_area_max_s", 0),
                 };
                 foreach (var a in Array(raids, "areas"))
                 {

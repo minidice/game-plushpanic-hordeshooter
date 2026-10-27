@@ -6,7 +6,7 @@
   "status": "plan",
   "date": "2026-10-27",
   "approved": "2026-10-27",
-  "applied": "2026-10-27 (all 8; warehouse sign placed the same day)",
+  "applied": "2026-10-27 (all 8; warehouse sign placed the same day). Same day, pacing-pressure-plan.md: timed mobs in B, D and F, route watcher packs, the C alley barrel gate and the G ramp nook",
   "zones": [
     {
       "id": "A", "size": "small", "order": 1, "progress": 0.0, "role": "safe",
@@ -16,9 +16,9 @@
     },
     {
       "id": "B", "size": "large", "order": 2, "progress": 0.08, "role": "fight",
-      "new": ["dormant_pack", "watcher_pack", "low_cover"], "reuse": [], "mix": [],
+      "new": ["dormant_pack", "watcher_pack", "low_cover", "timed_raid"], "reuse": [], "mix": [],
       "wayfinding": ["light"],
-      "note": "첫 큰 구역은 기본만: 잠든 무리를 깨우지 않고 지나갈지 먼저 칠지, 경계형 무리를 방벽 뒤에서. 가로등을 주 경로 쪽에 줄지어 두고 광장 끝 출구를 가장 밝게. (창고 간판은 B에서는 60 m 넘게 떨어져 화면에 들어오지 않아 C 골목 출구의 길 안내로 옮김 — 2026-10-27 배치 렌더.)"
+      "note": "첫 큰 구역은 기본만: 잠든 무리를 깨우지 않고 지나갈지 먼저 칠지, 경계형 무리를 방벽 뒤에서. 가로등을 주 경로 쪽에 줄지어 두고 광장 끝 출구를 가장 밝게. (창고 간판은 B에서는 60 m 넘게 떨어져 화면에 들어오지 않아 C 골목 출구의 길 안내로 옮김 — 2026-10-27 배치 렌더.) 시간 무리도 이 구역부터(2026-10-27 플레이 뒤 사용자 결정: 큰 구역마다 약 2분 · 압박) — 새 경험 4개라 W1 경고를 남긴다. 주 경로 위에 경계형 3마리 무리 둘(피해 갈 수 없는 작은 교전)."
     },
     {
       "id": "B-pharmacy", "size": "small", "order": 3, "progress": 0.18, "role": "explore",
@@ -28,13 +28,13 @@
     },
     {
       "id": "C", "size": "small", "order": 4, "progress": 0.27, "role": "transit",
-      "new": ["narrow_passage", "alarm_trap"], "reuse": ["watcher_pack"], "mix": [],
+      "new": ["narrow_passage", "alarm_trap", "breach_wall"], "reuse": ["watcher_pack"], "mix": [],
       "wayfinding": ["route_shape", "light", "landmark"],
-      "note": "골목 입구에 경보 차(B에서 옮김): 좁은 길에서 건드리면 앞뒤로 몰려오는 짧고 피할 수 있는 위기. 골목 끝 조명. 골목을 나서면 북쪽에 창고 간판(전구 테두리 · 상자 그림 · 동쪽 화살표, 앞에 따뜻한 조명)이 다음 큰 구역 D 쪽을 가리킴."
+      "note": "골목 입구에 경보 차(B에서 옮김): 좁은 길에서 건드리면 앞뒤로 몰려오는 짧고 피할 수 있는 위기. 골목 끝 조명. 골목을 나서면 북쪽에 창고 간판(전구 테두리 · 상자 그림 · 동쪽 화살표, 앞에 따뜻한 조명)이 다음 큰 구역 D 쪽을 가리킴. 골목 입구는 콘크리트 판 바리케이드로 막혀 있고 가운데 금 간 판 앞에 드럼통 — 쏘면 터져 길이 열린다(드럼통으로 길 뚫기 학습, 폭발 소리가 골목 무리를 깨움)."
     },
     {
       "id": "D", "size": "large", "order": 5, "progress": 0.42, "role": "peak",
-      "new": ["ramp_tiers", "crescendo_panel", "mission_roundtrip"], "reuse": ["dormant_pack", "watcher_pack"],
+      "new": ["ramp_tiers", "crescendo_panel", "mission_roundtrip"], "reuse": ["dormant_pack", "watcher_pack", "timed_raid"],
       "mix": [["narrow_passage", "low_cover"]],
       "wayfinding": ["objective", "light", "landmark"],
       "note": "정점. 경사로로 하역장에 올라 셔터 제어판을 켜고 크레센도를 버틴다 — 하역장 입구를 좁히고 방벽을 둬 C · B에서 배운 '좁은 길 + 엄폐'로 지키게. 제어판 위 조명, 돌아오는 길 재등장. 크레센도는 Stage 2(벙커 철문)에서 다시(W2)."
@@ -47,17 +47,17 @@
     },
     {
       "id": "F", "size": "large", "order": 7, "progress": 0.72, "role": "fight",
-      "new": ["ladder", "high_ground", "timed_raid"], "reuse": ["ramp_tiers", "dormant_pack", "watcher_pack"],
+      "new": ["ladder", "high_ground"], "reuse": ["ramp_tiers", "dormant_pack", "watcher_pack", "timed_raid"],
       "mix": [["alarm_trap", "ramp_tiers"], ["low_cover", "watcher_pack"]],
       "wayfinding": ["landmark", "light"],
-      "note": "사다리로 컨테이너 위에 올라 위에서 쏘기를 처음. 시간 습격은 이 구역부터(B · D에서는 뺌). 경보 트럭이 울리면 경사로 위 단으로 올라가 버티기. 크레인이 랜드마크, 크레인 조명이 출구 쪽. 사다리 · 시간 습격은 Stage 2에서 다시(W2)."
+      "note": "사다리로 컨테이너 위에 올라 위에서 쏘기를 처음. 시간 습격은 이 구역부터(B · D에서는 뺌). 경보 트럭이 울리면 경사로 위 단으로 올라가 버티기. 크레인이 랜드마크, 크레인 조명이 출구 쪽. 사다리 · 시간 습격은 Stage 2에서 다시(W2). (시간 무리는 B부터로 바뀜, 여기선 다시 쓰기.)"
     },
     {
       "id": "G", "size": "small", "order": 8, "progress": 0.88, "role": "transit",
-      "new": ["special_enemy", "explosive_barrel"], "reuse": ["ramp_tiers"],
+      "new": ["special_enemy", "explosive_barrel"], "reuse": ["ramp_tiers", "breach_wall"],
       "mix": [["high_ground", "low_cover"]],
       "wayfinding": ["route_shape", "light"],
-      "note": "마지막 도전: 고가 오르막에서 특수 적이 처음 내려온다(B · F에서 옮김). 위 단 방벽 뒤에서, 드럼통으로 아래 무리를 날린다. 특수 적 · 드럼통은 Stage 2에서 다시(W2)."
+      "note": "마지막 도전: 고가 오르막에서 특수 적이 처음 내려온다(B · F에서 옮김). 위 단 방벽 뒤에서, 드럼통으로 아래 무리를 날린다. 특수 적 · 드럼통은 Stage 2에서 다시(W2). 진입로 남쪽 구석에 C에서 배운 금 간 벽 + 드럼통 — 샛길 보상(산탄총 · 수류탄 · 구급상자), 따뜻한 조명으로 안내."
     },
     {
       "id": "H", "size": "small", "order": 9, "progress": 1.0, "role": "safe",

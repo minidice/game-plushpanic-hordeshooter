@@ -13,7 +13,8 @@
 ## 상세 규격
 
 - **[레벨 디자인 가이드 맵](guide-map.md)**: 맵보다 먼저 쓰는 구역별 경험 지도 · 체크리스트(L-33). 경험 목록 · 구역별 기록 · 검사기 · 가이드 보드 · 평면도 표시
-- [레벨 디자인 참고 리서치](reference-level-design-research.md): Left 4 Dead · Alien Swarm · The Division의 경로 · 경험 소개 · 몹 배치 · 길 안내 · 막기 · 리듬 비교와 가이드 맵 규칙 후보 18개(2026-10-27)
+- [레벨 디자인 참고 리서치](reference-level-design-research.md): Left 4 Dead · Alien Swarm · The Division의 경로 · 경험 소개 · 몹 배치 · 길 안내 · 막기 · 리듬 비교와 가이드 맵 규칙 후보 18개(2026-10-27), 10장 유입 · 압박 · 인원 수치
+- [유입 · 압박 설계안](pacing-pressure-plan.md): 플레이 관찰(1분 30초 · 위험 없음 · 일렬) → 큰 구역 2분, 웨이브 나누기 · 큰 구역 시간 무리 · 쉼, AI 0.5명, 드럼통 관문 → 샛길 벽 보상(제안, 확인 전)
 - [level-design-rules.md](../../level-design-rules.md)
 - [large-stages.md](../../large-stages.md): 큰 스테이지 시안 Stage 1 · 2 · 3 (L-30)
 - [scenario-level-design.md](../../scenario-level-design.md)

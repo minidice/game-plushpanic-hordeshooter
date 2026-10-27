@@ -148,18 +148,22 @@ public partial class Stage : Node3D
     /// People for the party table (decisions.md M-5, M-31). Null = counted when this is the running game scene; test scenes
     /// keep the data's own numbers (the 4-person row) unless they set one.
     /// </summary>
-    public int? PartyOverride { get; set; }
+    public float? PartyOverride { get; set; }
+    /// <summary>How much one AI squadmate weighs in <see cref="PartySize"/> (decisions.md M-34).</summary>
+    public const float SquadmateWeight = .5f;
     /// <summary>
-    /// How many people play: humans only, AI squadmates do not count. A host counts everyone in its room too, so friends
-    /// still loading at the start already count for the first fill.
+    /// How many people play: each human 1, each AI squadmate half (M-34: alone with one squadmate is 1.5). A host counts
+    /// everyone in its room too, so friends still loading at the start already count for the first fill.
     /// </summary>
-    public int PartySize
+    public float PartySize
     {
         get
         {
             if (PartyOverride is { } forced) return forced;
             int humans = Players.Count(p => IsInstanceValid(p) && !p.IsBot);
-            return Role == NetRole.Host && NetLaunch.Lobby is { } lobby ? System.Math.Max(humans, lobby.Members.Count) : humans;
+            int bots = Players.Count(p => IsInstanceValid(p) && p.IsBot);
+            float people = humans + bots * SquadmateWeight;
+            return Role == NetRole.Host && NetLaunch.Lobby is { } lobby ? System.Math.Max(people, lobby.Members.Count) : people;
         }
     }
     /// <summary>The party table's row in effect now (the 4-person row, i.e. the data as written, in test scenes).</summary>

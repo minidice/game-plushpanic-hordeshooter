@@ -50,7 +50,7 @@ public partial class DestructionCompatibilityCheck : Node
         {
             (j => j["placements"]![0]!["at"]![0] = 30, "wall position"),
             (j => j["placements"]![0]!["barrel"]![0] = 30, "barrel position"),
-            (j => j["placements"]![0]!["yaw"] = 90, "wall orientation"),
+            (j => j["placements"]![0]!["yaw"] = (int)j["placements"]![0]!["yaw"]! == 90 ? 0 : 90, "wall orientation"),
             (j => j["placements"]!.AsArray().RemoveAt(0), "placement count and network build order"),
         })
         {

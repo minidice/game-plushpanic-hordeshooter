@@ -34,6 +34,18 @@ public partial class HordeDirector : Node
     public SpawnRules Rules => SpawnDatabase.Current.Rules;
     /// <summary>Ledge monsters spread this far along the wall either way.</summary>
     public const float LedgeSpread = 1.8f;
+    /// <summary>
+    /// A wave comes from two entries on opposite sides of the leader, this share from behind (L4D: 75% of mobs from behind),
+    /// and each entry lets its monsters out a few at a time (Alien Swarm: batches every few seconds), so they do not arrive
+    /// in one file. pacing-pressure-plan.md 4.2.
+    /// </summary>
+    public const float BehindShare = .65f;
+    public const int BatchMin = 4, BatchMax = 6;
+    public const float BatchGapMin = 3, BatchGapMax = 5;
+    /// <summary>The second entry of the last wave, or null when it came from one (tests, debugging).</summary>
+    public SpawnEntry? LastSecondEntry { get; private set; }
+    /// <summary>Monsters of started waves still waiting at their entries.</summary>
+    public int PendingCommons => _batches.Sum(b => b.Count);
     /// <summary>Entries and specials that do not fit the built level (dropped, also pushed as errors).</summary>
     public List<string> EncounterErrors { get; } = new();
 
@@ -42,6 +54,10 @@ public partial class HordeDirector : Node
     private readonly RandomNumberGenerator _placeRng = new() { Seed = 1 };
     private float _mobTimer, _specialTimer, _waveTimer, _alarmWaveTimer;
     private int _crescendoSpecials;
+    private readonly List<Batch> _batches = new();
+    private sealed class Batch { public SpawnEntry Entry = null!; public int Count; public float Wait; }
+    /// <summary>The raid area the leader was in last frame (-1: none), to start a mob soon after walking into a new one.</summary>
+    private int _raidArea = -1;
     /// <summary>Seconds of timed raids still held: the start, or the rest after a crescendo (stage2-floorplan.md 6장).</summary>
     private float _raidHold;
     /// <summary>The mission's way-back groups are out (L-27).</summary>
@@ -109,9 +125,10 @@ public partial class HordeDirector : Node
             if (_alarmWaveTimer <= 0 && Stage.DirectorEnabled)
             {
                 _alarmWaveTimer = Rules.AlarmWaveEvery;
-                SpawnMob(_rng.RandiRange(Rules.AlarmWaveMin, Rules.AlarmWaveMax));
+                SpawnMob(_rng.RandiRange(Rules.AlarmWaveMin, Rules.AlarmWaveMax), trickle: false);
             }
         }
+        TickBatches(dt);
         if (!Active) return;
 
         if (CrescendoActive)
@@ -121,7 +138,7 @@ public partial class HordeDirector : Node
             if (_waveTimer <= 0)
             {
                 _waveTimer = _rng.RandfRange(5.5f, 7.5f);
-                SpawnMob(_rng.RandiRange(6, 9));
+                SpawnMob(_rng.RandiRange(6, 9), trickle: false);
             }
             float elapsed = CrescendoDuration - CrescendoRemaining;
             if (_crescendoSpecials < 2 && elapsed > CrescendoDuration * (_crescendoSpecials + 1) / 3f)
@@ -140,7 +157,14 @@ public partial class HordeDirector : Node
         if (Encounters?.Raids is { } raids)
         {
             _raidHold = Mathf.Max(0, _raidHold - dt);
-            if (RaidsHeld) return;
+            if (RaidsHeld) { _raidArea = -1; return; }
+            int area = Encounters.AreaIndex(Stage.Leader.GlobalPosition.X);
+            if (area != _raidArea)
+            {
+                // Walking into a large zone starts its pressure soon, whatever the running timer says.
+                _raidArea = area;
+                if (raids.FirstInAreaMax > 0) _mobTimer = Mathf.Min(_mobTimer, _rng.RandfRange(raids.FirstInAreaMin, raids.FirstInAreaMax));
+            }
             TickRaids(dt, raids);
             return;
         }
@@ -184,11 +208,11 @@ public partial class HordeDirector : Node
         _mobTimer -= dt;
         if (_mobTimer <= 0)
         {
-            // The same relax rule as the director's own timers.
-            if (Intensity > .7f || Stage.Player.Health < 25) _mobTimer = 10;
+            // Rest after a peak: the team is hurt or the last fight was intense.
+            if (Intensity > .7f || Stage.Player.Health < 25) _mobTimer = _rng.RandfRange(raids.RestMin, raids.RestMax);
             else
             {
-                SpawnMob(_rng.RandiRange(8, 12));
+                SpawnMob(_rng.RandiRange(raids.MobCountMin, raids.MobCountMax));
                 _mobTimer = _rng.RandfRange(raids.MobMin, raids.MobMax);
             }
         }
@@ -216,13 +240,55 @@ public partial class HordeDirector : Node
 
     // ---------- waves ----------
 
-    public int SpawnMob(int count)
+    /// <summary>
+    /// A wave of <paramref name="count"/> hunters (scaled for the party): split between an entry behind the leader and one
+    /// on the other side (<see cref="BehindShare"/>). A timed mob lets a few out at a time; <paramref name="trickle"/> off
+    /// (alarm and crescendo pulses, already a wave every few seconds) sends them all at once. Returns how many are on their way.
+    /// </summary>
+    public int SpawnMob(int count, bool trickle = true)
     {
         if (!Stage.Authoritative) return 0;
-        var entry = PickEntry(14, 36);
-        if (entry == null) return 0;
+        bool behindFirst = _rng.Randf() < BehindShare;
+        var first = PickEntry(14, 36, side: behindFirst ? 1 : -1);
+        if (first == null) return 0;
         MobsSpawned++;
-        return SpawnWave(entry, count);
+        int total = Stage.ScaleCommons(count);
+        var second = total >= BatchMin * 2 ? PickEntry(14, 36, side: behindFirst ? -1 : 1, apartFrom: first) : null;
+        LastSecondEntry = second;
+        LastEntry = first;
+        int behind = Mathf.CeilToInt(total * BehindShare);
+        int firstCount = second == null ? total : behindFirst ? behind : total - behind;
+        int sent = Release(first, firstCount, trickle);
+        if (second != null) sent += Release(second, total - firstCount, trickle);
+        return sent;
+    }
+
+    /// <summary>Lets the first few out at once and queues the rest at the same entry, a few every few seconds.</summary>
+    private int Release(SpawnEntry entry, int count, bool trickle)
+    {
+        int room = MaxCommons - AliveCommons - PendingCommons;
+        count = Mathf.Min(count, Mathf.Max(0, room));
+        if (count <= 0) return 0;
+        int now = trickle ? Mathf.Min(count, _rng.RandiRange(BatchMin, BatchMax)) : count;
+        Place(entry, now);
+        if (count > now) _batches.Add(new Batch { Entry = entry, Count = count - now, Wait = _rng.RandfRange(BatchGapMin, BatchGapMax) });
+        return count;
+    }
+
+    private void TickBatches(float dt)
+    {
+        if (!Stage.Authoritative || _batches.Count == 0) return;
+        for (int i = _batches.Count - 1; i >= 0; i--)
+        {
+            var batch = _batches[i];
+            batch.Wait -= dt;
+            if (batch.Wait > 0) continue;
+            int n = Mathf.Min(batch.Count, _rng.RandiRange(BatchMin, BatchMax));
+            Place(batch.Entry, n);
+            batch.Count -= n;
+            batch.Wait = _rng.RandfRange(BatchGapMin, BatchGapMax);
+            if (batch.Count <= 0) _batches.RemoveAt(i);
+        }
     }
 
     /// <summary>Summon a mob from around the player (balloon pop): off screen and out of sight where possible.</summary>
@@ -289,7 +355,9 @@ public partial class HordeDirector : Node
     /// 2) off every screen; 3) outside the cone; 4) the farthest reachable entry outside the cone.
     /// Candidates are the stage entries in range plus a walked-trail spot well behind the leader.
     /// </summary>
-    public SpawnEntry? PickEntry(float minDist, float maxDist, bool ledges = true)
+    /// <paramref name="side"/> +1 prefers entries behind the leader on the route, -1 ahead (falls back to any);
+    /// <paramref name="apartFrom"/> asks for an entry on the other side of the leader from that one (null if there is none).
+    public SpawnEntry? PickEntry(float minDist, float maxDist, bool ledges = true, int side = 0, SpawnEntry? apartFrom = null)
     {
         var player = Stage.Leader.GlobalPosition;
         var candidates = new List<SpawnEntry>();
@@ -302,6 +370,18 @@ public partial class HordeDirector : Node
         }
         if (Stage.TrailSpotBehind(Rules.TrailMin, Rules.TrailMax) is { } trail && !IsProtected(trail) && Stage.Flow.Reachable(trail))
             candidates.Add(new SpawnEntry { Kind = EntryKind.Trail, At = trail });
+        if (apartFrom != null)
+        {
+            var away = Flat(apartFrom.Ground - player).Normalized();
+            candidates = candidates.Where(e => e != apartFrom && Flat(e.Ground - player).Normalized().Dot(away) < 0).ToList();
+            if (candidates.Count == 0) return null;
+        }
+        if (side != 0 && Stage.ExitFlow is { } exit)
+        {
+            int lead = exit.Distance(player);
+            var sided = candidates.Where(e => exit.Distance(e.Ground) > lead == side > 0).ToList();
+            if (sided.Count > 0) candidates = sided;
+        }
 
         var pick = candidates.Where(e => e.Kind == EntryKind.Ledge || (!OnScreen(e.At) && !Stage.Vision.CanSee(e.At))).ToList();
         if (pick.Count == 0) pick = candidates.Where(e => e.Kind != EntryKind.Ledge && !OnScreen(e.At)).ToList();

@@ -187,6 +187,31 @@ public partial class LargeStageCheck : Node
             Check(sign != null && _stage.Flow.IsBlocked(signAt + new Vector3(1.85f, 0, 0)) && _stage.Flow.IsBlocked(signAt - new Vector3(1.85f, 0, 0))
                   && !_stage.Flow.IsBlocked(signAt + new Vector3(0, 0, 4)),
                 $"{name}: the warehouse sign stands at the alley exit, legs solid, the road in front open ({signAt})");
+
+            // Pressure (pacing-pressure-plan.md 4.2): timed mobs in every large zone, bigger, with a rest after a peak.
+            var raids = map.Encounters!.Raids!;
+            Check(new[] { "street", "depot", "yard" }.All(raids.Areas.Contains) && raids.MobCountMin >= 12 && raids.MobMax <= 75
+                  && raids.RestMin >= 25 && raids.FirstInAreaMax > 0,
+                $"{name}: timed mobs in B, D and F, {raids.MobCountMin}-{raids.MobCountMax} every {raids.MobMin}-{raids.MobMax} s, rest {raids.RestMin}-{raids.RestMax} s");
+            // A wave comes from two sides of the leader and a few at a time, not in one file.
+            var director = _stage.Director;
+            player.TeleportTo(new Vector3(90, tiers.GroundY(new Vector3(90, 0, -20)) + .05f, -20));
+            await Frames(3);
+            int before = _stage.AllEnemies.Count(e => !e.IsDead);
+            int sent = director.SpawnMob(16);
+            int now = _stage.AllEnemies.Count(e => !e.IsDead) - before;
+            var lead = player.GlobalPosition;
+            var one = director.LastEntry;
+            var two = director.LastSecondEntry;
+            bool apart = one != null && two != null && (one.Ground - lead).Normalized().Dot((two.Ground - lead).Normalized()) < 0;
+            Check(sent == 16 && apart && now <= HordeDirector.BatchMax * 2 && director.PendingCommons == sent - now,
+                $"{name}: a 16-monster wave splits between two entries on opposite sides ({one?.Ground} / {two?.Ground}), {now} out at once, {director.PendingCommons} waiting");
+            await ToSignal(GetTree().CreateTimer(HordeDirector.BatchGapMax + .5f), SceneTreeTimer.SignalName.Timeout);
+            int later = _stage.AllEnemies.Count(e => !e.IsDead) - before;
+            Check(later > now, $"{name}: the waiting ones follow a few seconds later ({now} -> {later})");
+            await ClearEnemies();
+            player.TeleportTo(map.PlayerStart);
+            await Frames(3);
         }
         var pickups = _stage.Interactables.Where(i => i is WeaponPickup || i.Pickup is PickupKind.Medkit or PickupKind.Ammo).ToList();
         var off = pickups.Where(i => Mathf.Abs(i.GlobalPosition.Y - tiers.GroundY(i.GlobalPosition)) > .3f || _stage.Flow.IsBlocked(i.GlobalPosition))
@@ -197,6 +222,8 @@ public partial class LargeStageCheck : Node
         await Frames(2);
         var reach = _stage.Flow.CopyLayout();
         reach.Riders = true;
+        // Breakable gates (the barrel lesson) count as open here: "walkable from the start" once the way is cleared.
+        map.ApplyFlow(reach, doors: false);
         var cut = new List<string>();
         foreach (var pickup in pickups)
         {
@@ -213,12 +240,23 @@ public partial class LargeStageCheck : Node
             foreach (var climb in new[] { MonsterClimb.Ladder, MonsterClimb.Wall, MonsterClimb.Jump })
             {
                 var field = _stage.Flow.CopyLayout();
+                map.ApplyFlow(field, doors: false);
                 field.Mover = climb;
                 field.Update(at);
                 any |= field.Reachable(map.PlayerStart);
             }
             int own = map.Encounters!.Entries.Count(e => Geometry2D.IsPointInPolygon(new Vector2(e.At.X, e.At.Z), region.Poly));
             Check(any || own > 0, $"{name}: monsters can get onto {region.Id} (tier {region.Tier})");
+        }
+        // The mission door is the only way on: a run cannot walk past it and skip the crescendo.
+        if (map.Shutter is { } mission)
+        {
+            mission.SetOpen(false, 0);
+            await Frames(2);
+            var skip = _stage.Flow.CopyLayout();
+            skip.Riders = true;
+            skip.Update(map.RouteGoal);
+            Check(!skip.Reachable(map.PlayerStart), $"{name}: with the mission door shut the safehouse cannot be reached from the start");
         }
         if (map.Shutter is { } close) close.SetOpen(false, 0);
         map.StartDoor?.SetOpen(false, 0);
@@ -238,6 +276,24 @@ public partial class LargeStageCheck : Node
             Check(map.StartDoor!.IsOpen && _stage.Objective == Objective.ReachShutter, $"{name}: the switch opens the safe room door");
         }
         var panel = map.ShutterPanel!;
+        if (n == 1)
+        {
+            // The barrel lesson (pacing-pressure-plan.md 4.4): the alley mouth is shut until its barrel goes off.
+            var alleyGate = DestructionPlacements.Load("stage1_large").Single(p => p.Id == "alley_gate");
+            var gateWall = _stage.Breakables.Single(b => b.HasMeta("destruction_placement") && b.GetMeta("destruction_placement").AsString() == alleyGate.Id);
+            var gateBarrel = _stage.Props.OfType<ExplosiveBarrel>().Single(b => b.HasMeta("destruction_placement") && b.GetMeta("destruction_placement").AsString() == alleyGate.Id);
+            Check(alleyGate.Gate && !Toward(panel.GlobalPosition).Reachable(player.GlobalPosition) && _stage.ExitFlow.Reachable(map.PlayerStart),
+                $"{name}: the alley gate shuts the way to the mission until it breaks (the route still counts it open)");
+            var normal = new Basis(Vector3.Up, Mathf.DegToRad(alleyGate.Yaw)) * Vector3.Back;
+            var standAt = alleyGate.Barrel - normal * 6;
+            var (sg, stuckG, _) = await Walk(Toward(standAt), standAt, .6f, 2);
+            Check(!stuckG, $"{name}: a survivor walks up to the barricade ({sg:0} s, at {player.GlobalPosition})");
+            gateBarrel.TakeDamage(gateBarrel.Health, ObjectDamage.Gun, player);
+            await Frames(80);
+            Check(!IsInstanceValid(gateWall) && Toward(panel.GlobalPosition).Reachable(player.GlobalPosition),
+                $"{name}: shooting the barrel blows the gate open, the way to the mission is clear");
+            await ClearEnemies();
+        }
         var (s1, stuck1, uses1) = await Walk(Toward(panel.GlobalPosition), panel.GlobalPosition, panel.Radius - .1f, 4);
         await Frames(2);
         Check(!stuck1 && _stage.FocusedInteractable == panel, $"{name}: a survivor walks to the mission device ({s1 / 60:0.0} min, {uses1}, at {player.GlobalPosition})");

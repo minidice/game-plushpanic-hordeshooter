@@ -1,5 +1,5 @@
 {
-  "description": "Large Stage 1 encounters (decisions.md L-30, doc/large-stages.md). Areas run along +X (the zones). Entering area N fills area N+1. Hidden entries stand inside every region the route reaches, on its own tier, so raised spaces get arrivals too. safe_zones: the middle safe zone (L-24). raids: timed mobs and specials only in the large travel zones. Groups with after = mission are placed when the shutter opens, on the way back from the panel (L-27). All counts and radii are [임시] starting values.",
+  "description": "Large Stage 1 encounters (decisions.md L-30, doc/large-stages.md). Areas run along +X (the zones). Entering area N fills area N+1. Hidden entries stand inside every region the route reaches, on its own tier, so raised spaces get arrivals too. safe_zones: the middle safe zone (L-24). raids: timed mobs and specials only in the large travel zones. Small watcher packs (3) stand right on the main route in every large zone, so a run meets a few it cannot walk around (wanderers, pacing-pressure-plan.md 4.2). Groups with after = mission are placed when the shutter opens, on the way back from the panel (L-27). All counts and radii are [임시] starting values.",
   "areas": [
     {
       "id": "saferoom",
@@ -110,6 +110,28 @@
       ]
     },
     {
+      "area": "street",
+      "reaction": "watcher",
+      "count": 3,
+      "rect": [
+        41,
+        47,
+        -13,
+        -7
+      ]
+    },
+    {
+      "area": "street",
+      "reaction": "watcher",
+      "count": 3,
+      "rect": [
+        89,
+        95,
+        -24,
+        -18
+      ]
+    },
+    {
       "area": "alley",
       "reaction": "dormant",
       "count": 6,
@@ -184,6 +206,28 @@
         332,
         -120,
         -46
+      ]
+    },
+    {
+      "area": "depot",
+      "reaction": "watcher",
+      "count": 3,
+      "rect": [
+        233,
+        239,
+        -83,
+        -77
+      ]
+    },
+    {
+      "area": "depot",
+      "reaction": "watcher",
+      "count": 3,
+      "rect": [
+        313,
+        319,
+        -91,
+        -85
       ]
     },
     {
@@ -274,6 +318,28 @@
         484,
         -142,
         -130
+      ]
+    },
+    {
+      "area": "yard",
+      "reaction": "watcher",
+      "count": 3,
+      "rect": [
+        437,
+        443,
+        -107,
+        -101
+      ]
+    },
+    {
+      "area": "yard",
+      "reaction": "watcher",
+      "count": 3,
+      "rect": [
+        493,
+        499,
+        -118,
+        -112
       ]
     },
     {
@@ -735,14 +801,22 @@
   ],
   "raids": {
     "areas": [
+      "street",
+      "depot",
       "yard"
     ],
-    "mob_min_s": 90,
-    "mob_max_s": 120,
+    "mob_min_s": 45,
+    "mob_max_s": 75,
     "special_min_s": 60,
     "special_max_s": 90,
-    "start_delay_s": 60,
-    "after_crescendo_s": 45
+    "start_delay_s": 25,
+    "after_crescendo_s": 45,
+    "mob_count_min": 12,
+    "mob_count_max": 20,
+    "rest_min_s": 25,
+    "rest_max_s": 40,
+    "first_in_area_min_s": 20,
+    "first_in_area_max_s": 35
   },
   "common_profiles": {
     "zombie": {

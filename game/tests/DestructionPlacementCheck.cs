@@ -19,6 +19,10 @@ public partial class DestructionPlacementCheck : Node
         try
         {
             Check(DestructionPlacements.Load("stage2").Count == 2 && DestructionPlacements.Load("stage3").Count == 3, "five trial placements across both Stage 2 maps");
+            var stage1 = DestructionPlacements.Load("stage1_large");
+            Check(stage1.Count == 2 && stage1.All(p => p.Gate) && stage1.Single(p => p.Id == "alley_gate").Panels.Length == 4,
+                "large Stage 1: the alley gate (four panels) and the ramp nook, both gates");
+            await MapCheck("stage1_large", LayoutMap.ForStage(1));
             await MapCheck("stage2", new StageTwoMap());
             await MapCheck("stage3", new LayoutMap());
             GD.Print("DESTRUCTION_PLACEMENT_CHECK_PASS " + _checks);
@@ -65,8 +69,9 @@ public partial class DestructionPlacementCheck : Node
                 foreach (var endpoint in draft.Layout.Links.SelectMany(l => new[] { l.From, l.To }))
                 {
                     var offset = basis.Inverse() * (new Vector3(endpoint.X, p.At.Y, endpoint.Y) - p.At);
-                    float right = p.PlainPanel ? 7.2f : 2.4f;
-                    Check(offset.X < -3.2f || offset.X > right + .8f || Mathf.Abs(offset.Z) > 1.025f,
+                    float right = Mathf.Max(2.4f, p.Panels.DefaultIfEmpty(0).Max() * BreakableWallArt.Width + 2.4f);
+                    float left = Mathf.Min(-2.4f, p.Panels.DefaultIfEmpty(0).Min() * BreakableWallArt.Width - 2.4f);
+                    Check(offset.X < left - .8f || offset.X > right + .8f || Mathf.Abs(offset.Z) > 1.025f,
                         p.Id + ": traversal endpoint outside wall and panel footprint " + endpoint);
                 }
             }
@@ -101,11 +106,11 @@ public partial class DestructionPlacementCheck : Node
             Check(IsInstanceValid(visual) && visual.GetParent() == _stage && visual.GlobalPosition.DistanceTo(p.At) < .01f
                 && !visual.GetNode<Node3D>("IntactPanels").Visible && visual.GetNode<Node3D>("GroundGravel").Visible,
                 p.Id + ": animated rubble remains on original floor after body removal");
-            if (p.PlainPanel)
+            foreach (int offset in p.Panels)
             {
-                var panel = p.At + tangent * BreakableWallArt.Width;
+                var panel = p.At + tangent * BreakableWallArt.Width * offset;
                 Check(!Rays.Clear(_stage, panel + Vector3.Up - normal * .8f, panel + Vector3.Up + normal * .8f, Layers.MovementWorld)
-                    && _stage.Flow.IsBlocked(panel), p.Id + ": adjacent plain panel remains intact");
+                    && _stage.Flow.IsBlocked(panel), p.Id + ": adjacent plain panel remains intact " + offset);
             }
         }
         Check(_stage.ExitFlow.Reachable(map.PlayerStart), key + ": exit remains reachable after every wall collapses");

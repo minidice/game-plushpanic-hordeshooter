@@ -343,6 +343,29 @@
       ]
     },
     {
+      "id": "ramp_nook",
+      "label": "G 진입로 옆 구석(부서지는 벽 뒤 보상)",
+      "tier": 1,
+      "poly": [
+        [
+          532.6,
+          -109.4
+        ],
+        [
+          537.4,
+          -109.4
+        ],
+        [
+          537.4,
+          -101
+        ],
+        [
+          532.6,
+          -101
+        ]
+      ]
+    },
+    {
       "id": "overpass",
       "label": "",
       "tier": 2,
@@ -1832,6 +1855,26 @@
       "color": "ffc46b",
       "energy": 2.6,
       "range": 10,
+      "post": false
+    },
+    {
+      "pos": [
+        148.5,
+        -55.5
+      ],
+      "color": "ffc46b",
+      "energy": 2.4,
+      "range": 8,
+      "post": false
+    },
+    {
+      "pos": [
+        535,
+        -104
+      ],
+      "color": "ffc46b",
+      "energy": 2.2,
+      "range": 7,
       "post": false
     }
   ]

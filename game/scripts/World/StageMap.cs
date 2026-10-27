@@ -17,6 +17,8 @@ public abstract partial class StageMap
     protected readonly RandomNumberGenerator _rng = new();
     private readonly List<(Vector3 center, Vector3 size)> _floors = new();
     private readonly List<(Vector3 center, Vector3 size)> _solids = new();
+    /// <summary>Breakable walls that close the way on (gates): walkable-now flows stamp them, route flows do not.</summary>
+    private readonly List<(Vector3 center, Vector3 size)> _gates = new();
     protected readonly List<(Node3D Body,Vector3 Size)> ArtWalls = new();
 
     /// <summary>
@@ -122,7 +124,9 @@ public abstract partial class StageMap
         flow.SetBlocked(new Vector3(center.X, 0, center.Y), new Vector3(area.Size.X + 10, 0, area.Size.Y + 10), 0, true);
         foreach (var (c, size) in _floors) flow.SetBlocked(c, size, -.05f, false);
         foreach (var (c, size) in _solids) flow.SetBlocked(c, size, Stage.WallPad, true);
-        if (doors) foreach (var door in Doors) door.StampFlow();
+        if (!doors) return;
+        foreach (var door in Doors) door.StampFlow();
+        foreach (var (c, size) in _gates) flow.SetBlocked(c, size, Stage.WallPad, true);
     }
 
     /// <summary>Something solid that was not made by <see cref="Solid"/> (a car, a generator) still blocks the flow field.</summary>

@@ -57,12 +57,13 @@ public sealed partial class LayoutMap : StageMap
     private Interactable? _pump, _safehouseSwitch, _startSwitch, _exit;
     private readonly List<AlarmCar> _alarms = new();
     private Rect2 _safehouseRoom;
-    private readonly bool _hasDestructionExamples;
+    /// <summary>The key of this map's rows in destruction_placements.json, or null.</summary>
+    private readonly string? _destructionKey;
 
     public LayoutMap(string path = Stage3Path, string? encounters = Stage3EncountersPath, string? supplies = Stage3SuppliesPath)
     {
         Layout = StageLayout.Load(path);
-        _hasDestructionExamples = path == Stage3Path;
+        _destructionKey = path == Stage3Path ? "stage3" : path == Stage1Path ? "stage1_large" : null;
         // The forest study's bounds and weights are Stage 3 coordinates.
         ForestStudyEnabled = path == Stage3Path;
         _encountersPath = encounters;
@@ -206,7 +207,7 @@ public sealed partial class LayoutMap : StageMap
         BuildLandmarks();
         BuildDataProps();
         BuildEnvironment();
-        if (_hasDestructionExamples) PlaceDestructionExamples("stage3");
+        if (_destructionKey != null) PlaceDestructionExamples(_destructionKey);
         if (Mode == GameMode.Scenario && _suppliesPath != null) PlaceSupplies(StageSupplies.Load(_suppliesPath));
     }
 

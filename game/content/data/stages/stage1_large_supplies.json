@@ -206,6 +206,36 @@
           ]
         }
       ]
+    },
+    {
+      "id": "ramp_nook",
+      "kind": "optional",
+      "area": "overpass",
+      "items": [
+        {
+          "item": "weapon",
+          "id": "benelli_m4",
+          "at": [
+            534,
+            -103.5
+          ]
+        },
+        {
+          "item": "throwable",
+          "id": "frag",
+          "at": [
+            536,
+            -103.5
+          ]
+        },
+        {
+          "item": "medkit",
+          "at": [
+            535,
+            -102.5
+          ]
+        }
+      ]
     }
   ]
 }

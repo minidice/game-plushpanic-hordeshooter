@@ -7,7 +7,7 @@
 사용자 요청(2026-10-27): 지금 레벨이 단순하고, 길 안내가 없어 어디로 가야 할지 모르며, 넓어서 방황한다. 맵을 만들기 전에 **가이드 맵**부터 만들고(큰 구역마다 새 경험 1개 이상, 앞의 경험을 섞어 쌓기), 그 근거로 Left 4 Dead 캠페인, Alien Swarm, The Division의 던전 · 미션 레벨 디자인(경로 · 경험 · 몹 배치 등)을 정리한다.
 
 - **출처 등급**: **1차** = 개발자 본인 발언(개발자 코멘터리 원문)이나 공식 개발 문서(Valve Developer Community의 공식 매핑 문서). **2차** = 리뷰 · 분석 기사 · 커뮤니티 위키. 문장 끝 `[1차]` · `[2차]`로 표시한다.
-- 인용은 짧게만 하고 대부분 요약했다. 원문은 10장 출처 링크.
+- 인용은 짧게만 하고 대부분 요약했다. 원문은 11장 출처 링크.
 - 4 ~ 6장은 사실 정리, 7장은 **우리 게임에 가져올 규칙 후보(AI 분석, 사용자 확인 전)**다. 후보는 결정이 아니다.
 
 ## 2. 한눈에 비교
@@ -137,7 +137,43 @@
 - L4D 개발자 코멘터리는 팬 위키에 옮겨 적힌 원문(Valve 공식 코멘터리 녹음의 받아쓰기)이다. 발언자 이름은 그 받아쓰기를 따랐다.
 - Valve Developer Community는 자동 요청을 막아(403) 앱의 내장 브라우저로 읽었다.
 
-## 10. 출처
+## 10. 추가 리서치 — 유입 · 압박 · 인원 (2026-10-27, 플레이 피드백 뒤)
+
+사용자 플레이(1인 + AI 동료 1): "Stage 1 클리어 1분 30초, 위험한 일이 전혀 없음, 몹이 멀리서 하나씩 일렬로 옴, 4명이면 진짜 쉬울 듯 — 에일리언 스웜 · 레포데 · 디비전은 배치 · 밸런스를 어떻게 했지?" 그 답으로 수치를 찾았다. 우리 쪽 대응 제안은 [유입 · 압박 설계안](pacing-pressure-plan.md).
+
+### Left 4 Dead — 감독(AI Director) 수치 `[1차: Mike Booth, "The AI Systems of Left 4 Dead", AIIDE 2009 발표 자료]`
+
+- **활성 영역(AAS)**: 생존자 주변 이동 구역 집합. 감독은 이 안에서만 적을 만들고 지운다(적 개체를 돌려 써 수백 마리).
+- **배회 좀비(wanderers, 높은 빈도)**: 구역마다 마릿수 N을 맵 시작 때 탈출 경로 길이 · 원하는 밀도로 정해 두고, 구역이 활성 영역에 들어오면 생성. 생존자에게 보이면 · 감독이 쉼(Relax)이면 0.
+- **무리(Mob, 중간 빈도)**: **20 ~ 30마리**의 성난 일반 감염자가 주기적으로 돌진. 노멀에서 **90 ~ 180초** 무작위 간격. 무리 크기는 직후엔 최소, 시간이 지나면 최대로 커져 잦은 무리가 연달아 와도 균형을 맞춤. 부머 구토는 무리를 강제로 부르고 간격을 다시 시작.
+- **등장 위치**: 활성 영역 안 · 생존자에게 안 보이는 곳. **무리의 75%는 뒤(진행 거리상 생존자보다 뒤)에서** — 앞쪽은 배회 좀비 · 특수 · 보스와 이미 싸우기 때문. 부머는 느려서 앞에, 스모커는 위쪽에.
+- **리듬(적응형 페이싱)**: 쌓기(긴장이 정점을 넘을 때까지 전체 위협) → 정점 유지 **3 ~ 5초** → 정점 내려오기(자연스러운 틈을 기다림) → **쉼 30 ~ 45초**(배회 · 무리 없음) → 다시 쌓기.
+- 다른 빈도: 특수 감염자(중간, 각자 무작위 간격), 보스(낮음, Tank · Witch를 카드처럼 나눠 같은 것 연속 방지), 무기 상자(낮음), 투척물 · 진통제(중간).
+
+### Alien Swarm — 감독 기본값 `[1차: 공개된 Alien Swarm 서버 소스(asw_director.cpp · asw_spawn_manager.cpp), Reactive Drop 저장소의 원본 값]`
+
+- 호드 간격 **45 ~ 65초**(`asw_horde_interval_min/max`), 쉼 **25 ~ 40초**(`asw_director_relaxed_*`), 정점 유지 **1 ~ 3초**.
+- 일반 등장 간격은 처음 5 ~ 7초에서 매번 0.9 ~ 0.95배로 줄어 최소 1초(쌓기).
+- 호드는 해병에게서 **800 ~ 1500유닛**(약 20 ~ 38 m) 떨어진 곳에, 한 지점에서 **한 번에 최대 10마리씩 5초 간격**으로 나눠 나옴. 깨어 있는 외계인이 25마리를 넘으면 새 호드 없음, 20마리를 넘으면 새 배회 없음(Reactive Drop 추가 값).
+- 호드 크기는 난이도별 등장 세트(최소 · 최대)에서 무작위. 배회(wanderers)와 호드(hordes)는 따로 켜고 끔.
+- 후속판(Reactive Drop)은 "두 번째 호드를 반대편(남 · 북)에서", "한 방향이 실패하면 반대 방향" 옵션을 더했다 — 한 방향 유입의 단조로움을 고친 흔적. `[1차: 같은 소스의 옵션 설명]`
+
+### The Division 2 — 인원 보정 `[2차: TU 8.4(2020-03) 패치 노트 보도]`
+
+- 2 · 3 · 4인 그룹의 적 체력 · 방어구를 **적 등급(일반 · 베테랑 · 정예 · 네임드)별로** 보정. 인원이 늘면 같은 구성에 정예 · 베테랑이 더 섞이는데, 그 결과 체력 · 피해가 의도보다 높게 맞춰져(과보정) 낮췄다. 낮춘 뒤 영웅 · 전설 난이도는 1 ~ 2인에게 약간 어렵고, 3인은 비슷, 4인은 쉬워짐.
+- 뜻: 인원 보정을 **수 · 체력 · 구성(정예 섞기)** 세 갈래로 동시에 올리면 겹쳐서 과해진다. 하나씩 재며 맞춘다.
+
+### 우리 지금 값과 비교 (2026-10-27 코드 · 데이터)
+
+| 항목 | L4D | Alien Swarm | 우리 Stage 1 |
+|---|---|---|---|
+| 큰 무리 크기(4인) | 20 ~ 30 | 난이도별 세트 | 시간 습격 8 ~ 12, 크레센도 웨이브 8 ~ 12(1인 50% → 4 ~ 6) |
+| 큰 무리 간격 | 90 ~ 180초 | 45 ~ 65초 | 90 ~ 120초, **야적장(F)에서만**, 시작 60초 뒤 |
+| 쉼 | 30 ~ 45초 | 25 ~ 40초 | 긴장 0.7 넘거나 체력 25 미만이면 10초 미룸 |
+| 나오는 곳 | 75% 뒤, 안 보이는 곳 | 20 ~ 38 m, 한 지점에서 10마리씩 5초 간격 | 14 ~ 36 m, **한 무리 전체가 한 지점** |
+| 배회 | 활성 영역마다 N마리 | 따로 켬 | 없음(미리 둔 잠든 · 경계형 무리 23개 · 109마리, 4인 기준) |
+
+## 11. 출처
 
 - L4D 개발자 코멘터리 받아쓰기: [Developer Commentary (Left 4 Dead)](https://left4deadwiki.com/wiki/Developer_Commentary_(Left_4_Dead)) — 4장의 발언 대부분. `[1차 발언, 팬 위키 게재]`
 - [Left 4 Dead Design Theory](https://developer.valvesoftware.com/wiki/Left_4_Dead_Design_Theory) (Valve Developer Community, 커뮤니티 작성 안내) `[2차]`
@@ -150,5 +186,9 @@
 - [The Division 2 리뷰(Well Played)](https://www.well-played.com.au/tom-clancys-the-division-2-review/), [The Review Geek](https://www.thereviewgeek.com/thedivision2-ps4review/) `[2차]`
 - [The Division Underground DLC 리뷰(GamingBolt)](https://gamingbolt.com/the-division-underground-dlc-review), [Game Informer 인상](https://gameinformer.com/b/features/archive/2016/08/13/the-division-underground-impressions-slave-to-the-grind) `[2차]`
 - [Crescendo Event (L4D 팬 위키)](https://left4dead.fandom.com/wiki/Crescendo_Event) `[2차]`
+
+- Mike Booth, [The AI Systems of Left 4 Dead](https://steamcdn-a.akamaihd.net/apps/valve/2009/ai_systems_of_l4d_mike_booth.pdf) (AIIDE 2009 발표 자료, Valve) `[1차]` — 10장 L4D 수치
+- Alien Swarm 서버 소스(공개 SDK, [Reactive Drop 저장소](https://github.com/ReactiveDrop/reactivedrop_public_src) `src/game/server/swarm/asw_director.cpp` · `asw_spawn_manager.cpp`) `[1차: 원본 기본값]` — 10장 Alien Swarm 수치. 명령 설명: [PingPerfect](https://pingperfect.com/knowledgebase/1058/Alien-Swarm--Console-Commands.html) `[2차]`
+- The Division 2 TU 8.4 패치 노트 보도: [MP1st](https://mp1st.com/title-updates-and-patches/the-division-2-update-1-20-brings-tu8-4-changes-patch-notes-listed), [GameLuster](https://gameluster.com/division-2-update-adjusts-damage-health-and-more/) `[2차]`
 
 외부 출처 확인일: 2026-10-27.

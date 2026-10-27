@@ -49,6 +49,7 @@
 <polygon points="1330.0,190.0 1372.0,190.0 1372.0,226.0 1330.0,226.0" fill="#bda97a" stroke="#00000033" stroke-width="1"/>
 <polygon points="1480.0,148.0 1522.0,148.0 1522.0,184.0 1480.0,184.0" fill="#bda97a" stroke="#00000033" stroke-width="1"/>
 <polygon points="1636.0,184.0 1726.0,166.0 1726.0,238.0 1636.0,256.0" fill="#d6cba4" stroke="#00000033" stroke-width="1"/>
+<polygon points="1667.8,245.8 1682.2,245.8 1682.2,271.0 1667.8,271.0" fill="#d6cba4" stroke="#00000033" stroke-width="1"/>
 <polygon points="1720.0,160.0 1846.0,136.0 1846.0,214.0 1720.0,238.0" fill="#bda97a" stroke="#00000033" stroke-width="1"/>
 <polygon points="1840.0,133.0 1972.0,130.0 1972.0,214.0 1840.0,217.0" fill="#bda97a" stroke="#00000033" stroke-width="1"/>
 <polygon points="58.0,544.0 124.0,544.0 124.0,604.0 58.0,604.0" fill="none" stroke="#0f7d74" stroke-width="2" stroke-dasharray="5,4" opacity=".85"/>
@@ -74,6 +75,7 @@
 <text x="1351.0" y="212.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >2단</text>
 <text x="1501.0" y="170.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >2단</text>
 <text x="1681.0" y="215.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >1단</text>
+<text x="1675.0" y="262.4" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >1단</text>
 <text x="1783.0" y="191.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >2단</text>
 <text x="1906.0" y="177.5" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >2단</text>
 <polyline points="856.0,250.0 898.0,250.0 898.0,286.0 856.0,286.0 856.0,250.0" fill="none" stroke="#2b2b2b" stroke-width="3" />
