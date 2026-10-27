@@ -593,7 +593,7 @@ public partial class Enemy : CharacterBody3D
         var center = GlobalPosition + Vector3.Up * Definition.ColliderHeight * .5f;
         Stage.Effects.Stuffing(center, direction, Definition.StuffingColor, 22);
         Stage.Sfx.PlayAt("zombie_die", center);
-        Stage.Effects.PaintSplat(GlobalPosition);
+        Stage.Effects.DeathSplat(GlobalPosition, Monster, direction);
         SpawnCorpse(direction, force, Definition.ColliderRadius, Definition.ColliderHeight);
         QueueFree();
     }

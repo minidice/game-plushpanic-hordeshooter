@@ -12,6 +12,8 @@
 
 ## 상세 규격
 
+- [A-19 사망 체액 흔적](log/017-code-body-fluid.md): 짙은 비정형 고임·젖은 반사/건조, 코드·셰이더 구현과 실제 검증.
+
 - [status-visuals.md](../../status-visuals.md)
 - [sound-spec.md](../../sound-spec.md)
 - [vfx-quality.md](../../vfx-quality.md): 폭발·화염·독·연무 공통 정의와 현재 렌더 계약.

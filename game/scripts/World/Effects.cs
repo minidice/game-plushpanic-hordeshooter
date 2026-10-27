@@ -15,10 +15,6 @@ public partial class Effects : Node3D
     private readonly Queue<Node3D> _splats = new();
     private readonly Queue<Node3D> _shells = new();
     private readonly RandomNumberGenerator _rng = new();
-    private static readonly Color[] Paint =
-    {
-        new("ff8fb8"), new("8fd6ff"), new("ffd36b"), new("b59cff"), new("8effc1"),
-    };
 
     public int CorpseCount => CommonCorpseCount + NamedCorpseCount;
     public int SplatCount => _splats.Count;
@@ -27,7 +23,8 @@ public partial class Effects : Node3D
 
     // Shared, scaled per use: effects fire every frame in a fight, so avoid a new mesh each time.
     private readonly BoxMesh _unitBox = new() { Size = Vector3.One };
-    private readonly CylinderMesh _unitDisc = new() { TopRadius = 1, BottomRadius = 1, Height = .01f, RadialSegments = 14, Rings = 1 };
+    private readonly SphereMesh _fluidDrop = new() { Radius = .045f, Height = .09f, RadialSegments = 8, Rings = 4,
+        Material = new StandardMaterial3D { VertexColorUseAsAlbedo = true, Roughness = .35f } };
     private readonly SphereMesh _unitSphere = new() { Radius = 1, Height = 2 };
     private readonly BoxShape3D _shellShape = new() { Size = new Vector3(.05f, .05f, .1f) };
     private readonly System.Collections.Generic.Dictionary<float, BoxMesh> _burstMeshes = new();
@@ -64,10 +61,31 @@ public partial class Effects : Node3D
 
     public void PaintSplat(Vector3 at, float size = 1f)
     {
-        var color = Paint[_rng.RandiRange(0, Paint.Length - 1)];
+        // Legacy name used by explosions and ground impacts: they leave dry neutral residue, never blood.
+        AddSplat(at, size, BodyFluidSplat.Scorch, false);
+    }
+
+    public void DeathSplat(Vector3 at, MonsterDefinition monster, Vector3 direction, float size = 1f)
+    {
+        var color = BodyFluidSplat.ColorFor(monster);
+        AddSplat(at, size, color, true);
+        var drops = new CpuParticles3D {
+            Position = new Vector3(at.X, Stage.Tiers.GroundY(at) + .12f, at.Z),
+            Mesh = _fluidDrop, Color = color, Amount = 6, OneShot = true, Emitting = true,
+            Lifetime = .32f, Explosiveness = 1, Direction = direction.LengthSquared() > .01f ? direction.Normalized() + Vector3.Up : Vector3.Up,
+            Spread = 38, InitialVelocityMin = .5f, InitialVelocityMax = 1.4f,
+            Gravity = new Vector3(0, -14, 0), ScaleAmountMin = .6f, ScaleAmountMax = 1.2f,
+            CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
+        };
+        AddChild(drops);
+        Expire(drops, .5f);
+    }
+
+    private void AddSplat(Vector3 at, float size, Color color, bool fluid)
+    {
         float radius = _rng.RandfRange(.35f, .8f) * size;
-        var splat = Mat.Mesh(this, _unitDisc, new Vector3(at.X, .012f + _rng.Randf() * .006f, at.Z), Mat.Solid(color, .25f));
-        splat.Scale = new Vector3(radius, 1, radius * _rng.RandfRange(.6f, 1f));
+        var floor = new Vector3(at.X, Stage.Tiers.GroundY(at) + .012f + _rng.Randf() * .006f, at.Z);
+        var splat = BodyFluidSplat.Create(this, floor, radius, color, _rng.RandfRange(0, 100), fluid);
         splat.RotationDegrees = new Vector3(0, _rng.RandfRange(0, 180), 0);
         Cap(_splats, splat, MaxSplats);
     }
