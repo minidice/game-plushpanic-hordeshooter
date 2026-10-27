@@ -57,9 +57,8 @@ public static class PropLibrary
         if (_props != null) return _props;
         _props = new Dictionary<string, PropInfo>();
         foreach (var folder in Folders)
+        foreach (var path in Manifests(folder))
         {
-            string path = folder + "/manifest.json";
-            if (!FileAccess.FileExists(path)) { Report($"{path} is missing"); continue; }
             try
             {
                 using var doc = JsonDocument.Parse(FileAccess.GetFileAsString(path));
@@ -77,6 +76,20 @@ public static class PropLibrary
             catch (System.Exception e) { Report($"{path}: {e.Message}"); }
         }
         return _props;
+    }
+
+    /// <summary>
+    /// The folder's manifest.json, then any manifest_*.json beside it: extra models written by their own build script
+    /// (the Stage 1 guide sign) stay listed when the kit script rewrites manifest.json.
+    /// </summary>
+    private static IEnumerable<string> Manifests(string folder)
+    {
+        string main = folder + "/manifest.json";
+        if (FileAccess.FileExists(main)) yield return main;
+        else Report($"{main} is missing");
+        if (!DirAccess.DirExistsAbsolute(folder)) yield break;
+        foreach (var file in DirAccess.GetFilesAt(folder))
+            if (file.StartsWith("manifest_") && file.EndsWith(".json")) yield return folder + "/" + file;
     }
 
     private static PropCollision ReadCollision(JsonElement c)

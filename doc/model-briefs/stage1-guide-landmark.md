@@ -1,6 +1,6 @@
 # 모델 지시문: Stage 1 길 안내 랜드마크 — 창고 간판 (`warehouse_sign`)
 
-> **상태**: 2026-10-27 작성. 사용자 요청: "확정된 Stage 1 설계안의 맵 변경 8개를 반영해줘(랜드마크 모델은 Codex 지시문으로)". 결정 L-33(레벨은 가이드 맵을 먼저), [가이드 맵](../features/level/guide-map.md) 7.3장 변경 8, [레벨 디자인 참고 리서치](../features/level/reference-level-design-research.md) 규칙 후보 1 · 3.
+> **상태**: 2026-10-27 작성 · 같은 날 Codex 실행 완료(`GUIDE_LANDMARK_BUILT 1`, 삼각형 2,136, 재질 6) · 게임 배치 (205, −81) — [레벨 log/007](../features/level/log/007-code-stage1-warehouse-sign.md). manifest 충돌 추천은 배치 때 Claude가 다리 사이 가새까지 덮는 5.3 × 2.4 × 1.2 m로 고침. 사용자 요청: "확정된 Stage 1 설계안의 맵 변경 8개를 반영해줘(랜드마크 모델은 Codex 지시문으로)". 결정 L-33(레벨은 가이드 맵을 먼저), [가이드 맵](../features/level/guide-map.md) 7.3장 변경 8, [레벨 디자인 참고 리서치](../features/level/reference-level-design-research.md) 규칙 후보 1 · 3.
 > **왜**: Stage 1 설계안은 큰 구역마다 길 안내 수단을 둔다. B 상가 거리 끝에서 C 골목을 지나 D 창고 단지로 가는 동안 "저기가 다음 목적지"라고 알려 줄 **멀리서 눈에 띄는 큰 것**이 필요하다(L4D: 어두운 맵에서 몇 개의 핵심 조명 · 큰 형태로 방향을 이끈다). 지금 Stage 1의 랜드마크는 F 야적장의 크레인 하나뿐이다.
 > **역할**: Codex는 새 Blender 스크립트 하나와 결과물(GLB · manifest · 원본 blend · 확인 렌더)을 만든다. Claude가 게임(`stage1_large_layout.json` 표식 · `LayoutMap`)에 연결하고 조명을 붙여 실제 렌더로 확인한다. **기존 키트 도구 · manifest · GLB는 수정하지 않는다**(I-84 · I-86 · I-88).
 

@@ -409,6 +409,12 @@ public sealed partial class LayoutMap : StageMap
                 var gate = Prop("bunker_gate", at);
                 if (gate != null) PropOcclusion.Attach(_stage, gate);
             }
+            else if (marker.Type == "landmark" && marker.Model != "")
+            {
+                // A kit landmark with its own collider (the warehouse sign: legs and braces only, the panel fades).
+                var landmark = Prop(marker.Model, at);
+                if (landmark != null) PropOcclusion.Attach(_stage, landmark);
+            }
             else if (marker.Type == "noise")
             {
                 var size = new Vector3(5.2f, 2, 2.2f);

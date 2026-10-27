@@ -197,7 +197,7 @@
 - [x] 추가 참조 6488/6485/6482 기반 품질 보완: 수관 끝·층간 명암, 외곽의 짧은 풀/군집 피복, 숲길·세이프하우스 구성과 경계 깊이별 3단계 감량 적용. [실행·검수](environment-quality-plan.md#foliage-reference-revision). 동적 LOD·저사양/6인·최종 미술 승인은 남음.
 - [x] 화면 우측 상단을 주 진행 방향으로 사용; 기본/확대 카메라와 화면 기준 WASD
 - [x] 레벨 디자인 가이드 맵 형식(2026-10-27, L-33): 경험 목록 30 · Stage 1 현재 상태 가이드 · 검사기 · 가이드 보드 · 평면도 표시. [기록](features/level/log/004-code-guide-map.md)
-- [ ] 가이드 맵 설계안(plan)으로 Stage 1 · 2 · 3 고치기 — Stage 1 현재 상태 오류 1 · 경고 8, **Stage 1 설계안 확정 · 맵 반영**(오류 0 · 경고 5, 2026-10-27) — 변경 8개 중 7개 반영, 창고 간판 모델 대기. [설계안](features/level/guide-map.md#7-stage-1-설계안plan--2026-10-27-확정)
+- [ ] 가이드 맵 설계안(plan)으로 Stage 1 · 2 · 3 고치기 — Stage 1 현재 상태 오류 1 · 경고 8, **Stage 1 설계안 확정 · 맵 반영**(오류 0 · 경고 5, 2026-10-27) — 변경 8개 모두 반영(창고 간판은 Codex 모델, [log/007](features/level/log/007-code-stage1-warehouse-sign.md)). [설계안](features/level/guide-map.md#7-stage-1-설계안plan--2026-10-27-확정)
 - [x] 모든 맵 공통 기본 카메라(2026-10-27, L-2): 수직 60° · 원근 34° · 화면 높이 21 m. 실제 플레이로 수치 재조정은 남음. [기록](features/level/log/002-code-camera-default-view.md)
 - [x] 주 경로 70% 이상 우측 상단이라는 [레벨 디자인 규칙](level-design-rules.md)
 - [x] 타일 바닥, 벽 패널, 선반·보관함·작업대·단말기, 구역 조명

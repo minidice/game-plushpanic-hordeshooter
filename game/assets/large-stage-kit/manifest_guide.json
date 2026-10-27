@@ -1,0 +1,38 @@
+{
+  "revision": 1,
+  "contract": "plushpanic_outdoor_v1",
+  "units": "metres",
+  "up_axis": "+Y",
+  "assets": [
+    {
+      "id": "warehouse_sign",
+      "file": "warehouse_sign.glb",
+      "name": "Warehouse guide sign",
+      "category": "Large stage kit",
+      "note": "6 x 2.6 x 0.3 m panel, bottom z=4.2 m; 7 m rear masts. Front normal faces Blender -Y and 20 degrees upward; arrow points +X. Three stacked boxes, 22 bulbs (diameter 0.18 m). Panel front center (game local XYZ): [0.0, 5.4945, 0.141]. Front outward normal (game local): [0, 0.342020, 0.939693]; place the game's warm OmniLight outward from this surface. No model lights or physics. Box collision covers the two legs, their feet and the cross braces between them (5.3 m wide, 2.4 m tall); the overhead panel must not block movement.",
+      "dimensions_m": [
+        6.0,
+        7.0,
+        1.2419
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 2136,
+      "collision": {
+        "kind": "box",
+        "size": [
+          5.3,
+          2.4,
+          1.2
+        ],
+        "center": [
+          0,
+          1.2,
+          0
+        ]
+      },
+      "occlusion_parts": [
+        "Occlude_Sign"
+      ]
+    }
+  ]
+}

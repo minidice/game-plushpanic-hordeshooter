@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="987" viewBox="0 0 1440 987" font-family="Noto Sans KR, Malgun Gothic, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1004" viewBox="0 0 1440 1004" font-family="Noto Sans KR, Malgun Gothic, sans-serif">
 <rect width="100%" height="100%" fill="#f7f5ef"/>
 <text x="20" y="30" font-size="18" fill="#1f1f1f" font-weight="bold" text-anchor="start">Stage 1 도시 (큰 맵) — 설계안 — 레벨 디자인 가이드 맵 (plan, 2026-10-27)</text>
 <text x="20" y="52" font-size="12" fill="#444" font-weight="normal" text-anchor="start">Stage 1 (plan): 구역 9(큰 3) · 새 경험 18 · 다시 쓰기 9 · 섞기 4 · 정점 1</text>
@@ -65,8 +65,7 @@
 <text x="286" y="259" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 경계형 무리</text>
 <text x="286" y="276" font-size="12" fill="#5b4a9c" font-weight="normal" text-anchor="start">• 낮은 엄폐물</text>
 <text x="1106" y="242" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
-<text x="1106" y="259" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">랜드마크(멀리서 보이는 큰 것)</text>
-<text x="28" y="305" font-size="10" fill="#777" font-weight="normal" text-anchor="start">첫 큰 구역은 기본만: 잠든 무리를 깨우지 않고 지나갈지 먼저 칠지, 경계형 무리를 방벽 뒤에서. 가로등을 주 경로 쪽에 줄지어 두고 광장 끝 출구를 가장 밝게. 멀리 창고 간판이 보임(간판 모델은 Codex 지시문 대기 — 그전까지 B의 랜드마크 길 안내는 빠져 있음).</text>
+<text x="28" y="305" font-size="10" fill="#777" font-weight="normal" text-anchor="start">첫 큰 구역은 기본만: 잠든 무리를 깨우지 않고 지나갈지 먼저 칠지, 경계형 무리를 방벽 뒤에서. 가로등을 주 경로 쪽에 줄지어 두고 광장 끝 출구를 가장 밝게. (창고 간판은 B에서는 60 m 넘게 떨어져 화면에 들어오지 않아 C 골목 출구의 길 안내로 옮김 — 2026-10-27 배치 렌더.)</text>
 <rect x="20" y="315" width="1400" height="70" fill="#ffffff" stroke="#00000014"/>
 <text x="28" y="333" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">3. B-pharmacy (작은)</text>
 <text x="28" y="350" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 18%</text>
@@ -76,7 +75,7 @@
 <text x="616" y="333" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 잠든 무리</text>
 <text x="1106" y="333" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
 <text x="28" y="379" font-size="10" fill="#777" font-weight="normal" text-anchor="start">약국 간판 불빛으로 곁길이 있음을 알림. 안에 잠든 무리 하나와 보급.</text>
-<rect x="20" y="389" width="1400" height="70" fill="#ffffff" stroke="#00000014"/>
+<rect x="20" y="389" width="1400" height="87" fill="#ffffff" stroke="#00000014"/>
 <text x="28" y="407" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">4. C (작은)</text>
 <text x="28" y="424" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 27%</text>
 <rect x="214" y="395" width="58" height="18" rx="9" fill="#8a8f98"/>
@@ -86,81 +85,82 @@
 <text x="616" y="407" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 경계형 무리</text>
 <text x="1106" y="407" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">길 모양(좁아지는 길 · 열린 문)</text>
 <text x="1106" y="424" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
-<text x="28" y="453" font-size="10" fill="#777" font-weight="normal" text-anchor="start">골목 입구에 경보 차(B에서 옮김): 좁은 길에서 건드리면 앞뒤로 몰려오는 짧고 피할 수 있는 위기. 골목 끝 조명.</text>
-<rect x="20" y="463" width="1400" height="87" fill="#ffffff" stroke="#00000014"/>
-<text x="28" y="481" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">5. D (큰)</text>
-<text x="28" y="498" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 42%</text>
-<rect x="214" y="469" width="58" height="18" rx="9" fill="#c8322a"/>
-<text x="243" y="482" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">정점</text>
-<text x="286" y="481" font-size="12" fill="#1f6f8b" font-weight="normal" text-anchor="start">• 경사로로 단 오르내리기</text>
-<text x="286" y="498" font-size="12" fill="#b5651d" font-weight="normal" text-anchor="start">• 제어판 크레센도</text>
-<text x="286" y="515" font-size="12" fill="#3f7f3f" font-weight="normal" text-anchor="start">• 임무 왕복</text>
-<text x="616" y="481" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 잠든 무리</text>
-<text x="616" y="498" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 경계형 무리</text>
-<text x="916" y="481" font-size="12" fill="#5b4a9c" font-weight="normal" text-anchor="start">좁은 통로 + 낮은 엄폐물</text>
-<text x="1106" y="481" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">목표 표시(지도 · 화면)</text>
-<text x="1106" y="498" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
-<text x="1106" y="515" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">랜드마크(멀리서 보이는 큰 것)</text>
-<text x="1276" y="481" font-size="12" fill="#c07a12" font-weight="bold" text-anchor="start">W2</text>
-<text x="28" y="544" font-size="10" fill="#777" font-weight="normal" text-anchor="start">정점. 경사로로 하역장에 올라 셔터 제어판을 켜고 크레센도를 버틴다 — 하역장 입구를 좁히고 방벽을 둬 C · B에서 배운 '좁은 길 + 엄폐'로 지키게. 제어판 위 조명, 돌아오는 길 재등장. 크레센도는 Stage 2(벙커 철문)에서 다시(W2).</text>
-<rect x="20" y="554" width="1400" height="70" fill="#ffffff" stroke="#00000014"/>
-<text x="28" y="572" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">6. E (작은)</text>
-<text x="28" y="589" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 58%</text>
-<rect x="214" y="560" width="58" height="18" rx="9" fill="#59a96a"/>
-<text x="243" y="573" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">휴식</text>
-<text x="286" y="572" font-size="12" fill="#3f7f3f" font-weight="normal" text-anchor="start">• 중간 안전 구역</text>
-<text x="1106" y="572" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
-<text x="28" y="618" font-size="10" fill="#777" font-weight="normal" text-anchor="start">경비 초소, 정점 바로 뒤 휴식. 따뜻한 색 조명(L4D 세이프룸 색).</text>
-<rect x="20" y="628" width="1400" height="87" fill="#ffffff" stroke="#00000014"/>
-<text x="28" y="646" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">7. F (큰)</text>
-<text x="28" y="663" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 72%</text>
-<rect x="214" y="634" width="58" height="18" rx="9" fill="#c8642a"/>
-<text x="243" y="647" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">교전</text>
-<text x="286" y="646" font-size="12" fill="#1f6f8b" font-weight="normal" text-anchor="start">• 사다리 오르기</text>
-<text x="286" y="663" font-size="12" fill="#5b4a9c" font-weight="normal" text-anchor="start">• 높은 단 교전</text>
-<text x="286" y="680" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 시간 습격</text>
-<text x="616" y="646" font-size="12" fill="#1f6f8b" font-weight="normal" text-anchor="start">• 경사로로 단 오르내리기</text>
-<text x="616" y="663" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 잠든 무리</text>
-<text x="616" y="680" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 경계형 무리</text>
-<text x="916" y="646" font-size="12" fill="#5b4a9c" font-weight="normal" text-anchor="start">경보 함정 + 경사로로 단 오르내리기</text>
-<text x="916" y="663" font-size="12" fill="#5b4a9c" font-weight="normal" text-anchor="start">낮은 엄폐물 + 경계형 무리</text>
-<text x="1106" y="646" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">랜드마크(멀리서 보이는 큰 것)</text>
-<text x="1106" y="663" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
-<text x="1276" y="646" font-size="12" fill="#c07a12" font-weight="bold" text-anchor="start">W2</text>
-<text x="28" y="709" font-size="10" fill="#777" font-weight="normal" text-anchor="start">사다리로 컨테이너 위에 올라 위에서 쏘기를 처음. 시간 습격은 이 구역부터(B · D에서는 뺌). 경보 트럭이 울리면 경사로 위 단으로 올라가 버티기. 크레인이 랜드마크, 크레인 조명이 출구 쪽. 사다리 · 시간 습격은 Stage 2에서 다시(W2).</text>
-<rect x="20" y="719" width="1400" height="70" fill="#ffffff" stroke="#00000014"/>
-<text x="28" y="737" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">8. G (작은)</text>
-<text x="28" y="754" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 88%</text>
-<rect x="214" y="725" width="58" height="18" rx="9" fill="#8a8f98"/>
-<text x="243" y="738" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">이동</text>
-<text x="286" y="737" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 특수 적</text>
-<text x="286" y="754" font-size="12" fill="#b5651d" font-weight="normal" text-anchor="start">• 폭발 드럼통</text>
-<text x="616" y="737" font-size="12" fill="#1f6f8b" font-weight="normal" text-anchor="start">• 경사로로 단 오르내리기</text>
-<text x="916" y="737" font-size="12" fill="#5b4a9c" font-weight="normal" text-anchor="start">높은 단 교전 + 낮은 엄폐물</text>
-<text x="1106" y="737" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">길 모양(좁아지는 길 · 열린 문)</text>
-<text x="1106" y="754" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
-<text x="1276" y="737" font-size="12" fill="#c07a12" font-weight="bold" text-anchor="start">W2</text>
-<text x="28" y="783" font-size="10" fill="#777" font-weight="normal" text-anchor="start">마지막 도전: 고가 오르막에서 특수 적이 처음 내려온다(B · F에서 옮김). 위 단 방벽 뒤에서, 드럼통으로 아래 무리를 날린다. 특수 적 · 드럼통은 Stage 2에서 다시(W2).</text>
-<rect x="20" y="793" width="1400" height="70" fill="#ffffff" stroke="#00000014"/>
-<text x="28" y="811" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">9. H (작은)</text>
-<text x="28" y="828" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 100%</text>
-<rect x="214" y="799" width="58" height="18" rx="9" fill="#2f8f5b"/>
-<text x="243" y="812" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">안전</text>
-<text x="286" y="811" font-size="12" fill="#3f7f3f" font-weight="normal" text-anchor="start">• 세이프하우스 닫기</text>
-<text x="286" y="828" font-size="12" fill="#3f7f3f" font-weight="normal" text-anchor="start">• 해치로 다음 스테이지</text>
-<text x="616" y="811" font-size="12" fill="#b5651d" font-weight="normal" text-anchor="start">• 스위치로 문 열기</text>
-<text x="1106" y="811" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
-<text x="28" y="857" font-size="10" fill="#777" font-weight="normal" text-anchor="start">세이프하우스 문 위 따뜻한 조명. 처음 배운 스위치로 문을 닫고 해치로 Stage 2.</text>
-<text x="20" y="883" font-size="11" fill="#444" font-weight="normal" text-anchor="start">색: 경험 종류 — 이동 · 지형 · 장치 · 임무 · 적 · 교전 공간 · 진행 · 보상</text>
-<rect x="20" y="893" width="12" height="12" fill="#1f6f8b"/>
-<text x="36" y="904" font-size="11" fill="#1f6f8b" font-weight="normal" text-anchor="start">이동 · 지형</text>
-<rect x="140" y="893" width="12" height="12" fill="#b5651d"/>
-<text x="156" y="904" font-size="11" fill="#b5651d" font-weight="normal" text-anchor="start">장치 · 임무</text>
-<rect x="260" y="893" width="12" height="12" fill="#a02c2c"/>
-<text x="276" y="904" font-size="11" fill="#a02c2c" font-weight="normal" text-anchor="start">적</text>
-<rect x="380" y="893" width="12" height="12" fill="#5b4a9c"/>
-<text x="396" y="904" font-size="11" fill="#5b4a9c" font-weight="normal" text-anchor="start">교전 공간</text>
-<rect x="500" y="893" width="12" height="12" fill="#3f7f3f"/>
-<text x="516" y="904" font-size="11" fill="#3f7f3f" font-weight="normal" text-anchor="start">진행 · 보상</text>
-<text x="20" y="929" font-size="11" fill="#444" font-weight="normal" text-anchor="start">역할 막대: 진행 위치에 따라 구역을 놓고 역할 색으로 칠함, 빨간 점 = 그 구역의 새 경험 수. 검사 칸: G = 오류, W = 경고(guide-map.md 4장).</text>
+<text x="1106" y="441" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">랜드마크(멀리서 보이는 큰 것)</text>
+<text x="28" y="470" font-size="10" fill="#777" font-weight="normal" text-anchor="start">골목 입구에 경보 차(B에서 옮김): 좁은 길에서 건드리면 앞뒤로 몰려오는 짧고 피할 수 있는 위기. 골목 끝 조명. 골목을 나서면 북쪽에 창고 간판(전구 테두리 · 상자 그림 · 동쪽 화살표, 앞에 따뜻한 조명)이 다음 큰 구역 D 쪽을 가리킴.</text>
+<rect x="20" y="480" width="1400" height="87" fill="#ffffff" stroke="#00000014"/>
+<text x="28" y="498" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">5. D (큰)</text>
+<text x="28" y="515" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 42%</text>
+<rect x="214" y="486" width="58" height="18" rx="9" fill="#c8322a"/>
+<text x="243" y="499" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">정점</text>
+<text x="286" y="498" font-size="12" fill="#1f6f8b" font-weight="normal" text-anchor="start">• 경사로로 단 오르내리기</text>
+<text x="286" y="515" font-size="12" fill="#b5651d" font-weight="normal" text-anchor="start">• 제어판 크레센도</text>
+<text x="286" y="532" font-size="12" fill="#3f7f3f" font-weight="normal" text-anchor="start">• 임무 왕복</text>
+<text x="616" y="498" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 잠든 무리</text>
+<text x="616" y="515" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 경계형 무리</text>
+<text x="916" y="498" font-size="12" fill="#5b4a9c" font-weight="normal" text-anchor="start">좁은 통로 + 낮은 엄폐물</text>
+<text x="1106" y="498" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">목표 표시(지도 · 화면)</text>
+<text x="1106" y="515" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
+<text x="1106" y="532" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">랜드마크(멀리서 보이는 큰 것)</text>
+<text x="1276" y="498" font-size="12" fill="#c07a12" font-weight="bold" text-anchor="start">W2</text>
+<text x="28" y="561" font-size="10" fill="#777" font-weight="normal" text-anchor="start">정점. 경사로로 하역장에 올라 셔터 제어판을 켜고 크레센도를 버틴다 — 하역장 입구를 좁히고 방벽을 둬 C · B에서 배운 '좁은 길 + 엄폐'로 지키게. 제어판 위 조명, 돌아오는 길 재등장. 크레센도는 Stage 2(벙커 철문)에서 다시(W2).</text>
+<rect x="20" y="571" width="1400" height="70" fill="#ffffff" stroke="#00000014"/>
+<text x="28" y="589" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">6. E (작은)</text>
+<text x="28" y="606" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 58%</text>
+<rect x="214" y="577" width="58" height="18" rx="9" fill="#59a96a"/>
+<text x="243" y="590" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">휴식</text>
+<text x="286" y="589" font-size="12" fill="#3f7f3f" font-weight="normal" text-anchor="start">• 중간 안전 구역</text>
+<text x="1106" y="589" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
+<text x="28" y="635" font-size="10" fill="#777" font-weight="normal" text-anchor="start">경비 초소, 정점 바로 뒤 휴식. 따뜻한 색 조명(L4D 세이프룸 색).</text>
+<rect x="20" y="645" width="1400" height="87" fill="#ffffff" stroke="#00000014"/>
+<text x="28" y="663" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">7. F (큰)</text>
+<text x="28" y="680" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 72%</text>
+<rect x="214" y="651" width="58" height="18" rx="9" fill="#c8642a"/>
+<text x="243" y="664" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">교전</text>
+<text x="286" y="663" font-size="12" fill="#1f6f8b" font-weight="normal" text-anchor="start">• 사다리 오르기</text>
+<text x="286" y="680" font-size="12" fill="#5b4a9c" font-weight="normal" text-anchor="start">• 높은 단 교전</text>
+<text x="286" y="697" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 시간 습격</text>
+<text x="616" y="663" font-size="12" fill="#1f6f8b" font-weight="normal" text-anchor="start">• 경사로로 단 오르내리기</text>
+<text x="616" y="680" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 잠든 무리</text>
+<text x="616" y="697" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 경계형 무리</text>
+<text x="916" y="663" font-size="12" fill="#5b4a9c" font-weight="normal" text-anchor="start">경보 함정 + 경사로로 단 오르내리기</text>
+<text x="916" y="680" font-size="12" fill="#5b4a9c" font-weight="normal" text-anchor="start">낮은 엄폐물 + 경계형 무리</text>
+<text x="1106" y="663" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">랜드마크(멀리서 보이는 큰 것)</text>
+<text x="1106" y="680" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
+<text x="1276" y="663" font-size="12" fill="#c07a12" font-weight="bold" text-anchor="start">W2</text>
+<text x="28" y="726" font-size="10" fill="#777" font-weight="normal" text-anchor="start">사다리로 컨테이너 위에 올라 위에서 쏘기를 처음. 시간 습격은 이 구역부터(B · D에서는 뺌). 경보 트럭이 울리면 경사로 위 단으로 올라가 버티기. 크레인이 랜드마크, 크레인 조명이 출구 쪽. 사다리 · 시간 습격은 Stage 2에서 다시(W2).</text>
+<rect x="20" y="736" width="1400" height="70" fill="#ffffff" stroke="#00000014"/>
+<text x="28" y="754" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">8. G (작은)</text>
+<text x="28" y="771" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 88%</text>
+<rect x="214" y="742" width="58" height="18" rx="9" fill="#8a8f98"/>
+<text x="243" y="755" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">이동</text>
+<text x="286" y="754" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 특수 적</text>
+<text x="286" y="771" font-size="12" fill="#b5651d" font-weight="normal" text-anchor="start">• 폭발 드럼통</text>
+<text x="616" y="754" font-size="12" fill="#1f6f8b" font-weight="normal" text-anchor="start">• 경사로로 단 오르내리기</text>
+<text x="916" y="754" font-size="12" fill="#5b4a9c" font-weight="normal" text-anchor="start">높은 단 교전 + 낮은 엄폐물</text>
+<text x="1106" y="754" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">길 모양(좁아지는 길 · 열린 문)</text>
+<text x="1106" y="771" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
+<text x="1276" y="754" font-size="12" fill="#c07a12" font-weight="bold" text-anchor="start">W2</text>
+<text x="28" y="800" font-size="10" fill="#777" font-weight="normal" text-anchor="start">마지막 도전: 고가 오르막에서 특수 적이 처음 내려온다(B · F에서 옮김). 위 단 방벽 뒤에서, 드럼통으로 아래 무리를 날린다. 특수 적 · 드럼통은 Stage 2에서 다시(W2).</text>
+<rect x="20" y="810" width="1400" height="70" fill="#ffffff" stroke="#00000014"/>
+<text x="28" y="828" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">9. H (작은)</text>
+<text x="28" y="845" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 100%</text>
+<rect x="214" y="816" width="58" height="18" rx="9" fill="#2f8f5b"/>
+<text x="243" y="829" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">안전</text>
+<text x="286" y="828" font-size="12" fill="#3f7f3f" font-weight="normal" text-anchor="start">• 세이프하우스 닫기</text>
+<text x="286" y="845" font-size="12" fill="#3f7f3f" font-weight="normal" text-anchor="start">• 해치로 다음 스테이지</text>
+<text x="616" y="828" font-size="12" fill="#b5651d" font-weight="normal" text-anchor="start">• 스위치로 문 열기</text>
+<text x="1106" y="828" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
+<text x="28" y="874" font-size="10" fill="#777" font-weight="normal" text-anchor="start">세이프하우스 문 위 따뜻한 조명. 처음 배운 스위치로 문을 닫고 해치로 Stage 2.</text>
+<text x="20" y="900" font-size="11" fill="#444" font-weight="normal" text-anchor="start">색: 경험 종류 — 이동 · 지형 · 장치 · 임무 · 적 · 교전 공간 · 진행 · 보상</text>
+<rect x="20" y="910" width="12" height="12" fill="#1f6f8b"/>
+<text x="36" y="921" font-size="11" fill="#1f6f8b" font-weight="normal" text-anchor="start">이동 · 지형</text>
+<rect x="140" y="910" width="12" height="12" fill="#b5651d"/>
+<text x="156" y="921" font-size="11" fill="#b5651d" font-weight="normal" text-anchor="start">장치 · 임무</text>
+<rect x="260" y="910" width="12" height="12" fill="#a02c2c"/>
+<text x="276" y="921" font-size="11" fill="#a02c2c" font-weight="normal" text-anchor="start">적</text>
+<rect x="380" y="910" width="12" height="12" fill="#5b4a9c"/>
+<text x="396" y="921" font-size="11" fill="#5b4a9c" font-weight="normal" text-anchor="start">교전 공간</text>
+<rect x="500" y="910" width="12" height="12" fill="#3f7f3f"/>
+<text x="516" y="921" font-size="11" fill="#3f7f3f" font-weight="normal" text-anchor="start">진행 · 보상</text>
+<text x="20" y="946" font-size="11" fill="#444" font-weight="normal" text-anchor="start">역할 막대: 진행 위치에 따라 구역을 놓고 역할 색으로 칠함, 빨간 점 = 그 구역의 새 경험 수. 검사 칸: G = 오류, W = 경고(guide-map.md 4장).</text>
 </svg>

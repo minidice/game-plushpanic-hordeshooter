@@ -135,6 +135,12 @@ public partial class LargeStageCheck : Node
             Check(alarms.Count == 2 && alarms.All(a => _stage.AlarmCars.Contains(a)) && map.AlarmDevice == alarms[0]
                   && alarms[0].GlobalPosition.X < 200 && alarms[1].GlobalPosition.X > 450,
                 $"{name}: the alley car and the yard truck are both alarms ({string.Join(", ", alarms.Select(a => a.GlobalPosition))})");
+            // B wayfinding landmark (L-33): the warehouse sign north of the alley exit; its legs block, the road in front stays open.
+            var sign = map.KitProps.FirstOrDefault(p => p.GetNodeOrNull("warehouse_sign") != null);
+            var signAt = sign?.GlobalPosition ?? Vector3.Zero;
+            Check(sign != null && _stage.Flow.IsBlocked(signAt + new Vector3(1.85f, 0, 0)) && _stage.Flow.IsBlocked(signAt - new Vector3(1.85f, 0, 0))
+                  && !_stage.Flow.IsBlocked(signAt + new Vector3(0, 0, 4)),
+                $"{name}: the warehouse sign stands at the alley exit, legs solid, the road in front open ({signAt})");
         }
         var pickups = _stage.Interactables.Where(i => i is WeaponPickup || i.Pickup is PickupKind.Medkit or PickupKind.Ammo).ToList();
         var off = pickups.Where(i => Mathf.Abs(i.GlobalPosition.Y - tiers.GroundY(i.GlobalPosition)) > .3f || _stage.Flow.IsBlocked(i.GlobalPosition))

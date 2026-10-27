@@ -1016,6 +1016,19 @@
     {
       "type": "landmark",
       "pos": [
+        205,
+        -81
+      ],
+      "label": "창고 간판",
+      "label_offset": [
+        6,
+        -6
+      ],
+      "model": "warehouse_sign"
+    },
+    {
+      "type": "landmark",
+      "pos": [
         452,
         -146
       ],
@@ -1807,6 +1820,16 @@
         -130
       ],
       "color": "ffb070",
+      "energy": 2.6,
+      "range": 10,
+      "post": false
+    },
+    {
+      "pos": [
+        205,
+        -77.5
+      ],
+      "color": "ffc46b",
       "energy": 2.6,
       "range": 10,
       "post": false

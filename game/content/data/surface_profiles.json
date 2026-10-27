@@ -233,6 +233,7 @@
     "gondola_station": "metal_solid",
     "bridge_truss": "metal_solid",
     "crane": "metal_solid",
+    "warehouse_sign": "metal_solid",
     "barrel": "metal_hollow",
     "sandbags": "sandbag",
     "bit_pebbles": "gravel",
