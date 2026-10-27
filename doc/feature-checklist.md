@@ -21,6 +21,8 @@
 
 - [x] **D-14 목표 문서화**: [캠페인·난전 Blueprint](features/direction/campaign-onslaught-blueprint.md)에 사용자 목표·임시 제안·미결 사항 보존. **게임 기능 완료 표시가 아님.** [작업 기록](features/direction/log/001-doc-campaign-onslaught-blueprint.md).
 - [x] **D-14 방향 문서 3층 · 진행 점검**(2026-10-27): 핵심 목표 6개만 둔 [방향 지침](features/direction/game-direction.md)(지우지 않음), 이유 · 장단점 · 참고작 · 히스토리를 쓰는 [세부 방향성](features/direction/details/README.md) 7개 파일, Blueprint 12장에 현재 구현 대비 · 카메라 기준 밀도 · 선행 조건 · 우선순위. 문서 작업이며 게임 기능 완료가 아님. [기록](features/direction/log/002-doc-direction-guide-and-blueprint-check.md).
+- [x] **D-15 · D-16 결정**(2026-10-27): 총기 적 수 혼자 기준점 + 인원 보정, 캠페인 기본 8시간, 확장 새 캠페인 포함 합계 30시간. 문서 결정이며 구현 아님. [기록](features/direction/log/004-doc-d15-d16-decisions.md).
+- [ ] **D-15 레벨 반영**: 총기 적이 모이는 교전 공간 설계와 대표 교전 테스트로 수치 맞추기.
 - [ ] **D-14 후속 검증**: AI·밀도·순찰·난이도·새 스테이지 경험·난전 빌드와 캠페인 8시간 구성 검증. 최대 30시간의 단계/시기는 미결.
 
 
