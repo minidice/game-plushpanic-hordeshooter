@@ -14,3 +14,5 @@
 
 - [localization.md](../../localization.md)
 - [app-icon.md](../../app-icon.md)
+- [장전·충전 UI 규격](../../weapon-spec.md#64-장전충전-진행-ui-m-33)
+- [HUD 빛 표현 보강 범위·계획](hud-light-polish-plan.md)

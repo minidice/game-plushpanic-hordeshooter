@@ -174,7 +174,9 @@ void fragment() {
             : gun.Reloading ? Loc.Text("ui_hud_reload")
             : $"{gun.Mag:00} / {(gun.HasInfiniteReserve ? "∞" : gun.Reserve.ToString("00"))}";
         bool low = !gun.IsMelee && gun.Mag <= Mathf.Max(1, gun.Def.MagSize / 6);
-        _ammo.AddThemeColorOverride("font_color", low ? UiTheme.Danger : HudWhite);
+        bool busy = !gun.IsMelee && (gun.Reloading || gun.CooldownLeft > 0);
+        _ammo.AddThemeColorOverride("font_color", busy ? HudMuted : low ? UiTheme.Danger : HudWhite);
+        _ammo.AddThemeFontSizeOverride("font_size", busy ? 18 : 28);
         _reserve.Text = gun.Def.DisplayName;
         _ammoHint.Text = Loc.Text(gun.IsMelee ? "hud_melee_hint" : !gun.HasInfiniteReserve && !gun.Def.Refillable ? "hud_no_refill_hint" : "hud_ammo_hint");
 
@@ -525,7 +527,7 @@ void fragment() {
             var direction = dir.Rotated(Mathf.Pi / 4 * actionWeight);
             var from = center + direction * Mathf.Lerp(aimed + 2, 29, actionWeight);
             float length = Mathf.Lerp(ReticleTickLength, .5f, actionWeight);
-            ReticleLine(c, from, from + direction * length, color, Mathf.Lerp(ReticleTickWidth, 2.5f, actionWeight), ReticleHot, 0);
+            ReticleLine(c, from, from + direction * length, color, Mathf.Lerp(ReticleTickWidth, 4, actionWeight), ReticleHot, 0);
         }
         c.DrawCircle(center, ReticleDot + 1, new Color(0, 0, 0, .4f * (1 - actionWeight)), true, -1, true);
         c.DrawCircle(center, ReticleDot, new Color(color, color.A * (1 - actionWeight)), true, -1, true);

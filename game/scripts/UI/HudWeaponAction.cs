@@ -57,15 +57,22 @@ public partial class Hud
     private readonly WeaponActionFeedback _weaponAction = new();
     private Paint _weaponActionGauge = null!;
     private Label _weaponActionLabel = null!;
-    private static readonly Color ActionLight = new(.77f, .93f, 1f, .86f);
-    // Native vector resources: rounded alpha layers remain sharp at every UI scale.
-    private static readonly StyleBoxFlat ActionTrack = ActionPlate(new Color(.015f, .035f, .055f, .50f), new Color(.72f, .88f, 1, .17f), 8);
-    private static readonly StyleBoxFlat ActionFill = ActionPlate(new Color(.70f, .89f, 1, .78f), new Color(.88f, .97f, 1, .5f), 5);
-
-    private static StyleBoxFlat ActionPlate(Color fill, Color edge, int radius) => new()
+    private static readonly Color ActionLight = new(.94f, .98f, 1f, .98f);
+    private static readonly Color ActionGlow = new(.22f, .70f, 1f);
+    // Shared vector resources: a quiet track, opaque light core and soft coloured shadow.
+    private static readonly StyleBoxFlat ActionTrack = ActionPlate(new Color(.008f, .016f, .025f, .62f), 11);
+    private static readonly StyleBoxFlat ActionFill = new()
     {
-        BgColor = fill, BorderColor = edge,
-        BorderWidthTop = 1, BorderWidthBottom = 1, BorderWidthLeft = 1, BorderWidthRight = 1,
+        BgColor = ActionLight,
+        CornerRadiusTopLeft = 7, CornerRadiusTopRight = 7,
+        CornerRadiusBottomLeft = 7, CornerRadiusBottomRight = 7,
+        ShadowColor = new Color(.18f, .68f, 1, .65f), ShadowSize = 10,
+        AntiAliasing = true, AntiAliasingSize = 1,
+    };
+
+    private static StyleBoxFlat ActionPlate(Color fill, int radius) => new()
+    {
+        BgColor = fill,
         CornerRadiusTopLeft = radius, CornerRadiusTopRight = radius,
         CornerRadiusBottomLeft = radius, CornerRadiusBottomRight = radius,
         AntiAliasing = true, AntiAliasingSize = 1,
@@ -76,9 +83,9 @@ public partial class Hud
 
     private void BuildWeaponAction()
     {
-        _weaponActionGauge = Place(new Paint { Name = "WeaponActionGauge", CustomMinimumSize = new(248, 16), Painter = DrawWeaponActionGauge },
+        _weaponActionGauge = Place(new Paint { Name = "WeaponActionGauge", CustomMinimumSize = new(248, 22), Painter = DrawWeaponActionGauge },
             .5f, 1, new(0, -204), true, true, centerX: true);
-        _weaponActionLabel = Place(HudLabel("", 15, ActionLight), .5f, 1, new(0, -226), true, true, centerX: true);
+        _weaponActionLabel = Place(HudLabel("", 14, HudWhite), .5f, 1, new(0, -232), true, true, centerX: true);
         _weaponActionLabel.Name = "WeaponActionLabel";
         _weaponActionLabel.CustomMinimumSize = new(248, 0);
         _weaponActionLabel.HorizontalAlignment = HorizontalAlignment.Center;
@@ -107,8 +114,6 @@ public partial class Hud
         var inside = new Rect2(new Vector2(4, 4), new Vector2((c.Size.X - 8) * _weaponAction.Progress, c.Size.Y - 8));
         if (inside.Size.X <= 0) return;
         c.DrawStyleBox(ActionFill, inside);
-        if (inside.Size.X > 8)
-            c.DrawLine(inside.Position + new Vector2(4, 1.5f), inside.Position + new Vector2(inside.Size.X - 4, 1.5f), new Color(1, 1, 1, .36f), 1, true);
     }
 
     private void DrawWeaponActionRing(Control c, Vector2 center)
@@ -116,14 +121,25 @@ public partial class Hud
         float w = _weaponAction.Weight;
         if (w <= 0) return;
         float radius = Mathf.Lerp(23, 19, w);
-        c.DrawCircle(center, radius + 4, new Color(.015f, .035f, .055f, .32f * w), true, -1, true);
-        c.DrawArc(center, radius, 0, Mathf.Tau, 64, new Color(.55f, .71f, .8f, .20f * w), 3, true);
+        c.DrawArc(center + Vector2.Down, radius, 0, Mathf.Tau, 96, new Color(0, 0, 0, .16f * w), 14, true);
+        c.DrawArc(center, radius, 0, Mathf.Tau, 96, new Color(.008f, .016f, .025f, .48f * w), 11, true);
         if (_weaponAction.Progress > 0)
         {
             float end = -Mathf.Pi / 2 + Mathf.Tau * _weaponAction.Progress;
-            c.DrawArc(center, radius, -Mathf.Pi / 2, end, 64, new Color(ActionLight, .12f * w), 7, true);
-            c.DrawArc(center, radius, -Mathf.Pi / 2, end, 64, new Color(ActionLight, .86f * w), 2.5f, true);
-            c.DrawCircle(center + Vector2.FromAngle(end) * radius, 1.7f, new Color(.94f, .99f, 1, .9f * w), true, -1, true);
+            DrawLightArc(c, center, radius, end, ActionGlow, w);
         }
+    }
+
+    // A bounded stack of translucent strokes gives a soft halo without textures or scene bloom.
+    private static void DrawLightArc(Control c, Vector2 center, float radius, float end, Color tint, float opacity)
+    {
+        for (int i = 10; i >= 1; i--)
+        {
+            float edge = i / 10f;
+            c.DrawArc(center, radius, -Mathf.Pi / 2, end, 96,
+                new Color(tint, (.025f + .045f * (1 - edge)) * opacity), 4 + i * 1.2f, true);
+        }
+        c.DrawArc(center, radius, -Mathf.Pi / 2, end, 96, new Color(tint.Lerp(Colors.White, .45f), .8f * opacity), 5, true);
+        c.DrawArc(center, radius, -Mathf.Pi / 2, end, 96, new Color(ActionLight, .98f * opacity), 3.2f, true);
     }
 }
