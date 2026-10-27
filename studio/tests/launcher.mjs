@@ -62,6 +62,20 @@ try {
  const failed=launch(port,{fail:true,open:'failed.log'});
  await until(()=>failed.exitCode!==null,'startup failure should exit');
  check(failed.exitCode!==0&&!(await text('failed.log')),'startup failure does not open browser');
+ // A running Studio whose renderer stopped (I-130): the launcher asks it to restart once, then opens the page.
+ let revived=false,reloads=0;
+ const stopped=http.createServer((req,res)=>{
+  if(req.method==='POST'&&req.url==='/api/reload'){reloads++;setTimeout(()=>revived=true,600);}
+  res.setHeader('Content-Type','application/json');
+  res.end(JSON.stringify({app:'plush-panic-studio',workspace:root,ready:revived,renderer:revived?'ready':'stopped',error:revived?'':'Godot renderer exited (1)'}));
+ });
+ await new Promise(r=>stopped.listen(port,'127.0.0.1',r));
+ try {
+  const revive=launch(port,{open:'revive.log'});
+  await until(()=>revive.exitCode!==null,'launcher should finish after the renderer restart');
+  check(revive.exitCode===0&&reloads===1&&(await text('revive.log')).includes(String(port)),'a stopped renderer is restarted once, then the page opens');
+  check((await text('starts.log')).trim().split(/\r?\n/).length===2,'reviving the renderer does not start another server');
+ } finally {await new Promise(r=>stopped.close(r));}
  let foreignState={app:'different-app',ready:true};
  const foreign=http.createServer((req,res)=>{res.setHeader('Content-Type','application/json');res.end(JSON.stringify(foreignState));});
  await new Promise(r=>foreign.listen(port,'127.0.0.1',r));

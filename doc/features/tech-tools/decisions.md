@@ -21,3 +21,13 @@
 - 이유: 사용자 요청(2026-10-26) — "md 문서는 공개할 생각없고", 캐릭터 · 배경 모델만 지인 피드백, 보안상 계속 열어 두지 않고 1시간 정도만. 서버 터널보다 파일 전달이 노출 범위가 작고 끝나면 남는 것이 없다. 압축 파일, 확대 · 게임 시점 · 회전 3D가 필요(사용자).
 - 상태 · 날짜: `[확정]` 2026-10-26. 첫 꾸러미 `001-models`(31 모델, 장면 4, zip 20.0 MB).
 - 근거 코드 · 규격: Studio `share_item`([StudioShare.cs](../../../game/tests/StudioShare.cs), [server.mjs](../../../studio/server.mjs) `/api/share/item`), 장면 [ShareSceneCapture.cs](../../../game/tests/ShareSceneCapture.cs), 만들기 [build-share.mjs](../../../studio/tools/build-share.mjs) · [share-page.html](../../../studio/tools/share-page.html), 목록 [selection.json](../../../studio/share/selection.json). 기록: [log/004](log/004-code-share-pack.md).
+
+## T-28 Studio 기획서 › 레벨디자인 메뉴
+
+- 결정: Studio 위 막대에 **기획서** 메뉴를 두고, 그 아래 첫 항목으로 **레벨디자인**(`/plan/level`, `/plan`은 여기로 이동)을 둔다. 맵(`game/content/data/stages/*_layout.json`)을 골라 두 탭으로 본다.
+  - **기능**: 구역마다 크기 · 역할 · 새 경험 · 다시 쓰기 · 섞기 · 길 안내(레벨 가이드 맵, L-33, 설계안 우선 · 없으면 현재 상태), 무리(반응별 무리 수 · 마릿수, 특수 적), 장치 · 표식(맵 표식), 구역 테스트 명령(`-Zone`, 눌러 복사). 맵 요약(구역 수 · 주 경로 길이 · 다음 스테이지 · 가이드 상태)과 가이드 검사 결과.
+  - **평면도**: `tools/floorplan/render_floorplan.py`로 그때그때 그린 SVG, 가이드 표시(설계안 · 현재 상태 · 없이) 선택, 확대 · 축소 · 화면 맞춤 · 끌어서 이동 · 새 탭.
+  - 렌더러 없이 작업 폴더의 파일을 읽는다(md 메뉴와 같이). 읽기 전용 — 맵 · 가이드는 파일에서 고친다.
+- 이유: 사용자 요청(2026-10-27) — "studio에서 기획서 메뉴 하나 생기고 하위로 레벨디자인 메뉴가 기획서의 하위로 생기고 각 맵들을 골라서 기능과 평면도라고 해야하나 지도처럼 러프하게 볼 수 있는 걸 확인할 수 있어야겠어." 가이드 맵 · 평면도가 JSON · SVG 파일로만 있어 한눈에 보기 어려웠다.
+- 상태 · 날짜: `[확정]`(메뉴 위치 · 두 탭) 2026-10-27. 표 구성 · 표시 항목은 첫 판.
+- 근거 코드 · 규격: [studio/levels.mjs](../../../studio/levels.mjs), [server.mjs](../../../studio/server.mjs) `/plan/level` · `/api/levels*`, [level.js](../../../studio/web/level.js), 검사 [tests/levels.mjs](../../../studio/tests/levels.mjs). 기록: [log/008](log/008-code-studio-level-design.md).

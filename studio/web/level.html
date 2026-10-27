@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Plush Panic Studio · 레벨디자인</title><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/library.css"><link rel="stylesheet" href="/level.css"><script type="module" src="/level.js"></script></head>
+<body>
+<header><a class="brand" href="/">PLUSH PANIC <span>STUDIO</span></a><nav class="top-nav" aria-label="Studio 영역"><a href="/">리소스</a><a href="/plan/level" aria-current="page">기획서</a><a href="/docs">md</a></nav><span class="local"><i></i> LOCAL WORKSPACE</span><button id="reload">다시 읽기 ↻</button></header>
+<nav class="sub-nav" aria-label="기획서"><span>기획서</span><a href="/plan/level" aria-current="page">레벨디자인</a></nav>
+<main>
+  <div class="heading"><div><p class="eyebrow">PLANNING · LEVEL DESIGN</p><h1>레벨디자인</h1><p>맵마다 구역별 기능(새 경험 · 무리 · 장치 · 길 안내)과 평면도를 봅니다. 맵 데이터와 가이드 맵을 그때그때 읽어 그립니다. 읽기 전용입니다.</p></div><span class="tag" id="total-count">불러오는 중</span></div>
+  <div class="library-layout level-layout">
+    <aside class="library-sidebar">
+      <div class="search-box"><label>맵</label><p id="map-note">큰 캠페인 시안 맵(`*_layout.json`)</p></div>
+      <div id="maps" class="entries" aria-label="맵 목록"></div>
+    </aside>
+    <section class="level-main" aria-label="맵 내용">
+      <div class="level-head"><div><span id="map-eyebrow" class="eyebrow"></span><h2 id="map-title">맵을 고르세요</h2><p id="map-facts"></p></div><code id="map-file"></code></div>
+      <div class="tabs level-tabs" role="tablist"><button id="tab-features" class="active" role="tab" aria-selected="true">기능</button><button id="tab-floor" role="tab" aria-selected="false">평면도</button></div>
+      <div id="features" class="level-panel"><p class="empty">왼쪽에서 맵을 고르세요.</p></div>
+      <div id="floor" class="level-panel" hidden>
+        <div class="floor-tools">
+          <label>가이드 표시 <select id="guide"></select></label>
+          <button id="zoom-out" aria-label="축소">−</button><output id="zoom-value">100%</output><button id="zoom-in" aria-label="확대">+</button><button id="zoom-fit">화면 맞춤</button>
+          <a id="floor-open" target="_blank" rel="noopener">새 탭에서 열기</a>
+        </div>
+        <div id="floor-view" class="floor-view"><img id="floor-img" alt="평면도"><p id="floor-note" class="empty"></p></div>
+        <p class="floor-legend">위 = 먼 쪽(−z), 아래 = 카메라 쪽. 구역 경계: 큰 구역 보라 굵은 점선, 작은 구역 청록 점선. 그림 아래쪽 범례에 색 · 기호 설명과 기본 시점 한 화면 크기가 있습니다.</p>
+      </div>
+    </section>
+  </div>
+  <footer><span id="status" role="status" aria-live="polite">맵 목록을 읽는 중…</span><span id="loaded-at"></span></footer>
+</main></body></html>

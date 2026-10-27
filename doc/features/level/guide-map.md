@@ -82,6 +82,8 @@ python tools/level-guide/guide.py board game/content/data/stages/guide/stage1_la
 python tools/floorplan/render_floorplan.py game/content/data/stages/stage1_large_layout.json doc/images/stage1-large-guide-plan-floor.svg --guide game/content/data/stages/guide/stage1_large_plan_guide.json
 ```
 
+**Studio에서 보기**: Studio 위 막대 `기획서` › `레벨디자인`(`/plan/level`, T-28)에서 맵을 골라 구역별 기능(가이드 맵 · 무리 · 장치 · `-Zone` 명령)과 평면도(가이드 표시 선택 · 확대)를 바로 본다 — 위 명령을 그때그때 대신 돌려 준다.
+
 출력(구역 행마다 역할 · 새 · 다시 · 섞기 · 길 안내 · 검사 코드, 위쪽 진행 막대): 설계안 보드 [stage1-large-guide-plan.svg](../../images/stage1-large-guide-plan.svg) · 평면도 [stage1-large-guide-plan-floor.svg](../../images/stage1-large-guide-plan-floor.svg), 현재 상태 보드 [stage1-large-guide-asis.svg](../../images/stage1-large-guide-asis.svg) · 평면도 [stage1-large-guide-asis-floor.svg](../../images/stage1-large-guide-asis-floor.svg).
 
 ## 6. Stage 1 현재 상태(as-is) 검사 결과 — 2026-10-27
@@ -147,3 +149,20 @@ python tools/floorplan/render_floorplan.py game/content/data/stages/stage1_large
 - Stage 1: 어두운 기조 적용 뒤 길 안내 조명(창고 간판 앞 조명 포함) 밝기 조정, 실제 손 플레이로 진지 · 경보 · 마지막 도전 확인. Stage 2 · 3 현재 상태 · 설계안 가이드(Stage 2가 Stage 1 W2 다섯 개를 다시 쓰는지).
 - 리서치 규칙 후보 중 데이터로 아직 못 재는 것: 다음 목표가 1~2화면 안에서 보이는지, 등장 위치 후보 세트, 남쪽 벽 높이. 맵 데이터 검사(`LargeStageCheck`)나 렌더 확인으로 다룬다.
 - 경험 목록은 시작판이다. 새 장치 · 적이 생기면 추가한다.
+
+## 9. 구역 테스트
+
+구역 하나를 손으로 확인할 때는 처음부터 걷지 않고 그 구역에서 시작한다(2026-10-27, [log/008](log/008-code-zone-start.md)).
+
+```bash
+powershell -File game/Start-Game.ps1 -Zone D      # Stage 1의 D 창고 단지
+powershell -File game/Start-Game.ps1 -Zone 2:D    # Stage 2의 D
+```
+
+- 메뉴 없이 큰 캠페인(`-LargeStages`와 같은 맵)의 그 스테이지로 바로 들어간다. 구역 ID는 맵의 `zones` ID(대소문자 무시, 예: `B-pharmacy`).
+- 시작 자리: 주 경로(`routes.main`, 없으면 다른 경로)가 구역에 들어간 곳에서 3 m 안쪽의 빈 바닥. 경로가 지나지 않는 곁가지 구역(Stage 3 `B-tower`)은 구역 가운데에 가장 가까운 빈 바닥.
+- 세이프룸 문은 열린 채, 목표는 문을 연 다음 단계로 넘어가고 몹 감독(director)이 바로 깨어난다. **무리 · 특수 적 · 경보 · 크레센도 · 보급은 맵 그대로** — 지나온 구역의 무리도 남아 있다(뒤를 돌아보면 있음).
+- 기본 캐릭터 · 동료 1명 · 혼자 플레이. 해치로 다음 스테이지에 가면 그 스테이지는 평소처럼 해치 아래에서 시작한다.
+- 모르는 구역 ID면 경고를 남기고 세이프룸에서 시작한다.
+- 확인할 것(가이드 맵 기준): 그 구역의 새 경험이 실제로 느껴지는지, 다음 목표가 1~2화면 안에 보이는지(길 안내), 정점 뒤 숨 돌릴 틈, 헤매는 곳. 결과는 레벨 작업 기록(`check` 종류)으로 남긴다.
+- 검사: `LargeStageCheck`가 세 스테이지의 모든 구역에 시작 자리가 있는지, `-Zone d`가 D 입구 · 열린 세이프룸 · 다음 목표로 시작하는지, 모르는 ID가 세이프룸으로 돌아가는지 확인한다.

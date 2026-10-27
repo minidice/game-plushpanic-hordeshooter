@@ -26,8 +26,21 @@ try {
     if (!$ownsMutex -or $null -ne $state) {
         Write-Host "Waiting for existing Studio: $url"
         $deadline = (Get-Date).AddMinutes(3)
+        $restarted = $false
         while (!$state.ready) {
-            if ((Get-Date) -gt $deadline) { throw "Studio did not become ready within 3 minutes: $url" }
+            # A running Studio whose Godot renderer stopped never gets ready by itself: ask it once to restart the renderer.
+            if ($null -ne $state -and $state.renderer -eq 'stopped' -and !$restarted) {
+                Write-Host "Studio renderer stopped ($($state.error)). Restarting it: build, import, renderer."
+                try { Invoke-RestMethod -Method Post "$url/api/reload" -TimeoutSec 2 -UseBasicParsing | Out-Null } catch { }
+                $restarted = $true
+                $deadline = (Get-Date).AddMinutes(5)
+            }
+            if ((Get-Date) -gt $deadline) {
+                if ($null -eq $state) { throw "Studio did not become ready within the wait: $url" }
+                # The web server is up: md and planning pages work without the renderer, previews retry from the page.
+                Write-Warning "Studio renderer is not ready ($($state.renderer) $($state.error)). Opening the page anyway; previews may fail until it is."
+                break
+            }
             if (!$ownsMutex) {
                 try { $released = $mutex.WaitOne(0) }
                 catch [System.Threading.AbandonedMutexException] { $released = $true }

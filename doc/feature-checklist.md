@@ -198,6 +198,7 @@
 - [x] 화면 우측 상단을 주 진행 방향으로 사용; 기본/확대 카메라와 화면 기준 WASD
 - [x] 레벨 디자인 가이드 맵 형식(2026-10-27, L-33): 경험 목록 30 · Stage 1 현재 상태 가이드 · 검사기 · 가이드 보드 · 평면도 표시. [기록](features/level/log/004-code-guide-map.md)
 - [ ] 가이드 맵 설계안(plan)으로 Stage 1 · 2 · 3 고치기 — Stage 1 현재 상태 오류 1 · 경고 8, **Stage 1 설계안 확정 · 맵 반영**(오류 0 · 경고 5, 2026-10-27) — 변경 8개 모두 반영(창고 간판은 Codex 모델, [log/007](features/level/log/007-code-stage1-warehouse-sign.md)). [설계안](features/level/guide-map.md#7-stage-1-설계안plan--2026-10-27-확정)
+- [x] 구역 테스트 시작 옵션 `Start-Game.ps1 -Zone D` / `-Zone 2:D`(구역 입구에서 바로 시작, 무리 · 장치는 맵 그대로) — [가이드 맵 9장](features/level/guide-map.md#9-구역-테스트), [log/008](features/level/log/008-code-zone-start.md)
 - [x] 모든 맵 공통 기본 카메라(2026-10-27, L-2): 수직 60° · 원근 34° · 화면 높이 21 m. 실제 플레이로 수치 재조정은 남음. [기록](features/level/log/002-code-camera-default-view.md)
 - [x] 주 경로 70% 이상 우측 상단이라는 [레벨 디자인 규칙](level-design-rules.md)
 - [x] 타일 바닥, 벽 패널, 선반·보관함·작업대·단말기, 구역 조명
@@ -611,11 +612,12 @@
 - [x] 기록 문서를 기능별 폴더로(앞으로만 새 구조, 옛 기록은 그대로) — [기록 001](features/tech-tools/log/001-doc-records-split.md)
 - [x] Studio 최상단 「리소스 | md」와 문서 목록 · 검색 · 읽기 — [기록 002](features/tech-tools/log/002-code-studio-md-menu.md)
 - [x] `codex/mammal-weapon-arms` 병합 검증 — [기록 003](features/tech-tools/log/003-check-merge-mammal-weapon-arms.md)
-- [ ] Studio 「기획서」 메뉴
+- [x] Studio 「기획서」 메뉴 — 첫 하위 「레벨디자인」: 맵별 구역 기능 · 평면도(T-28, 2026-10-27) — [기록 008](features/tech-tools/log/008-code-studio-level-design.md). 다른 기획서 하위 메뉴는 아직
 - [ ] 옛 기록을 기능 폴더로 옮기기(필요한 기능부터)
 
 ## 로컬 개발용 Studio (T-25, 2026-10-24)
 
+- [x] 렌더러가 멈춘 기존 Studio에서 브라우저가 뜨지 않던 실행기(I-130, 2026-10-27): health 렌더러 상태, 재시작 요청, 끝내 안 되면 경고와 함께 열기 — [기록 008](features/tech-tools/log/008-code-studio-level-design.md)
 - [x] 실행기 후속(2026-10-25): `Start-Studio.ps1` 준비 완료 후 기본 브라우저 자동 열기, 동일 작업 폴더/포트 재실행 시 서버 재사용, 준비 중 연속 실행 중복 방지. 다른 앱/작업 폴더의 포트 점유는 오류 처리. [실행 계약](studio-prototype.md#실행).
 
 - [x] 이펙트·사운드 후속: 실제 효과 생성기/셰이더13표본의 프레임 재생·정지·느리게 보기·타임라인·반복, 실제 Sfx 선택 음원43종·속성·원음 듣기. 미디어312, 캐릭터36, 도감200/8렌더, 품질33/22렌더, 파괴24/3렌더 회귀 통과. 원본/사용자 파일 불변, Debug/ExportRelease 빌드 통과, 두 export설정에서 Studio 제외. 전체 게임/공간 믹스·모든 효과 상황은 이번 검수 범위 밖. [도구 계약](studio-prototype.md).

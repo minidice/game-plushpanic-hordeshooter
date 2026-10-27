@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { listDocs, readDoc, searchDocs } from './docs.mjs';
 import { readSurfaces, saveSurfaces } from './surfaces.mjs';
+import { listLevels, readLevel, levelFloor } from './levels.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const game = path.join(root, 'game');
@@ -20,6 +21,8 @@ await mkdir(path.join(studio, 'output'), { recursive: true });
 const logPath = path.join(studio, 'output', 'renderer.log');
 const log = text => appendFile(logPath, text).catch(() => {});
 let child, pending, sequence = 0, ready = false, reloading = false, stopping = false;
+// What the launcher sees in /api/health: starting | ready | stopped (the renderer exited or failed; /api/reload restarts it).
+let rendererStatus = 'starting', rendererError = '';
 
 function run(command, arguments_) {
   return new Promise((resolve, reject) => {
@@ -32,7 +35,12 @@ function run(command, arguments_) {
 }
 
 async function startRenderer() {
-  ready = false;
+  ready = false; rendererStatus = 'starting'; rendererError = '';
+  try { await launchRenderer(); rendererStatus = 'ready'; }
+  catch (error) { rendererStatus = 'stopped'; rendererError = error.message; throw error; }
+}
+
+async function launchRenderer() {
   console.log('Building current local game and importing assets…');
   await run('dotnet', ['build', 'HordeShooter.csproj', '--nologo', '-v', 'q']);
   await run(godot, ['--headless', '--editor', '--import', '--path', game, '--quit']);
@@ -62,7 +70,10 @@ async function startRenderer() {
     renderer.on('error', error => { clearTimeout(timeout); reject(error); });
     renderer.on('exit', code => {
       clearTimeout(timeout);
-      if (child === renderer) ready = false;
+      if (child === renderer) {
+        ready = false;
+        if (!stopping && !reloading && rendererStatus === 'ready') { rendererStatus = 'stopped'; rendererError = `Godot renderer exited (${code})`; }
+      }
       if (pending) { clearTimeout(pending.timeout); pending.reject(new Error('Godot renderer stopped')); pending = null; }
       reject(new Error(`Godot renderer exited (${code})`));
     });
@@ -77,7 +88,7 @@ function request(method, data = {}) {
     const renderer = child;
     const timeout = setTimeout(() => {
       if (pending?.id !== id) return;
-      pending = null; ready = false; renderer.kill();
+      pending = null; ready = false; rendererStatus = 'stopped'; rendererError = '렌더 시간 초과로 렌더러를 멈췄습니다'; renderer.kill();
       reject(new Error('렌더 시간이 초과됐습니다. 로컬 데이터 다시 읽기를 눌러 주세요.'));
     }, 30000);
     pending = { id, resolve, reject, timeout };
@@ -130,6 +141,9 @@ const staticFiles = new Map([
   ['/weapons.js', ['weapons.js', 'text/javascript; charset=utf-8']],
   ['/weapons.css', ['weapons.css', 'text/css; charset=utf-8']],
   ['/docs', ['docs.html', 'text/html; charset=utf-8']],
+  ['/plan/level', ['level.html', 'text/html; charset=utf-8']],
+  ['/level.js', ['level.js', 'text/javascript; charset=utf-8']],
+  ['/level.css', ['level.css', 'text/css; charset=utf-8']],
   ['/docs.js', ['docs.js', 'text/javascript; charset=utf-8']],
   ['/docs.css', ['docs.css', 'text/css; charset=utf-8']],
 ]);
@@ -144,11 +158,26 @@ const server = http.createServer(async (req, res) => {
     }
     const url = new URL(req.url, origin);
     if (req.method === 'GET' && url.pathname === '/api/health') {
-      json(200, { app: 'plush-panic-studio', workspace: root, ready: ready && !reloading }); return;
+      json(200, { app: 'plush-panic-studio', workspace: root, ready: ready && !reloading, renderer: reloading ? 'starting' : rendererStatus, error: rendererError }); return;
     }
     if (req.method === 'GET' && staticFiles.has(url.pathname)) {
       const [name, mime] = staticFiles.get(url.pathname);
       res.writeHead(200, { 'Content-Type': mime }); res.end(await readFile(path.join(studio, 'web', name))); return;
+    }
+    // 기획서 › 레벨디자인: stage layouts, guide maps and floor plans from the working folder, no renderer needed.
+    if (req.method === 'GET' && url.pathname === '/plan') {
+      res.writeHead(302, { Location: '/plan/level' }); res.end(); return;
+    }
+    if (req.method === 'GET' && url.pathname === '/api/levels') {
+      json(200, { levels: await listLevels(root), loadedAt: new Date().toISOString() }); return;
+    }
+    if (req.method === 'GET' && url.pathname === '/api/levels/map') {
+      const level = await readLevel(root, url.searchParams.get('id')); json(level.status, level.body); return;
+    }
+    if (req.method === 'GET' && url.pathname === '/api/levels/floor') {
+      const floor = await levelFloor(root, url.searchParams.get('id'), url.searchParams.get('guide'));
+      if (floor.status !== 200) { json(floor.status, { error: floor.error }); return; }
+      res.writeHead(200, { 'Content-Type': 'image/svg+xml' }); res.end(floor.svg); return;
     }
     // md menu: read straight from the working folder, no renderer needed (T-26).
     if (req.method === 'GET' && url.pathname === '/api/docs') {

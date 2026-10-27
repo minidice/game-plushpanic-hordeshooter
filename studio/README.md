@@ -2,7 +2,7 @@
 
 현재 작업 폴더의 게임을 읽는 로컬 검수 시제품. **캐릭터 / 일반 몬스터 조합 / 몬스터 도감 / 오브젝트 / 무기 / 이펙트 / 상태이상 / 사운드** 메뉴에서 조합 확인, 도감 검색·분류, 실제 외형과 속성을 확인한다. 실제 Godot가 렌더하며 게임 데이터·커스터마이징 저장 파일은 변경하지 않는다.
 
-저장소 루트에서 `./studio/Start-Studio.ps1`을 실행하면 빌드·에셋 준비·렌더러 시작 후 기본 브라우저에서 [로컬 Studio](http://127.0.0.1:4317)를 자동으로 연다. 같은 작업 폴더/포트의 Studio가 이미 실행 중이면 서버를 추가로 실행하지 않고 웹 페이지만 연다. 준비 중 다시 실행해도 기존 실행을 기다린다(최대3분). 최초 서버를 실행한 터미널은 유지하고, 종료는 그 터미널의 Ctrl+C. Godot 위치는 `-GodotDir`, 포트는 `-Port`로 지정한다.
+저장소 루트에서 `./studio/Start-Studio.ps1`을 실행하면 빌드·에셋 준비·렌더러 시작 후 기본 브라우저에서 [로컬 Studio](http://127.0.0.1:4317)를 자동으로 연다. 같은 작업 폴더/포트의 Studio가 이미 실행 중이면 서버를 추가로 실행하지 않고 웹 페이지만 연다. 그 Studio의 렌더러가 멈춰 있으면 렌더러 재시작을 요청하고 기다리며, 끝내 준비되지 않아도 경고와 함께 페이지를 연다(I-130 — md · 기획서는 렌더러 없이 동작). 준비 중 다시 실행해도 기존 실행을 기다린다(최대3분). 최초 서버를 실행한 터미널은 유지하고, 종료는 그 터미널의 Ctrl+C. Godot 위치는 `-GodotDir`, 포트는 `-Port`로 지정한다.
 
 외부 실행 버튼: 실행 파일 `powershell.exe`, 인수 `-NoProfile -ExecutionPolicy Bypass -File "D:\Project\Game\game-hordeshooter\studio\Start-Studio.ps1"`. `node`·`dotnet`은 실행 환경의 PATH에 있어야 한다. 다른 앱/작업 폴더가 같은 포트를 사용하면 오류를 표시한다. 이 자동 실행 기능을 추가하기 전부터 켜 둔 구버전 Studio는 한 번 종료하고 다시 실행한다.
 
@@ -13,6 +13,8 @@
 목록은 현재 로컬 자산에서 읽는다. **펫3·드론4·부사수4는 하나의 항목에서 고/저품질을 나란히 비교**한다. 펫/드론은 별도 GLB, 부사수는 자동 LOD 설정이며 원본 삼각형 수를 표시한다. 몬스터는 배율 적용 전 기본값, 모델 충돌은 manifest 추천값이다. 이동/탄환 차단은 실제 `object_interactions.json`과 게임 공통 로더에서 읽는다. 철조망은 이동 차단/탄환 통과, 일반 구조물은 양쪽 차단이며 배치 예외와 출처를 함께 표시한다. 낮은 엄폐물(모래자루 · 콘크리트 방벽)과 파괴(깰 수 있는 강도 · 내구도)도 같은 데이터에서 표시한다(C-29). 자체 폭발 여부·반경·피해/충격 계수·지연도 같은 데이터에서 표시한다. **균열 콘크리트 벽**은 한 항목에서 파괴 전/붕괴 중/파괴 후를 선택하며, **폭발 드럼통**은 실제 전투 데이터가 연결된다. [현재/후속 계약](../doc/object-data-spec.md).
 
 실행 중 `node studio/tests/smoke.mjs`, `node studio/tests/library.mjs --all`, `node studio/tests/quality.mjs`, `node studio/tests/interactions.mjs`, `node studio/tests/destruction.mjs`로 검증한다(검사에만 Python + Pillow 필요).
+
+**기획서 › 레벨디자인**(`/plan/level`, T-28): 맵(`game/content/data/stages/*_layout.json`)을 골라 구역별 기능(가이드 맵의 역할 · 새 경험 · 섞기 · 길 안내, 무리, 장치, 구역 테스트 `-Zone` 명령)과 평면도(`tools/floorplan/render_floorplan.py`로 그때그때 그림, 가이드 표시 · 확대)를 본다. 렌더러 없이 작업 폴더 파일을 읽고, python이 PATH에 있어야 평면도가 그려진다. 읽기 전용.
 
 지인에게 모델 피드백을 받을 때는 Studio를 밖에 열지 말고 [피드백 공유 꾸러미](share/README.md)(고른 모델만 담은 오프라인 zip, md · 데이터 제외)를 만든다.
 
