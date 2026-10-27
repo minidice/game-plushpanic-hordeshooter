@@ -23,6 +23,11 @@ public sealed class StageLayout
     public sealed record Zone(string Id, string Size, bool Branch, Vector2[] Poly, string Label);
     /// <summary>A kit model placed by the data (yaw in degrees, solid = the manifest's recommended collider).</summary>
     public sealed record PropSpot(string Id, Vector2 Pos, float Yaw, bool Solid, float Scale);
+    /// <summary>
+    /// A lamp: a plain street lamp by default, or a guiding light (level guide map, L-33) with its own colour, energy and range;
+    /// Post = false hangs the light without a lamp post (a sign or a door light).
+    /// </summary>
+    public sealed record LampSpot(Vector2 Pos, string Color = "ffe1ab", float Energy = 1.1f, float Range = 9, bool Post = true);
 
     public int Stage { get; private set; }
     /// <summary>The scenario stage the safehouse hatch leads to in the large campaign (0: none, decisions.md L-30).</summary>
@@ -44,8 +49,8 @@ public sealed class StageLayout
     public List<Supply> Supplies { get; } = new();
     public List<Zone> Zones { get; } = new();
     public List<PropSpot> Props { get; } = new();
-    /// <summary>Street lamps (a kit lamp post and a light).</summary>
-    public List<Vector2> Lamps { get; } = new();
+    /// <summary>Lamps: <c>[x, z]</c> is a street lamp, an object <c>{pos, color, energy, range, post}</c> a guiding light.</summary>
+    public List<LampSpot> Lamps { get; } = new();
     public List<string> Errors { get; } = new();
 
     public static StageLayout Load(string path)
@@ -107,7 +112,13 @@ public sealed class StageLayout
                     layout.Props.Add(new PropSpot(p.GetProperty("id").GetString() ?? "", Point(p.GetProperty("pos")),
                         p.TryGetProperty("yaw", out var yaw) ? yaw.GetSingle() : 0, !p.TryGetProperty("solid", out var so) || so.GetBoolean(),
                         p.TryGetProperty("scale", out var sc) ? sc.GetSingle() : 1));
-            if (root.TryGetProperty("lamps", out var lamps)) layout.Lamps.AddRange(Points(lamps));
+            if (root.TryGetProperty("lamps", out var lamps))
+                foreach (var l in lamps.EnumerateArray())
+                    layout.Lamps.Add(l.ValueKind == JsonValueKind.Array ? new LampSpot(Point(l)) : new LampSpot(Point(l.GetProperty("pos")),
+                        l.TryGetProperty("color", out var lc) ? lc.GetString() ?? "ffe1ab" : "ffe1ab",
+                        l.TryGetProperty("energy", out var le) ? le.GetSingle() : 1.1f,
+                        l.TryGetProperty("range", out var lr) ? lr.GetSingle() : 9,
+                        !l.TryGetProperty("post", out var lp) || lp.GetBoolean()));
             foreach (var link in layout.Links)
                 if (link.Type is not ("ramp" or "ladder" or "drop" or "zipline" or "gondola"))
                     layout.Errors.Add($"{where}: link type '{link.Type}' is not ramp/ladder/drop/zipline/gondola");

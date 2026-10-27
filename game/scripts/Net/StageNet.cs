@@ -509,7 +509,8 @@ public partial class StageNet : Node
         w.U8((int)_stage.State);
         int bits = 0;
         for (int i = 0; i < map.Doors.Count; i++) if (map.Doors[i].IsOpen) bits |= 1 << i;
-        if (map.AlarmDevice is { Triggered: true }) bits |= 1 << map.Doors.Count;
+        // Doors, then alarms, one bit each in a byte (a map with more than 8 of them would lose the rest).
+        for (int i = 0; i < map.AlarmDevices.Count; i++) if (map.AlarmDevices[i].Triggered) bits |= 1 << (map.Doors.Count + i);
         w.U8(bits);
         w.U16(_stage.Interactables.Count);
         foreach (var i in _stage.Interactables) { w.U16(i.NetId); w.U8((i.Enabled ? 1 : 0) | (i.Visible ? 2 : 0)); }
@@ -852,7 +853,7 @@ public partial class StageNet : Node
             bool open = (bits & (1 << i)) != 0;
             if (open != door.IsOpen) door.SetOpen(open, door.OpenSeconds);
         }
-        if ((bits & (1 << map.Doors.Count)) != 0) map.AlarmDevice?.Sound();
+        for (int i = 0; i < map.AlarmDevices.Count; i++) if ((bits & (1 << (map.Doors.Count + i))) != 0) map.AlarmDevices[i].Sound();
         int n = r.U16();
         var listed = new HashSet<int>();
         for (int i = 0; i < n; i++)

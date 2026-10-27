@@ -128,6 +128,14 @@ public partial class LargeStageCheck : Node
 
         // ---------- supplies and raised spaces ----------
         Check(_stage.Director.EncounterErrors.Count == 0, $"{name}: every wave entry and named monster stands on open floor " + string.Join("; ", _stage.Director.EncounterErrors));
+        if (n == 1)
+        {
+            // Stage 1 guide plan (L-33): the alley car and the yard truck are two separate alarms, the first stays AlarmDevice.
+            var alarms = map.AlarmDevices;
+            Check(alarms.Count == 2 && alarms.All(a => _stage.AlarmCars.Contains(a)) && map.AlarmDevice == alarms[0]
+                  && alarms[0].GlobalPosition.X < 200 && alarms[1].GlobalPosition.X > 450,
+                $"{name}: the alley car and the yard truck are both alarms ({string.Join(", ", alarms.Select(a => a.GlobalPosition))})");
+        }
         var pickups = _stage.Interactables.Where(i => i is WeaponPickup || i.Pickup is PickupKind.Medkit or PickupKind.Ammo).ToList();
         var off = pickups.Where(i => Mathf.Abs(i.GlobalPosition.Y - tiers.GroundY(i.GlobalPosition)) > .3f || _stage.Flow.IsBlocked(i.GlobalPosition))
             .Select(i => $"{i.Name} at {i.GlobalPosition}").ToList();

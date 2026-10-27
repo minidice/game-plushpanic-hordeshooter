@@ -685,6 +685,10 @@
       ],
       [
         300,
+        -107
+      ],
+      [
+        300,
         -117
       ]
     ],
@@ -694,8 +698,12 @@
         -117
       ],
       [
+        300,
+        -107
+      ],
+      [
         314,
-        -104
+        -102
       ],
       [
         330,
@@ -957,10 +965,10 @@
     {
       "type": "noise",
       "pos": [
-        64,
-        -6
+        167,
+        -55
       ],
-      "label": "경보 차(실수로 켜면 웨이브)",
+      "label": "경보 차(골목, 실수로 켜면 웨이브)",
       "model": "car_wreck",
       "label_offset": [
         10,
@@ -1027,6 +1035,19 @@
       "label_offset": [
         -40,
         -18
+      ]
+    },
+    {
+      "type": "noise",
+      "pos": [
+        492,
+        -99
+      ],
+      "label": "경보 트럭(야적장, 울리면 위 단으로)",
+      "model": "alarm_truck",
+      "label_offset": [
+        10,
+        16
       ]
     }
   ],
@@ -1413,28 +1434,10 @@
       "solid": true
     },
     {
-      "id": "barrel",
-      "pos": [
-        328,
-        -79
-      ],
-      "yaw": 0,
-      "solid": true
-    },
-    {
       "id": "sandbags",
       "pos": [
         326,
         -98
-      ],
-      "yaw": 0,
-      "solid": true
-    },
-    {
-      "id": "barrel",
-      "pos": [
-        328,
-        -97
       ],
       "yaw": 0,
       "solid": true
@@ -1449,15 +1452,6 @@
       "solid": true
     },
     {
-      "id": "barrel",
-      "pos": [
-        388,
-        -88
-      ],
-      "yaw": 0,
-      "solid": true
-    },
-    {
       "id": "container_closed",
       "pos": [
         402,
@@ -1467,28 +1461,10 @@
       "solid": true
     },
     {
-      "id": "barrel",
-      "pos": [
-        398,
-        -120
-      ],
-      "yaw": 0,
-      "solid": true
-    },
-    {
       "id": "container_closed",
       "pos": [
         452,
         -94
-      ],
-      "yaw": 0,
-      "solid": true
-    },
-    {
-      "id": "barrel",
-      "pos": [
-        448,
-        -92
       ],
       "yaw": 0,
       "solid": true
@@ -1503,28 +1479,10 @@
       "solid": true
     },
     {
-      "id": "barrel",
-      "pos": [
-        488,
-        -126
-      ],
-      "yaw": 0,
-      "solid": true
-    },
-    {
       "id": "container_closed",
       "pos": [
         506,
         -94
-      ],
-      "yaw": 0,
-      "solid": true
-    },
-    {
-      "id": "barrel",
-      "pos": [
-        502,
-        -92
       ],
       "yaw": 0,
       "solid": true
@@ -1618,6 +1576,96 @@
       ],
       "yaw": 0,
       "solid": true
+    },
+    {
+      "id": "barrel",
+      "pos": [
+        530,
+        -111
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "barrel",
+      "pos": [
+        540,
+        -127
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "barrel",
+      "pos": [
+        546,
+        -114
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "container_closed",
+      "pos": [
+        290,
+        -122.4
+      ],
+      "yaw": 90,
+      "solid": true
+    },
+    {
+      "id": "container_closed",
+      "pos": [
+        310,
+        -125.3
+      ],
+      "yaw": 90,
+      "solid": true
+    },
+    {
+      "id": "sandbags",
+      "pos": [
+        290,
+        -117.3
+      ],
+      "yaw": 90,
+      "solid": true
+    },
+    {
+      "id": "sandbags",
+      "pos": [
+        310,
+        -120.3
+      ],
+      "yaw": 90,
+      "solid": true
+    },
+    {
+      "id": "sandbags",
+      "pos": [
+        310,
+        -117.5
+      ],
+      "yaw": 90,
+      "solid": true
+    },
+    {
+      "id": "concrete_barrier",
+      "pos": [
+        292.6,
+        -114.8
+      ],
+      "yaw": 0,
+      "solid": true
+    },
+    {
+      "id": "sandbags",
+      "pos": [
+        307.7,
+        -114.8
+      ],
+      "yaw": 0,
+      "solid": true
     }
   ],
   "lamps": [
@@ -1676,6 +1724,92 @@
     [
       598,
       -126
-    ]
+    ],
+    {
+      "pos": [
+        21,
+        -3
+      ],
+      "color": "ffe6b8",
+      "energy": 2.4,
+      "range": 12,
+      "post": false
+    },
+    {
+      "pos": [
+        69,
+        -46
+      ],
+      "color": "8fe3b4",
+      "energy": 2.0,
+      "range": 9,
+      "post": false
+    },
+    {
+      "pos": [
+        146,
+        -50
+      ],
+      "color": "ffe9c2",
+      "energy": 3.0,
+      "range": 14
+    },
+    {
+      "pos": [
+        196,
+        -76
+      ],
+      "color": "ffe9c2",
+      "energy": 2.4,
+      "range": 12
+    },
+    {
+      "pos": [
+        300,
+        -115
+      ],
+      "color": "ffd27a",
+      "energy": 2.8,
+      "range": 10,
+      "post": false
+    },
+    {
+      "pos": [
+        359,
+        -92
+      ],
+      "color": "ffb070",
+      "energy": 2.2,
+      "range": 12,
+      "post": false
+    },
+    {
+      "pos": [
+        514,
+        -112
+      ],
+      "color": "ffe9c2",
+      "energy": 2.8,
+      "range": 14
+    },
+    {
+      "pos": [
+        552,
+        -118
+      ],
+      "color": "ffe9c2",
+      "energy": 2.2,
+      "range": 11
+    },
+    {
+      "pos": [
+        594,
+        -130
+      ],
+      "color": "ffb070",
+      "energy": 2.6,
+      "range": 10,
+      "post": false
+    }
   ]
 }

@@ -50,6 +50,8 @@ public abstract partial class StageMap
     public virtual IReadOnlyList<Door> Doors => Array.Empty<Door>();
     /// <summary>The loud device (car alarm) whose going off is shared in a match.</summary>
     public virtual AlarmCar? AlarmDevice => null;
+    /// <summary>Every loud device on the map, in a fixed order (match sync sends one bit each after the doors).</summary>
+    public virtual IReadOnlyList<AlarmCar> AlarmDevices => AlarmDevice is { } alarm ? new[] { alarm } : Array.Empty<AlarmCar>();
     /// <summary>Outpost: where the generator stands.</summary>
     public virtual Vector3 CoreSpot => PlayerStart + Vector3.Right * 2;
     /// <summary>Outpost: groups of spots a wave walks in from (one group per doorway).</summary>

@@ -55,7 +55,7 @@ public sealed partial class LayoutMap : StageMap
     private readonly string? _encountersPath, _suppliesPath;
     private Door? _gate, _safehouseDoor, _startDoor;
     private Interactable? _pump, _safehouseSwitch, _startSwitch, _exit;
-    private AlarmCar? _alarmTruck;
+    private readonly List<AlarmCar> _alarms = new();
     private Rect2 _safehouseRoom;
     private readonly bool _hasDestructionExamples;
 
@@ -89,7 +89,8 @@ public sealed partial class LayoutMap : StageMap
     public override Door? StartDoor => _startDoor;
     public override Interactable? StartDoorSwitch => _startSwitch;
     public override Door? Shutter => _gate;
-    public override AlarmCar? AlarmDevice => _alarmTruck;
+    public override AlarmCar? AlarmDevice => _alarms.Count > 0 ? _alarms[0] : null;
+    public override IReadOnlyList<AlarmCar> AlarmDevices => _alarms;
     public override Interactable? ShutterPanel => _pump;
     public override string CrescendoObjectiveKey => Key("crescendo_objective", "ui_objective_lower_bridge");
     public override string CrescendoHoldOutKey => Key("crescendo_hold", "fmt_objective_hold_bridge");
@@ -358,8 +359,8 @@ public sealed partial class LayoutMap : StageMap
         }
         foreach (var lamp in Layout.Lamps)
         {
-            Prop("streetlamp", FloorAt(lamp), 90, solid: false);
-            Lamp(FloorAt(lamp) + Vector3.Up * 3.6f, "ffe1ab", 1.1f, 9, false).Name = "EnvironmentLamp";
+            if (lamp.Post) Prop("streetlamp", FloorAt(lamp.Pos), 90, solid: false);
+            Lamp(FloorAt(lamp.Pos) + Vector3.Up * (lamp.Post ? 3.6f : 3f), lamp.Color, lamp.Energy, lamp.Range, false).Name = lamp.Post ? "EnvironmentLamp" : "GuideLight";
         }
     }
 
@@ -412,8 +413,9 @@ public sealed partial class LayoutMap : StageMap
             {
                 var size = new Vector3(5.2f, 2, 2.2f);
                 if (marker.Model == "car_wreck") size = new Vector3(4.4f, 1.5f, 1.9f);
-                _alarmTruck = AlarmCar.Create(_stage, at + Vector3.Up * size.Y / 2, size, "c7a35c", PropLibrary.Instance(marker.Model != "" ? marker.Model : "alarm_truck"));
-                BlockFlow(_alarmTruck.Position, size);
+                var alarm = AlarmCar.Create(_stage, at + Vector3.Up * size.Y / 2, size, "c7a35c", PropLibrary.Instance(marker.Model != "" ? marker.Model : "alarm_truck"));
+                _alarms.Add(alarm);
+                BlockFlow(alarm.Position, size);
             }
         }
     }

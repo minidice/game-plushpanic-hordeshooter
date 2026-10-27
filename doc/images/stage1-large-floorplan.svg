@@ -81,20 +81,24 @@
 <polyline points="1480.0,148.0 1522.0,148.0 1522.0,184.0 1480.0,184.0 1480.0,148.0" fill="none" stroke="#2b2b2b" stroke-width="3" />
 <polyline points="721.0,262.0 793.0,262.0" fill="none" stroke="#7a3e12" stroke-width="3" stroke-dasharray="6,3"/>
 <polyline points="370.0,460.0 454.0,442.0" fill="none" stroke="#7a3e12" stroke-width="3" stroke-dasharray="6,3"/>
-<polygon points="866.6,393.2 954.9,444.2 983.4,394.8 895.1,343.8" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="4,3"/>
-<text x="877.0" y="460.0" font-size="10" fill="#ffffff" text-anchor="start" font-weight="normal" >기본 시점 한 화면(약 34×19 m)</text>
+<polygon points="858.3,397.4 955.4,453.5 991.7,390.6 894.6,334.5" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="4,3"/>
+<text x="877.0" y="460.0" font-size="10" fill="#ffffff" text-anchor="start" font-weight="normal" >기본 시점 한 화면(약 37×24 m, L-2)</text>
 <polyline points="268.0,532.0 277.0,424.0" fill="none" stroke="#2f6fb5" stroke-width="3" stroke-dasharray="2,4" stroke-linejoin="round" stroke-linecap="round"/>
 <polyline points="856.0,322.0 877.0,298.0 877.0,268.0" fill="none" stroke="#2f6fb5" stroke-width="3" stroke-dasharray="2,4" stroke-linejoin="round" stroke-linecap="round"/>
-<polyline points="1060.0,307.0 1006.0,274.0 970.0,223.0" fill="none" stroke="#e07b12" stroke-width="3" stroke-dasharray="7,4" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="1060.0,307.0 1006.0,274.0 970.0,253.0 970.0,223.0" fill="none" stroke="#e07b12" stroke-width="3" stroke-dasharray="7,4" stroke-linejoin="round" stroke-linecap="round"/>
 <line x1="1033.0" y1="290.5" x2="1031.9" y2="289.8" stroke="#e07b12" stroke-width="3"  stroke-linecap="round"/>
 <polygon points="1031.9,289.8 1040.4,290.7 1036.5,297.0" fill="#e07b12"/>
-<line x1="988.0" y1="248.5" x2="987.3" y2="247.5" stroke="#e07b12" stroke-width="3"  stroke-linecap="round"/>
-<polygon points="987.3,247.5 994.7,251.6 988.7,255.9" fill="#e07b12"/>
-<polyline points="970.0,223.0 1012.0,262.0 1060.0,307.0" fill="none" stroke="#e07b12" stroke-width="3" stroke-dasharray="7,4" stroke-linejoin="round" stroke-linecap="round"/>
-<line x1="991.0" y1="242.5" x2="991.8" y2="243.3" stroke="#e07b12" stroke-width="3"  stroke-linecap="round"/>
-<polygon points="991.8,243.3 983.7,240.8 988.7,235.4" fill="#e07b12"/>
-<line x1="1036.0" y1="284.5" x2="1037.0" y2="285.4" stroke="#e07b12" stroke-width="3"  stroke-linecap="round"/>
-<polygon points="1037.0,285.4 1028.8,282.9 1033.9,277.5" fill="#e07b12"/>
+<line x1="988.0" y1="263.5" x2="987.3" y2="263.1" stroke="#e07b12" stroke-width="3"  stroke-linecap="round"/>
+<polygon points="987.3,263.1 995.8,263.7 992.0,270.1" fill="#e07b12"/>
+<line x1="970.0" y1="238.0" x2="970.0" y2="237.4" stroke="#e07b12" stroke-width="3"  stroke-linecap="round"/>
+<polygon points="970.0,237.4 973.7,245.1 966.3,245.1" fill="#e07b12"/>
+<polyline points="970.0,223.0 970.0,253.0 1012.0,268.0 1060.0,307.0" fill="none" stroke="#e07b12" stroke-width="3" stroke-dasharray="7,4" stroke-linejoin="round" stroke-linecap="round"/>
+<line x1="970.0" y1="238.0" x2="970.0" y2="238.6" stroke="#e07b12" stroke-width="3"  stroke-linecap="round"/>
+<polygon points="970.0,238.6 966.3,230.9 973.7,230.9" fill="#e07b12"/>
+<line x1="991.0" y1="260.5" x2="991.8" y2="260.8" stroke="#e07b12" stroke-width="3"  stroke-linecap="round"/>
+<polygon points="991.8,260.8 983.4,261.7 985.9,254.7" fill="#e07b12"/>
+<line x1="1036.0" y1="287.5" x2="1037.0" y2="288.3" stroke="#e07b12" stroke-width="3"  stroke-linecap="round"/>
+<polygon points="1037.0,288.3 1028.7,286.3 1033.4,280.6" fill="#e07b12"/>
 <polyline points="88.0,574.0 118.0,574.0 190.0,556.0 310.0,526.0 430.0,484.0 520.0,412.0 664.0,355.0 790.0,334.0 940.0,316.0 1090.0,307.0 1147.0,307.0 1192.0,301.0 1330.0,274.0 1480.0,244.0 1636.0,220.0 1726.0,202.0 1840.0,184.0 1891.0,172.0" fill="none" stroke="#c8322a" stroke-width="5"  stroke-linejoin="round" stroke-linecap="round"/>
 <line x1="103.0" y1="574.0" x2="103.6" y2="574.0" stroke="#c8322a" stroke-width="5"  stroke-linecap="round"/>
 <polygon points="103.6,574.0 93.2,579.0 93.2,569.0" fill="#c8322a"/>
@@ -178,9 +182,9 @@
 <text x="88.0" y="578.0" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" >S</text>
 <text x="100.0" y="566.0" font-size="11" fill="#1f1f1f" text-anchor="start" font-weight="normal" stroke="#ffffffcc" stroke-width="3" paint-order="stroke">세이프룸</text>
 <text x="100.0" y="566.0" font-size="11" fill="#1f1f1f" text-anchor="start" font-weight="normal" stroke="#ffffffcc" stroke-width="3" paint-order="stroke"></text>
-<circle cx="262.0" cy="556.0" r="7" fill="none" stroke="#b5179e" stroke-width="2.5"/>
-<circle cx="262.0" cy="556.0" r="12" fill="none" stroke="#b5179e" stroke-width="1.2"/>
-<text x="272.0" y="572.0" font-size="11" fill="#1f1f1f" text-anchor="start" font-weight="normal" stroke="#ffffffcc" stroke-width="3" paint-order="stroke">경보 차(실수로 켜면 웨이브)</text>
+<circle cx="571.0" cy="409.0" r="7" fill="none" stroke="#b5179e" stroke-width="2.5"/>
+<circle cx="571.0" cy="409.0" r="12" fill="none" stroke="#b5179e" stroke-width="1.2"/>
+<text x="581.0" y="425.0" font-size="11" fill="#1f1f1f" text-anchor="start" font-weight="normal" stroke="#ffffffcc" stroke-width="3" paint-order="stroke">경보 차(골목, 실수로 켜면 웨이브)</text>
 <line x1="1083.0" y1="300.0" x2="1097.0" y2="314.0" stroke="#c8322a" stroke-width="3"/>
 <line x1="1083.0" y1="314.0" x2="1097.0" y2="300.0" stroke="#c8322a" stroke-width="3"/>
 <text x="1070.0" y="325.0" font-size="11" fill="#1f1f1f" text-anchor="start" font-weight="normal" stroke="#ffffffcc" stroke-width="3" paint-order="stroke">셔터(임무로 열림)</text>
@@ -195,6 +199,9 @@
 <rect x="1906.0" y="163.0" width="18" height="18" fill="#c8322a" stroke="#fff" stroke-width="2"/>
 <text x="1915.0" y="176.0" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" >H</text>
 <text x="1875.0" y="154.0" font-size="11" fill="#1f1f1f" text-anchor="start" font-weight="bold" stroke="#ffffffcc" stroke-width="3" paint-order="stroke">세이프하우스</text>
+<circle cx="1546.0" cy="277.0" r="7" fill="none" stroke="#b5179e" stroke-width="2.5"/>
+<circle cx="1546.0" cy="277.0" r="12" fill="none" stroke="#b5179e" stroke-width="1.2"/>
+<text x="1556.0" y="293.0" font-size="11" fill="#1f1f1f" text-anchor="start" font-weight="normal" stroke="#ffffffcc" stroke-width="3" paint-order="stroke">경보 트럭(야적장, 울리면 위 단으로)</text>
 <text x="61.0" y="559.0" font-size="12" fill="#0f7d74" text-anchor="start" font-weight="bold" stroke="#ffffffcc" stroke-width="3" paint-order="stroke">A 세이프룸 · 작은 구역</text>
 <text x="121.0" y="397.0" font-size="12" fill="#6a2c91" text-anchor="start" font-weight="bold" stroke="#ffffffcc" stroke-width="3" paint-order="stroke">B 상가 거리 · 큰 구역</text>
 <text x="235.0" y="397.0" font-size="12" fill="#0f7d74" text-anchor="start" font-weight="bold" stroke="#ffffffcc" stroke-width="3" paint-order="stroke">약국(보상 분기) · 작은 구역</text>
@@ -214,7 +221,7 @@
 <line x1="50" y1="650.0" x2="200" y2="650.0" stroke="#111" stroke-width="3"/>
 <text x="206.0" y="654.0" font-size="10" fill="#1f1f1f" text-anchor="start" font-weight="normal" >50 m</text>
 <text x="40.0" y="722.0" font-size="14" fill="#1f1f1f" text-anchor="start" font-weight="bold" >Stage 1 평면도 (L-30 · L-31, 수치는 시작값) — game/content/data/stages/stage1_large_layout.json에서 생성</text>
-<text x="40.0" y="742.0" font-size="11" fill="#1f1f1f" text-anchor="start" font-weight="normal" >주 경로 걷는 거리 약 623 m(곤돌라 제외) · 순수 이동 약 2.4분(4.4 m/s) · L-1 우측 상단 비율(그린 경로 기준) 100% · 임무 왕복 약 83 m · 큰 구역 3 · 작은 구역 6 · 1단 = 1.2 m</text>
+<text x="40.0" y="742.0" font-size="11" fill="#1f1f1f" text-anchor="start" font-weight="normal" >주 경로 걷는 거리 약 623 m(곤돌라 제외) · 순수 이동 약 2.4분(4.4 m/s) · L-1 우측 상단 비율(그린 경로 기준) 100% · 임무 왕복 약 90 m · 큰 구역 3 · 작은 구역 6 · 1단 = 1.2 m</text>
 <line x1="40" y1="770.0" x2="74" y2="770.0" stroke="#c8322a" stroke-width="4" />
 <text x="82.0" y="774.0" font-size="11" fill="#1f1f1f" text-anchor="start" font-weight="normal" >주 경로</text>
 <line x1="340" y1="770.0" x2="374" y2="770.0" stroke="#e07b12" stroke-width="4" stroke-dasharray="7,4"/>

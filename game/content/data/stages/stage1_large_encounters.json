@@ -110,15 +110,6 @@
       ]
     },
     {
-      "area": "street",
-      "reaction": "watcher",
-      "special": 1,
-      "at": [
-        128,
-        -20
-      ]
-    },
-    {
       "area": "alley",
       "reaction": "dormant",
       "count": 6,
@@ -193,15 +184,6 @@
         332,
         -120,
         -46
-      ]
-    },
-    {
-      "area": "depot",
-      "reaction": "dormant",
-      "special": 0,
-      "at": [
-        270,
-        -76
       ]
     },
     {
@@ -295,15 +277,6 @@
       ]
     },
     {
-      "area": "yard",
-      "reaction": "watcher",
-      "special": 1,
-      "at": [
-        490,
-        -120
-      ]
-    },
-    {
       "area": "overpass",
       "reaction": "dormant",
       "count": 4,
@@ -323,6 +296,15 @@
         588,
         -138,
         -118
+      ]
+    },
+    {
+      "area": "overpass",
+      "reaction": "watcher",
+      "special": 1,
+      "at": [
+        572,
+        -130
       ]
     }
   ],
@@ -753,8 +735,6 @@
   ],
   "raids": {
     "areas": [
-      "street",
-      "depot",
       "yard"
     ],
     "mob_min_s": 90,

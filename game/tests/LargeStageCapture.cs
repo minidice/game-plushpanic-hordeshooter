@@ -16,6 +16,7 @@ public partial class LargeStageCapture : Node
         (1, "a-saferoom", new(6, 0)), (1, "b-street", new(70, -14)), (1, "b-terrace", new(114, -32)), (1, "c-alley", new(172, -64)),
         (1, "d-depot", new(250, -82)), (1, "d-panel", new(300, -114)), (1, "d-stack-ladder", new(269, -90)), (1, "e-post", new(352, -89)),
         (1, "f-yard", new(440, -104)), (1, "g-overpass", new(556, -124)), (1, "h-safehouse", new(612, -133)),
+        (1, "c-alarm-car", new(170, -58)), (1, "d-panel-pocket", new(300, -108)), (1, "f-alarm-truck", new(496, -104)),
         (2, "a-drain", new(10, 0)), (2, "b-slope", new(90, -14)), (2, "b-cabin-ladder", new(150, -58)), (2, "c-ford", new(190, -46)),
         (2, "d-bunker", new(250, -62)), (2, "d-panel", new(276, -106)), (2, "e-post", new(379, -71)), (2, "f-hill", new(460, -86)),
         (2, "f-ladder-east", new(444, -108)), (2, "g-safehouse", new(594, -109)),
