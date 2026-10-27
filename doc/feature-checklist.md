@@ -20,6 +20,7 @@
 - [x] A-19 월드 링·범위·공격 예고 외형: 줍기/곡사/수류탄과 돌진·보스·원거리·포획 준비 표시를 고정 경계·부드러운 번짐으로 통일. 전용29·무기36·모드147·통합149 검사와 두 해상도 실제 렌더 확인. [변경·검사·제약](features/menu-ui/log/004-code-world-marker-polish.md).
 
 - [x] **D-14 목표 문서화**: [캠페인·난전 Blueprint](features/direction/campaign-onslaught-blueprint.md)에 사용자 목표·임시 제안·미결 사항 보존. **게임 기능 완료 표시가 아님.** [작업 기록](features/direction/log/001-doc-campaign-onslaught-blueprint.md).
+- [x] **D-14 방향 문서 3층 · 진행 점검**(2026-10-27): 핵심 목표 6개만 둔 [방향 지침](features/direction/game-direction.md)(지우지 않음), 이유 · 장단점 · 참고작 · 히스토리를 쓰는 [세부 방향성](features/direction/details/README.md) 7개 파일, Blueprint 12장에 현재 구현 대비 · 카메라 기준 밀도 · 선행 조건 · 우선순위. 문서 작업이며 게임 기능 완료가 아님. [기록](features/direction/log/002-doc-direction-guide-and-blueprint-check.md).
 - [ ] **D-14 후속 검증**: AI·밀도·순찰·난이도·새 스테이지 경험·난전 빌드와 캠페인 8시간 구성 검증. 최대 30시간의 단계/시기는 미결.
 
 

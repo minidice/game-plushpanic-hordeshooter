@@ -6,7 +6,7 @@
 
 **2026-10-26부터 기록은 기능별 폴더 `doc/features/<기능>/`에 쓴다**(T-26, [`doc/features/README.md`](doc/features/README.md), 설계 [`doc/records-split-plan.md`](doc/records-split-plan.md)). 위쪽 세 문서는 짧은 색인이다. 옛 기록은 옮기지 않고 세 문서에 그대로 있다.
 
-1. 작업 시작 시 `doc/decisions.md`, `doc/issues.md`(색인과 옛 기록), 해당 기능 폴더의 `decisions.md` · `issues.md`, 변경 영역의 상세 규격을 먼저 읽는다. 확정된 결정과 현재 구현, 임시 수치, 미구현 계획을 구분한다.
+1. 작업 시작 시 `doc/decisions.md`, `doc/issues.md`(색인과 옛 기록), 해당 기능 폴더의 `decisions.md` · `issues.md`, 변경 영역의 상세 규격을 먼저 읽는다. 확정된 결정과 현재 구현, 임시 수치, 미구현 계획을 구분한다. 게임 방향에 닿는 작업은 [`doc/features/direction/game-direction.md`](doc/features/direction/game-direction.md)(핵심 목표, 지우지 않는 방향 지침)와 관련 [세부 방향성](doc/features/direction/details/README.md)에 어긋나지 않는지 확인한다. 방향 지침은 완료돼도 지우지 않고 진행도를 쓰지 않으며, 바꿀 때는 사용자 결정으로만 바꾸고 이력을 남긴다. 세부 방향성 항목은 이유 · 출처(사용자 목표 / AI 제안) · 선택지 장단점 · 참고작 특성 · 상태 · 히스토리를 쓰고 지우지 않는다.
 2. **기능 추가·동작 변경·버그 수정 시 같은 작업에서 기록하고, 코드와 같은 커밋에 포함한다.** 완료 보고 전에 확인한다.
    - **작업 기록**: `doc/features/<기능>/log/번호-종류-주제.md`에 **새 파일**로 쓴다(번호는 그 폴더에서 1부터, 날짜를 쓰지 않음; 종류 `code` · `data` · `art` · `doc` · `check`). 변경 사항, 실행한 검사와 결과(통과 · 실패 · 종료 경고 구분), 렌더, 남은 제약, 관련 ID.
    - **결정**: 본문은 `doc/features/<기능>/decisions.md`의 ID 아래에(무엇을 정했는지, 이유, 상태, 날짜, 근거 코드/규격), `doc/decisions.md`에는 ID · 한 줄 요약 · 상태 · 날짜 · 링크 한 줄. 기존 결정을 바꿨다면 기존 ID의 현재 내용을 갱신하고 「바뀐 결정」에 이전/이후와 이유를 보존한다.

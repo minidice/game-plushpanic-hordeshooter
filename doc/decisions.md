@@ -22,7 +22,7 @@
 
 ## 1. 게임 방향 (D)
 
-- **D-14** · 캠페인·난전 핵심 Blueprint: AI·밀도·난이도·스테이지 경험과 캠페인 초기 8시간/최대 30시간 목표 · `[목표]`(구현·세부 제안 확정 아님) · 2026-10-27 · [본문](features/direction/decisions.md#d-14-캠페인과-난전-blueprint).
+- **D-14** · 캠페인·난전 핵심 Blueprint: AI·밀도·난이도·스테이지 경험과 캠페인 초기 8시간/최대 30시간 목표 · `[목표]`(구현·세부 제안 확정 아님). 핵심 목표는 지우지 않는 [방향 지침](features/direction/game-direction.md), 세부 방향은 [세부 방향성](features/direction/details/README.md)으로 분리(같은 날) · 2026-10-27 · [본문](features/direction/decisions.md#d-14-캠페인과-난전-blueprint).
 
 | ID | 결정 | 이유 | 날짜 | 상태 | 출처 |
 |---|---|---|---|---|---|
