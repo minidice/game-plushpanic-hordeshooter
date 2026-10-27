@@ -1,0 +1,67 @@
+{
+  "_comment": "Level design guide map for the large Stage 1 (doc/features/level/guide-map.md, L-33). status as-is = what the built stage gives today, read from stage1_large_layout.json / _encounters.json on 2026-10-27; not a design target. Describes the map before the Stage 1 plan changes were applied (2026-10-27, level log 006). Check: python tools/level-guide/guide.py check game/content/data/stages/guide/stage1_large_asis_guide.json (the default check reads the plan guide)",
+  "stage": 1,
+  "name": "Stage 1 도시 (큰 맵) — 현재 상태",
+  "layout": "stage1_large_layout.json",
+  "status": "as-is",
+  "date": "2026-10-27",
+  "zones": [
+    {
+      "id": "A", "size": "small", "order": 1, "progress": 0.0, "role": "safe",
+      "new": ["door_switch"], "reuse": [], "mix": [],
+      "wayfinding": ["route_shape"],
+      "note": "세이프룸. 북쪽 벽 스위치로 동쪽 문을 연다."
+    },
+    {
+      "id": "B", "size": "large", "order": 2, "progress": 0.1, "role": "fight",
+      "new": ["dormant_pack", "watcher_pack", "special_enemy", "alarm_trap", "timed_raid", "ramp_tiers", "low_cover"],
+      "reuse": [], "mix": [],
+      "wayfinding": [],
+      "note": "상가 거리. 첫 큰 구역에 새 경험 7개가 한꺼번에 나온다 — 하나씩 소개되지 않음. 가로등은 있으나 길 안내용 배치는 아님."
+    },
+    {
+      "id": "B-pharmacy", "size": "small", "order": 3, "progress": 0.2, "role": "explore",
+      "new": ["reward_branch"], "reuse": [], "mix": [],
+      "wayfinding": [],
+      "note": "약국 보상 분기."
+    },
+    {
+      "id": "C", "size": "small", "order": 4, "progress": 0.3, "role": "transit",
+      "new": ["narrow_passage"], "reuse": ["dormant_pack", "watcher_pack"], "mix": [],
+      "wayfinding": ["route_shape"],
+      "note": "골목(폭 18 m)."
+    },
+    {
+      "id": "D", "size": "large", "order": 5, "progress": 0.45, "role": "peak",
+      "new": ["ladder", "high_ground", "crescendo_panel", "mission_roundtrip", "explosive_barrel"],
+      "reuse": ["dormant_pack", "watcher_pack", "special_enemy", "ramp_tiers", "low_cover"], "mix": [],
+      "wayfinding": ["objective"],
+      "note": "창고 단지. 셔터 제어판 크레센도 → 돌아오는 길 재등장. 임무 표시만 있음."
+    },
+    {
+      "id": "E", "size": "small", "order": 6, "progress": 0.6, "role": "rest",
+      "new": ["safe_zone_mid"], "reuse": [], "mix": [],
+      "wayfinding": [],
+      "note": "경비 초소, 중간 안전 구역."
+    },
+    {
+      "id": "F", "size": "large", "order": 7, "progress": 0.75, "role": "fight",
+      "new": [],
+      "reuse": ["dormant_pack", "watcher_pack", "special_enemy", "timed_raid", "ladder", "high_ground", "explosive_barrel"], "mix": [],
+      "wayfinding": ["landmark"],
+      "note": "화물 야적장. 새 경험 없이 B · D의 구성을 다시 씀(크레인 랜드마크)."
+    },
+    {
+      "id": "G", "size": "small", "order": 8, "progress": 0.9, "role": "transit",
+      "new": [], "reuse": ["ramp_tiers", "low_cover", "dormant_pack", "watcher_pack"], "mix": [],
+      "wayfinding": ["route_shape"],
+      "note": "고가 진입로(0 → 2단)."
+    },
+    {
+      "id": "H", "size": "small", "order": 9, "progress": 1.0, "role": "safe",
+      "new": ["safehouse_close", "hatch_transition"], "reuse": [], "mix": [],
+      "wayfinding": [],
+      "note": "세이프하우스 닫기 → 바닥 해치로 Stage 2."
+    }
+  ]
+}

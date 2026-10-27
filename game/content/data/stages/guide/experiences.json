@@ -1,0 +1,60 @@
+{
+  "_comment": "Level design guide map: the catalog of experiences a zone can introduce, reuse or mix (doc/features/level/guide-map.md, L-33). status: built = in the game now, planned = decided or proposed but not built. Names and descriptions are for the guide board; ids are what the stage guides use.",
+  "version": 1,
+  "kinds": {
+    "move": "이동 · 지형",
+    "device": "장치 · 임무",
+    "enemy": "적",
+    "space": "교전 공간",
+    "flow": "진행 · 보상"
+  },
+  "roles": {
+    "safe": "안전",
+    "explore": "탐색",
+    "fight": "교전",
+    "peak": "정점",
+    "rest": "휴식",
+    "transit": "이동",
+    "finale": "피날레"
+  },
+  "wayfinding": {
+    "light": "조명(빛으로 이끔)",
+    "landmark": "랜드마크(멀리서 보이는 큰 것)",
+    "sign": "표지 · 화살표 · 낙서",
+    "objective": "목표 표시(지도 · 화면)",
+    "route_shape": "길 모양(좁아지는 길 · 열린 문)",
+    "sound": "소리(경보 · 무전)"
+  },
+  "experiences": [
+    { "id": "door_switch", "name": "스위치로 문 열기", "kind": "device", "status": "built", "desc": "벽 스위치를 눌러 문을 연다(세이프룸 출발).", "refs": ["L-32"] },
+    { "id": "ramp_tiers", "name": "경사로로 단 오르내리기", "kind": "move", "status": "built", "desc": "높이 단을 경사로로 오르내린다.", "refs": ["elevation-tiers"] },
+    { "id": "ladder", "name": "사다리 오르기", "kind": "move", "status": "built", "desc": "사다리로 위 단에 오른다(북 · 동으로 오름).", "refs": ["L-32"] },
+    { "id": "drop_shortcut", "name": "뛰어내리기 지름길", "kind": "move", "status": "built", "desc": "높은 단에서 한 방향으로 뛰어내린다.", "refs": ["large-stages"] },
+    { "id": "zipline", "name": "짚라인", "kind": "move", "status": "built", "desc": "짚라인으로 빠르게 이동, 타는 동안 사격 불가.", "refs": ["L-29"] },
+    { "id": "gondola", "name": "곤돌라", "kind": "move", "status": "built", "desc": "곤돌라를 타고 협곡을 건넌다(연출 이동).", "refs": ["L-29"] },
+    { "id": "narrow_passage", "name": "좁은 통로", "kind": "space", "status": "built", "desc": "폭 8~18 m의 골목 · 다리 · 경사로를 지난다. 줄 서는 적을 막기 좋다.", "refs": ["L-31"] },
+    { "id": "high_ground", "name": "높은 단 교전", "kind": "space", "status": "built", "desc": "높은 단에서 아래로 쏘거나, 위 단의 적에게 맞는다(바닥 예고 표시).", "refs": ["L-21", "I-125"] },
+    { "id": "low_cover", "name": "낮은 엄폐물", "kind": "space", "status": "built", "desc": "모래자루 · 방벽 뒤에서 탄을 피한다.", "refs": ["C-29"] },
+    { "id": "breach_wall", "name": "파괴 벽 뚫기", "kind": "device", "status": "built", "desc": "폭발로 콘크리트 벽을 무너뜨려 길을 연다.", "refs": ["C-29"] },
+    { "id": "explosive_barrel", "name": "폭발 드럼통", "kind": "device", "status": "built", "desc": "드럼통을 쏴 주변 적을 날린다(연쇄 폭발).", "refs": ["A-19"] },
+    { "id": "alarm_trap", "name": "경보 함정", "kind": "device", "status": "built", "desc": "경보 차 · 트럭을 건드리면 웨이브가 몰려온다(피할 수 있는 짧은 위기).", "refs": ["spawn-design 4장"] },
+    { "id": "crescendo_panel", "name": "제어판 크레센도", "kind": "device", "status": "built", "desc": "제어판을 켜면 큰 무리가 몰려오고 버텨야 길이 열린다.", "refs": ["L-29"] },
+    { "id": "mission_roundtrip", "name": "임무 왕복", "kind": "flow", "status": "built", "desc": "장치까지 갔다가 돌아오는 길에 적이 다시 나온다.", "refs": ["L-27"] },
+    { "id": "reward_branch", "name": "보상 분기", "kind": "flow", "status": "built", "desc": "주 경로 옆 짧은 곁길에 보급이 있다.", "refs": ["M-0b"] },
+    { "id": "safe_zone_mid", "name": "중간 안전 구역", "kind": "flow", "status": "built", "desc": "웨이브가 멈추는 중간 쉼터, 시간 습격이 멈춘다.", "refs": ["L-24"] },
+    { "id": "safehouse_close", "name": "세이프하우스 닫기", "kind": "flow", "status": "built", "desc": "적이 없을 때 문을 닫아 스테이지를 끝낸다.", "refs": ["L-14"] },
+    { "id": "hatch_transition", "name": "해치로 다음 스테이지", "kind": "flow", "status": "built", "desc": "바닥 해치를 길게 눌러 다음 스테이지로 간다.", "refs": ["L-14"] },
+    { "id": "dormant_pack", "name": "잠든 무리", "kind": "enemy", "status": "built", "desc": "가만히 있는 무리 — 소리 내지 않고 지나가거나 먼저 친다.", "refs": ["spawn-design 2장"] },
+    { "id": "watcher_pack", "name": "경계형 무리", "kind": "enemy", "status": "built", "desc": "보면 깨어나 달려드는 무리(시야 14 m).", "refs": ["spawn-design 2장"] },
+    { "id": "special_enemy", "name": "특수 적", "kind": "enemy", "status": "built", "desc": "대응을 흔드는 특수 몬스터(돌진 등).", "refs": ["monster-design-guide"] },
+    { "id": "timed_raid", "name": "시간 습격", "kind": "enemy", "status": "built", "desc": "큰 이동 구역에서 90~120초마다 무리가 덮친다.", "refs": ["L-29"] },
+    { "id": "gun_enemies", "name": "총기 적", "kind": "enemy", "status": "built", "desc": "조준 전조 뒤 쏘는 무장단(사선 · 엄폐 판단).", "refs": ["C-31"] },
+    { "id": "gun_stronghold", "name": "총기 적 거점", "kind": "space", "status": "planned", "desc": "총기 적이 모이는 교전 공간(진지 · 높이 차 · 증원 입구 · 경보), 인원 보정으로 1인 5~6 ~ 6인 14~17.", "refs": ["D-15"] },
+    { "id": "patrol", "name": "순찰대", "kind": "enemy", "status": "planned", "desc": "1~3마리가 정해진 구역을 돌거나 진입로를 경계한다.", "refs": ["direction/details/ai.md"] },
+    { "id": "enemy_cover", "name": "엄폐하는 적", "kind": "enemy", "status": "planned", "desc": "적이 엄폐를 쓰고(노멀), 사격 후 · 재장전 중 숨는다(하드).", "refs": ["direction/details/ai.md"] },
+    { "id": "split_objective", "name": "팀 나누기 목표", "kind": "device", "status": "planned", "desc": "장치 지키기 · 동시 작동처럼 팀이 갈라져야 하는 목표.", "refs": ["D-15"] },
+    { "id": "countdown", "name": "시간제한 목표", "kind": "device", "status": "planned", "desc": "정해진 시간 안에 해내야 하는 목표.", "refs": ["reference-level-design-research 5장"] },
+    { "id": "escape_run", "name": "탈출 질주", "kind": "flow", "status": "planned", "desc": "무너지는 곳 · 쫓아오는 무리에서 탈출로를 달린다(대표 장면).", "refs": ["direction/details/campaign-experience.md"] },
+    { "id": "finale_defense", "name": "피날레 방어", "kind": "device", "status": "planned", "desc": "캠페인 마지막: 방어 → 보스 처치.", "refs": ["L-25"] }
+  ]
+}

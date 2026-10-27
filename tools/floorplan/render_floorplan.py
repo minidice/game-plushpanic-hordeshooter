@@ -3,11 +3,15 @@
     python tools/floorplan/render_floorplan.py game/content/data/stages/stage3_layout.json doc/images/stage3-floorplan.svg
     python tools/floorplan/render_floorplan.py game/content/data/stages/stage1_large_layout.json doc/images/stage1-large-floorplan.svg
     python tools/floorplan/render_floorplan.py game/content/data/stages/stage2_large_layout.json doc/images/stage2-large-floorplan.svg
+    python tools/floorplan/render_floorplan.py game/content/data/stages/stage1_large_layout.json doc/images/stage1-large-guide-plan.svg --guide game/content/data/stages/guide/stage1_large_guide.json
+
+--guide draws each zone's guide map entry (role, new / reuse / mix counts, first new experiences; guide-map.md, L-33).
 
 Plan view: x to the right, the far side (-z) up, the camera side (+z) down. Standard library only.
 """
 import json
 import math
+import os
 import sys
 from xml.sax.saxutils import escape
 
@@ -58,10 +62,16 @@ def up_right_share(points):
     return good / total if total else 0.0
 
 
+GUIDE_ROLE_COLORS = {"safe": "#2f8f5b", "explore": "#2f6fb5", "fight": "#c8642a", "peak": "#c8322a",
+                     "rest": "#59a96a", "transit": "#8a8f98", "finale": "#7d1d6f"}
+
+
 class Plan:
-    def __init__(self, data, source=""):
+    def __init__(self, data, source="", guide=None, catalog=None):
         self.d = data
         self.source = source
+        self.guide = {z["id"]: z for z in guide["zones"]} if guide else {}
+        self.catalog = catalog or {}
         x0, z0, x1, z1 = data["bounds"]
         self.x0, self.z0 = x0, z0
         self.w = (x1 - x0) * SCALE + MARGIN * 2
@@ -157,6 +167,8 @@ class Plan:
                 x, y = self.p((min(xs), min(zs)))
                 size = "큰" if z["size"] == "large" else "작은"
                 self.text(x + 3, y + 15, f'{z["label"]} · {size} 구역', size=12, color=color, weight="bold")
+                if z["id"] in self.guide:
+                    self.guide_badge(x + 3, y + 22, self.guide[z["id"]])
         else:
             for r in d["regions"]:
                 if r["label"]:
@@ -181,18 +193,33 @@ class Plan:
             self.add(f'<line x1="{a[0]:.1f}" y1="{a[1]:.1f}" x2="{b[0]:.1f}" y2="{b[1]:.1f}" stroke="#ffffff18" stroke-width="1"/>')
             self.text(MARGIN - 4, a[1] + 3, f"z {gz}", size=9, color="#666", anchor="end", halo=False)
 
+    def guide_badge(self, x, y, g):
+        """Guide map entry under a zone label: role chip, counts, the first new experiences."""
+        roles = self.catalog.get("roles", {})
+        names = {e["id"]: e["name"] for e in self.catalog.get("experiences", [])}
+        color = GUIDE_ROLE_COLORS.get(g["role"], "#999")
+        self.add(f'<rect x="{x:.1f}" y="{y:.1f}" width="44" height="15" rx="7" fill="{color}"/>')
+        self.text(x + 22, y + 11, roles.get(g["role"], g["role"]), size=10, color="#fff", anchor="middle", weight="bold", halo=False)
+        counts = f'새 {len(g.get("new", []))} · 다시 {len(g.get("reuse", []))} · 섞기 {len(g.get("mix", []))}'
+        warn = "#c8322a" if g["size"] == "large" and not g.get("new") else "#1f1f1f"
+        self.text(x + 50, y + 11, counts, size=10, color=warn, weight="bold")
+        for k, e in enumerate(g.get("new", [])[:2]):
+            self.text(x + 2, y + 27 + k * 13, "+ " + names.get(e, e), size=10, color="#6a2c91")
+        if len(g.get("new", [])) > 2:
+            self.text(x + 2, y + 27 + 2 * 13, f'… 외 {len(g["new"]) - 2}', size=10, color="#6a2c91")
+
     def screen_footprint(self, center):
-        """One default outdoor screen of floor (about 34 m x 19 m, CameraView.Outdoor), turned by the camera yaw."""
+        """One default screen of floor (CameraView.Default, L-2: 21 m tall view at 60 degrees, 16:9 -> about 37 x 24 m), turned by the camera yaw."""
         yaw = math.radians(CAMERA_YAW_DEG)
         right = (math.cos(yaw), -math.sin(yaw))
         up = (-math.sin(yaw), -math.cos(yaw))
-        hw, hh = 17, 9.5
+        hw, hh = 18.7, 12.1
         corners = []
         for sx, sy in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
             corners.append((center[0] + right[0] * hw * sx + up[0] * hh * sy, center[1] + right[1] * hw * sx + up[1] * hh * sy))
         self.add(f'<polygon points="{self.pts(corners)}" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="4,3"/>')
         x, y = self.p((center[0] - 16, center[1] + 22))
-        self.text(x, y, "기본 시점 한 화면(약 34×19 m)", size=10, color="#ffffff", halo=False)
+        self.text(x, y, "기본 시점 한 화면(약 37×24 m, L-2)", size=10, color="#ffffff", halo=False)
 
     def link(self, l):
         a, b = l["from"], l["to"]
@@ -318,7 +345,12 @@ class Plan:
 def main():
     src, dst = sys.argv[1], sys.argv[2]
     data = load(src)
-    svg = Plan(data, src.replace("\\", "/")).draw()
+    guide = catalog = None
+    if "--guide" in sys.argv:
+        guide_path = sys.argv[sys.argv.index("--guide") + 1]
+        guide = load(guide_path)
+        catalog = load(os.path.join(os.path.dirname(guide_path), "experiences.json"))
+    svg = Plan(data, src.replace("\\", "/"), guide, catalog).draw()
     with open(dst, "w", encoding="utf-8") as f:
         f.write(svg)
     rt = data["routes"]

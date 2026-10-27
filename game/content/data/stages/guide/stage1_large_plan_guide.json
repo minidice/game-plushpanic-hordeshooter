@@ -1,0 +1,69 @@
+{
+  "_comment": "Level design guide map for the large Stage 1 — design proposal (doc/features/level/guide-map.md 7장, L-33). Zones stay as in stage1_large_layout.json; what changes is what each zone teaches and how the way is lit. Map changes it needs are listed in guide-map.md 7장. Proposed by AI and approved by the user on 2026-10-27 (\"Stage 1 설계안 이대로 확정\"); the map changes in 7.3 were applied the same day except the warehouse-sign landmark, whose model is briefed to Codex (doc/model-briefs/stage1-guide-landmark.md).",
+  "stage": 1,
+  "name": "Stage 1 도시 (큰 맵) — 설계안",
+  "layout": "stage1_large_layout.json",
+  "status": "plan",
+  "date": "2026-10-27",
+  "approved": "2026-10-27",
+  "applied": "2026-10-27 (7 of 8; landmark model pending)",
+  "zones": [
+    {
+      "id": "A", "size": "small", "order": 1, "progress": 0.0, "role": "safe",
+      "new": ["door_switch"], "reuse": [], "mix": [],
+      "wayfinding": ["light", "route_shape"],
+      "note": "세이프룸. 스위치로 문을 열면 문밖 거리 첫 가로등이 켜진 채 보인다."
+    },
+    {
+      "id": "B", "size": "large", "order": 2, "progress": 0.08, "role": "fight",
+      "new": ["dormant_pack", "watcher_pack", "low_cover"], "reuse": [], "mix": [],
+      "wayfinding": ["light", "landmark"],
+      "note": "첫 큰 구역은 기본만: 잠든 무리를 깨우지 않고 지나갈지 먼저 칠지, 경계형 무리를 방벽 뒤에서. 가로등을 주 경로 쪽에 줄지어 두고 광장 끝 출구를 가장 밝게. 멀리 창고 간판이 보임(간판 모델은 Codex 지시문 대기 — 그전까지 B의 랜드마크 길 안내는 빠져 있음)."
+    },
+    {
+      "id": "B-pharmacy", "size": "small", "order": 3, "progress": 0.18, "role": "explore",
+      "new": ["reward_branch"], "reuse": ["dormant_pack"], "mix": [],
+      "wayfinding": ["light"],
+      "note": "약국 간판 불빛으로 곁길이 있음을 알림. 안에 잠든 무리 하나와 보급."
+    },
+    {
+      "id": "C", "size": "small", "order": 4, "progress": 0.27, "role": "transit",
+      "new": ["narrow_passage", "alarm_trap"], "reuse": ["watcher_pack"], "mix": [],
+      "wayfinding": ["route_shape", "light"],
+      "note": "골목 입구에 경보 차(B에서 옮김): 좁은 길에서 건드리면 앞뒤로 몰려오는 짧고 피할 수 있는 위기. 골목 끝 조명."
+    },
+    {
+      "id": "D", "size": "large", "order": 5, "progress": 0.42, "role": "peak",
+      "new": ["ramp_tiers", "crescendo_panel", "mission_roundtrip"], "reuse": ["dormant_pack", "watcher_pack"],
+      "mix": [["narrow_passage", "low_cover"]],
+      "wayfinding": ["objective", "light", "landmark"],
+      "note": "정점. 경사로로 하역장에 올라 셔터 제어판을 켜고 크레센도를 버틴다 — 하역장 입구를 좁히고 방벽을 둬 C · B에서 배운 '좁은 길 + 엄폐'로 지키게. 제어판 위 조명, 돌아오는 길 재등장. 크레센도는 Stage 2(벙커 철문)에서 다시(W2)."
+    },
+    {
+      "id": "E", "size": "small", "order": 6, "progress": 0.58, "role": "rest",
+      "new": ["safe_zone_mid"], "reuse": [], "mix": [],
+      "wayfinding": ["light"],
+      "note": "경비 초소, 정점 바로 뒤 휴식. 따뜻한 색 조명(L4D 세이프룸 색)."
+    },
+    {
+      "id": "F", "size": "large", "order": 7, "progress": 0.72, "role": "fight",
+      "new": ["ladder", "high_ground", "timed_raid"], "reuse": ["ramp_tiers", "dormant_pack", "watcher_pack"],
+      "mix": [["alarm_trap", "ramp_tiers"], ["low_cover", "watcher_pack"]],
+      "wayfinding": ["landmark", "light"],
+      "note": "사다리로 컨테이너 위에 올라 위에서 쏘기를 처음. 시간 습격은 이 구역부터(B · D에서는 뺌). 경보 트럭이 울리면 경사로 위 단으로 올라가 버티기. 크레인이 랜드마크, 크레인 조명이 출구 쪽. 사다리 · 시간 습격은 Stage 2에서 다시(W2)."
+    },
+    {
+      "id": "G", "size": "small", "order": 8, "progress": 0.88, "role": "transit",
+      "new": ["special_enemy", "explosive_barrel"], "reuse": ["ramp_tiers"],
+      "mix": [["high_ground", "low_cover"]],
+      "wayfinding": ["route_shape", "light"],
+      "note": "마지막 도전: 고가 오르막에서 특수 적이 처음 내려온다(B · F에서 옮김). 위 단 방벽 뒤에서, 드럼통으로 아래 무리를 날린다. 특수 적 · 드럼통은 Stage 2에서 다시(W2)."
+    },
+    {
+      "id": "H", "size": "small", "order": 9, "progress": 1.0, "role": "safe",
+      "new": ["safehouse_close", "hatch_transition"], "reuse": ["door_switch"], "mix": [],
+      "wayfinding": ["light"],
+      "note": "세이프하우스 문 위 따뜻한 조명. 처음 배운 스위치로 문을 닫고 해치로 Stage 2."
+    }
+  ]
+}
