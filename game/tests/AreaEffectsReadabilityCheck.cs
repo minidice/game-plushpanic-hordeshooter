@@ -79,8 +79,9 @@ public partial class AreaEffectsReadabilityCheck : Node
         var slam=boss.Data.Skills.Values.First(s=>s.Kind==BossSkillKind.Slam);
         boss._PhysicsProcess(slam.Windup*.35f);
         Check(boss.Casting,"capture remains inside real slam windup");
-        Check(Descendants(_stage.Effects).OfType<MeshInstance3D>().Count(m=>m.Mesh is CylinderMesh)>=2,
-            "actual boss disc and fill exist");
+        // One GroundMarker draws the boundary and the filling interior since 2026-10-27 (was a disc + fill cylinder pair, I-129).
+        Check(Descendants(_stage.Effects).OfType<GroundMarker>().Any(m=>Mathf.IsEqualApprox(m.Footprint.X,slam.Radius*2,.05f)),
+            "actual boss slam marker covers the slam radius");
         _stage.Hud!._Process(0);
         _stage.ProcessMode=ProcessModeEnum.Disabled;
         foreach(var node in Descendants(_stage)) node.ProcessMode=ProcessModeEnum.Disabled;

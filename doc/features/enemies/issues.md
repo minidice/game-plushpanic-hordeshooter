@@ -25,5 +25,8 @@
 - 증상: `CommonRosterFieldCheck`(헤드리스)의 `ElevatedTell`(160행)에서 `Sequence contains no matching element`로 멈춤. 높은 단의 무장 코뿔소(AK47)가 조준을 시작한 뒤 `Effects` 아래 `BoxMesh` 예고 표시를 `Last`로 찾지 못함.
 - 원인(추정): 검사가 고정 좌표 `Ground(488,-92)` · `(484,-92)`를 쓰는데 L-30 큰 Stage 2에서 그 자리가 높은 단이 아니게 되었거나, 예고 표시가 `BoxMesh`가 아닌 다른 모양으로 바뀜(I-125 수정 이후 이펙트 작업) — 미확인.
 - 확인: 2026-10-27 카메라 기본 시점 작업(L-2) 중 검사 묶음에서 실패. 카메라 변경 전 main `eedab6d`를 별도 worktree로 받아 같은 장면을 돌려도 **똑같이 실패** — 카메라와 무관한 기존 실패([레벨 기록 002](../level/log/002-code-camera-default-view.md)).
-- 해결: 아직 없음(열림).
+- 확인된 원인(2026-10-27): `cdc786d`(2026-10-27, 공격 예고 표시 다듬기 A-19)에서 원거리 조준 예고가 늘린 상자(`BoxMesh`)에서 `GroundMarker`(바닥 평면 + 셰이더)로 바뀌었는데 검사는 상자를 찾음. 좌표 (488, -92)는 여전히 높은 단이었다(추정했던 L-30 좌표 문제는 아님).
+- 해결(2026-10-27, [기록 007](../tech-tools/log/007-code-fix-broken-checks.md)): 검사가 `Effects` 아래 마지막 `GroundMarker`를 찾게 수정. 높이 기대값(두 몸 높이의 중간 + 0.055 m)은 새 표시의 위치 규칙과 같아 그대로 둠.
 - 재발 방지 · 검사 경로: `Godot --headless --path game res://tests/CommonRosterFieldCheck.tscn`. 고칠 때 좌표를 맵 데이터의 높은 단에서 찾게 하면 맵이 바뀌어도 버팀.
+- 검사: `CommonRosterFieldCheck` 93 통과(헤드리스), `GroundMarkerCheck` 29.
+- 상태: **해결**.

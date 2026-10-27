@@ -157,7 +157,8 @@ public partial class CommonRosterFieldCheck : Node
         At(Ground(488,-92));var p=_stage.Player;
         var e=(RangedEnemy)_stage.SpawnCommonIdentity(new("armed","rhino","green","ak47"),Ground(484,-92),true);
         e.SetPhysicsProcess(false);e.StartWindup(p);await Frames(2);await Shot("plateau-tell");
-        var marker=_stage.Effects.GetChildren().OfType<MeshInstance3D>().Last(m=>m.Mesh is BoxMesh);
+        // The windup lane is a GroundMarker (A-19 world markers) since 2026-10-27; it used to be a stretched box (I-128).
+        var marker=_stage.Effects.GetChildren().OfType<GroundMarker>().Last();
         float expected=(e.Position.Y+p.Position.Y)*.5f+.055f;
         Check(Mathf.Abs(marker.GlobalPosition.Y-expected)<.12f,"elevated gun windup marker follows actors floor instead of world zero");
     }

@@ -19,15 +19,6 @@
 
 ## 1. 열림 · 제약
 
-### 2026-10-27 기존 검사 실패 (카메라 기본 시점 작업 중 발견, 변경 전 main에서도 같음)
-
-| ID | 증상 | 원인 / 메모 | 상태 | 날짜 | 관련 |
-|---|---|---|---|---|---|
-| I-126 | `ForestExpansionCheck`가 `Sequence contains no matching element`로 멈춤 | 숲 소품 중 `.glb` 자식이 없는 것(추정: 최근 `LayoutMap` 변경). [본문](features/art-environment/issues.md#i-126-forestexpansioncheck가-숲-소품-glb를-찾지-못하고-멈춤) | 열림 | 2026-10-27 | `ForestExpansionCheck` |
-| I-127 | `ForestQualityCheck`가 같은 예외로 멈춤 | I-126과 같은 원인으로 추정. [본문](features/art-environment/issues.md#i-127-forestqualitycheck가-같은-예외로-멈춤) | 열림 | 2026-10-27 | `ForestQualityCheck` |
-| I-128 | `CommonRosterFieldCheck` 고지 사격 예고 검사가 예고 표시(`BoxMesh`)를 찾지 못하고 멈춤 | 추정: 고정 좌표가 L-30 큰 Stage 2에서 다른 곳이 됨, 또는 예고 표시 방식 변경. [본문](features/enemies/issues.md#i-128-commonrosterfieldcheck-고지-사격-예고-표시를-찾지-못함) | 열림 | 2026-10-27 | `CommonRosterFieldCheck` |
-| I-129 | `AreaEffectsReadabilityCheck`(창 모드) "actual boss disc and fill exist" 실패 | 보스 내려찍기 예고의 `CylinderMesh`가 2개 미만(추정: 장판 효과 작업이 예고 그림을 바꿈). [본문](features/effects-audio/issues.md#i-129-areaeffectsreadabilitycheck-보스-예고-원판을-찾지-못함) | 열림 | 2026-10-27 | `AreaEffectsReadabilityCheck` |
-
 ### 2026-10-24 낮은 엄폐물 · 파괴 오브젝트 1차(C-29)
 
 | ID | 증상 | 원인 / 메모 | 상태 | 날짜 | 관련 |
@@ -116,6 +107,15 @@ I-120 후속 검토(2026-10-24): 정적 리뷰에서 이번 구현 중 클라이
 - **재발 방지**: 후속 UX 수정은 탄창 경고·예비탄 부족·AI 보급 조건을 구분하고, 임계값 양옆/0발/1발 탄창/무한 예비탄/장전 전환을 확인한다. 시나리오 보급 수치를 공용 HUD 규칙에 자동 반영하지 않는다.
 
 ## 2. 해결
+
+### 2026-10-27 기존 검사 실패 4개 (카메라 기본 시점 작업 중 발견, 같은 날 해결)
+
+| ID | 증상 | 원인 / 메모 | 상태 | 날짜 | 관련 |
+|---|---|---|---|---|---|
+| I-126 | `ForestExpansionCheck`가 `Sequence contains no matching element`로 멈춤 | 확인: 야적장의 파괴 콘크리트 벽 3개(`BreachWall_yard_*`, 코드로 그림)가 `KitProps`에 들어 있는데 검사가 모든 소품에 GLB가 있다고 가정. 검사 수정 · "GLB 없는 소품은 파괴 벽뿐" 검사 추가. [본문](features/art-environment/issues.md#i-126-forestexpansioncheck가-숲-소품-glb를-찾지-못하고-멈춤) | 해결 | 2026-10-27 | `ForestExpansionCheck` 45 |
+| I-127 | `ForestQualityCheck`가 같은 예외로 멈춤 | I-126과 같은 원인 · 같은 수정. [본문](features/art-environment/issues.md#i-127-forestqualitycheck가-같은-예외로-멈춤) | 해결 | 2026-10-27 | `ForestQualityCheck` 22 |
+| I-128 | `CommonRosterFieldCheck` 고지 사격 예고 검사가 예고 표시(`BoxMesh`)를 찾지 못하고 멈춤 | 확인: `cdc786d`(공격 예고 표시 다듬기)에서 원거리 예고가 `GroundMarker`로 바뀜. 검사가 `GroundMarker`를 찾게 수정, 높이 기대값은 그대로. [본문](features/enemies/issues.md#i-128-commonrosterfieldcheck-고지-사격-예고-표시를-찾지-못함) | 해결 | 2026-10-27 | `CommonRosterFieldCheck` 93 |
+| I-129 | `AreaEffectsReadabilityCheck`(창 모드) "actual boss disc and fill exist" 실패 | 확인: 같은 커밋에서 보스 원판 + 채움(원기둥 2개)이 `GroundMarker` 하나로 바뀜. 검사가 내려찍기 반지름과 같은 `GroundMarker`를 찾게 수정. [본문](features/effects-audio/issues.md#i-129-areaeffectsreadabilitycheck-보스-예고-원판을-찾지-못함) | 해결 | 2026-10-27 | `AreaEffectsReadabilityCheck` 16 |
 
 ### I-125 고지의 원거리 공격 예고선이 지형에 묻힘 — 2026-10-25
 

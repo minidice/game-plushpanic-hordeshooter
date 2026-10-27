@@ -59,5 +59,8 @@
 - 증상: `AreaEffectsReadabilityCheck`(창 모드 전용, 실제 GPU)가 "actual boss disc and fill exist"에서 실패(`AREA_READABILITY_FAIL`). 보스 내려찍기 준비 중 `Effects` 아래 `CylinderMesh`가 2개 미만.
 - 원인(추정): 장판 효과 작업(area-effects)이 보스 예고의 원판 · 채움을 다른 메시로 바꿈 — 미확인.
 - 확인: 2026-10-27 카메라 기본 시점 작업(L-2) 중 검사 묶음에서 실패. 카메라 변경 전 main `eedab6d`를 별도 worktree로 받아 같은 장면을 돌려도 **똑같이 실패** — 카메라와 무관한 기존 실패([레벨 기록 002](../level/log/002-code-camera-default-view.md)).
-- 해결: 아직 없음(열림).
+- 확인된 원인(2026-10-27): 같은 `cdc786d`에서 보스 내려찍기 예고가 원판 + 채움 원기둥 2개에서 `GroundMarker` 하나(테두리와 안쪽 채움을 한 셰이더가 그림)로 바뀌었는데 검사는 원기둥 2개를 찾음.
+- 해결(2026-10-27, [기록 007](../tech-tools/log/007-code-fix-broken-checks.md)): 검사가 `Footprint`가 내려찍기 반지름 × 2와 같은 `GroundMarker`를 찾게 수정(크기까지 확인해 이전보다 엄격).
 - 재발 방지 · 검사 경로: 창 모드 `Godot --path game res://tests/AreaEffectsReadabilityCheck.tscn`(헤드리스는 "real GPU render required"로 바로 끝남).
+- 검사: 창 모드 `AreaEffectsReadabilityCheck` 16 통과.
+- 상태: **해결**.

@@ -43,7 +43,9 @@ public partial class ForestQualityCheck : Node
         var env=_stage.GetChildren().OfType<WorldEnvironment>().Single().Environment;
         Check(map.ForestTreeCount>=4 && map.ForestTreeCount<=6 && map.ForestGrassCount>600 && map.ForestGrassCount<2000,$"study planting stays within budget: {map.ForestTreeCount} trees, {map.ForestGrassCount} tufts");
         Check(light.Weight>.99f && env.AmbientLightEnergy<.4f && sun.LightColor.R>sun.LightColor.B,"warm light and deeper ambient shading at the patch centre");
-        string Asset(Node3D holder)=>holder.GetChildren().OfType<Node3D>().First(n=>n.SceneFilePath.EndsWith(".glb")).SceneFilePath;
+        string Asset(Node3D holder)=>holder.GetChildren().OfType<Node3D>().FirstOrDefault(n=>n.SceneFilePath.EndsWith(".glb"))?.SceneFilePath??"";
+        // Kit props are GLB models except the breakable concrete walls, whose panels are built in code (I-126).
+        Check(map.KitProps.Where(t=>Asset(t)=="").All(t=>t.GetChildren().OfType<BreakableWallVisual>().Any()),"only breakable walls are kit props without a GLB model");
         var trees=map.KitProps.Where(t=>Asset(t).Contains("/forest_")).ToArray();
         Check(trees.Length==map.ForestTreeCount && trees.All(t=>t is StaticBody3D && _stage.Flow.IsBlocked(t.GlobalPosition)),"all trunks have matching physical and flow blockers");
         foreach(var tree in trees)

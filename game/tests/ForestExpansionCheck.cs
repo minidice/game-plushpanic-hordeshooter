@@ -35,7 +35,9 @@ public partial class ForestExpansionCheck : Node
         Check(_stage.Director.EncounterErrors.Count==0,"all authored enemy entry points and special positions remain open: "+string.Join("; ",_stage.Director.EncounterErrors));
         Check(map.ForestTreeCount>=40 && map.ForestTreeCount<200,$"forest-wide tree budget {map.ForestTreeCount}");
         Check(map.ForestGrassCount>5000 && map.ForestGrassCount<30000,$"forest-wide grass budget {map.ForestGrassCount}");
-        string Asset(Node3D holder)=>holder.GetChildren().OfType<Node3D>().First(n=>n.SceneFilePath.EndsWith(".glb")).SceneFilePath;
+        string Asset(Node3D holder)=>holder.GetChildren().OfType<Node3D>().FirstOrDefault(n=>n.SceneFilePath.EndsWith(".glb"))?.SceneFilePath??"";
+        // Kit props are GLB models except the breakable concrete walls, whose panels are built in code (I-126).
+        Check(map.KitProps.Where(t=>Asset(t)=="").All(t=>t.GetChildren().OfType<BreakableWallVisual>().Any()),"only breakable walls are kit props without a GLB model");
         var trees=map.KitProps.Where(t=>Asset(t).Contains("/forest_")).ToArray();
         foreach(string id in new[]{"forest_broadleaf","forest_oval","forest_fan"})
         {
