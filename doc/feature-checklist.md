@@ -1,5 +1,7 @@
 # 게임 기능 체크리스트
 
+- [x] A-19 월드 링·범위·공격 예고 외형: 줍기/곡사/수류탄과 돌진·보스·원거리·포획 준비 표시를 고정 경계·부드러운 번짐으로 통일. 전용29·무기36·모드147·통합149 검사와 두 해상도 실제 렌더 확인. [변경·검사·제약](features/menu-ui/log/004-code-world-marker-polish.md).
+
 
 - [x] **A-26 사운드 9종 적용**: 무료 CC0 소재 편집·결과 악구, 발성 변형3개, 공유 ID 분리, 근거리/군중 믹스·결과 볼륨 처리. [작업·검증](features/effects-audio/log/002-art-sound-quality-rollout.md).
 - [x] **A-26 후속 검증**: 5분 통제 전투 음향·변형별 피격 하한·실제 상태효과 캡처 확인. 시체 누적 렌더 오류(I-41)는 남음. [검사·통합 기록](features/effects-audio/log/003-check-combat-soak-main-integration.md).

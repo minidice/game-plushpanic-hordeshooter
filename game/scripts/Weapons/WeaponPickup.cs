@@ -51,8 +51,7 @@ public partial class WeaponPickup : Interactable
         pickup.OnUse = who => stage.PickUp(pickup, who ?? stage.Player);
         stage.AddChild(pickup);
         stage.AddInteractable(pickup);
-        var ringMat = Mat.Fade(new Color(color, .55f));
-        Mat.Mesh(pickup, new TorusMesh { InnerRadius = .42f, OuterRadius = .5f, Rings = 24, RingSegments = 4 }, Vector3.Up * .03f, ringMat);
+        GroundMarker.Circle(pickup, Vector3.Up * .035f, .5f, color, 0, .7f, .035f);
         pickup._display = new Node3D { Position = Vector3.Up * .35f };
         pickup.AddChild(pickup._display);
         pickup._label = new Label3D

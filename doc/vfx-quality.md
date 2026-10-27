@@ -75,4 +75,21 @@ node studio/server.mjs
 
 ### 커밋 전 재검증 — 2026-10-24
 
+아래는 당시 검사 기록이며 이후 월드 표시 계약은 마지막 절을 따른다.
+
 사용자의 커밋·main 병합·푸시 요청으로 현재 트리를 다시 검사했다. Debug 빌드 오류/경고0, `CombatEffectsCheck`78(종료 경고 없음), `Integration`149 통과. 통합 종료 ObjectDB4개 경고는 이번 실행에서 객체별 식별하지 않았으며 I-17을 유지한다. 로그 `game/output/vfx-commit-check.log`, `vfx-commit-integration.log`. 최초 fetch에서 로컬/원격 main 기준은 `a82c5d8`로 같았다. 생성 산출물과 참고 이미지 첨부 폴더는 커밋에서 제외한다.
+
+## 월드 링·공격 예고 표시 — 2026-10-27
+
+`GroundMarker`는 원/직선 범위의 공통 평면 셰이더다. `Footprint`는 표시 경계의 지름 또는 폭/길이이고 메시의 바깥0.18m 패딩은 번짐만 담는다. 밝은 선은 경계 안쪽, 약한 번짐만 바깥에 놓인다. `fwidth`로 가장자리를 완화하고 깊이 검사를 유지하며 그림자·깊이 쓰기·전체 bloom 변경은 없다. PNG/새 외부 에셋은 사용하지 않는다. 각 표시가 메시/머티리얼을 유지하고 공통 셰이더를 공유한다.
+
+| 사용처 | 경계·색·진행 |
+|---|---|
+| WeaponPickup / LootPickup | 반경0.5 / 0.4m, 기존 종류색, 내부 채움 없음. 상호작용 반경과 다른 식별용 장식 |
+| ThrowPreview | 착탄 `max(.6, AimRadius)` 또는 곡사 `max(.6, ExplosionRadius)`, 종류색. 크기 맥박 제거, 밝기만 변화. 최대거리 링은 차분한 청색/알파0.28, 궤적14점 |
+| MortarShell | 실제 `ExplosionRadius`, 주황색. 비행 시간 비율로 내부 채움. 기존 자기 피해·착탄 시점 유지 |
+| BullEnemy | 기존 폭 `Radius*2`, 길이 `Speed*ChargeTime*.7`, 붉은 경계. 전체 충돌 경로나 피해 폭의 정확한 영역을 뜻하지 않는 방향 예고 |
+| BossEnemy | 내려찍기 `skill.Radius`, 산개 사격 각 폭0.35m·길이 `skill.Range`. 붉은 고정 경계, 기존 준비 시간 비율로 내부 채움 |
+| RangedEnemy / CaptureEnemy | 독은 `HazardRadius`, 총격 폭0.12m, 포획 준비 폭0.24m/도약0.65m. 붉은 경계. 포획 후 실제 연결선은 기존 유지 |
+
+일반적인 선 폭0.045m·기본 내부 알파0.04는 제작값이다. 단일 바닥 평면으로 현재 발생원의 층 높이를 따른다. 경사·단차 전체에 투영하거나 막힌 경로를 잘라내지 않으며 이 제한은 기존과 같다. 기존 목표/타이머/기절·공격 종료·삭제 경로를 사용하고 전투/네트워크 데이터는 바꾸지 않는다. 지속 독·불·폭발 효과는 기존 공통 데이터 경로를 따른다. [현재 결정](features/effects-audio/decisions.md#a-19-월드-링공격-예고-외형-후속), [검사·렌더](features/menu-ui/log/004-code-world-marker-polish.md).

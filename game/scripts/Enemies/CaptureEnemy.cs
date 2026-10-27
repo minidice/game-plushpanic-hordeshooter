@@ -12,6 +12,7 @@ public partial class CaptureEnemy : Enemy
     private float _timer, _cooldown = 1.5f, _damageTimer;
     private Vector3 _target, _direction;
     private MeshInstance3D? _marker;
+    private GroundMarker? _warning;
     /// <summary>The survivor being aimed at or held. Fixed from windup until the capture ends.</summary>
     private Player? _victim;
 
@@ -99,7 +100,8 @@ public partial class CaptureEnemy : Enemy
         Stage.Net?.OnEnemyAttack(this, NetAttack.Capture, victim, victim.GlobalPosition);
         _target = victim.GlobalPosition;
         Awake = true;
-        DrawLine(_target + Vector3.Up * .04f, IsLeaper ? .65f : .24f, new Color("f9b34c"));
+        _warning?.QueueFree();
+        _warning = GroundMarker.Lane(Stage.Effects, GlobalPosition + Vector3.Up * .04f, _target + Vector3.Up * .04f, IsLeaper ? .65f : .24f, GroundMarker.Danger);
         Stage.Sfx.PlayAt("bull_snort", GlobalPosition + Vector3.Up, -5, IsLeaper ? 1.5f : .7f);
     }
 
@@ -169,7 +171,13 @@ public partial class CaptureEnemy : Enemy
         if (distance > .01f) _marker.LookAt(target, Vector3.Up);
     }
 
-    private void ClearMarker() { if (IsInstanceValid(_marker)) _marker!.QueueFree(); _marker = null; }
+    private void ClearMarker()
+    {
+        if (IsInstanceValid(_marker)) _marker!.QueueFree();
+        _marker = null;
+        if (IsInstanceValid(_warning)) _warning!.QueueFree();
+        _warning = null;
+    }
     protected override void OnStunned() => CancelCapture();
     public override void Die(Vector3 direction, float force) { CancelCapture(); base.Die(direction, force); }
     public override void _ExitTree()

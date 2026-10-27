@@ -50,9 +50,8 @@ public partial class BossEnemy : BullEnemy
     private float _afterLeft, _afterTime, _roarLeft, _roarTime, _stateTime, _steamTimer, _dustTimer;
     private bool _roarPending;
     private Mode _lastState = Mode.Chase;
-    private MeshInstance3D? _disc, _fill;
-    private StandardMaterial3D? _discMat;
-    private readonly List<MeshInstance3D> _lanes = new();
+    private GroundMarker? _disc;
+    private readonly List<GroundMarker> _lanes = new();
 
     public override void _Ready()
     {
@@ -181,9 +180,8 @@ public partial class BossEnemy : BullEnemy
         Hurt = Mathf.Max(Hurt, .25f * t);
         if (skill.Kind == BossSkillKind.FanShot) FaceOverride = _castDir;
         if (skill.Kind == BossSkillKind.Slam && skill.Leap > 0) Leap(skill, t);
-        if (_fill != null) _fill.Scale = new Vector3(Mathf.Max(.02f, t), 1, Mathf.Max(.02f, t));
-        if (_discMat != null) _discMat.AlbedoColor = new Color(1, .2f, .15f, .16f + .14f * Mathf.Abs(Mathf.Sin(_castTime * 14)));
-        foreach (var lane in _lanes) lane.Scale = new Vector3(1, 1, Mathf.Max(.05f, t));
+        _disc?.SetProgress(t);
+        foreach (var lane in _lanes) lane.SetProgress(t);
         if (_castTime < skill.Windup) return;
         _casting = null;
         _leapHeight = 0;
@@ -350,38 +348,29 @@ public partial class BossEnemy : BullEnemy
 
     private void ShowDisc(float r)
     {
-        _discMat = Mat.Fade(new Color(1, .2f, .15f, .2f));
-        _disc = Mat.Mesh(Stage.Effects, new CylinderMesh { TopRadius = r, BottomRadius = r, Height = .02f, RadialSegments = 48 }, _castAt + Vector3.Up * .03f, _discMat);
-        _fill = Mat.Mesh(Stage.Effects, new CylinderMesh { TopRadius = r, BottomRadius = r, Height = .025f, RadialSegments = 48 }, _castAt + Vector3.Up * .05f,
-            Mat.Fade(new Color(1, .35f, .2f, .38f)));
-        _fill.Scale = new Vector3(.02f, 1, .02f);
+        _disc = GroundMarker.Circle(Stage.Effects, _castAt + Vector3.Up * .03f, r, GroundMarker.Danger, .055f);
+        _disc.SetProgress(0);
     }
 
-    /// <summary>One red lane per shot on the floor, growing outward as the windup fills.</summary>
+    /// <summary>One fixed red boundary per shot; its interior fills outward during the windup.</summary>
     private void ShowLanes(BossSkill skill)
     {
         int count = Mathf.Max(1, skill.Count);
-        var mat = Mat.Fade(new Color(1, .25f, .2f, .3f));
         for (int i = 0; i < count; i++)
         {
             float a = count == 1 ? 0 : Mathf.DegToRad(-skill.SpreadDegrees * .5f + skill.SpreadDegrees * i / (count - 1));
             var dir = _castDir.Rotated(Vector3.Up, a);
-            var pivot = new MeshInstance3D();
-            Stage.Effects.AddChild(pivot);
-            pivot.GlobalPosition = _castAt + Vector3.Up * .04f;
-            pivot.LookAt(pivot.GlobalPosition + dir, Vector3.Up);
-            Mat.Box(pivot, new Vector3(0, 0, -skill.Range * .5f), new Vector3(.35f, .02f, skill.Range), mat);
-            pivot.Scale = new Vector3(1, 1, .05f);
-            _lanes.Add(pivot);
+            var start = _castAt + Vector3.Up * .04f;
+            var lane = GroundMarker.Lane(Stage.Effects, start, start + dir * skill.Range, .35f, GroundMarker.Danger);
+            lane.SetProgress(0);
+            _lanes.Add(lane);
         }
     }
 
     private void HideTelegraphs()
     {
         _disc?.QueueFree();
-        _fill?.QueueFree();
-        _disc = _fill = null;
-        _discMat = null;
+        _disc = null;
         foreach (var lane in _lanes) lane.QueueFree();
         _lanes.Clear();
     }

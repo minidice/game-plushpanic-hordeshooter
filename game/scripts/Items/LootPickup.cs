@@ -32,7 +32,7 @@ public partial class LootPickup : Interactable
             ItemKind.Medkit => new Color("e8eee6"),
             _ => new Color("8dff9c"),
         };
-        Mat.Mesh(this, new TorusMesh { InnerRadius = .34f, OuterRadius = .4f, Rings = 20, RingSegments = 4 }, Vector3.Up * .03f, Mat.Fade(new Color(color, .5f)));
+        GroundMarker.Circle(this, Vector3.Up * .035f, .4f, color, 0, .65f, .03f);
         _display = new Node3D { Position = Vector3.Up * .3f };
         AddChild(_display);
         if (Item.Kind == ItemKind.Throwable && ArmoryCatalog.Throwables.TryGetValue(Item.Id, out var def))
