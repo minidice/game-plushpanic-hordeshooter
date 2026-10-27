@@ -11,8 +11,7 @@ public partial class ThrowPreview : Node3D
 {
     private const int ArcDots = 14;
 
-    private MeshInstance3D _landing = null!, _reach = null!;
-    private StandardMaterial3D _landingMat = null!;
+    private GroundMarker _landing = null!, _reach = null!;
     private readonly List<MeshInstance3D> _dots = new();
     private float _time;
 
@@ -22,12 +21,13 @@ public partial class ThrowPreview : Node3D
     {
         var preview = new ThrowPreview { Name = "ThrowPreview" };
         parent.AddChild(preview);
-        var dotMat = Mat.Fade(new Color(1, 1, 1, .7f));
+        var dotMat = Mat.Fade(new Color(.86f, .96f, 1, .82f));
         for (int i = 0; i < ArcDots; i++)
-            preview._dots.Add(Mat.Mesh(preview, new SphereMesh { Radius = .06f, Height = .12f, RadialSegments = 6, Rings = 3 }, Vector3.Zero, dotMat));
-        preview._landingMat = Mat.Fade(new Color(1, .7f, .3f, .7f));
-        preview._landing = Mat.Mesh(preview, new TorusMesh { InnerRadius = .94f, OuterRadius = 1f, Rings = 40, RingSegments = 4 }, Vector3.Zero, preview._landingMat);
-        preview._reach = Mat.Mesh(preview, new TorusMesh { InnerRadius = .985f, OuterRadius = 1f, Rings = 64, RingSegments = 3 }, Vector3.Zero, Mat.Fade(new Color(1, 1, 1, .18f)));
+            preview._dots.Add(Mat.Mesh(preview, new SphereMesh { Radius = .045f, Height = .09f, RadialSegments = 10, Rings = 5 }, Vector3.Zero, dotMat));
+        preview._landing = GroundMarker.Circle(preview, Vector3.Zero, 1, KindColor(ThrowableKind.Frag));
+        preview._landing.Name = "Landing";
+        preview._reach = GroundMarker.Circle(preview, Vector3.Zero, 1, new Color(.6f, .83f, 1), 0, .28f, .025f);
+        preview._reach.Name = "Reach";
         return preview;
     }
 
@@ -39,11 +39,12 @@ public partial class ThrowPreview : Node3D
         if (tiers is { Any: true }) Target = Target with { Y = tiers.GroundY(Target) + .2f };
         float radius = Mathf.Max(.6f, def.AimRadius);
         _landing.GlobalPosition = new Vector3(Target.X, Target.Y - .2f + .06f, Target.Z);
-        _landing.Scale = new Vector3(radius, 1, radius) * (1 + .03f * Mathf.Sin(_time * 8));
+        _landing.SetRadius(radius);
         var color = KindColor(def.Kind);
-        _landingMat.AlbedoColor = new Color(color, .55f + .2f * Mathf.Sin(_time * 8));
+        _landing.SetTint(color);
+        _landing.SetOpacity(.86f + .08f * Mathf.Sin(_time * 4));
         _reach.GlobalPosition = new Vector3(playerFeet.X, tiers is { Any: true } ? playerFeet.Y + .05f : .05f, playerFeet.Z);
-        _reach.Scale = new Vector3(def.MaxRange, 1, def.MaxRange);
+        _reach.SetRadius(def.MaxRange);
 
         float flight = ThrownItem.FlightTime(from, Target);
         for (int i = 0; i < _dots.Count; i++)
@@ -60,10 +61,11 @@ public partial class ThrowPreview : Node3D
         Target = target;
         float radius = Mathf.Max(.6f, def.ExplosionRadius);
         _landing.GlobalPosition = new Vector3(target.X, target.Y + .06f, target.Z);
-        _landing.Scale = new Vector3(radius, 1, radius) * (1 + .03f * Mathf.Sin(_time * 8));
-        _landingMat.AlbedoColor = new Color(KindColor(ThrowableKind.Frag), .55f + .2f * Mathf.Sin(_time * 8));
+        _landing.SetRadius(radius);
+        _landing.SetTint(KindColor(ThrowableKind.Frag));
+        _landing.SetOpacity(.86f + .08f * Mathf.Sin(_time * 4));
         _reach.GlobalPosition = new Vector3(playerFeet.X, tiers is { Any: true } ? playerFeet.Y + .05f : .05f, playerFeet.Z);
-        _reach.Scale = new Vector3(def.MaxRange, 1, def.MaxRange);
+        _reach.SetRadius(def.MaxRange);
         float flight = ThrownItem.FlightTime(from, target);
         for (int i = 0; i < _dots.Count; i++)
             _dots[i].GlobalPosition = ThrownItem.ArcPoint(from, target, flight * (i + 1) / (_dots.Count + 1));

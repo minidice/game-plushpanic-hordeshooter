@@ -37,6 +37,7 @@ public partial class WeaponAimCheck : Node
 
     private async Task Run()
     {
+        if (Array.Exists(OS.GetCmdlineUserArgs(), a => a == "--english")) Loc.Language = "eng";
         // ---------- data ----------
         var db = WeaponDatabase.Current;
         Check(db.Errors.Count == 0, "weapon data loads with the new aim and recoil columns" + (db.Errors.Count > 0 ? ": " + string.Join("; ", db.Errors) : ""));
@@ -159,6 +160,7 @@ public partial class WeaponAimCheck : Node
         player.HoldAim(true);
         for (int i = 0; i < 60 && !(player.CritReady && player.FocusTarget == mark); i++) { player.SetControls(Vector2.Zero, onMark, false); await Frames(1); }
         Check(player.CritReady && player.FocusTarget == mark, "half a second on a monster readies a crit");
+        await Shot("focus-ready");
         for (int i = 0; i < 20; i++) { player.SetControls(Vector2.Zero, onMark, true); await Frames(1); }
         player.SetControls(Vector2.Zero, onMark, false);
         Check(crits.Count >= 2 && crits[0] && crits.Skip(1).All(c => !c), $"only the first shot of the burst crits ({string.Join(" ", crits.Select(c => c ? "C" : "."))})");
@@ -173,5 +175,12 @@ public partial class WeaponAimCheck : Node
         player.HoldAim(false);
         var pellets = ArmoryCatalog.Weapon("r870");
         Check(pellets.Pellets > 1 && pellets.AimSpread < pellets.BaseSpread, "the shotgun's pellet cone tightens with aiming (aim_spread_deg below spread_deg)");
+        _stage.Hud.SetPaused(true);
+        await Shot("controls-open");
+        for (int i = 0; i < 3; i++) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        await Shot("controls");
+        // Keep the captured scene alive through the renderer's in-flight frames before cleanup.
+        for (int i = 0; i < 15; i++) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        _stage.Hud.SetPaused(false);
     }
 }

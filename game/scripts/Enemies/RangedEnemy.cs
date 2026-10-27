@@ -14,7 +14,7 @@ public partial class RangedEnemy : Enemy
     private RangedTrait Shot => Monster.Ranged!;
     private float _timer, _cooldown = 2f;
     private Vector3 _target;
-    private MeshInstance3D? _marker;
+    private GroundMarker? _marker;
     private BaseCore? _targetCore;
     public string ShotSound => Monster.CommonIdentity?.Weapon == "woodbow" ? "hunter_bow_release" : Monster.Behavior == MonsterBehavior.Shooter ? "shot_rifle" : "zombie_hit";
 
@@ -139,17 +139,15 @@ public partial class RangedEnemy : Enemy
         // Shooting at you from the dark: you see who it is from the windup until a moment after the shot (C-23).
         RevealTo(victim, Shot.Windup + 1f + VisionSystem.RevealAfterHit);
         Stage.Net?.OnEnemyAttack(this, NetAttack.Ranged, victim, _target);
-        var color = Shot.HazardSeconds > 0 ? new Color("b4df45") : new Color("ff6252");
         // The locked target is torso-height. Telegraphs belong on the actors' floor,
         // including upper tiers; a world-zero marker disappears inside elevated terrain.
         var flatTarget = new Vector3(_target.X, _target.Y - .8f + .055f, _target.Z);
         if (Shot.HazardSeconds > 0)
-            _marker = Mat.Mesh(Stage.Effects, new CylinderMesh { TopRadius = Shot.HazardRadius, BottomRadius = Shot.HazardRadius, Height = .025f }, flatTarget, Mat.Fade(new Color(color, .35f)));
+            _marker = GroundMarker.Circle(Stage.Effects, flatTarget, Shot.HazardRadius, GroundMarker.Danger, .07f);
         else
         {
             var start = GlobalPosition + Vector3.Up * .055f;
-            _marker = Mat.Box(Stage.Effects, (start + flatTarget) * .5f, new Vector3(.12f, .03f, start.DistanceTo(flatTarget)), Mat.Glow(color));
-            if (start.DistanceTo(flatTarget) > .01f) _marker.LookAt(flatTarget, Vector3.Up);
+            _marker = GroundMarker.Lane(Stage.Effects, start, flatTarget, .12f, GroundMarker.Danger);
         }
         if (!HunterBow) Stage.Sfx.PlayAt("bull_snort", GlobalPosition, -8, 1.8f);
     }

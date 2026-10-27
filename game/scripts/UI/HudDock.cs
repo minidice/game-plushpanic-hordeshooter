@@ -23,7 +23,7 @@ public partial class Hud
         return new StyleBoxFlat
         {
             BgColor = fill ?? new Color(.025f, .045f, .09f, .83f),
-            BorderColor = border ?? new Color(.45f, .57f, .72f, .26f),
+            BorderColor = border ?? new Color(.45f, .57f, .72f, .10f),
             BorderWidthTop = 1, BorderWidthRight = 1, BorderWidthBottom = 1, BorderWidthLeft = 1,
             CornerRadiusTopLeft = radius, CornerRadiusTopRight = radius,
             CornerRadiusBottomLeft = radius, CornerRadiusBottomRight = radius,
@@ -109,16 +109,16 @@ public partial class Hud
         var left = Stage.Player.RollCooldownLeft;
         var center = new Vector2(c.Size.X / 2, 32);
         var ready = left <= 0;
-        c.DrawCircle(center, 28, new Color(.025f, .045f, .09f, .9f));
-        c.DrawArc(center, 26, 0, Mathf.Tau, 48, new Color(.28f, .36f, .48f, .6f), 3, true);
+        c.DrawCircle(center, 28, new Color(.008f, .016f, .025f, .70f), true, -1, true);
+        c.DrawArc(center, 26, 0, Mathf.Tau, 96, new Color(.28f, .36f, .48f, .25f), 3, true);
         var progress = 1 - Mathf.Clamp(left / Player.RollCooldown, 0, 1);
         if (progress > 0)
-            c.DrawArc(center, 26, -Mathf.Pi / 2, -Mathf.Pi / 2 + Mathf.Tau * progress, 48, ready ? HudWarm : HudMuted, 3, true);
+            DrawLightArc(c, center, 26, -Mathf.Pi / 2 + Mathf.Tau * progress, new Color(1, .55f, .18f), ready ? 1 : .55f);
         var font = c.GetThemeDefaultFont();
         if (ready)
         {
             // A simple lightning mark reads as the leap ability without implying an extra stat.
-            c.DrawColoredPolygon(new[] { center + new Vector2(3, -13), center + new Vector2(-9, 2), center + new Vector2(-1, 2), center + new Vector2(-4, 14), center + new Vector2(10, -3), center + new Vector2(2, -3) }, HudWarm);
+            c.DrawColoredPolygon(new[] { center + new Vector2(3, -13), center + new Vector2(-9, 2), center + new Vector2(-1, 2), center + new Vector2(-4, 14), center + new Vector2(10, -3), center + new Vector2(2, -3) }, HudWhite);
         }
         else c.DrawString(font, new Vector2(0, 38), $"{left:0.0}", HorizontalAlignment.Center, c.Size.X, 17, HudWhite);
         c.DrawString(font, new Vector2(0, 78), "SPACE", HorizontalAlignment.Center, c.Size.X, 11, HudMuted);

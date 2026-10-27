@@ -8,7 +8,7 @@ public partial class HudEquipmentSlot : PanelContainer
     private readonly Label _name;
     private readonly Label _count;
     private readonly StyleBoxFlat _normal = Hud.HudPlate(pad: 7, radius: 12);
-    private readonly StyleBoxFlat _selected = Hud.HudPlate(new Color(.12f, .12f, .15f, .94f), Hud.HudWarm, 7, 12);
+    private readonly StyleBoxFlat _selected = Hud.HudPlate(new Color(.12f, .12f, .15f, .94f), new Color(Hud.HudWarm, .5f), 7, 12);
     private readonly StyleBoxFlat _medkitPlate = Hud.HudPlate(new Color(.12f, .18f, .2f, .9f), Hud.HudMuted, 0, 6);
     private Texture2D? _texture;
     private string _iconPath = "", _kind = "";
