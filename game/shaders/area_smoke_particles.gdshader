@@ -6,6 +6,9 @@ uniform float card_height = 1.0;
 uniform float clock = 0.0;
 uniform float active_lifetime = 5.0;
 uniform float tail_seconds = 0.0;
+uniform float spread_seconds = 1.25;
+uniform float appear_seconds = .65;
+uniform float radial_delay = .9;
 
 float variation(float i) { return fract(sin(i * 127.1 + 911.7) * 43758.5453); }
 
@@ -14,9 +17,9 @@ void pose(uint index, inout mat4 transform, inout vec4 color, inout vec4 custom)
     float phase = variation(i + 2.0) * 6.2831853;
     float radial = sqrt((i + .5) / float(root_count));
     float pace = min(1.0, active_lifetime / 2.0);
-    float begin = max(0.0, radial - sqrt(.5 / float(root_count))) * .9 * pace;
-    float appear = smoothstep(begin, begin + .65 * pace, clock);
-    float spread = smoothstep(0.0, 1.25 * pace, clock);
+    float begin = max(0.0, radial - sqrt(.5 / float(root_count))) * radial_delay * pace;
+    float appear = smoothstep(begin, begin + appear_seconds * pace, clock);
+    float spread = smoothstep(0.0, spread_seconds * pace, clock);
     float angle = i * 2.399963 + (variation(i + 7.0) - .5) * .8;
     float radius = radial * root_radius * mix(.12, 1.0, spread);
     float end = tail_seconds > 0.0 ? active_lifetime + tail_seconds * (.55 + .4 * variation(i + 31.0))

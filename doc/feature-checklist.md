@@ -1,5 +1,6 @@
 # 게임 기능 체크리스트
 
+- [x] A-27/A-28/A-29 공간 채움: 큰 반투명 카드로 화염·연무/폭발 내부를 연결. 중앙 확산/고정 불꽃/개별 소멸 유지, 바닥 그림 없음. [검사·렌더·제약](features/effects-audio/log/014-art-volume-fill.md).
 - [x] A-27/A-28/A-29 범위 보정: 실제 피해 반경에 가까운 전 방향 폭발 입자와 지속 불꽃 외곽 분포, 로켓 전방 편향 축소. 바닥 링/피해 변경 없음. [검사·렌더·제약](features/effects-audio/log/013-art-damage-reach.md).
 
 - [x] A-29 기존 기본/수류탄/로켓/박격포/유인 폭발을 반투명 카드 질감으로 확장. 바닥 링 제거, 기존 화염·연무·연료통과 피해/음향 보존. 공통 Studio/전투/부하 통합 검사. [통합 기록](features/effects-audio/log/012-check-effects-rollout.md).

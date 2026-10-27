@@ -31,10 +31,10 @@ public partial class AreaSurfaceVisual : Node3D
         if (fire)
         {
             Layer("Flames", true, Math.Max(1, _def.Lobes), _def.Opacity, _radius * .31f, Math.Max(.45f, _def.Rise * 1.65f), .75f, 1.25f);
-            Layer("ThinSmoke", false, Math.Max(4, _def.Lobes / 2), _def.Opacity * .22f, _radius * .65f, _radius * .43f, 1.8f, 2.2f);
+            Layer("ThinSmoke", false, Math.Max(4, _def.Lobes * 2 / 3), _def.Opacity * .46f, _radius * 1.05f, _radius * .65f, 1.8f, 2.2f);
             if (_def.Particles > 0) Layer("Embers", true, _def.Particles, .7f, .045f, .09f, 1.1f, 1.2f, true);
         }
-        else Layer("LowSmoke", false, Math.Max(1, _def.Lobes), _def.Opacity, _radius * .85f, _radius * .65f, 2.3f, 3.2f);
+        else Layer("LowSmoke", false, Math.Max(1, _def.Lobes), _def.Opacity * .9f, _radius * 1.05f, _radius * .65f, 2.3f, 3.2f);
     }
 
     private void Layer(string name, bool flame, int amount, float alpha, float width, float height, float life, float warmup, bool ember = false)
@@ -68,6 +68,14 @@ public partial class AreaSurfaceVisual : Node3D
             timeline.SetShaderParameter("card_height", height);
             timeline.SetShaderParameter("active_lifetime", _lifetime);
             timeline.SetShaderParameter("tail_seconds", _def.ResidueSeconds);
+            if (!flame)
+            {
+                // A broad, low volume connects the flame roots before the outer flames finish igniting.
+                bool fireFill = _def.Family == "fire";
+                timeline.SetShaderParameter("spread_seconds", fireFill ? .38f : .95f);
+                timeline.SetShaderParameter("appear_seconds", fireFill ? .24f : .55f);
+                timeline.SetShaderParameter("radial_delay", fireFill ? .12f : .45f);
+            }
             _timelines.Add(timeline);
             motion = timeline;
         }
@@ -108,6 +116,12 @@ public partial class AreaSurfaceVisual : Node3D
             float visibility = shaped ? 1 : Mathf.SmoothStep(0, .6f, age)
                 * (1 - Mathf.SmoothStep(Math.Max(0, _lifetime - .35f), _lifetime + Math.Min(.35f, _def.ResidueSeconds), age));
             var color = material.AlbedoColor;
+            if (_def.Family == "fire" && particles.Name == "ThinSmoke")
+            {
+                // Warm translucent combustion volume cools into ordinary smoke at hazard expiry.
+                float cool = Mathf.SmoothStep(Math.Max(0, _lifetime - .35f), _lifetime + Math.Min(.35f, _def.ResidueSeconds), age);
+                color = _def.Color.Lerp(_def.Accent, .38f).Lerp(_def.SmokeColor, cool);
+            }
             color.A = alpha * visibility;
             material.AlbedoColor = color;
         }

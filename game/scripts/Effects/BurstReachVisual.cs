@@ -18,12 +18,12 @@ public partial class BurstReachVisual : Node3D
         if (def.Lobes == 0) return visual;
         var random = new RandomNumberGenerator { Seed = 17621 };
         // Fixed angular coverage: directional core art must not hide the other side of a spherical blast.
-        const int count = 24;
+        const int count = 28;
         for (int i = 0; i < count; i++)
         {
             bool edge = i < 16;
             float angle = edge ? Mathf.Tau * i / 16 + random.RandfRange(-.055f, .055f) : i * 2.39996f;
-            float distance = radius * (edge ? random.RandfRange(.72f, .79f) : random.RandfRange(.2f, .48f));
+            float distance = radius * (edge ? random.RandfRange(.72f, .79f) : Mathf.Sqrt((i - 16 + .5f) / 12) * .58f);
             int tile = i % 4;
             var color = def.Color.Lerp(def.Accent, .35f);
             var material = new StandardMaterial3D {
@@ -39,7 +39,7 @@ public partial class BurstReachVisual : Node3D
             var mesh = CombatBurstEffect.Mesh(visual, new QuadMesh { Size = Vector2.One }, material);
             mesh.Name = "ReachPuff" + i;
             visual._puffs.Add((mesh, material, new Vector3(Mathf.Cos(angle)*distance, radius*.12f, Mathf.Sin(angle)*distance),
-                radius * (edge ? random.RandfRange(.66f,.74f) : random.RandfRange(.75f,.95f)),
+                radius * (edge ? random.RandfRange(.66f,.74f) : random.RandfRange(.9f,1.1f)),
                 Math.Min(.48f,def.Duration*.7f)*random.RandfRange(.8f,1)));
         }
         return visual;
