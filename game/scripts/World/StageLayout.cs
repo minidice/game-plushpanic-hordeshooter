@@ -17,7 +17,8 @@ public sealed class StageLayout
     public sealed record Edge(string Kind, bool Climbable, Vector2[] Line);
     public sealed record Link(string Type, Vector2 From, Vector2 To, float Width);
     /// <summary>A point beat. <see cref="Kind"/> picks how it is built (blocked: bridge | shutter; mission: pump | panel), <see cref="Model"/> overrides its prop.</summary>
-    public sealed record Marker(string Type, Vector2 Pos, string Label, string Kind = "", string Model = "");
+    /// <summary><see cref="Button"/> · <see cref="Width"/>: a switch gate's button spot and the gate's width (level log 016).</summary>
+    public sealed record Marker(string Type, Vector2 Pos, string Label, string Kind = "", string Model = "", Vector2? Button = null, float Width = 0);
     public sealed record Supply(string Kind, Vector2 Pos);
     /// <summary>A zone of the stage plan (decisions.md L-31): "large" or "small", branch = a reward or mission detour off the main route.</summary>
     public sealed record Zone(string Id, string Size, bool Branch, Vector2[] Poly, string Label);
@@ -98,7 +99,9 @@ public sealed class StageLayout
                     layout.Markers.Add(new Marker(m.GetProperty("type").GetString() ?? "", Point(m.GetProperty("pos")),
                         m.TryGetProperty("label", out var lb) ? lb.GetString() ?? "" : "",
                         m.TryGetProperty("kind", out var mk) ? mk.GetString() ?? "" : "",
-                        m.TryGetProperty("model", out var mm) ? mm.GetString() ?? "" : ""));
+                        m.TryGetProperty("model", out var mm) ? mm.GetString() ?? "" : "",
+                        m.TryGetProperty("button", out var mb) ? Point(mb) : null,
+                        m.TryGetProperty("width", out var mw) ? mw.GetSingle() : 0));
             if (root.TryGetProperty("supplies", out var supplies))
                 foreach (var s in supplies.EnumerateArray())
                     layout.Supplies.Add(new Supply(s.GetProperty("kind").GetString() ?? "", Point(s.GetProperty("pos"))));

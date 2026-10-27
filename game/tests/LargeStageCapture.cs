@@ -16,7 +16,7 @@ public partial class LargeStageCapture : Node
         (1, "a-saferoom", new(6, 0)), (1, "b-street", new(70, -14)), (1, "b-terrace", new(114, -32)), (1, "c-alley", new(172, -64)),
         (1, "d-depot", new(250, -82)), (1, "d-panel", new(300, -114)), (1, "d-stack-ladder", new(269, -90)), (1, "e-post", new(352, -89)),
         (1, "f-yard", new(440, -104)), (1, "g-overpass", new(556, -124)), (1, "h-safehouse", new(612, -133)),
-        (1, "c-alarm-car", new(170, -58)), (1, "d-panel-pocket", new(300, -108)), (1, "f-alarm-truck", new(496, -104)), (1, "b-warehouse-sign", new(200, -76)), (1, "c-alley-east", new(186, -70)), (1, "c-alley-gate", new(144, -54)), (1, "p1-start", new(-130, 0)), (1, "p2-yard", new(-114, 0)), (1, "p3-door-hold", new(-102.6f, 0)),
+        (1, "c-alarm-car", new(170, -58)), (1, "d-panel-pocket", new(300, -108)), (1, "f-alarm-truck", new(496, -104)), (1, "b-warehouse-sign", new(200, -76)), (1, "c-alley-east", new(186, -70)), (1, "c-alley-gate", new(144, -54)), (1, "b-back-lane", new(60, 8)), (1, "b-cross", new(43, 0)), (1, "d-pallet-lane", new(280, -58)), (1, "d-switch-gate", new(318, -62)), (1, "f-north-lane", new(452, -148)), (1, "f-cross", new(440, -125)), (1, "p1-start", new(-130, 0)), (1, "p2-yard", new(-114, 0)), (1, "p3-door-hold", new(-102.6f, 0)),
         (1, "p3-base", new(-95, 0)), (1, "p6-base", new(6, 0)), (1, "c1-base", new(140, -54)), (1, "e-table", new(359, -88)), (1, "d-ladder-climb", new(269, -92)), (1, "g-ramp-nook", new(535, -106)),
         (2, "a-drain", new(10, 0)), (2, "b-slope", new(90, -14)), (2, "b-cabin-ladder", new(150, -58)), (2, "c-ford", new(190, -46)),
         (2, "d-bunker", new(250, -62)), (2, "d-panel", new(276, -106)), (2, "e-post", new(379, -71)), (2, "f-hill", new(460, -86)),

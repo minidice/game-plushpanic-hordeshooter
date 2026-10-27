@@ -52,6 +52,7 @@ msg_stage_enemies_inside,There are still enemies inside!
 msg_stage_down,You went down...
 # Use prompts (next to [E])
 ui_use_open_door,Open door
+ui_use_open_shutter,Raise the shutter
 ui_use_open_base,Open the base door
 ui_use_shutter,Open shutter (sets off the alarm!)
 ui_use_close_safehouse,Close door (clear stage)

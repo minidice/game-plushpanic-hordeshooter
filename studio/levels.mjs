@@ -10,7 +10,7 @@ const guideDir = stagesDir + '/guide';
 const themes = { urban: '도시', forest: '숲' };
 const markerNames = {
   start_room: '세이프룸', start: '출발', mission: '임무', safe_zone: '중간 안전 구역', safehouse: '세이프하우스',
-  landmark: '랜드마크', blocked: '막힌 길', noise: '경보 장치', base: '기지',
+  landmark: '랜드마크', blocked: '막힌 길', noise: '경보 장치', base: '기지', switch_gate: '버튼 셔터',
 };
 const reactions = { dormant: '잠든', watcher: '경계형', wave: '웨이브형' };
 

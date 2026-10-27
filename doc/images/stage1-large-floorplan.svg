@@ -41,29 +41,56 @@
 <text x="36.0" y="577.0" font-size="9" fill="#666" text-anchor="end" font-weight="normal" >z 0</text>
 <polygon points="52.0,556.0 100.0,556.0 100.0,592.0 52.0,592.0" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
 <polygon points="94.0,544.0 166.0,544.0 166.0,604.0 94.0,604.0" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
-<polygon points="160.0,559.0 202.0,559.0 202.0,589.0 160.0,589.0" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="160.0,562.0 202.0,562.0 202.0,586.0 160.0,586.0" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
 <polygon points="199.0,562.0 286.0,562.0 286.0,586.0 199.0,586.0" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
-<polygon points="283.0,532.0 454.0,532.0 454.0,616.0 283.0,616.0" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="283.0,538.0 454.0,538.0 454.0,610.0 283.0,610.0" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
 <polygon points="454.0,544.0 520.0,544.0 520.0,604.0 454.0,604.0" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
-<polygon points="514.0,478.0 916.0,382.0 916.0,622.0 514.0,622.0" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="502.9,610.9 613.3,583.3 597.1,519.1 486.7,546.7" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="574.9,592.9 733.3,553.3 717.1,489.1 558.7,528.7" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="698.2,563.8 855.7,508.6 833.8,446.2 676.3,501.4" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="847.6,515.8 897.1,407.8 837.4,380.2 787.9,488.2" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="523.6,619.3 685.6,612.7 684.4,582.7 522.4,589.3" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="668.8,613.9 830.8,593.8 827.2,564.1 665.2,584.2" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="610.9,597.1 602.8,547.0 579.1,550.9 587.2,601.0" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="813.4,588.1 820.6,495.7 796.6,493.9 789.4,586.3" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="675.1,540.4 685.6,448.3 661.9,445.6 651.4,537.7" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="865.0,400.0 907.0,400.0 907.0,424.0 865.0,424.0" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
 <polygon points="634.0,466.0 712.0,448.0 712.0,388.0 634.0,406.0" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
 <polygon points="766.0,418.0 850.0,400.0 850.0,442.0 766.0,460.0" fill="#d6cba4" stroke="#00000033" stroke-width="1"/>
 <polygon points="904.0,382.0 1072.0,322.0 1072.0,382.0 904.0,436.0" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
-<polygon points="1054.0,238.0 1474.0,178.0 1474.0,454.0 1054.0,418.0" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="1044.7,394.0 1213.3,366.1 1201.3,295.0 1032.7,322.9" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="1168.9,372.4 1361.8,349.3 1353.1,277.6 1160.2,300.7" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="1316.5,353.2 1509.7,341.5 1505.5,269.8 1312.3,281.5" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="1177.0,336.4 1177.0,253.6 1129.0,253.6 1129.0,336.4" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="1288.0,325.0 1288.0,289.0 1258.0,289.0 1258.0,325.0" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="1429.3,285.1 1372.9,228.7 1338.7,262.9 1395.1,319.3" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="1318.0,190.0 1414.0,190.0 1414.0,262.0 1318.0,262.0" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="1095.4,404.8 1224.7,419.2 1228.6,383.2 1099.3,368.8" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="1205.2,418.0 1442.8,418.0 1442.8,382.0 1205.2,382.0" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="1227.1,408.4 1234.6,334.0 1210.9,331.6 1203.4,406.0" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="1442.8,409.0 1456.9,322.9 1433.2,319.0 1419.1,405.1" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
 <polygon points="1117.0,238.0 1189.0,238.0 1189.0,262.0 1117.0,262.0" fill="#d6cba4" stroke="#00000033" stroke-width="1"/>
 <polygon points="1252.0,250.0 1294.0,250.0 1294.0,286.0 1252.0,286.0" fill="#bda97a" stroke="#00000033" stroke-width="1"/>
 <polygon points="1468.0,298.0 1504.0,298.0 1504.0,316.0 1468.0,316.0" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
 <polygon points="1498.0,274.0 1588.0,268.0 1588.0,340.0 1498.0,340.0" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
-<polygon points="1582.0,148.0 2032.0,94.0 2032.0,358.0 1582.0,376.0" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="1573.6,340.6 1754.2,305.2 1740.4,234.4 1559.8,269.8" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="1711.9,313.6 1904.2,275.2 1890.1,204.4 1697.8,242.8" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="1860.1,283.0 2058.7,252.4 2047.9,181.0 1849.3,211.6" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="1909.0,251.2 1909.0,185.8 1885.0,185.8 1885.0,251.2" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="1669.6,139.3 1831.6,132.7 1830.4,102.7 1668.4,109.3" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="1812.4,132.7 1974.4,139.3 1975.6,109.3 1813.6,102.7" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="1798.0,263.2 1798.0,116.8 1774.0,116.8 1774.0,263.2" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="1969.0,239.2 1969.0,116.8 1945.0,116.8 1945.0,239.2" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
+<polygon points="1918.0,262.0 1966.0,262.0 1966.0,298.0 1918.0,298.0" fill="#e9e3cf" stroke="#00000033" stroke-width="1"/>
 <polygon points="1726.0,190.0 1768.0,190.0 1768.0,226.0 1726.0,226.0" fill="#bda97a" stroke="#00000033" stroke-width="1"/>
 <polygon points="1876.0,148.0 1918.0,148.0 1918.0,184.0 1876.0,184.0" fill="#bda97a" stroke="#00000033" stroke-width="1"/>
 <polygon points="2032.0,184.0 2122.0,166.0 2122.0,238.0 2032.0,256.0" fill="#d6cba4" stroke="#00000033" stroke-width="1"/>
 <polygon points="2063.8,245.8 2078.2,245.8 2078.2,271.0 2063.8,271.0" fill="#d6cba4" stroke="#00000033" stroke-width="1"/>
 <polygon points="2116.0,160.0 2242.0,136.0 2242.0,214.0 2116.0,238.0" fill="#bda97a" stroke="#00000033" stroke-width="1"/>
-<polygon points="2236.0,133.0 2368.0,130.0 2368.0,214.0 2236.0,217.0" fill="#bda97a" stroke="#00000033" stroke-width="1"/>
+<polygon points="2236.0,142.0 2347.0,142.0 2347.0,208.0 2236.0,208.0" fill="#bda97a" stroke="#00000033" stroke-width="1"/>
 <polygon points="52.0,556.0 100.0,556.0 100.0,592.0 52.0,592.0" fill="none" stroke="#0f7d74" stroke-width="2" stroke-dasharray="5,4" opacity=".85"/>
 <polygon points="94.0,544.0 166.0,544.0 166.0,604.0 94.0,604.0" fill="none" stroke="#0f7d74" stroke-width="2" stroke-dasharray="5,4" opacity=".85"/>
-<polygon points="163.0,559.0 199.0,559.0 199.0,589.0 163.0,589.0" fill="none" stroke="#0f7d74" stroke-width="2" stroke-dasharray="5,4" opacity=".85"/>
+<polygon points="163.0,562.0 199.0,562.0 199.0,586.0 163.0,586.0" fill="none" stroke="#0f7d74" stroke-width="2" stroke-dasharray="5,4" opacity=".85"/>
 <polygon points="199.0,562.0 286.0,562.0 286.0,586.0 199.0,586.0" fill="none" stroke="#0f7d74" stroke-width="2" stroke-dasharray="5,4" opacity=".85"/>
 <polygon points="283.0,532.0 454.0,532.0 454.0,616.0 283.0,616.0" fill="none" stroke="#0f7d74" stroke-width="2" stroke-dasharray="5,4" opacity=".85"/>
 <polygon points="454.0,544.0 520.0,544.0 520.0,604.0 454.0,604.0" fill="none" stroke="#0f7d74" stroke-width="2" stroke-dasharray="5,4" opacity=".85"/>
@@ -82,22 +109,49 @@
 <text x="242.5" y="578.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
 <text x="368.5" y="578.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
 <text x="487.0" y="578.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
-<text x="715.0" y="530.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="550.0" y="569.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="646.0" y="545.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="766.0" y="509.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="842.5" y="452.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="604.0" y="605.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="748.0" y="593.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="595.0" y="578.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="805.0" y="545.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="668.5" y="497.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="886.0" y="416.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
 <text x="673.0" y="431.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
 <text x="808.0" y="434.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >1단</text>
 <text x="988.0" y="384.5" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
-<text x="1264.0" y="326.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="1123.0" y="348.5" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="1261.0" y="329.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="1411.0" y="315.5" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="1153.0" y="299.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="1273.0" y="311.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="1384.0" y="278.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="1366.0" y="230.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="1162.0" y="398.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="1324.0" y="404.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="1219.0" y="374.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="1438.0" y="368.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
 <text x="1153.0" y="254.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >1단</text>
 <text x="1273.0" y="272.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >2단</text>
 <text x="1486.0" y="311.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
 <text x="1543.0" y="309.5" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
-<text x="1807.0" y="248.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="1657.0" y="291.5" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="1801.0" y="263.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="1954.0" y="236.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="1897.0" y="222.5" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="1750.0" y="125.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="1894.0" y="125.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="1786.0" y="194.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="1957.0" y="182.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
+<text x="1942.0" y="284.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >0단</text>
 <text x="1747.0" y="212.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >2단</text>
 <text x="1897.0" y="170.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >2단</text>
 <text x="2077.0" y="215.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >1단</text>
 <text x="2071.0" y="262.4" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >1단</text>
 <text x="2179.0" y="191.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >2단</text>
-<text x="2302.0" y="177.5" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >2단</text>
+<text x="2291.5" y="179.0" font-size="10" fill="#5a4a2a" text-anchor="middle" font-weight="normal" >2단</text>
 <polyline points="1252.0,250.0 1294.0,250.0 1294.0,286.0 1252.0,286.0 1252.0,250.0" fill="none" stroke="#2b2b2b" stroke-width="3" />
 <polyline points="1726.0,190.0 1768.0,190.0 1768.0,226.0 1726.0,226.0 1726.0,190.0" fill="none" stroke="#2b2b2b" stroke-width="3" />
 <polyline points="1876.0,148.0 1918.0,148.0 1918.0,184.0 1876.0,184.0 1876.0,148.0" fill="none" stroke="#2b2b2b" stroke-width="3" />
@@ -244,9 +298,10 @@
 <circle cx="1942.0" cy="277.0" r="7" fill="none" stroke="#b5179e" stroke-width="2.5"/>
 <circle cx="1942.0" cy="277.0" r="12" fill="none" stroke="#b5179e" stroke-width="1.2"/>
 <text x="1952.0" y="293.0" font-size="11" fill="#1f1f1f" text-anchor="start" font-weight="normal" stroke="#ffffffcc" stroke-width="3" paint-order="stroke">경보 트럭(야적장, 울리면 위 단으로)</text>
+<text x="1451.5" y="356.0" font-size="11" fill="#1f1f1f" text-anchor="start" font-weight="normal" stroke="#ffffffcc" stroke-width="3" paint-order="stroke">팔레트 길 셔터(안에서 버튼)</text>
 <text x="55.0" y="571.0" font-size="12" fill="#0f7d74" text-anchor="start" font-weight="bold" stroke="#ffffffcc" stroke-width="3" paint-order="stroke">P1 시작 방 · 작은 구역</text>
 <text x="97.0" y="559.0" font-size="12" fill="#0f7d74" text-anchor="start" font-weight="bold" stroke="#ffffffcc" stroke-width="3" paint-order="stroke">P2 첫 마당 · 작은 구역</text>
-<text x="166.0" y="574.0" font-size="12" fill="#0f7d74" text-anchor="start" font-weight="bold" stroke="#ffffffcc" stroke-width="3" paint-order="stroke">P3 첫 기지 · 작은 구역</text>
+<text x="166.0" y="577.0" font-size="12" fill="#0f7d74" text-anchor="start" font-weight="bold" stroke="#ffffffcc" stroke-width="3" paint-order="stroke">P3 첫 기지 · 작은 구역</text>
 <text x="202.0" y="577.0" font-size="12" fill="#0f7d74" text-anchor="start" font-weight="bold" stroke="#ffffffcc" stroke-width="3" paint-order="stroke">P4 뒷골목 · 작은 구역</text>
 <text x="286.0" y="547.0" font-size="12" fill="#0f7d74" text-anchor="start" font-weight="bold" stroke="#ffffffcc" stroke-width="3" paint-order="stroke">P5 주차장 · 작은 구역</text>
 <text x="457.0" y="559.0" font-size="12" fill="#0f7d74" text-anchor="start" font-weight="bold" stroke="#ffffffcc" stroke-width="3" paint-order="stroke">P6 보급 기지 · 작은 구역</text>

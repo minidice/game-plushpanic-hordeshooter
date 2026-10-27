@@ -233,6 +233,21 @@ public partial class LargeStageCheck : Node
             var around = _stage.Flow.CopyLayout();
             around.Update(alley);
             Check(!around.Reachable(new Vector3(-112, 0, 0)), $"{name}: the only way from the first yard to the back alley runs through base P3");
+            // The street is lanes now (L-36, level log 016): base C1 is the only way from the street on to the alley.
+            var alleyC = new Vector3(170, 0, -64);
+            var street = _stage.Flow.CopyLayout();
+            street.Update(alleyC);
+            Check(!_stage.Flow.IsBlocked(alleyC) && !street.Reachable(new Vector3(100, 0, -20)), $"{name}: the only way from the street to the alley runs through base C1");
+            // G's barrels (L-33 #4) blow up: data props "explosive_barrel" are real barrels, the kit "barrel" is only dressing (I-131).
+            // (The ramp nook's breach barrel is a destruction placement's, not one of these.)
+            var gBarrels = _stage.Props.OfType<ExplosiveBarrel>().Count(b => b.GlobalPosition.X is > 522 and < 592 && !b.HasMeta("destruction_placement"));
+            Check(gBarrels == 3, $"{name}: G's three barrels are explosive ({gBarrels})");
+            // The depot's pallet lane (level log 016): a shutter shuts its east alley, a button inside the lane raises it.
+            var shutter = map.Doors.FirstOrDefault(d => new Vector2(d.GlobalPosition.X - 324.5f, d.GlobalPosition.Z + 70).Length() < 1);
+            var raise = _stage.Interactables.FirstOrDefault(i => i.Enabled && new Vector2(i.GlobalPosition.X - 316, i.GlobalPosition.Z + 63.6f).Length() < 1.5f);
+            bool shutBefore = shutter is { IsOpen: false } && _stage.Flow.IsBlocked(shutter.GlobalPosition);
+            raise?.Use(player);
+            Check(shutBefore && shutter!.IsOpen && raise is { Enabled: false }, $"{name}: the pallet lane's shutter is shut and its button inside the lane raises it ({shutter?.GlobalPosition}, button {raise?.GlobalPosition})");
             var yard = _stage.Interactables.OfType<WeaponPickup>().Where(w => !w.Infinite && w.GlobalPosition.X < -100).ToList();
             Check(yard.Count == 1 && yard[0].Weapon!.Id == "glock17" && player.Loadout.Primary == null && player.Loadout.Secondary.Def.Id == ArmoryCatalog.StartingWeapon,
                 $"{name}: a run starts with the frying pan only, one pistol lies in the first yard");
@@ -340,6 +355,8 @@ public partial class LargeStageCheck : Node
             for (int b = 0; b < map.BaseExits.Count; b++)
             {
                 var entry = map.BaseEntries[b];
+                // The walk is about the way and the doors: a pack woken on the way (P5's sleepers) would only stand in it.
+                await ClearEnemies();
                 var (sb, stuckB, _) = await Walk(Toward(entry.GlobalPosition), entry.GlobalPosition, .6f, 3);
                 Check(!stuckB, $"{name}: a survivor walks up to base {b + 1}'s door ({sb:0} s, at {player.GlobalPosition})");
                 if (b == 0)
@@ -480,7 +497,15 @@ public partial class LargeStageCheck : Node
             if (dir.LengthSquared() > 1) dir = dir.Normalized();
             player.SetControls(new Vector2(dir.X, dir.Z), here + dir * 5 + Vector3.Up, false);
             if (here.DistanceTo(last) > .5f) { last = here; lastMoved = frames; }
-            if (frames - lastMoved > 180) { stuck = true; break; }
+            if (frames - lastMoved > 180)
+            {
+                // What holds the walker: monsters next to it, and what a knee-high ray along its way hits.
+                var close = _stage.AllEnemies.Where(e => IsInstanceValid(e) && e.GlobalPosition.DistanceTo(here) < 3).Select(e => $"{e.Name}@{e.GlobalPosition}");
+                var block = _stage.GetWorld3D().DirectSpaceState.IntersectRay(PhysicsRayQueryParameters3D.Create(here + Vector3.Up * .5f, here + Vector3.Up * .5f + dir * 1.5f));
+                GD.Print($"  stuck at {here} toward {dir} (next cell {next}): monsters [{string.Join(", ", close)}], ray hits {(block.Count > 0 ? ((Node)block["collider"]).GetPath() + " at " + block["position"] : "nothing")}");
+                stuck = true;
+                break;
+            }
         }
         player.SetControls(Vector2.Zero, player.AimPoint, false);
         return (frames / 60f, stuck, $"ladders {ladderUses}, ziplines {ziplineUses}, gondola {gondolaRides}");

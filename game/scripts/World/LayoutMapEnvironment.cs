@@ -126,13 +126,14 @@ public sealed partial class LayoutMap
     }
 
     /// <summary>
-    /// The urban edge (L-30 Stage 1): beyond the far (north) edge a row of buildings, beyond the camera-side and west
-    /// edges low fences, so the invisible walls read as streets that go on. No collision (the edge walls already block).
+    /// The urban edge (L-30 Stage 1): beyond the far (north) edge a row of buildings, and every edge no building covers
+    /// fenced one 3 m fence after another (solid sheet on the far side, see-through wire on the camera side), so the lanes
+    /// read as walled streets (L-36, level log 016). No collision (the edge walls already block).
     /// </summary>
     private void BuildUrbanBorders()
     {
         var buildings=new Dictionary<string,List<Transform3D>>();
-        var fences=new List<Transform3D>();
+        var fences=new List<Transform3D>();var sheets=new List<Transform3D>();
         var rng=new RandomNumberGenerator{Seed=(ulong)(31031+Layout.Stage)};
         var taken=new List<Rect2>();
         Vector2? Nearest(Vector2 p,float reach)
@@ -167,14 +168,44 @@ public sealed partial class LayoutMap
                 if(!buildings.TryGetValue(id,out var list)){list=new();buildings.Add(id,list);}
                 list.Add(new Transform3D(Basis.Identity,new Vector3(p.X,FloorAt(near).Y-.05f,p.Y)));
             }
-            else if(p.DistanceTo(near)<5)
-            {
-                var along=(near-p).Orthogonal().Normalized();
-                fences.Add(new Transform3D(new Basis(Vector3.Up,-Mathf.Atan2(along.Y,along.X)),new Vector3(p.X,FloorAt(near).Y-.05f,p.Y)));
-            }
+        }
+        // The fence line: just outside the floor's edge, one per 3 m. The floor is sampled once on a 1.5 m lattice; a void
+        // lattice point's outward normal comes from the floor around it, the edge from a short search back along it.
+        const float step=1.5f;
+        var origin=Layout.Bounds.Position;
+        int nx=(int)(Layout.Bounds.Size.X/step)+1,nz=(int)(Layout.Bounds.Size.Y/step)+1;
+        var floor=new bool[nx,nz];
+        for(int i=0;i<nx;i++)for(int k=0;k<nz;k++)floor[i,k]=Layout.TierAt(origin+new Vector2(i,k)*step)>=0;
+        var fenceAt=new Dictionary<(int,int),List<Vector2>>();
+        bool Crowded(Vector2 q)
+        {
+            for(int i=-1;i<=1;i++)for(int k=-1;k<=1;k++)
+                if(fenceAt.TryGetValue(((int)Mathf.Floor(q.X/3)+i,(int)Mathf.Floor(q.Y/3)+k),out var cell) && cell.Any(o=>o.DistanceTo(q)<2.4f))return true;
+            return false;
+        }
+        for(int i=0;i<nx;i++)for(int k=0;k<nz;k++)
+        {
+            if(floor[i,k])continue;
+            var toFloor=Vector2.Zero;
+            for(int di=-2;di<=2;di++)for(int dk=-2;dk<=2;dk++)
+                if(i+di>=0 && i+di<nx && k+dk>=0 && k+dk<nz && floor[i+di,k+dk])toFloor+=new Vector2(di,dk);
+            if(toFloor.LengthSquared()<.01f)continue;
+            var p=origin+new Vector2(i,k)*step;var normal=-toFloor.Normalized();
+            Vector2? hit=null;var outside=p;
+            for(float r=.75f;r<=3.75f && hit==null;r+=.75f){var q=p-normal*r;if(Layout.TierAt(q)>=0)hit=q;else outside=q;}
+            if(hit is not { } inside)continue;
+            for(int n=0;n<6;n++){var mid=(outside+inside)/2;if(Layout.TierAt(mid)>=0)inside=mid;else outside=mid;}
+            var at=outside+normal*.6f;
+            if(Layout.TierAt(at)>=0 || Crowded(at) || taken.Any(r=>r.HasPoint(at)))continue;
+            var key=((int)Mathf.Floor(at.X/3),(int)Mathf.Floor(at.Y/3));
+            if(!fenceAt.TryGetValue(key,out var cell)){cell=new();fenceAt.Add(key,cell);}
+            cell.Add(at);
+            var along=normal.Orthogonal();
+            (normal.Y<-.5f?sheets:fences).Add(new Transform3D(new Basis(Vector3.Up,-Mathf.Atan2(along.Y,along.X)),new Vector3(at.X,FloorAt(inside).Y-.05f,at.Y)));
         }
         foreach(var (id,list) in buildings)Scatter(id,list);
         Scatter("wire_fence",fences);
+        Scatter("corrugated_fence",sheets);
     }
 
     private float PathDistance(Vector2 p)

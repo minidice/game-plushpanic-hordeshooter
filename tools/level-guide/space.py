@@ -1,6 +1,6 @@
 """Space check for a stage layout (doc/features/level/guide-map.md 10장, decisions.md L-36 · L-37).
 
-    python tools/level-guide/space.py game/content/data/stages/stage1_large_layout.json [out.svg]
+    python tools/level-guide/space.py game/content/data/stages/stage1_large_layout.json [out.svg] [--proposals]
 
 For every walkable 1 m cell, seen at the widest default view (about 37 x 24 m, turned by the camera yaw, L-2):
   A (L-36) a wall shows: some edge of the walkable floor (a wall, a building, the map's border) lies on that screen;
@@ -22,7 +22,7 @@ STAGES = os.path.join(ROOT, "game", "content", "data", "stages")
 CAMERA_YAW_DEG = -30.0          # CameraRig.Yaw (L-2), as tools/floorplan/render_floorplan.py
 SCREEN_HALF = (18.7, 12.1)      # half of the widest default screen on the floor, metres (right, up)
 QUARTER_HALF = (SCREEN_HALF[0] / 2, SCREEN_HALF[1] / 2)
-MEANING_PROPS = {"barrel", "alarm_truck", "car_alarm", "wall_button_panel"}
+MEANING_PROPS = {"explosive_barrel", "alarm_truck", "car_alarm", "wall_button_panel"}
 
 
 def load(path):
@@ -44,9 +44,12 @@ def inside(points, poly):
     return hit
 
 
-def features(layout, stem):
-    """Meaningful things of the stage as (x, z, kind)."""
+def features(layout, stem, proposals=False):
+    """Meaningful things of the stage as (x, z, kind); with proposals also a draft's "proposal_meaning" spots."""
     out = []
+    if proposals:
+        for p in layout.get("proposal_meaning", []):
+            out.append((p["at"][0], p["at"][1], "proposal"))
     for m in layout.get("markers", []):
         out.append((m["pos"][0], m["pos"][1], m["type"]))
     for link in layout.get("links", []):
@@ -81,7 +84,7 @@ def features(layout, stem):
     return out
 
 
-def analyse(layout_path):
+def analyse(layout_path, proposals=False):
     layout = load(layout_path)
     stem = os.path.basename(layout_path).replace("_layout.json", "")
     x0, z0, x1, z1 = layout["bounds"]
@@ -102,7 +105,13 @@ def analyse(layout_path):
     up = np.array([-math.sin(yaw), -math.cos(yaw)])
     W = cells[walk]
     E = cells[edge]
-    F = np.array([(f[0], f[1]) for f in features(layout, stem)] or [(1e9, 1e9)])
+    # Only what stands on the floor counts (a pack's rect may reach past it; a prop may sit in a building block).
+    F = np.array([(f[0], f[1]) for f in features(layout, stem, proposals)] or [(1e9, 1e9)])
+    on_floor = np.zeros(len(F), bool)
+    for s0 in range(0, len(F), 500):
+        d = np.abs(F[s0:s0 + 500, None, :] - W[None, :, :]).max(axis=2)
+        on_floor[s0:s0 + 500] = (d <= 2.0).any(axis=1)
+    F = F[on_floor] if on_floor.any() else np.array([(1e9, 1e9)])
 
     def seen(points, targets, half):
         ok = np.zeros(len(points), bool)
@@ -153,7 +162,9 @@ def main(argv):
     if not argv:
         print(__doc__)
         return 2
-    layout, W, wall, meaning, zones = analyse(argv[0])
+    proposals = "--proposals" in argv
+    argv = [a for a in argv if a != "--proposals"]
+    layout, W, wall, meaning, zones = analyse(argv[0], proposals)
     print(f"바닥 {len(W)} m² · 벽이 안 보이는 곳 {(~wall).mean() * 100:.0f}% · 의미 없는 곳 {(~meaning).mean() * 100:.0f}%")
     for zid, size, n, no_wall, empty in zones:
         print(f"  {zid:<11} {size:<5} {n:>6} m²  벽 안 보임 {no_wall * 100:>3.0f}%  빈 곳 {empty * 100:>3.0f}%")

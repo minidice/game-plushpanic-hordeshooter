@@ -213,6 +213,7 @@ public sealed partial class LayoutMap : StageMap
         }
         if (Layout.FindMarker("safe_zone") is { } zone) BuildHut(zone.Pos);
         foreach (var marker in Layout.Markers.Where(m => m.Type == "base")) BuildBase(marker.Pos);
+        foreach (var marker in Layout.Markers.Where(m => m.Type == "switch_gate")) BuildSwitchGate(marker);
         if (Layout.FindMarker("safehouse") is { } safehouse) BuildSafehouse(safehouse.Pos);
         BuildLandmarks();
         BuildDataProps();
@@ -352,6 +353,21 @@ public sealed partial class LayoutMap : StageMap
         Lamp(new Vector3(x0 - 1.5f, y + 2.8f, center.Y), "ffc46b", 2.2f, 7, false);
     }
 
+    /// <summary>
+    /// A shutter across a lane (along X, <see cref="StageLayout.Marker.Width"/> wide) and a wall button that raises it: a
+    /// side lane's way back out, opened from inside (the depot's pallet lane, level log 016).
+    /// </summary>
+    private void BuildSwitchGate(StageLayout.Marker marker)
+    {
+        var at = FloorAt(marker.Pos);
+        float width = marker.Width > 0 ? marker.Width : 8;
+        var gate = Door.Create(_stage, at, new Vector3(width, 2.6f, .35f), new Color("7a6a4a"), new Vector3(0, 2.8f, 0));
+        _baseDoors.Add(gate);
+        if (marker.Button is not { } button) return;
+        Interactable? press = null;
+        press = WallPanel(FloorAt(button), "ui_use_open_shutter", () => { gate.SetOpen(true); press!.Enabled = false; });
+    }
+
     /// <summary>The spot outside an entry door: hold E for <see cref="BaseDoorHold"/> s, a hit starts it over (L-35).</summary>
     private void HoldDoor(Door door, Vector3 outside)
     {
@@ -408,6 +424,8 @@ public sealed partial class LayoutMap : StageMap
                 else GD.PushWarning($"LayoutMap: unknown workshop prop {spot.Id}");
                 continue;
             }
+            // A real barrel that blows (shoot it into a crowd); the kit's plain "barrel" is only dressing.
+            if (spot.Id == "explosive_barrel") { ExplosiveBarrel.Create(_stage, at); continue; }
             var prop = Prop(spot.Id, at, spot.Yaw, spot.Scale, spot.Solid);
             if (prop != null) PropOcclusion.Attach(_stage, prop);
         }

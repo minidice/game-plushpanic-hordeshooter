@@ -28,7 +28,7 @@ check(list.find(l => l.id === 'stage1_large').guides.map(g => g.kind).join() ===
 const map = (await get('/api/levels/map?id=stage1_large')).body;
 const zone = id => map.zones.find(z => z.id === id);
 check(map.zones.length === 15 && map.guide.kind === 'plan' && zone('D').guide?.role === 'peak' && zone('P1').guide?.new?.[0] === 'melee_only', 'Stage 1 reads the tutorial plan guide: 15 zones, D is the peak, P1 teaches melee only');
-check(zone('C1').devices.some(d => d.type === '기지') && zone('F').devices.some(d => d.type === '경보 장치') && zone('D').devices.some(d => d.label === '창고 간판'), 'devices land in their zones (base C1, the yard alarm truck in F, warehouse sign in D)');
+check(zone('C1').devices.some(d => d.type === '기지') && zone('F').devices.some(d => d.type === '경보 장치') && zone('D').devices.some(d => d.label === '창고 간판') && zone('D').devices.some(d => d.type === '버튼 셔터'), 'devices land in their zones (base C1, the yard alarm truck in F, warehouse sign and the pallet lane shutter in D)');
 check(zone('B').packs.length > 0 && zone('G').packs.some(p => p.special), 'packs land in their zones, the named special in G');
 check(map.check && map.check.lines.some(l => l.startsWith('GUIDE_CHECK')), 'the guide check result is attached');
 const bare = (await get('/api/levels/map?id=stage3')).body;

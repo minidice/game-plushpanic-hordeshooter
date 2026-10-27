@@ -52,6 +52,7 @@ msg_stage_enemies_inside,안에 적이 남아 있습니다!
 msg_stage_down,쓰러졌습니다...
 # 상호작용 안내 ([E] 옆)
 ui_use_open_door,문 열기
+ui_use_open_shutter,셔터 올리기
 ui_use_open_base,기지 문 열기
 ui_use_shutter,셔터 열기 (경보 작동!)
 ui_use_close_safehouse,문 닫기 (스테이지 클리어)
