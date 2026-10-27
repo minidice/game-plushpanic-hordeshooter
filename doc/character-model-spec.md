@@ -258,6 +258,8 @@ node prototypes/character-lab/tools/validate-game-roster.mjs
 <a id="damage-effects"></a>
 ### 8.1 피격·사망 섬광 (2026-10-22, A-19·C-19)
 
+2026-10-27 바닥 흔적 후속: 아래 기존 기록의 페인트는 이제 짙은 계열별 체액 고임으로 대체한다. 불규칙한 윤곽·가까운 방울·젖은 광택/건조를 코드·셰이더로 표현하며 솜 파편·사망 섬광·시체 동작은 유지한다. [현재 표시 계약](vfx-quality.md#사망-체액-흔적--2026-10-27), [검사·렌더](features/effects-audio/log/017-code-body-fluid.md).
+
 사용자 첨부 `공격효과참고.mp4`·`피격효과.mp4`에서 확인한 짧은 흰 몸 점멸과 주황빛 방사형 타격선을 반영한다. 영상에서 사망 순간은 뚜렷하게 확인되지 않아 사망 연출은 같은 색감으로 확장한 현재 시안이다. Blender 모델·외부 이미지 텍스처 없이 Godot 메시와 절차적 셰이더로 그린다.
 
 - **피격**: `CharacterHitFlashEffect`는 일반 흰색(`#ffffff`), 치명타 노란색(`#ffd34a`) 오버레이를 사용한다(0.1초, 최고 불투명도 0.72 유지). `CharacterRig.FlashHit`가 몸과 같은 색의 6방향 타격선과 작은 중심 섬광을 함께 시작하며, 0.16초 동안 바깥으로 이동·감쇠한다. 직경은 `clamp(ColliderHeight × 1.45, 1.8, 3.1)`m. 몸 중심 높이 `ColliderHeight × 0.55`에 붙어서 움직인다.

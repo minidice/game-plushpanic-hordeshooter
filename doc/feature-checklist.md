@@ -1,5 +1,7 @@
 # 게임 기능 체크리스트
 
+- [x] A-19 사망 흔적: 원색 원판을 짙은 계열별 체액·불규칙한 고임·부분 반사/건조로 교체. 방울/층 높이/160개 상한, 비사망 건조 흔적 분리, 실제 렌더·회귀 확인. [변경·검사·남은 제약](features/effects-audio/log/017-code-body-fluid.md).
+
 - [x] A-27/A-28 공간 채움 외형 수락·보존, A-29 나머지5종만 외곽 위치/크기/높이 조정. 수락 대상241프레임 픽셀 동일·실제 안/밖 피해 검사. [검사·렌더·제약](features/effects-audio/log/015-art-remaining-burst-radius.md).
 - [x] A-27/A-28/A-29 공간 채움: 큰 반투명 카드로 화염·연무/폭발 내부를 연결. 중앙 확산/고정 불꽃/개별 소멸 유지, 바닥 그림 없음. [검사·렌더·제약](features/effects-audio/log/014-art-volume-fill.md).
 - [x] A-27/A-28/A-29 범위 보정: 실제 피해 반경에 가까운 전 방향 폭발 입자와 지속 불꽃 외곽 분포, 로켓 전방 편향 축소. 바닥 링/피해 변경 없음. [검사·렌더·제약](features/effects-audio/log/013-art-damage-reach.md).

@@ -449,7 +449,7 @@ public partial class Integration : Node
         Check(player.Gun.Mag < magBefore, "holding fire spends ammo");
         Check(!IsInstanceValid(front) && stage.Kills > kills, "shots kill the enemy");
         await Frames(2);
-        Check(stage.Effects.CorpseCount > 0 && stage.Effects.SplatCount > 0, "dead enemy leaves a physics corpse and a paint splat");
+        Check(stage.Effects.CorpseCount > 0 && stage.Effects.SplatCount > 0, "dead enemy leaves a physics corpse and a body-fluid stain");
         Check(behind.Awake, "gunfire wakes nearby idle enemies");
         ClearEnemies();
 
