@@ -21,7 +21,7 @@
 
 ## `.gdignore`
 
-- `game/output/.gdignore`(빈 파일) 추가, `.gitignore` · `game/.gitignore`에 `!output/.gdignore` 예외.
+- `game/output/.gdignore`(빈 파일) 추가, `game/.gitignore`에 `!output/.gdignore` 예외. (처음엔 루트 `.gitignore`에도 `!**/output/.gdignore`를 넣었으나 `prototypes/goose-playtest/output/`의 `.gdignore`까지 드러나 같은 날 뺐다.)
 - 이유: 검사 · 촬영 렌더가 `game/output/`에 쌓이는데 Godot가 이를 게임 에셋으로 가져왔다. [레벨 002](../../level/log/002-code-camera-default-view.md)에서 가져오기가 촬영 사진을 다시 가져오다 종료 코드 139로 끝난 적이 있다.
 - 영향 확인: `res://output/…`를 쓰는 검사(`DuckCleanCheck` · `PlayerMammalCleanCheck` · `TailMotionCapture` · `WorkshopWalkthrough` · `HunterAudioMixCheck`)는 모두 파일 **저장만** 하고 리소스로 다시 불러오지 않는다(`GlobalizePath` · `SavePng` · `SaveToWav`).
 

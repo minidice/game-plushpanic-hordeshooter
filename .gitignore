@@ -6,8 +6,6 @@
 **/.omc/
 **/output/*
 !**/output/.gitkeep
-# Keeps Godot from importing check renders as game assets (an import once crashed on them)
-!**/output/.gdignore
 **/__pycache__/
 **/.pytest_cache/
 **/.vs/
