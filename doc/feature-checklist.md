@@ -198,6 +198,8 @@
 - [x] 화면 우측 상단을 주 진행 방향으로 사용; 기본/확대 카메라와 화면 기준 WASD
 - [x] 레벨 디자인 가이드 맵 형식(2026-10-27, L-33): 경험 목록 30 · Stage 1 현재 상태 가이드 · 검사기 · 가이드 보드 · 평면도 표시. [기록](features/level/log/004-code-guide-map.md)
 - [ ] 가이드 맵 설계안(plan)으로 Stage 1 · 2 · 3 고치기 — Stage 1 현재 상태 오류 1 · 경고 8, **Stage 1 설계안 확정 · 맵 반영**(오류 0 · 경고 5, 2026-10-27) — 변경 8개 모두 반영(창고 간판은 Codex 모델, [log/007](features/level/log/007-code-stage1-warehouse-sign.md)). [설계안](features/level/guide-map.md#7-stage-1-설계안plan--2026-10-27-확정)
+- [x] Stage 1 도시 바닥(A-30, 2026-10-28, [환경 아트 log/001](features/art-environment/log/001-code-stage1-urban-ground.md)): 길은 아스팔트 · 보도블록 · 연석 · 중앙 점선, 작은 구역은 콘크리트 판, 담 뒤 자갈 공터, 풀 없음, 바닥 조각 7종(Codex)
+- [ ] 캠페인 네 스테이지(L-39, [log/017](features/level/log/017-doc-stage-lineup.md)): 2 건물 지하 · 4 물과 다리 새 맵, 3 좁히기, 지금 숲 Stage 2를 3 · 4에 녹이기
 - [x] 공간 기준(L-36 · L-37)에 맞게 Stage 1 큰 구역 좁히기 · 빈 곳 채우기(L-38, 2026-10-28, [log/016](features/level/log/016-code-stage1-lanes.md)): B · D · F 길 그물, C1 기지 필수 통과, 길 사이 담 줄, D 팔레트 길 버튼 셔터, G 폭발 드럼통(I-131) — 벽 안 보임 27 → 0% · 빈 곳 8 → 6%
 - [ ] Stage 2 · 3도 L-36 · L-37에 맞추기(지금 벽 안 보임 34% · 33%, [log/014](features/level/log/014-code-space-path-squad.md))
 - [x] 테스트 옵션 `-Squad 0`(AI 동료 없이), Stage 1 바닥 길(도시 보도), 첫 기지 P3 옆길 막음 — [log/014](features/level/log/014-code-space-path-squad.md)

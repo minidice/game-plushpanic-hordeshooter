@@ -12,6 +12,7 @@
 
 ## 상세 규격
 
+- [도시 바닥 조각 모델 지시문](../../model-briefs/urban-ground-bits.md) (A-30, Stage 1 도로 · 보도)
 - [environment-quality-plan.md](../../environment-quality-plan.md)
 - [tree-asset-replacement.md](../../tree-asset-replacement.md)
 - [stage2-environment-pass.md](../../stage2-environment-pass.md)

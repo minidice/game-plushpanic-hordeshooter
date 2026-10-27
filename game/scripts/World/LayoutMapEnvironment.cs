@@ -24,8 +24,11 @@ public sealed partial class LayoutMap
         }
         if(Urban)
         {
-            // A paved walkway along the routes so a run knows which way to go (log 014).
-            BuildPaths(new ShaderMaterial{Shader=GD.Load<Shader>("res://shaders/urban_path.gdshader")},2.2f);
+            // A paved walkway along the routes so a run knows which way to go (log 014); on the roads the centre line
+            // does that instead (A-30).
+            BuildPaths(new ShaderMaterial{Shader=GD.Load<Shader>("res://shaders/urban_path.gdshader")},2.2f,UrbanRoadAt);
+            BuildRoadMarkings();
+            BuildUrbanBits();
             BuildUrbanBorders();
             return;
         }
@@ -234,7 +237,7 @@ public sealed partial class LayoutMap
         return prop;
     }
 
-    private void BuildPaths(Material material,float mainHalf)
+    private void BuildPaths(Material material,float mainHalf,Func<Vector2,bool>? skip=null)
     {
         using var surface=new SurfaceTool(); surface.Begin(Mesh.PrimitiveType.Triangles);
         var segments=new List<(Vector2 a,Vector2 b,float half)>();
@@ -251,7 +254,7 @@ public sealed partial class LayoutMap
         // Each ground cell is emitted once, even where routes merge. Shared corners prevent transparent Z fighting.
         for(float x=Layout.Bounds.Position.X;x<Layout.Bounds.End.X;x++)for(float z=Layout.Bounds.Position.Y;z<Layout.Bounds.End.Y;z++)
         {
-            if(Distance(new Vector2(x+.5f,z+.5f))>1.4f)continue;
+            if(Distance(new Vector2(x+.5f,z+.5f))>1.4f || (skip?.Invoke(new Vector2(x+.5f,z+.5f))??false))continue;
             var points=new[]{new Vector2(x,z),new Vector2(x+1,z),new Vector2(x+1,z+1),new Vector2(x,z+1)};
             if(points.Any(p=>Layout.TierAt(p)<0 || (bridge?.HasPoint(p)??false) || (tower?.HasPoint(p)??false)))continue;
             var verts=points.Select(FloorAt).ToArray();

@@ -1,0 +1,136 @@
+{
+  "revision": 1,
+  "contract": "plushpanic_outdoor_v1",
+  "date": "2026-10-28",
+  "units": "metres",
+  "up_axis": "+Y",
+  "status": "urban ground art; not integrated or render-reviewed",
+  "assets": [
+    {
+      "id": "bit_manhole",
+      "name": "맨홀 뚜껑",
+      "category": "도시 바닥",
+      "note": "16각 주철 뚜껑, 높은 테두리와 볼록한 격자 4줄.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        0.9,
+        0.03,
+        0.9
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 152,
+      "file": "bit_manhole.glb"
+    },
+    {
+      "id": "bit_drain",
+      "name": "빗물받이",
+      "category": "도시 바닥",
+      "note": "테두리 틀과 긴 살 6개, 살 사이가 뚫린 격자.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        0.9,
+        0.03,
+        0.45
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 100,
+      "file": "bit_drain.glb"
+    },
+    {
+      "id": "bit_litter",
+      "name": "도시 쓰레기 조각",
+      "category": "도시 바닥",
+      "note": "접힌 종이 3장, 눌린 캔과 쓰러진 속 빈 종이컵.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        0.762,
+        0.07,
+        0.602
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 96,
+      "file": "bit_litter.glb"
+    },
+    {
+      "id": "bit_leaves",
+      "name": "마른 낙엽",
+      "category": "도시 바닥",
+      "note": "조금씩 휜 낙엽 10장, 두 가지 갈색.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        0.672,
+        0.04,
+        0.474
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 60,
+      "file": "bit_leaves.glb"
+    },
+    {
+      "id": "bit_rubble",
+      "name": "벽돌과 콘크리트 조각",
+      "category": "도시 바닥",
+      "note": "모서리 깨진 벽돌 3개와 콘크리트 3개.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        0.667,
+        0.12,
+        0.507
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 120,
+      "file": "bit_rubble.glb"
+    },
+    {
+      "id": "bit_crack_weed",
+      "name": "틈 잡초",
+      "category": "도시 바닥",
+      "note": "바닥 틈에서 드물게 벌어진 작은 잎 6개.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        0.3,
+        0.15,
+        0.225
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 60,
+      "file": "bit_crack_weed.glb"
+    },
+    {
+      "id": "bit_puddle",
+      "name": "작은 물웅덩이",
+      "category": "도시 바닥",
+      "note": "불규칙한 18각 윤곽, 두께 0.006 m의 어두운 물 판.",
+      "collision": {
+        "kind": "none"
+      },
+      "occlusion_parts": [],
+      "dimensions_m": [
+        1.4,
+        0.006,
+        0.9
+      ],
+      "bounds_min_y": 0.0,
+      "triangles": 54,
+      "file": "bit_puddle.glb"
+    }
+  ]
+}

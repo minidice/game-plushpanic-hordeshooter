@@ -161,6 +161,7 @@ public sealed partial class LayoutMap : StageMap
         for (int z = 0; z < depth; z++)
         for (int x = 0; x < width; x++)
             grid[z * width + x] = Layout.TierAt(new Vector2(tiers.MinX + (x + .5f) * tiers.Cell, tiers.MinZ + (z + .5f) * tiers.Cell));
+        if (Urban) BakeUrbanGround(grid, width, depth);
 
         foreach (var (x0, z0, x1, z1, value) in MergeRects(grid, width, depth))
         {
@@ -177,7 +178,7 @@ public sealed partial class LayoutMap : StageMap
             {
                 // Off the map: a tall invisible wall, and a dark floor so the edge reads as "nowhere to go".
                 Solid(new Vector3((wx0 + wx1) / 2, 4, (wz0 + wz1) / 2), new Vector3(wx1 - wx0, 8, wz1 - wz0), "", drawCargo: false);
-                Mat.Box(_stage, new Vector3((wx0 + wx1) / 2, -.05f, (wz0 + wz1) / 2), new Vector3(wx1 - wx0, .1f, wz1 - wz0), GroundMaterial);
+                Mat.Box(_stage, new Vector3((wx0 + wx1) / 2, -.05f, (wz0 + wz1) / 2), new Vector3(wx1 - wx0, .1f, wz1 - wz0), Urban ? _urbanLot! : GroundMaterial);
                 VoidRects++;
             }
         }
@@ -508,7 +509,7 @@ public sealed partial class LayoutMap : StageMap
             float thick = container ? .04f : deck ? .3f : top + .4f;
             var center = r.GetCenter();
             var mesh = Mat.Box(_stage, new Vector3(center.X, top - thick / 2, center.Y),
-                new Vector3(r.Size.X, thick, r.Size.Y), deck && !container ? Mat.Solid("8a6a46", .95f) : Urban ? Mat.Solid(tier == 0 ? "5c5f60" : "8d8c84", .95f) : GroundMaterial);
+                new Vector3(r.Size.X, thick, r.Size.Y), deck && !container ? Mat.Solid("8a6a46", .95f) : Urban ? tier == 0 ? _urbanFloor! : Mat.Solid("8d8c84", .95f) : GroundMaterial);
             if (deck) mesh.Name = container ? "ContainerRoof" : RegionFootprint("watchtower") is { } tower && r.Intersects(tower) ? "WatchtowerDeck" : "BridgeDeck";
         }
         var span = new[] { BridgeFootprint(), RegionFootprint("watchtower"),RegionFootprint("stack_1"),RegionFootprint("stack_2"),RegionFootprint("stack_3") }

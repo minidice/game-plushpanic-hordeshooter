@@ -238,6 +238,12 @@ public partial class LargeStageCheck : Node
             var street = _stage.Flow.CopyLayout();
             street.Update(alleyC);
             Check(!_stage.Flow.IsBlocked(alleyC) && !street.Reachable(new Vector3(100, 0, -20)), $"{name}: the only way from the street to the alley runs through base C1");
+            // The urban ground (A-30): roads on the lanes, concrete in the yards, a dashed centre line, urban bits and no grass.
+            var bits = map.UrbanBits;
+            Check(map.UrbanRoadAt(new Vector2(80, -16)) && map.UrbanRoadAt(new Vector2(260, -84)) && !map.UrbanRoadAt(new Vector2(-114, 0)) && !map.UrbanRoadAt(new Vector2(140, -54))
+                  && map.RoadDashes > 40 && bits.Values.Sum() > 300 && new[] { "bit_manhole", "bit_drain", "bit_litter", "bit_crack_weed" }.All(id => bits.GetValueOrDefault(id) > 0)
+                  && !map.GroundBits.ContainsKey("bit_grass_tuft") && !map.GroundBits.ContainsKey("bit_grass_clump"),
+                $"{name}: urban ground — roads on the lanes, concrete in P2 and base C1, {map.RoadDashes} centre-line dashes, bits {string.Join(", ", bits.Select(b => $"{b.Key} {b.Value}"))}, no grass");
             // G's barrels (L-33 #4) blow up: data props "explosive_barrel" are real barrels, the kit "barrel" is only dressing (I-131).
             // (The ramp nook's breach barrel is a destruction placement's, not one of these.)
             var gBarrels = _stage.Props.OfType<ExplosiveBarrel>().Count(b => b.GlobalPosition.X is > 522 and < 592 && !b.HasMeta("destruction_placement"));
