@@ -22,7 +22,7 @@ public partial class StageTransition : CanvasLayer
     public static bool Busy => _current != null;
     /// <summary>The stage being built now came down a hatch: start in <see cref="FromView"/> and reveal it.</summary>
     public static bool Arriving { get; private set; }
-    public static CameraView FromView { get; private set; } = CameraView.Indoor;
+    public static CameraView FromView { get; private set; } = CameraView.Default;
     /// <summary>Checks: replaces reloading the game scene (the test builds the next stage itself).</summary>
     public static Action<SceneTree>? LoadOverride { get; set; }
     /// <summary>How far the circle is closed (0 open … 1 black) and whether the title card shows (checks, captures).</summary>

@@ -86,8 +86,8 @@ public abstract partial class StageMap
 
     // ---------- look ----------
 
-    /// <summary>How the camera sees this map (Stage 1's indoor quarter view unless a map says otherwise, L-2 · L-14).</summary>
-    public virtual CameraView View => CameraView.Indoor;
+    /// <summary>How the camera sees this map: the shared default view (L-2) unless a map says otherwise.</summary>
+    public virtual CameraView View => CameraView.Default;
     /// <summary>Where the camera may look (x, z): it stops following past it, so the view never runs off the dressed ground (A-23). Null = anywhere.</summary>
     public virtual Rect2? CameraBounds => null;
     /// <summary>Sky, ambient light, fog and the key light. The default is Stage 1's night.</summary>
