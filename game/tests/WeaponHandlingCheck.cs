@@ -137,7 +137,7 @@ public partial class WeaponHandlingCheck : Node
         for (int i = 0; i < 90; i++) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         var lean = _stage.Cam.GlobalPosition - rest;
         lean.Y = 0;
-        float size = _stage.Cam.Size;
+        float size = _stage.Cam.ViewSize;
         await Shot("aim-" + weapon);
         player.HoldAim(false);
         return (lean.Length(), size);
@@ -157,7 +157,7 @@ public partial class WeaponHandlingCheck : Node
             $"aiming a sniper zooms out and sees about 1.5× further than a rifle ({ratio:0.00}×, size {sniper.Size:0.0})");
         await Frames(40);
         for (int i = 0; i < 60; i++) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        Check(Mathf.IsEqualApprox(_stage.Cam.Size, CameraRig.WideSize, .1f), "letting go zooms back in");
+        Check(Mathf.IsEqualApprox(_stage.Cam.ViewSize, CameraRig.WideSize, .1f), "letting go zooms back in");
         // A special weapon only slows its holder while it is in hand.
         player.Weapons.Pickup(ArmoryCatalog.Weapon("m4"), null);
         player.Weapons.Pickup(ArmoryCatalog.Weapon("alabong"), null);

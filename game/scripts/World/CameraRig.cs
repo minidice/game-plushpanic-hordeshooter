@@ -8,24 +8,24 @@ namespace HordeShooter;
 /// </summary>
 public readonly record struct CameraView(float Pitch, float Yaw, float WideSize, float CloseSize, bool Perspective, float Fov)
 {
-    /// <summary>Stage 1 (L-2): 55° down, −30° around, orthographic.</summary>
-    public static readonly CameraView Indoor = new(CameraRig.Pitch, CameraRig.Yaw, CameraRig.WideSize, CameraRig.CloseSize, false, 0);
     /// <summary>
-    /// Outdoor stages (L-14, the reference clip): lower and with depth, so the near trees loom and the far ground fades into
-    /// the haze. The yaw stays −30° so the +X route still runs to the screen's upper right (L-1).
+    /// Every map's view since 2026-10-27 (L-2, the user's reference shot): looking well down at 60° with a light perspective,
+    /// wide enough to see around the survivor. The yaw stays −30° so the +X route still runs to the screen's upper right (L-1).
     /// </summary>
-    public static readonly CameraView Outdoor = new(41f, CameraRig.Yaw, 19f, 11.5f, true, 38f);
+    public static readonly CameraView Default = new(CameraRig.Pitch, CameraRig.Yaw, CameraRig.WideSize, CameraRig.CloseSize, true, CameraRig.DefaultFov);
 }
 
 /// <summary>Quarter-view camera that follows the player, leans toward the aim, and shakes. Ortho or perspective per map.</summary>
 public partial class CameraRig : Camera3D
 {
-    public const float Pitch = 55f;
+    public const float Pitch = 60f;
     // Stage 1 runs along +X. Negative yaw projects that route toward screen upper-right.
     public const float Yaw = -30f;
     public const float Distance = 34f;
-    public const float WideSize = 17f;
-    public const float CloseSize = 10f;
+    public const float WideSize = 21f;
+    public const float CloseSize = 12.5f;
+    /// <summary>Field of view of <see cref="CameraView.Default"/>: enough depth to read heights, little edge stretch.</summary>
+    public const float DefaultFov = 34f;
     /// <summary>An orthographic view eases into a perspective one from this narrow field of view (nearly flat).</summary>
     private const float FlatFov = 16f;
 
@@ -33,7 +33,7 @@ public partial class CameraRig : Camera3D
     public Player? Player { get; set; }
     public bool Close { get; set; }
     /// <summary>The map's view (set before the rig enters the tree; <see cref="Arrive"/> eases into it).</summary>
-    public CameraView View { get; set; } = CameraView.Indoor;
+    public CameraView View { get; set; } = CameraView.Default;
     /// <summary>Depth fog that follows the camera's distance, so only the far ground is hazed (outdoor maps).</summary>
     public Godot.Environment? Haze { get; set; }
     /// <summary>The map's camera bounds (x, z): the focus stays inside, so the view never runs off the dressed ground.</summary>
@@ -42,6 +42,8 @@ public partial class CameraRig : Camera3D
     public float FocusDistance { get; private set; } = Distance;
     /// <summary>Angles now (they ease from the last stage's view after a stage change).</summary>
     public float CurrentPitch => _pitch;
+    /// <summary>Metres of ground across the screen height now (the orthographic size, or the perspective equivalent at the focus).</summary>
+    public float ViewSize => View.Perspective ? _size : Size;
     public bool Arriving => _blend < 1;
 
     private Vector3 _focus;

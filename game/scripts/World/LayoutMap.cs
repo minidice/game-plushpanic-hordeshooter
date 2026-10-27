@@ -101,7 +101,6 @@ public sealed partial class LayoutMap : StageMap
     public override Interactable? SafehouseSwitch => _safehouseSwitch;
     public override bool InSafehouse(Vector3 p) => _safehouseDoor != null && _safehouseRoom.HasPoint(new Vector2(p.X, p.Z));
     public override bool NearSafehouse(Vector3 p) => _safehouseDoor != null && _safehouseRoom.Grow(.6f).HasPoint(new Vector2(p.X, p.Z));
-    public override CameraView View => CameraView.Outdoor;
     public override Rect2? CameraBounds => Layout.Bounds;
     private bool Urban => Layout.Theme == "urban";
     private string Key(string name, string fallback) => Layout.Keys.TryGetValue(name, out var key) && key != "" ? key : fallback;

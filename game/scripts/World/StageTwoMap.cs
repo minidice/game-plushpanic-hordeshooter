@@ -37,7 +37,6 @@ public sealed class StageTwoMap : StageMap
     public override Interactable SafehouseSwitch => _safehouseSwitch;
     public override bool InSafehouse(Vector3 p) => SafehouseRect.HasPoint(new Vector2(p.X, p.Z));
     public override bool NearSafehouse(Vector3 p) => SafehouseRect.Grow(.6f).HasPoint(new Vector2(p.X, p.Z));
-    public override CameraView View => CameraView.Outdoor;
 
     /// <summary>Rainy dusk: grey-blue sky, warm low sun, and depth haze that only reaches the far ground.</summary>
     public override void Light(Godot.Environment env, DirectionalLight3D key)

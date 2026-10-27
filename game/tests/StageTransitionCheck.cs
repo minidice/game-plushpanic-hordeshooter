@@ -82,8 +82,9 @@ public partial class StageTransitionCheck : Node
         var map = _stage.Map;
         var player = _stage.Player;
         player.Invulnerable = true;
-        Check(map.View == CameraView.Indoor && _stage.Cam.Projection == Camera3D.ProjectionType.Orthogonal
-              && Mathf.IsEqualApprox(_stage.Cam.Size, CameraRig.WideSize, .1f), "Stage 1 keeps its 55° orthographic view (L-2)");
+        Check(map.View == CameraView.Default && _stage.Cam.Projection == Camera3D.ProjectionType.Perspective
+              && Mathf.IsEqualApprox(_stage.Cam.CurrentPitch, CameraRig.Pitch, .1f) && Mathf.IsEqualApprox(_stage.Cam.ViewSize, CameraRig.WideSize, .1f),
+            "Stage 1 uses the shared 60° view (L-2)");
         Check(map.StageExit is { Enabled: false, HoldSeconds: > 0 } && map.NextStage == 2, "the safehouse hatch to Stage 2 waits, closed, for the clear");
         Check(map.KitProps.Any(p => p.Name == "floor_hatch" && p.GlobalPosition.DistanceTo(map.StageExit!.GlobalPosition) < .1f), "the floor hatch model marks the exit");
         if (Windowed)
@@ -168,8 +169,8 @@ public partial class StageTransitionCheck : Node
         Check(GameSession.ScenarioStage == 2 && GameSession.Carry == null, "the run is on Stage 2 and the carried kit was handed over");
         Check(player.Loadout.Primary == _carried && _carried.Mag == _carriedMag && _carried.Reserve == _carriedReserve && player.Loadout.ActiveSlot == 2,
             "the M4 comes along with its rounds and stays in hand");
-        Check(cam.View == CameraView.Outdoor && cam.Projection == Camera3D.ProjectionType.Perspective, "Stage 2 is seen through the outdoor perspective view");
-        Check(cam.Arriving && cam.CurrentPitch > CameraView.Outdoor.Pitch + 8, $"the view starts near Stage 1's steep angle ({cam.CurrentPitch:0.0}°)");
+        Check(cam.View == CameraView.Default && cam.Projection == Camera3D.ProjectionType.Perspective, "Stage 2 is seen through the same shared view (L-2)");
+        Check(cam.Arriving && Mathf.IsEqualApprox(cam.CurrentPitch, CameraView.Default.Pitch, .1f), $"the angle carries over from Stage 1 without a jump ({cam.CurrentPitch:0.0}°)");
         Check(_stage.Objective == Objective.ReachSafehouse && map.StageExit == null && map.NextStage == 0, "Stage 2 starts on the route; its safehouse ends the run");
         Check(map.KitProps.Any(p => p.Name == "bunker_hatch" && p.GlobalPosition.DistanceTo(map.PlayerStart) < 4), "the survivors arrive next to the bunker hatch");
         var env = _stage.GetChildren().OfType<WorldEnvironment>().First().Environment;
@@ -179,8 +180,8 @@ public partial class StageTransitionCheck : Node
         if (Windowed) await Shot("transition-4-opening");
         await Until(() => !StageTransition.Busy && !StageTransition.Arriving, "the stage change finishes", 4);
         await Until(() => !cam.Arriving, "the camera settles", StageTransition.ArriveSeconds);
-        Check(Mathf.IsEqualApprox(cam.CurrentPitch, CameraView.Outdoor.Pitch, .1f) && Mathf.IsEqualApprox(cam.Fov, CameraView.Outdoor.Fov, .1f),
-            "the view ends at the outdoor angle and field of view");
+        Check(Mathf.IsEqualApprox(cam.CurrentPitch, CameraView.Default.Pitch, .1f) && Mathf.IsEqualApprox(cam.Fov, CameraView.Default.Fov, .1f),
+            "the view ends at the shared angle and field of view");
         if (Windowed)
         {
             await Frames(20);

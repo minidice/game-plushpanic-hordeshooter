@@ -54,3 +54,10 @@
 - 재발 방지: `AudioBalanceCheck`는 모든 ID의 실제 감쇠 호출·부착 소리·풀 우선순위를 검사한다. `AudioBalanceCapture`는 거리/분대/군중/경고/바닥과 Cues의 실제 장치 출력을 기록한다. 최종 합산 limiter와 개별 상한을 구별하며 합산 전 신호가0dBFS를 넘을 수 있다.
 - [구현008](log/008-code-audio-balance-followup.md) · [최종 통합·실제 출력009](log/009-check-surface-followup-integration.md). 캡처의 파일/소스 지문과 실제 음원 SHA를 검사해 이전 결과를 재사용하지 않는다.
 - 상태는 부분 해결 유지: 상한 누락 구현은 닫았지만 최종 음색·피로도 수락, 모든 보스/무기 조합의 청취, 물리적으로 다른 두 PC의 실전 지연/손실은 자동 검사로 확정하지 않는다. 새로운 ID는 만들지 않는다.
+
+## I-129 AreaEffectsReadabilityCheck 보스 예고 원판을 찾지 못함
+- 증상: `AreaEffectsReadabilityCheck`(창 모드 전용, 실제 GPU)가 "actual boss disc and fill exist"에서 실패(`AREA_READABILITY_FAIL`). 보스 내려찍기 준비 중 `Effects` 아래 `CylinderMesh`가 2개 미만.
+- 원인(추정): 장판 효과 작업(area-effects)이 보스 예고의 원판 · 채움을 다른 메시로 바꿈 — 미확인.
+- 확인: 2026-10-27 카메라 기본 시점 작업(L-2) 중 검사 묶음에서 실패. 카메라 변경 전 main `eedab6d`를 별도 worktree로 받아 같은 장면을 돌려도 **똑같이 실패** — 카메라와 무관한 기존 실패([레벨 기록 002](../level/log/002-code-camera-default-view.md)).
+- 해결: 아직 없음(열림).
+- 재발 방지 · 검사 경로: 창 모드 `Godot --path game res://tests/AreaEffectsReadabilityCheck.tscn`(헤드리스는 "real GPU render required"로 바로 끝남).
