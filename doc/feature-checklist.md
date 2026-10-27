@@ -198,6 +198,8 @@
 - [x] 화면 우측 상단을 주 진행 방향으로 사용; 기본/확대 카메라와 화면 기준 WASD
 - [x] 레벨 디자인 가이드 맵 형식(2026-10-27, L-33): 경험 목록 30 · Stage 1 현재 상태 가이드 · 검사기 · 가이드 보드 · 평면도 표시. [기록](features/level/log/004-code-guide-map.md)
 - [ ] 가이드 맵 설계안(plan)으로 Stage 1 · 2 · 3 고치기 — Stage 1 현재 상태 오류 1 · 경고 8, **Stage 1 설계안 확정 · 맵 반영**(오류 0 · 경고 5, 2026-10-27) — 변경 8개 모두 반영(창고 간판은 Codex 모델, [log/007](features/level/log/007-code-stage1-warehouse-sign.md)). [설계안](features/level/guide-map.md#7-stage-1-설계안plan--2026-10-27-확정)
+- [ ] 공간 기준(L-36 · L-37)에 맞게 큰 구역 좁히기 · 빈 곳 채우기 — 검사 도구 `space.py`와 Studio 공간 검사는 있음(2026-10-28, [log/014](features/level/log/014-code-space-path-squad.md)), Stage 1 벽 안 보임 27% · 빈 곳 8%
+- [x] 테스트 옵션 `-Squad 0`(AI 동료 없이), Stage 1 바닥 길(도시 보도), 첫 기지 P3 옆길 막음 — [log/014](features/level/log/014-code-space-path-squad.md)
 - [x] Stage 1 튜토리얼(L-34, 2026-10-28 확정 · 구현, [log/013](features/level/log/013-code-stage1-tutorial.md)): 프롤로그 구역 P1 ~ P6 · 기지 C1, 근접만 시작, 첫 마당 1회 권총, 웨이브 구역 직전 투척물, 구역마다 새 경험 하나, 가이드 검사기 튜토리얼 규칙 — [시나리오](features/level/stage1-tutorial-scenario.md)
 - [x] 무기 배치 공용(무한) · 1회(C-33): 테이블 · 둥근 네모 + ∞, 같은 총은 탄약만 채움, 무한 탄약 더미
 - [x] 기지 문 3초 누르기(L-35): 맞으면 취소, 몸 위 진행 바

@@ -27,8 +27,8 @@ check(list.find(l => l.id === 'stage1_large').guides.map(g => g.kind).join() ===
 
 const map = (await get('/api/levels/map?id=stage1_large')).body;
 const zone = id => map.zones.find(z => z.id === id);
-check(map.zones.length === 9 && map.guide.kind === 'plan' && zone('D').guide?.role === 'peak', 'Stage 1 reads the plan guide: 9 zones, D is the peak');
-check(zone('C').devices.some(d => d.type === '경보 장치') && zone('D').devices.some(d => d.label === '창고 간판'), 'devices land in their zones (alley alarm car in C, warehouse sign in D)');
+check(map.zones.length === 15 && map.guide.kind === 'plan' && zone('D').guide?.role === 'peak' && zone('P1').guide?.new?.[0] === 'melee_only', 'Stage 1 reads the tutorial plan guide: 15 zones, D is the peak, P1 teaches melee only');
+check(zone('C1').devices.some(d => d.type === '기지') && zone('F').devices.some(d => d.type === '경보 장치') && zone('D').devices.some(d => d.label === '창고 간판'), 'devices land in their zones (base C1, the yard alarm truck in F, warehouse sign in D)');
 check(zone('B').packs.length > 0 && zone('G').packs.some(p => p.special), 'packs land in their zones, the named special in G');
 check(map.check && map.check.lines.some(l => l.startsWith('GUIDE_CHECK')), 'the guide check result is attached');
 const bare = (await get('/api/levels/map?id=stage3')).body;
@@ -37,6 +37,8 @@ check(bare.guide === null && bare.check === null && bare.zones.length > 0 && bar
 const floor = await get('/api/levels/floor?id=stage1_large&guide=plan');
 check(floor.status === 200 && floor.type.includes('image/svg+xml') && floor.body.includes('<svg'), 'floor plan with the guide overlay is an SVG');
 check((await get('/api/levels/floor?id=stage3&guide=none')).body.includes('<svg'), 'floor plan without a guide');
+const space = await get('/api/levels/floor?id=stage1_large&guide=space');
+check(space.status === 200 && space.body.includes('<svg') && space.body.includes('L-36'), 'space check (no wall in view, nothing meaningful near) draws as an SVG');
 for (const bad of ['../x', 'stage1_large/../../x', 'C:/x', 'no_such_map'])
   check((await get('/api/levels/map?id=' + encodeURIComponent(bad))).status === 404, `refuses map ${bad}`);
 check((await get('/api/levels/floor?id=stage3&guide=plan')).status === 404, 'a missing guide is 404');

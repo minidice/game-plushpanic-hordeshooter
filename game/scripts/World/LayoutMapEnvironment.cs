@@ -22,8 +22,14 @@ public sealed partial class LayoutMap
             var center=box.GetCenter();
             Landmark("container_stack_shell",new Vector3(center.X,(region.Tier-2)*TierMap.Height,center.Y));
         }
-        if(Urban){BuildUrbanBorders();return;}
-        BuildPaths();
+        if(Urban)
+        {
+            // A paved walkway along the routes so a run knows which way to go (log 014).
+            BuildPaths(new ShaderMaterial{Shader=GD.Load<Shader>("res://shaders/urban_path.gdshader")},2.2f);
+            BuildUrbanBorders();
+            return;
+        }
+        BuildPaths(ForestMaterial("res://shaders/stage2_path.gdshader"),3);
         BuildCliffFaces();
         BuildBoundaryGroves();
         if(Layout.Dressing=="stage3")BuildStage3Dressing();
@@ -197,12 +203,12 @@ public sealed partial class LayoutMap
         return prop;
     }
 
-    private void BuildPaths()
+    private void BuildPaths(Material material,float mainHalf)
     {
         using var surface=new SurfaceTool(); surface.Begin(Mesh.PrimitiveType.Triangles);
         var segments=new List<(Vector2 a,Vector2 b,float half)>();
         foreach(var (id,points) in Layout.Routes)for(int i=0;i+1<points.Length;i++)
-            segments.Add((points[i],points[i+1],id.StartsWith("main")?3:1.6f));
+            segments.Add((points[i],points[i+1],id.StartsWith("main")?mainHalf:1.6f));
         foreach(var link in Layout.Links.Where(l=>l.Type=="ramp"))segments.Add((link.From,link.To,Mathf.Min(2.5f,(link.Width-1)/2)));
         float Distance(Vector2 p)
         {
@@ -225,7 +231,7 @@ public sealed partial class LayoutMap
                 surface.AddVertex(verts[k]+Vector3.Up*.025f);
             }
         }
-        surface.SetMaterial(ForestMaterial("res://shaders/stage2_path.gdshader"));
+        surface.SetMaterial(material);
         _stage.AddChild(new MeshInstance3D{Name="EnvironmentPaths",Mesh=surface.Commit(),CastShadow=GeometryInstance3D.ShadowCastingSetting.Off});
     }
 

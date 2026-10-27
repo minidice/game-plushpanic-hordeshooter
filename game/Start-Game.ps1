@@ -16,9 +16,12 @@ param(
     [Alias('Stage2Draft')]
     [switch]$Stage3Draft,
     # Level test (doc/features/level/guide-map.md 9장): open the large campaign straight at a zone's entry, e.g. -Zone D or -Zone 2:D.
-    [string]$Zone
+    [string]$Zone,
+    # AI squadmates for this run (0, 1 or 3), over the menu's saved choice: -Squad 0 tests alone.
+    [int]$Squad = -1
 )
 $ErrorActionPreference = 'Stop'
+$squadArg = if ($Squad -ge 0) { @('--squad=' + $Squad) } else { @() }
 $console = Join-Path $GodotDir 'Godot_v4.7.2-stable_mono_win64_console.exe'
 $windowed = Join-Path $GodotDir 'Godot_v4.7.2-stable_mono_win64.exe'
 if (-not (Test-Path -LiteralPath $console)) { throw "Godot 4.7.2 .NET not found in $GodotDir. Pass -GodotDir." }
@@ -51,9 +54,9 @@ try {
         Start-Process -FilePath $windowed -ArgumentList '--path', ('"' + $PSScriptRoot + '"'), '--', ('--join=' + $NetJoin) -WorkingDirectory $PSScriptRoot
     } elseif ($Zone) {
         # Straight into the stage (no menu): Scenario, the default character and squad.
-        Start-Process -FilePath $windowed -ArgumentList '--path', ('"' + $PSScriptRoot + '"'), 'res://scenes/Stage1.tscn', '--', '--large-stages', ('--zone=' + $Zone) -WorkingDirectory $PSScriptRoot
+        Start-Process -FilePath $windowed -ArgumentList (@('--path', ('"' + $PSScriptRoot + '"'), 'res://scenes/Stage1.tscn', '--', '--large-stages', ('--zone=' + $Zone)) + $squadArg) -WorkingDirectory $PSScriptRoot
     } elseif ($LargeStages) {
-        Start-Process -FilePath $windowed -ArgumentList '--path', ('"' + $PSScriptRoot + '"'), '--', '--large-stages' -WorkingDirectory $PSScriptRoot
+        Start-Process -FilePath $windowed -ArgumentList (@('--path', ('"' + $PSScriptRoot + '"'), '--', '--large-stages') + $squadArg) -WorkingDirectory $PSScriptRoot
     } elseif ($Stage3Draft) {
         Start-Process -FilePath $windowed -ArgumentList '--path', ('"' + $PSScriptRoot + '"'), '--', '--stage3-draft' -WorkingDirectory $PSScriptRoot
     } else {

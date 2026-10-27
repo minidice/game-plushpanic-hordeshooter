@@ -112,7 +112,7 @@ async function openMap(id) {
   $('map-title').textContent = levelTitle(level);
   $('map-facts').textContent = `크기 ${map.bounds ? `${map.bounds[2] - map.bounds[0]} × ${map.bounds[3] - map.bounds[1]} m` : '?'} · 주 경로 ${map.route} m`;
   $('map-file').textContent = map.file;
-  $('guide').innerHTML = map.guides.map(g => `<option value="${g.kind}">${esc(g.label)}</option>`).join('') + '<option value="none">가이드 없이</option>';
+  $('guide').innerHTML = map.guides.map(g => `<option value="${g.kind}">${esc(g.label)}</option>`).join('') + '<option value="none">가이드 없이</option><option value="space">공간 검사(벽 · 빈 곳)</option>';
   $('floor-img').removeAttribute('src');
   showMaps();
   showFeatures(map);

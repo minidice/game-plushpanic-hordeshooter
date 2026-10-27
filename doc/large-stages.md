@@ -6,6 +6,7 @@
 
 ```
 Start-Game.ps1 -LargeStages    # 큰 Stage 1 → 2 → 3 (세이프하우스 해치로 이어짐, 혼자만)
+Start-Game.ps1 -Zone P1 -Squad 0  # AI 동료 없이 혼자(-Squad 0 · 1 · 3, 메뉴 저장값보다 우선)
 Start-Game.ps1 -Zone D         # 구역 테스트: 메뉴 없이 Stage 1 D 구역 입구에서 시작(-Zone 2:D = Stage 2), 레벨 가이드 맵 9장
 Start-Game.ps1 -Stage3Draft    # Stage 3(크기 시안)에서 바로 시작 (옛 -Stage2Draft도 같음)
 ```

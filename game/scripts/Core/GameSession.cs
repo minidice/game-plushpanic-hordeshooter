@@ -41,10 +41,17 @@ public static class GameSession
     public static string StartZone { get; set; } = "";
     public static int StartZoneStage { get; set; } = 1;
 
+    /// <summary>
+    /// Launch option <c>--squad=0</c> (Start-Game.ps1 -Squad 0): AI squadmates for this run, over the menu's saved choice
+    /// (a tutorial test without the strong AI help). Null = the menu's choice.
+    /// </summary>
+    public static int? LaunchSquad { get; set; }
+
     static GameSession()
     {
         foreach (var arg in OS.GetCmdlineUserArgs())
         {
+            if (arg.StartsWith("--squad=") && int.TryParse(arg["--squad=".Length..], out int squad)) LaunchSquad = Mathf.Clamp(squad, 0, 3);
             if (!arg.StartsWith("--zone=")) continue;
             var value = arg["--zone=".Length..];
             int colon = value.IndexOf(':');

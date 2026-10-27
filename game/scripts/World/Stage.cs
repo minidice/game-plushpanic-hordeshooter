@@ -336,7 +336,7 @@ public partial class Stage : Node3D
         Trail.Add(Player.GlobalPosition);
         // The menu's squad size applies to the real game scene; tests ask for squadmates explicitly.
         // No AI squadmates in a network match (M-11).
-        SpawnSquad(SquadOverride ?? (GetTree().CurrentScene == this && Role == NetRole.Offline ? GameSession.SquadSize : 0), start);
+        SpawnSquad(SquadOverride ?? (GetTree().CurrentScene == this && Role == NetRole.Offline ? GameSession.LaunchSquad ?? GameSession.SquadSize : 0), start);
 
         // Multiplayer: after the level and the start fill exist, so ids and the welcome list are complete.
         if (Role != NetRole.Offline) Net = StageNet.Attach(this, Role);

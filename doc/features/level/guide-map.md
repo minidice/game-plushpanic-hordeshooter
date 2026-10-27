@@ -161,6 +161,7 @@ python tools/floorplan/render_floorplan.py game/content/data/stages/stage1_large
 ```bash
 powershell -File game/Start-Game.ps1 -Zone D      # Stage 1의 D 창고 단지
 powershell -File game/Start-Game.ps1 -Zone 2:D    # Stage 2의 D
+powershell -File game/Start-Game.ps1 -Zone P1 -Squad 0    # AI 동료 없이(튜토리얼 체감 확인)
 ```
 
 - 메뉴 없이 큰 캠페인(`-LargeStages`와 같은 맵)의 그 스테이지로 바로 들어간다. 구역 ID는 맵의 `zones` ID(대소문자 무시, 예: `B-pharmacy`).
@@ -170,3 +171,14 @@ powershell -File game/Start-Game.ps1 -Zone 2:D    # Stage 2의 D
 - 모르는 구역 ID면 경고를 남기고 세이프룸에서 시작한다.
 - 확인할 것(가이드 맵 기준): 그 구역의 새 경험이 실제로 느껴지는지, 다음 목표가 1~2화면 안에 보이는지(길 안내), 정점 뒤 숨 돌릴 틈, 헤매는 곳. 결과는 레벨 작업 기록(`check` 종류)으로 남긴다.
 - 검사: `LargeStageCheck`가 세 스테이지의 모든 구역에 시작 자리가 있는지, `-Zone d`가 D 입구 · 열린 세이프룸 · 다음 목표로 시작하는지, 모르는 ID가 세이프룸으로 돌아가는지 확인한다.
+
+## 10. 공간 검사 (L-36 · L-37)
+
+```bash
+python tools/level-guide/space.py game/content/data/stages/stage1_large_layout.json doc/images/stage1-large-space.svg
+```
+
+- **벽이 안 보이는 곳(L-36)**: 1 m 칸마다, 그 자리를 가운데로 한 가장 넓은 기본 화면(약 37 × 24 m, 카메라 −30° 회전)에 걸을 수 있는 바닥의 가장자리(벽 · 건물 · 맵 끝)가 하나도 없으면 실패.
+- **의미 없는 곳(L-37)**: 그 자리 둘레 화면 1/4(약 18.7 × 12.1 m) 안에 보급 · 표식(임무 · 기지 · 랜드마크 · 경보 · 안전 구역 · 막힌 길 · 세이프하우스) · 몬스터 무리(영역을 4 m 간격으로) · 특수 적 · 부서지는 벽 · 사다리 · 경사로 · 드럼통이 하나도 없으면 실패.
+- 출력: 전체 · 구역별 비율, SVG(빨강 = 벽 안 보임, 주황 = 빈 곳). Studio 기획서 › 레벨디자인 › 평면도에서 "공간 검사(벽 · 빈 곳)"로도 본다.
+- 2026-10-28 결과: Stage 1 벽 안 보임 27%(B 26 · D 34 · F 38%) · 빈 곳 8%(P5 58 · H 55 · E 22 · P2 19 · P6 16%), Stage 2 34% · 4%, Stage 3 33% · 8%. 큰 구역을 좁히고 빈 곳에 의미를 넣는 재설계가 남음([log/014](log/014-code-space-path-squad.md)).

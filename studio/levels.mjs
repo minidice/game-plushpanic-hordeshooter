@@ -10,7 +10,7 @@ const guideDir = stagesDir + '/guide';
 const themes = { urban: '도시', forest: '숲' };
 const markerNames = {
   start_room: '세이프룸', start: '출발', mission: '임무', safe_zone: '중간 안전 구역', safehouse: '세이프하우스',
-  landmark: '랜드마크', blocked: '막힌 길', noise: '경보 장치',
+  landmark: '랜드마크', blocked: '막힌 길', noise: '경보 장치', base: '기지',
 };
 const reactions = { dormant: '잠든', watcher: '경계형', wave: '웨이브형' };
 
@@ -137,6 +137,15 @@ export async function levelFloor(root, rawId, guideKind) {
   const id = safeLevel(rawId);
   const layout = id && `${stagesDir}/${id}_layout.json`;
   if (!layout || !await exists(root, layout)) return { status: 404, error: '맵이 없습니다: ' + rawId };
+  if (guideKind === 'space') {
+    // Space check (L-36 · L-37): where no wall shows at the widest view, where nothing meaningful is near.
+    const outDir = path.join(root, 'studio', 'output', 'levels');
+    await mkdir(outDir, { recursive: true });
+    const out = path.join(outDir, `${id}-space.svg`);
+    const result = await runPython(root, ['tools/level-guide/space.py', layout, out]);
+    if (result.code !== 0) return { status: 500, error: '공간 검사를 그리지 못했습니다. ' + result.out.trim().split('\n').slice(-3).join(' ') };
+    return { status: 200, svg: await readFile(out), report: result.out.trim() };
+  }
   const guide = ['plan', 'asis'].includes(guideKind) ? `${guideDir}/${id}_${guideKind}_guide.json` : null;
   if (guide && !await exists(root, guide)) return { status: 404, error: '가이드가 없습니다: ' + guide };
   const outDir = path.join(root, 'studio', 'output', 'levels');

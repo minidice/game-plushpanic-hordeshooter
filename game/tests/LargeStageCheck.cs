@@ -228,6 +228,11 @@ public partial class LargeStageCheck : Node
             Check(shared.SequenceEqual(new[] { "glock17", "m4", "mp5" }) && map.BaseEntries.Count == 4 && map.BaseExits.Count == 3
                   && map.BaseEntries.All(e => e.HoldSeconds == LayoutMap.BaseDoorHold && e.CancelOnHit),
                 $"{name}: shared tables {string.Join(", ", shared)}; {map.BaseEntries.Count} hold doors (three bases and the safehouse)");
+            // The first base cannot be walked around (log 014): with its doors shut the back alley is cut off from the first yard.
+            var alley = new Vector3(-75, 0, 0);
+            var around = _stage.Flow.CopyLayout();
+            around.Update(alley);
+            Check(!around.Reachable(new Vector3(-112, 0, 0)), $"{name}: the only way from the first yard to the back alley runs through base P3");
             var yard = _stage.Interactables.OfType<WeaponPickup>().Where(w => !w.Infinite && w.GlobalPosition.X < -100).ToList();
             Check(yard.Count == 1 && yard[0].Weapon!.Id == "glock17" && player.Loadout.Primary == null && player.Loadout.Secondary.Def.Id == ArmoryCatalog.StartingWeapon,
                 $"{name}: a run starts with the frying pan only, one pistol lies in the first yard");
