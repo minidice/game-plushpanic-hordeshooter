@@ -117,6 +117,12 @@ I-120 후속 검토(2026-10-24): 정적 리뷰에서 이번 구현 중 클라이
 | I-128 | `CommonRosterFieldCheck` 고지 사격 예고 검사가 예고 표시(`BoxMesh`)를 찾지 못하고 멈춤 | 확인: `cdc786d`(공격 예고 표시 다듬기)에서 원거리 예고가 `GroundMarker`로 바뀜. 검사가 `GroundMarker`를 찾게 수정, 높이 기대값은 그대로. [본문](features/enemies/issues.md#i-128-commonrosterfieldcheck-고지-사격-예고-표시를-찾지-못함) | 해결 | 2026-10-27 | `CommonRosterFieldCheck` 93 |
 | I-129 | `AreaEffectsReadabilityCheck`(창 모드) "actual boss disc and fill exist" 실패 | 확인: 같은 커밋에서 보스 원판 + 채움(원기둥 2개)이 `GroundMarker` 하나로 바뀜. 검사가 내려찍기 반지름과 같은 `GroundMarker`를 찾게 수정. [본문](features/effects-audio/issues.md#i-129-areaeffectsreadabilitycheck-보스-예고-원판을-찾지-못함) | 해결 | 2026-10-27 | `AreaEffectsReadabilityCheck` 16 |
 
+### 2026-10-27 Studio
+
+| ID | 증상 | 원인 / 메모 | 상태 | 날짜 | 관련 |
+|---|---|---|---|---|---|
+| I-130 | Studio를 다시 실행해도 브라우저가 뜨지 않음 | 확인: 기존 Studio의 렌더러가 멈춰 `ready:false`, 실행기는 3분 기다린 뒤 브라우저 없이 끝남. health에 렌더러 상태, 멈췄으면 재시작 요청, 그래도 안 되면 경고와 함께 열기. [본문](features/tech-tools/issues.md#i-130-studio를-다시-실행해도-브라우저가-뜨지-않음렌더러가-멈춘-기존-studio) | 해결 | 2026-10-27 | T-25 · T-28 |
+
 ### I-125 고지의 원거리 공격 예고선이 지형에 묻힘 — 2026-10-25
 
 - 증상/확인된 원인: 실제 Stage 2 고지 AK47 검수에서 공격 전조선이 보이지 않음. `RangedEnemy.StartWindup`이 양 끝을 월드 Y=.055로 만들었으며 고지 바닥은 그보다 높다. 창 모드 재현 이미지와 높이 검사가 수정 전 실패했다.
