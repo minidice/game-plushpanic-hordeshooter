@@ -44,7 +44,16 @@ public partial class LargeStageCheck : Node
             "with --large-stages the scenario runs the large Stage 1 → 2 → 3, other modes keep their maps");
         Check(LayoutMap.ForStage(1).Layout.NextStage == 2 && LayoutMap.ForStage(2).Layout.NextStage == 3 && LayoutMap.ForStage(3).Layout.NextStage == 0,
             "each large stage's safehouse hatch leads to the next, Stage 3 is the last for now");
+        // Level test start (--zone=2:D): the option alone runs the large campaign from that stage.
         GameSession.LargeStages = false;
+        GameSession.StartZone = "D";
+        GameSession.StartZoneStage = 2;
+        GameSession.StartCampaign();
+        Check(GameSession.LargeCampaign && GameSession.ScenarioStage == 2 && StageMap.Create(GameMode.Scenario, 2) is LayoutMap { StageNumber: 2 },
+            "--zone=2:D starts the large campaign on Stage 2");
+        GameSession.StartZone = "";
+        GameSession.StartZoneStage = 1;
+        GameSession.StartCampaign();
         Check(StageMap.Create(GameMode.Scenario, 1) is StageOneLayout && StageMap.Create(GameMode.Scenario, 2) is StageTwoMap, "without the option today's Stage 1 and 2 stay");
         Check(PropLibrary.Errors.Count == 0 && new[] { "safehouse_b", "wall_button_panel", "shutter_leaf", "urban_rowhouse", "urban_shop", "urban_warehouse", "car_wreck", "bus_wreck", "dumpster" }
             .All(id => PropLibrary.Find(id) != null), "the large stage kit (Codex) is registered" + string.Join("; ", PropLibrary.Errors));
@@ -56,6 +65,34 @@ public partial class LargeStageCheck : Node
             _stage = null!;
             await Frames(2);
         }
+        await CheckZoneStart();
+    }
+
+    /// <summary>A level test run started at Stage 1's D (--zone=D): the player, the open safe room and the running director.</summary>
+    private async Task CheckZoneStart()
+    {
+        var map = LayoutMap.ForStage(1);
+        _stage = new Stage { CharacterOverride = "goose", ThemeOverride = "zombie", ModeOverride = GameMode.Scenario, MapOverride = map, DirectorEnabled = false, SquadOverride = 0, StartZoneOverride = "d" };
+        AddChild(_stage);
+        await Frames(3);
+        var entry = map.ZoneEntry("D");
+        var at = _stage.Player.GlobalPosition;
+        Check(entry is { } e && at.DistanceTo(e) < 1 && map.Layout.ZoneAt(new Vector2(at.X, at.Z))?.Id == "D" && _stage.StartedZone == "D",
+            $"--zone=d starts the player at D's entry on the main route ({at}, entry {entry})");
+        Check(_stage.Objective != Objective.LeaveSafeRoom && map.StartDoor is { IsOpen: true },
+            $"a zone start is past the safe room: its door is open and the objective moved on ({_stage.Objective})");
+        _stage.Free();
+        _stage = null!;
+        await Frames(2);
+        var none = new Stage { CharacterOverride = "goose", ThemeOverride = "zombie", ModeOverride = GameMode.Scenario, MapOverride = LayoutMap.ForStage(1), DirectorEnabled = false, SquadOverride = 0, StartZoneOverride = "Z" };
+        _stage = none;
+        AddChild(_stage);
+        await Frames(3);
+        Check(none.StartedZone == "" && none.Player.GlobalPosition.DistanceTo(none.Map.PlayerStart) < 1 && none.Objective == Objective.LeaveSafeRoom,
+            "an unknown zone falls back to the safe-room start");
+        _stage.Free();
+        _stage = null!;
+        await Frames(2);
     }
 
     private async Task CheckStage(int n)
@@ -125,6 +162,15 @@ public partial class LargeStageCheck : Node
         Check(!Seen(old), $"{name}: the old west-wall button spot would be hidden from the camera (the ray check tells them apart)");
         var local = map.SafehouseSwitch!.GlobalPosition - new Vector3(room.X, map.SafehouseSwitch.GlobalPosition.Y - LayoutMap.SafehouseSwitchLocal.Y, room.Y);
         Check(local.Z < -LayoutMap.SafehouseSize.Y / 2 + 1, $"{name}: the safehouse switch hangs on the north wall, the screen's upper-left wall ({local})");
+
+        // Level test starts (--zone): every zone a route crosses has an open entry inside it.
+        var noEntry = new List<string>();
+        foreach (var zone in layout.Zones)
+        {
+            var entry = map.ZoneEntry(zone.Id);
+            if (entry is not { } at || layout.ZoneAt(new Vector2(at.X, at.Z))?.Id != zone.Id || _stage.Flow.IsBlocked(at)) noEntry.Add(zone.Id);
+        }
+        Check(noEntry.Count == 0, $"{name}: every zone has a level test start (a route entry, or the open middle of a branch no route crosses; none: {string.Join(", ", noEntry)})");
 
         // ---------- supplies and raised spaces ----------
         Check(_stage.Director.EncounterErrors.Count == 0, $"{name}: every wave entry and named monster stands on open floor " + string.Join("; ", _stage.Director.EncounterErrors));

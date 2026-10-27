@@ -14,7 +14,9 @@ param(
     [switch]$LargeStages,
     # Start a large-campaign run on Stage 3, the size draft (doc/stage2-floorplan.md 11-12장). Single player only.
     [Alias('Stage2Draft')]
-    [switch]$Stage3Draft
+    [switch]$Stage3Draft,
+    # Level test (doc/features/level/guide-map.md 9장): open the large campaign straight at a zone's entry, e.g. -Zone D or -Zone 2:D.
+    [string]$Zone
 )
 $ErrorActionPreference = 'Stop'
 $console = Join-Path $GodotDir 'Godot_v4.7.2-stable_mono_win64_console.exe'
@@ -47,6 +49,9 @@ try {
         Start-Process -FilePath $windowed -ArgumentList '--path', ('"' + $PSScriptRoot + '"'), '--', '--host' -WorkingDirectory $PSScriptRoot
     } elseif ($NetJoin) {
         Start-Process -FilePath $windowed -ArgumentList '--path', ('"' + $PSScriptRoot + '"'), '--', ('--join=' + $NetJoin) -WorkingDirectory $PSScriptRoot
+    } elseif ($Zone) {
+        # Straight into the stage (no menu): Scenario, the default character and squad.
+        Start-Process -FilePath $windowed -ArgumentList '--path', ('"' + $PSScriptRoot + '"'), 'res://scenes/Stage1.tscn', '--', '--large-stages', ('--zone=' + $Zone) -WorkingDirectory $PSScriptRoot
     } elseif ($LargeStages) {
         Start-Process -FilePath $windowed -ArgumentList '--path', ('"' + $PSScriptRoot + '"'), '--', '--large-stages' -WorkingDirectory $PSScriptRoot
     } elseif ($Stage3Draft) {

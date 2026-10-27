@@ -49,6 +49,13 @@ public partial class Stage : Node3D
     /// <summary>Set before adding to the tree to play another map than the mode's own (checks, a generated map).</summary>
     public StageMap? MapOverride { get; set; }
     /// <summary>
+    /// A zone id to start a scenario at instead of the safe room (level tests). Null = <see cref="GameSession.StartZone"/>
+    /// in the running game scene on its first stage; "" = the normal start.
+    /// </summary>
+    public string? StartZoneOverride { get; set; }
+    /// <summary>The zone this stage started at for a level test, or "" (the normal start).</summary>
+    public string StartedZone { get; private set; } = "";
+    /// <summary>
     /// Whether shutting a scenario safehouse opens the hatch to the next stage. Null = offline in the running game scene
     /// (a network match ends at the first safehouse for now, I-90); test scenes stop at the clear unless they ask.
     /// </summary>
@@ -267,10 +274,20 @@ public partial class Stage : Node3D
         map.Build(this, Mode);
         _map = map;
 
+        // Level test start (--zone): the zone's entry on the route; arriving down a hatch keeps the next stage's normal start.
+        string zone = StartZoneOverride ?? (running && Mode == GameMode.Scenario && !StageTransition.Arriving
+            && GameSession.ScenarioStage == GameSession.StartZoneStage ? GameSession.StartZone : "");
+        var start = Map.PlayerStart;
+        if (zone != "")
+        {
+            if (Map is LayoutMap layoutMap && layoutMap.ZoneEntryOf(zone) is { } entry) { start = entry.At; StartedZone = entry.Id; }
+            else GD.PushWarning($"[zone] stage {Map.StageNumber} has no zone '{zone}' on a route; starting in the safe room");
+        }
+
         var def = CharacterCatalog.Player(CharacterOverride ?? GameSession.SelectedCharacterId);
         Player = new Player();
         Player.Setup(this, def);
-        Player.Position = Map.PlayerStart;
+        Player.Position = start;
         AddChild(Player);
         Players.Add(Player);
         Player.Died += CheckWipe;
@@ -283,7 +300,7 @@ public partial class Stage : Node3D
         bool arriving = (ArrivalOverride ?? running) && StageTransition.Arriving;
         if (arriving) Cam.Arrive(StageTransition.FromView, StageTransition.ArriveSeconds);
         AddChild(Cam);
-        Cam.SnapTo(Map.PlayerStart);
+        Cam.SnapTo(start);
         Effects.RegisterCorpseObserver(Player, Cam);
 
         _enemyRoot = new Node3D { Name = "Enemies" };
@@ -305,7 +322,7 @@ public partial class Stage : Node3D
         Trail.Add(Player.GlobalPosition);
         // The menu's squad size applies to the real game scene; tests ask for squadmates explicitly.
         // No AI squadmates in a network match (M-11).
-        SpawnSquad(SquadOverride ?? (GetTree().CurrentScene == this && Role == NetRole.Offline ? GameSession.SquadSize : 0));
+        SpawnSquad(SquadOverride ?? (GetTree().CurrentScene == this && Role == NetRole.Offline ? GameSession.SquadSize : 0), start);
 
         // Multiplayer: after the level and the start fill exist, so ids and the welcome list are complete.
         if (Role != NetRole.Offline) Net = StageNet.Attach(this, Role);
@@ -315,6 +332,8 @@ public partial class Stage : Node3D
         if (ModeRules == null) ShowNotice(Loc.Text(Objective == Objective.LeaveSafeRoom ? "msg_stage_start" : Map.RouteStartKey));
         // A stage that starts out on the route (no safe-room door to open) wakes the director at once.
         if (ModeRules == null && Objective != Objective.LeaveSafeRoom && DirectorEnabled) Director.Begin();
+        // A zone start is past the safe room: open its door and go on as if the switch was used.
+        if (StartedZone != "" && Objective == Objective.LeaveSafeRoom) LeaveSafeRoom();
         if (arriving)
         {
             if (GameSession.Carry is { } carry) carry.ApplyTo(Player);
@@ -503,7 +522,7 @@ public partial class Stage : Node3D
         return null;
     }
 
-    private void SpawnSquad(int count)
+    private void SpawnSquad(int count, Vector3 start)
     {
         var roles = SquadDatabase.Current.Roles;
         if (count <= 0 || roles.Count == 0) return;
@@ -517,8 +536,8 @@ public partial class Stage : Node3D
             // Three squadmates take one role each; a single one gets a random role.
             var role = count >= roles.Count ? roles[i % roles.Count] : roles[rng.RandiRange(0, roles.Count - 1)];
             var def = CharacterCatalog.Player(species[i % species.Count]);
-            var at = Map.PlayerStart + offsets[i % offsets.Length];
-            if (Flow.IsBlocked(at)) at = Map.PlayerStart;
+            var at = start + offsets[i % offsets.Length];
+            if (Flow.IsBlocked(at)) at = start;
             var bot = AddSurvivor(def, at, true, $"Squad{i + 1}", new AppearanceProfile());
             Squad.Add(SquadBrain.Attach(this, bot, role, i));
             WatchSquadmate(bot, role, i);

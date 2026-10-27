@@ -450,6 +450,56 @@ public sealed partial class LayoutMap : StageMap
         Box(cut, deck: true);
     }
 
+    /// <summary>
+    /// Where a level test starts in zone <paramref name="id"/> (--zone): walking the main route first, then the other routes,
+    /// the first open spot a little past where the route enters the zone; a zone no route crosses gives its open spot
+    /// nearest the middle. Null for an unknown zone.
+    /// </summary>
+    public Vector3? ZoneEntry(string id) => ZoneEntryOf(id)?.At;
+
+    /// <summary><see cref="ZoneEntry"/> with the zone's own id spelling (the option ignores case).</summary>
+    public (string Id, Vector3 At)? ZoneEntryOf(string id)
+    {
+        const float step = .5f, inside = 3f;
+        var order = Layout.Routes.OrderBy(r => r.Key == "main" ? 0 : 1).Select(r => r.Value);
+        foreach (var route in order)
+        {
+            float walked = -1;
+            for (int i = 0; i + 1 < route.Length; i++)
+            {
+                var a = route[i];
+                var b = route[i + 1];
+                int steps = Mathf.Max(1, Mathf.CeilToInt(a.DistanceTo(b) / step));
+                for (int k = 0; k < steps; k++)
+                {
+                    var p = a.Lerp(b, (float)k / steps);
+                    var zone = Layout.ZoneAt(p);
+                    if (zone == null || !zone.Id.Equals(id, StringComparison.OrdinalIgnoreCase)) { if (walked >= 0) break; continue; }
+                    if (walked < 0) walked = 0; else walked += step;
+                    var at = FloorAt(p) + Vector3.Up * .05f;
+                    if (walked >= inside && !_stage.Flow.IsBlocked(at)) return (zone.Id, at);
+                }
+            }
+        }
+        // A zone no route crosses (a branch such as Stage 3's tower): the open spot nearest its middle.
+        var off = Layout.Zones.Find(z => z.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
+        if (off == null || off.Poly.Length == 0) return null;
+        var rect = new Rect2(off.Poly[0], Vector2.Zero);
+        foreach (var point in off.Poly) rect = rect.Expand(point);
+        (string, Vector3)? best = null;
+        float bestDistance = float.MaxValue;
+        for (float x = rect.Position.X; x <= rect.End.X; x += step)
+        for (float z = rect.Position.Y; z <= rect.End.Y; z += step)
+        {
+            var p = new Vector2(x, z);
+            if (Layout.ZoneAt(p) != off) continue;
+            var at = FloorAt(p) + Vector3.Up * .05f;
+            float distance = p.DistanceSquaredTo(rect.GetCenter());
+            if (distance < bestDistance && !_stage.Flow.IsBlocked(at)) { best = (off.Id, at); bestDistance = distance; }
+        }
+        return best;
+    }
+
     private Vector3 FloorAt(Vector2 p) => new(p.X, _stage.Tiers.GroundY(new Vector3(p.X, 0, p.Y)), p.Y);
 
     private void BuildLink(StageLayout.Link link)

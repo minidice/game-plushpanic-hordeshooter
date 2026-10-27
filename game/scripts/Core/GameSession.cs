@@ -33,13 +33,35 @@ public static class GameSession
     /// </summary>
     public static bool Stage3Draft { get; set; } = OS.GetCmdlineUserArgs().Any(a => a is "--stage3-draft" or "--stage2-draft");
 
+    /// <summary>
+    /// Launch option <c>--zone=D</c> or <c>--zone=2:D</c> (Start-Game.ps1 -Zone): a level test run on the large campaign that
+    /// starts at that zone's entry on the stage's route, safe-room door already open (doc/features/level/guide-map.md 9장).
+    /// Every encounter stays as the map sets it. Single player only, like --large-stages.
+    /// </summary>
+    public static string StartZone { get; set; } = "";
+    public static int StartZoneStage { get; set; } = 1;
+
+    static GameSession()
+    {
+        foreach (var arg in OS.GetCmdlineUserArgs())
+        {
+            if (!arg.StartsWith("--zone=")) continue;
+            var value = arg["--zone=".Length..];
+            int colon = value.IndexOf(':');
+            if (colon > 0 && int.TryParse(value[..colon], out int stage)) { StartZoneStage = Mathf.Clamp(stage, 1, 3); value = value[(colon + 1)..]; }
+            StartZone = value;
+            // Also when the scene is opened straight away, without the menu's StartCampaign.
+            ScenarioStage = StartZoneStage;
+        }
+    }
+
     /// <summary>Whether the scenario builds the large campaign's maps (<see cref="StageMap.Create"/>).</summary>
-    public static bool LargeCampaign => LargeStages || Stage3Draft;
+    public static bool LargeCampaign => LargeStages || Stage3Draft || StartZone != "";
 
     /// <summary>A new run from the menu or the room: back to Stage 1 (Stage 3 with --stage3-draft), nothing carried.</summary>
     public static void StartCampaign()
     {
-        ScenarioStage = Stage3Draft ? 3 : 1;
+        ScenarioStage = StartZone != "" ? StartZoneStage : Stage3Draft ? 3 : 1;
         Carry = null;
     }
 
