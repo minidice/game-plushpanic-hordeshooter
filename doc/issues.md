@@ -19,6 +19,15 @@
 
 ## 1. 열림 · 제약
 
+### 2026-10-27 기존 검사 실패 (카메라 기본 시점 작업 중 발견, 변경 전 main에서도 같음)
+
+| ID | 증상 | 원인 / 메모 | 상태 | 날짜 | 관련 |
+|---|---|---|---|---|---|
+| I-126 | `ForestExpansionCheck`가 `Sequence contains no matching element`로 멈춤 | 숲 소품 중 `.glb` 자식이 없는 것(추정: 최근 `LayoutMap` 변경). [본문](features/art-environment/issues.md#i-126-forestexpansioncheck가-숲-소품-glb를-찾지-못하고-멈춤) | 열림 | 2026-10-27 | `ForestExpansionCheck` |
+| I-127 | `ForestQualityCheck`가 같은 예외로 멈춤 | I-126과 같은 원인으로 추정. [본문](features/art-environment/issues.md#i-127-forestqualitycheck가-같은-예외로-멈춤) | 열림 | 2026-10-27 | `ForestQualityCheck` |
+| I-128 | `CommonRosterFieldCheck` 고지 사격 예고 검사가 예고 표시(`BoxMesh`)를 찾지 못하고 멈춤 | 추정: 고정 좌표가 L-30 큰 Stage 2에서 다른 곳이 됨, 또는 예고 표시 방식 변경. [본문](features/enemies/issues.md#i-128-commonrosterfieldcheck-고지-사격-예고-표시를-찾지-못함) | 열림 | 2026-10-27 | `CommonRosterFieldCheck` |
+| I-129 | `AreaEffectsReadabilityCheck`(창 모드) "actual boss disc and fill exist" 실패 | 보스 내려찍기 예고의 `CylinderMesh`가 2개 미만(추정: 장판 효과 작업이 예고 그림을 바꿈). [본문](features/effects-audio/issues.md#i-129-areaeffectsreadabilitycheck-보스-예고-원판을-찾지-못함) | 열림 | 2026-10-27 | `AreaEffectsReadabilityCheck` |
+
 ### 2026-10-24 낮은 엄폐물 · 파괴 오브젝트 1차(C-29)
 
 | ID | 증상 | 원인 / 메모 | 상태 | 날짜 | 관련 |
