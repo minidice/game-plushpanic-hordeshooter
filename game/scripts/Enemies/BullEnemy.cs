@@ -24,10 +24,9 @@ public partial class BullEnemy : Enemy
     private Vector3 _chargeDir = Vector3.Forward;
     public Vector3 ChargeDirection => _chargeDir;
     private Player? _windupVictim;
-    private MeshInstance3D? _telegraph;
+    private GroundMarker? _telegraph;
     // Each survivor is bowled over at most once per charge.
     private readonly System.Collections.Generic.HashSet<Player> _bowled = new();
-    private StandardMaterial3D? _telegraphMat;
 
     /// <summary>A boss charges only in phases that list the charge skill.</summary>
     protected virtual bool CanCharge => true;
@@ -192,18 +191,18 @@ public partial class BullEnemy : Enemy
     private void ShowTelegraph()
     {
         if (_telegraph != null) return;
-        _telegraphMat = Mat.Fade(new Color(1, .25f, .2f, .35f));
-        _telegraph = Mat.Box(Stage.Effects, GlobalPosition, new Vector3(Radius * 2, .02f, Charge.Speed * Charge.ChargeTime * .7f), _telegraphMat);
+        var start = GlobalPosition + Vector3.Up * .03f;
+        _telegraph = GroundMarker.Lane(Stage.Effects, start, start + _chargeDir * (Charge.Speed * Charge.ChargeTime * .7f), Radius * 2, GroundMarker.Danger);
         UpdateTelegraph();
     }
 
     private void UpdateTelegraph()
     {
-        if (_telegraph == null || _telegraphMat == null) return;
-        float length = ((BoxMesh)_telegraph.Mesh).Size.Z;
+        if (_telegraph == null) return;
+        float length = _telegraph.Footprint.Y;
         _telegraph.GlobalPosition = GlobalPosition + _chargeDir * length * .5f + Vector3.Up * .03f;
         _telegraph.LookAt(_telegraph.GlobalPosition + _chargeDir, Vector3.Up);
-        _telegraphMat.AlbedoColor = new Color(1, .25f, .2f, .25f + .25f * Mathf.Abs(Mathf.Sin(_timer * 18)));
+        _telegraph.SetOpacity(.85f + .15f * Mathf.Abs(Mathf.Sin(_timer * 8)));
     }
 
     private void HideTelegraph()

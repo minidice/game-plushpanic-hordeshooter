@@ -1,0 +1,416 @@
+{
+  "version": 1,
+  "note": "Audio presentation only; no friction, bounce, mass, HP, penetration or blocking changes. Null object profiles are non-contact decorations without surface audio. Values are authored defaults, not measured material constants.",
+  "default_profile": "concrete",
+  "families": {
+    "stone": "단단한 지면·석재",
+    "metal": "금속",
+    "wood": "목재",
+    "soft": "천·충전재",
+    "soil": "흙·모래",
+    "gravel": "자갈·잔해",
+    "grass": "풀·낙엽"
+  },
+  "profiles": {
+    "asphalt": {
+      "label": "아스팔트",
+      "family": "stone",
+      "step": "step",
+      "hit": "surface_hit_stone",
+      "breaking": "surface_break_stone",
+      "step_db": 0,
+      "hit_db": 0,
+      "break_db": 0
+    },
+    "concrete": {
+      "label": "콘크리트",
+      "family": "stone",
+      "step": "step",
+      "hit": "surface_hit_stone",
+      "breaking": "surface_break_stone",
+      "step_db": 0,
+      "hit_db": 0,
+      "break_db": 0
+    },
+    "rock": {
+      "label": "바위·석재",
+      "family": "stone",
+      "step": "step",
+      "hit": "surface_hit_stone",
+      "breaking": "surface_break_stone",
+      "step_db": 0,
+      "hit_db": 0,
+      "break_db": 0
+    },
+    "metal_solid": {
+      "label": "두꺼운 금속",
+      "family": "metal",
+      "step": "surface_step_metal",
+      "hit": "surface_hit_metal",
+      "breaking": "surface_break_metal",
+      "step_db": 0,
+      "hit_db": 0,
+      "break_db": 0
+    },
+    "metal_sheet": {
+      "label": "철판",
+      "family": "metal",
+      "step": "surface_step_metal",
+      "hit": "surface_hit_metal",
+      "breaking": "surface_break_metal",
+      "step_db": 0,
+      "hit_db": 0,
+      "break_db": 0
+    },
+    "metal_hollow": {
+      "label": "금속통",
+      "family": "metal",
+      "step": "surface_step_metal",
+      "hit": "surface_hit_metal",
+      "breaking": "surface_break_metal",
+      "step_db": 0,
+      "hit_db": -2,
+      "break_db": 0
+    },
+    "wood_solid": {
+      "label": "단단한 목재",
+      "family": "wood",
+      "step": "surface_step_wood",
+      "hit": "surface_hit_wood",
+      "breaking": "surface_break_wood",
+      "step_db": 0,
+      "hit_db": 0,
+      "break_db": 0
+    },
+    "wood_hollow": {
+      "label": "목재 상자",
+      "family": "wood",
+      "step": "surface_step_wood",
+      "hit": "surface_hit_wood",
+      "breaking": "surface_break_wood",
+      "step_db": 0,
+      "hit_db": 0,
+      "break_db": 0
+    },
+    "sandbag": {
+      "label": "모래주머니",
+      "family": "soft",
+      "step": "surface_step_soft",
+      "hit": "surface_hit_soft",
+      "breaking": "surface_break_soft",
+      "step_db": 0,
+      "hit_db": 0,
+      "break_db": 0
+    },
+    "fabric": {
+      "label": "천·쿠션",
+      "family": "soft",
+      "step": "surface_step_soft",
+      "hit": "surface_hit_soft",
+      "breaking": "surface_break_soft",
+      "step_db": 0,
+      "hit_db": 0,
+      "break_db": 0
+    },
+    "cardboard": {
+      "label": "골판지 상자",
+      "family": "soft",
+      "step": "surface_step_soft",
+      "hit": "surface_hit_soft",
+      "breaking": "surface_break_soft",
+      "step_db": 0,
+      "hit_db": 0,
+      "break_db": 0
+    },
+    "soil": {
+      "label": "다져진 흙",
+      "family": "soil",
+      "step": "surface_step_soil",
+      "hit": "surface_hit_soil",
+      "breaking": "surface_break_soft",
+      "step_db": 0,
+      "hit_db": 0,
+      "break_db": 0
+    },
+    "sand": {
+      "label": "모래",
+      "family": "soil",
+      "step": "surface_step_soil",
+      "hit": "surface_hit_soil",
+      "breaking": "surface_break_soft",
+      "step_db": 0,
+      "hit_db": 0,
+      "break_db": 0
+    },
+    "gravel": {
+      "label": "자갈·잔해",
+      "family": "gravel",
+      "step": "surface_step_gravel",
+      "hit": "surface_hit_gravel",
+      "breaking": "surface_break_soft",
+      "step_db": 0,
+      "hit_db": 0,
+      "break_db": 0
+    },
+    "grass": {
+      "label": "풀·낙엽",
+      "family": "grass",
+      "step": "surface_step_grass",
+      "hit": "surface_hit_grass",
+      "breaking": "surface_break_soft",
+      "step_db": 0,
+      "hit_db": 0,
+      "break_db": 0
+    }
+  },
+  "objects": {
+    "pine_tall": "wood_solid",
+    "pine_small": "wood_solid",
+    "broadleaf": "wood_solid",
+    "round_oak": "wood_solid",
+    "round_linden": "wood_solid",
+    "stump": "wood_solid",
+    "fallen_log": "wood_solid",
+    "pallet": "wood_solid",
+    "timber_bridge": "wood_solid",
+    "bench": "wood_solid",
+    "watch_post": "wood_solid",
+    "watchtower": "wood_solid",
+    "forest_pine": "wood_solid",
+    "forest_broadleaf": "wood_solid",
+    "forest_oval": "wood_solid",
+    "forest_fan": "wood_solid",
+    "wooden_crate": "wood_hollow",
+    "shrub": "grass",
+    "grass_patch": "grass",
+    "reeds": "grass",
+    "ground_grass": "grass",
+    "edge_shrub_band": "grass",
+    "bit_grass_tuft": "grass",
+    "bit_grass_clump": "grass",
+    "forest_grass_a": "grass",
+    "forest_grass_b": "grass",
+    "boulder": "rock",
+    "rock_cluster": "rock",
+    "cliff_segment": "rock",
+    "edge_rock_wall": "rock",
+    "bit_stone": "rock",
+    "cliff_face": "rock",
+    "path_dirt": "soil",
+    "road_asphalt": "asphalt",
+    "curb": "concrete",
+    "concrete_barrier": "concrete",
+    "pump_house": "concrete",
+    "safehouse": "concrete",
+    "safehouse_b": "concrete",
+    "urban_rowhouse": "concrete",
+    "urban_shop": "concrete",
+    "urban_warehouse": "concrete",
+    "container_closed": "metal_sheet",
+    "container_open": "metal_sheet",
+    "corrugated_fence": "metal_sheet",
+    "utility_shed": "metal_sheet",
+    "floor_hatch": "metal_sheet",
+    "bunker_hatch": "metal_sheet",
+    "warning_sign": "metal_sheet",
+    "gondola_cabin": "metal_sheet",
+    "bridge_leaf": "metal_sheet",
+    "alarm_truck": "metal_sheet",
+    "bunker_gate": "metal_sheet",
+    "safehouse_door": "metal_sheet",
+    "container_stack_shell": "metal_sheet",
+    "route_sign": "metal_sheet",
+    "wall_button_panel": "metal_sheet",
+    "shutter_leaf": "metal_sheet",
+    "car_wreck": "metal_sheet",
+    "bus_wreck": "metal_sheet",
+    "dumpster": "metal_sheet",
+    "wire_fence": "metal_solid",
+    "streetlamp": "metal_solid",
+    "ladder_section": "metal_solid",
+    "ladder_top": "metal_solid",
+    "zipline_anchor": "metal_solid",
+    "gondola_station": "metal_solid",
+    "bridge_truss": "metal_solid",
+    "crane": "metal_solid",
+    "barrel": "metal_hollow",
+    "sandbags": "sandbag",
+    "bit_pebbles": "gravel",
+    "bit_gravel": "gravel",
+    "water_tile": null,
+    "stream_straight": null,
+    "stream_curve": null,
+    "runtime:barrel": "metal_hollow",
+    "runtime:breach_wall": "concrete",
+    "runtime:door": "metal_sheet",
+    "runtime:alarm_car": "metal_sheet",
+    "runtime:carton": "cardboard",
+    "runtime:cargo": "wood_hollow",
+    "runtime:wall": "concrete",
+    "runtime:workshop:Workbench": "wood_solid",
+    "runtime:workshop:ToolChest": "metal_sheet",
+    "runtime:workshop:PartsShelf": "metal_solid",
+    "runtime:workshop:Generator": "metal_hollow",
+    "runtime:workshop:CableReel": "wood_solid",
+    "runtime:workshop:PipeRack": "metal_solid",
+    "runtime:workshop:SafetyBoard": "wood_solid",
+    "runtime:shelf": "metal_solid",
+    "runtime:ammo": null,
+    "runtime:fixture": null
+  },
+  "ground": {
+    "StageOneLayout": {
+      "default": "asphalt",
+      "zones": [
+        {
+          "rect": [
+            0,
+            -4,
+            10,
+            4
+          ],
+          "profile": "concrete"
+        },
+        {
+          "rect": [
+            52,
+            -10,
+            84.4,
+            10
+          ],
+          "profile": "concrete"
+        },
+        {
+          "rect": [
+            116,
+            -4,
+            126,
+            4
+          ],
+          "profile": "concrete"
+        }
+      ]
+    },
+    "StageTwoMap": {
+      "default": "grass",
+      "zones": [
+        {
+          "rect": [
+            -2,
+            -3,
+            60.3,
+            3
+          ],
+          "profile": "soil"
+        },
+        {
+          "rect": [
+            60.3,
+            -1.5,
+            67.7,
+            1.5
+          ],
+          "profile": "wood_solid"
+        },
+        {
+          "rect": [
+            67.7,
+            -10,
+            100,
+            10
+          ],
+          "profile": "gravel"
+        },
+        {
+          "rect": [
+            100,
+            -4,
+            112,
+            4
+          ],
+          "profile": "concrete"
+        }
+      ]
+    },
+    "OpenFieldMap": {
+      "default": "grass",
+      "zones": []
+    }
+  },
+  "layouts": {
+    "1": {
+      "default": "asphalt",
+      "regions": {
+        "saferoom_lot": "concrete",
+        "main_street": "asphalt",
+        "pharmacy": "concrete",
+        "plaza_terrace": "concrete",
+        "alley": "asphalt",
+        "depot": "concrete",
+        "dock_1": "concrete",
+        "stack_1": "metal_sheet",
+        "gate_gap": "asphalt",
+        "guard_post": "concrete",
+        "freight_yard": "asphalt",
+        "stack_2": "metal_sheet",
+        "stack_3": "metal_sheet",
+        "ramp_up": "concrete",
+        "overpass": "concrete",
+        "safehouse_deck": "concrete"
+      },
+      "route_profile": null,
+      "main_half_width": 3,
+      "side_half_width": 1.6
+    },
+    "2": {
+      "default": "grass",
+      "regions": {
+        "drain_exit": "concrete",
+        "slope_high": "grass",
+        "slope_mid": "grass",
+        "valley": "grass",
+        "cabin_ledge": "grass",
+        "ford": "gravel",
+        "bunker_yard": "gravel",
+        "gen_terrace": "concrete",
+        "gate_gap": "grass",
+        "ranger_post": "wood_solid",
+        "hill_low": "grass",
+        "hill_mid": "grass",
+        "log_deck": "wood_solid",
+        "hill_top": "grass",
+        "pass": "grass"
+      },
+      "route_profile": "soil",
+      "main_half_width": 3,
+      "side_half_width": 1.6
+    },
+    "3": {
+      "default": "grass",
+      "regions": {
+        "bunker": "concrete",
+        "forest_low": "grass",
+        "forest_mid": "grass",
+        "forest_high": "grass",
+        "tower_spur": "grass",
+        "watchtower": "wood_solid",
+        "west_rim": "grass",
+        "canyon": "grass",
+        "return_ledge": "grass",
+        "bridge": "wood_solid",
+        "east_rim": "grass",
+        "yard": "gravel",
+        "stack_1": "metal_sheet",
+        "stack_2": "metal_sheet",
+        "stack_3": "metal_sheet",
+        "plateau_2": "grass",
+        "plateau_3": "grass",
+        "plateau_4": "grass",
+        "arrival": "concrete"
+      },
+      "route_profile": "soil",
+      "main_half_width": 3,
+      "side_half_width": 1.6
+    }
+  }
+}

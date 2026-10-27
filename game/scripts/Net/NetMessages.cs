@@ -5,14 +5,14 @@ using System.Linq;
 namespace HordeShooter;
 
 /// <summary>
-/// Small ids for data that both PCs load from the same files: weapons, throwables and monsters sorted by id.
+/// Small ids for data that both PCs load from the same files, sorted by id.
 /// A mismatch between builds is caught by the version check before a match starts.
 /// </summary>
 public static class NetIds
 {
     private static WeaponDefinition[]? _weapons;
     private static Dictionary<string, int>? _weaponIndex;
-    private static string[]? _throwables, _monsters;
+    private static string[]? _throwables, _monsters, _surfaces;
 
     // Dual variants ("m1911_dual") are made from their base weapon and are not in the weapon table: include them (I-73).
     private static WeaponDefinition[] Weapons => _weapons ??= ArmoryCatalog.Weapons.Values
@@ -22,6 +22,7 @@ public static class NetIds
     private static Dictionary<string, int> WeaponIndex => _weaponIndex ??= Weapons.Select((d, i) => (d.Id, i)).ToDictionary(t => t.Id, t => t.i);
     private static string[] Throwables => _throwables ??= ArmoryCatalog.Throwables.Keys.OrderBy(k => k, System.StringComparer.Ordinal).ToArray();
     private static string[] Monsters => _monsters ??= MonsterDatabase.Current.Monsters.Keys.OrderBy(k => k, System.StringComparer.Ordinal).ToArray();
+    private static string[] Surfaces => _surfaces ??= SurfaceProfiles.Current.Profiles.Keys.OrderBy(k => k, System.StringComparer.Ordinal).ToArray();
 
     /// <summary>Fails loudly on the host instead of sending an index the other side cannot read.</summary>
     public static int Weapon(string id) => WeaponIndex.TryGetValue(id, out int i) ? i : throw new System.InvalidOperationException($"weapon '{id}' has no network id");
@@ -30,6 +31,9 @@ public static class NetIds
     public static int Throwable(string id) => Index(Throwables, id, "throwable");
     public static string ThrowableAt(int i) => Throwables[i];
     public static int Monster(string id) => Index(Monsters, id, "monster");
+    public static int Surface(string id) => Index(Surfaces, id, "surface");
+    public static SurfaceProfile SurfaceAt(int i) => i >= 0 && i < Surfaces.Length
+        ? SurfaceProfiles.Current.Profiles[Surfaces[i]] : throw new System.FormatException("Unknown network surface profile");
 
     /// <summary>An item's id as a number for its kind (weapon, caliber, throwable; medkits are 0).</summary>
     public static int Item(ItemKind kind, string id) => kind switch
@@ -59,8 +63,8 @@ public static class NetIds
     public static int DataHash() => DataHash(FileAccess.GetFileAsString(ObjectInteractions.DataPath),
         FileAccess.GetFileAsString(DestructionPlacements.Path));
 
-    /// <summary>Also fingerprints destruction policy and placement/build order; accepts text for checks without editing game files.</summary>
-    internal static int DataHash(string interactionsJson, string placementsJson, string? commonRosterJson = null)
+    /// <summary>Also fingerprints destruction, placement order and surface audio contracts; accepts text for checks without editing game files.</summary>
+    internal static int DataHash(string interactionsJson, string placementsJson, string? commonRosterJson = null, string? surfacesJson = null)
     {
         unchecked
         {
@@ -68,6 +72,7 @@ public static class NetIds
             foreach (var s in Weapons.Select(w => w.Id).Concat(Throwables).Concat(Monsters).Concat(CaliberDatabase.Current.Order))
                 foreach (char c in s) h = h * 31 + c;
             foreach (var (path, text) in new[] { (ObjectInteractions.DataPath, interactionsJson), (DestructionPlacements.Path, placementsJson),
+                (SurfaceProfiles.DataPath, surfacesJson ?? FileAccess.GetFileAsString(SurfaceProfiles.DataPath)),
                 (CommonRoster.DataPath, commonRosterJson ?? FileAccess.GetFileAsString(CommonRoster.DataPath)),
                 (SpawnDatabase.Stage1Path, FileAccess.GetFileAsString(SpawnDatabase.Stage1Path)),
                 (SpawnDatabase.Stage2Path, FileAccess.GetFileAsString(SpawnDatabase.Stage2Path)),
@@ -85,7 +90,7 @@ public static class NetIds
             return h;
         }
     }
-    public static void Clear() { _weapons = null; _weaponIndex = null; _throwables = _monsters = null; }
+    public static void Clear() { _weapons = null; _weaponIndex = null; _throwables = _monsters = _surfaces = null; }
 }
 
 /// <summary>Buttons a client is holding right now.</summary>

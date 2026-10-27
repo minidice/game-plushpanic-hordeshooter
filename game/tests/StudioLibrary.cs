@@ -32,7 +32,8 @@ public partial class StudioPreview
     private object Library()
     {
         if (_monsterEntries == null) BuildMonsterEntries();
-        if (_objectEntries == null) BuildObjectEntries();
+        SurfaceProfiles.Reload();
+        BuildObjectEntries();
         return new { monsters = _monsterEntries, objects = _objectEntries, loadedAt = DateTimeOffset.Now.ToString("O"),
             warnings = MonsterDatabase.Current.Errors.Concat(PropLibrary.Errors).ToArray() };
     }
@@ -129,6 +130,21 @@ public partial class StudioPreview
         {
             var entry = _objectEntries[i];
             var info = PropLibrary.Find(entry.id);
+            if (SurfaceProfiles.Current.Objects.TryGetValue(entry.id.StartsWith("workshop:") ? "runtime:" + entry.id : entry.id, out var surfaceId))
+            {
+                if (surfaceId is { } assigned)
+                {
+                    var surface = SurfaceProfiles.Current.Profiles[assigned];
+                    entry.properties.Add(new("표면·소리 프리셋", surface.Label + " (" + surface.Id + ")"));
+                    entry.properties.Add(new("재질 계열", SurfaceProfiles.Current.Families[surface.Family]));
+                    entry.properties.Add(new("발소리 / 명중 / 파손", surface.Step + " / " + surface.Hit + " / " + surface.Breaking));
+                    entry.properties.Add(new("추가 게인 dB (발 / 명중 / 파손)", Number(surface.StepDb) + " / " + Number(surface.HitDb) + " / " + Number(surface.BreakDb)));
+                    entry.properties.Add(new("표면 적용 범위", "실제 충돌체에 연결된 접촉만 적용. 장식·합성 충돌은 맵 소유. 파괴/관통/물리값을 변경하지 않음"));
+                }
+                else entry.properties.Add(new("표면·소리 프리셋", "미적용: 충돌 없는 장식"));
+                entry.details.Add(new("표면·소리 공통 데이터", ReadJson(SurfaceProfiles.DataPath)));
+            }
+
             var rule = info == null ? ObjectInteractions.Current.ForId(entry.id) : ObjectInteractions.Current.ForProp(info);
             entry.properties.Insert(2, new("이동 차단", rule == null ? "공통 데이터 미연결 · 맵 배치 코드에서 결정" : rule.BlocksMovement ? "차단" : "통과"));
             entry.properties.Insert(3, new("탄환 차단", rule == null ? "공통 데이터 미연결 · 맵 배치 코드에서 결정" : rule.BlocksProjectiles ? "차단" : "통과"));

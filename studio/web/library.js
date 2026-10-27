@@ -1,8 +1,10 @@
+import { surfaceEditor } from '/surface-editor.js';
 const $ = id => document.getElementById(id);
 const isMonster = location.pathname === '/monsters';
 const kind = isMonster ? 'monster' : 'object';
 const title = isMonster ? '몬스터 도감' : '오브젝트 도감';
 let entries = [], selected, revision = 0, busy = false, locked = false, timer;
+const surfaces = isMonster ? null : surfaceEditor(api, load);
 $('page-title').textContent = title; document.title = `Plush Panic Studio · ${title}`;
 $('eyebrow').textContent = isMonster ? 'MONSTER LIBRARY / 02' : 'OBJECT LIBRARY / 03';
 $('intro').textContent = isMonster ? '일반 감염체부터 보스까지, 실제 외형과 기본 능력치를 확인하세요.' : '등록된 모델 소품과 코드 생성 소품의 외형·규격을 확인하세요.';
@@ -39,7 +41,7 @@ async function render() {
         $('placeholder').hidden = true; $('pending').hidden = true;
         $('render-error').hidden = true;
         $('render-time').textContent = `${((performance.now() - started) / 1000).toFixed(2)}s`;
-        status('렌더 완료 · 현재 로컬 데이터 · 조회 전용');
+        status('렌더 완료 · 현재 로컬 데이터' + (isMonster ? ' · 조회 전용' : ' · 표면·소리 편집 가능'));
       }
     }
   } catch (error) {
@@ -57,6 +59,7 @@ function select(id) {
   history.replaceState(null, '', `${location.pathname}?id=${encodeURIComponent(id)}`);
   $('item-name').textContent = selected.name; $('item-id').textContent = selected.id;
   $('item-category').textContent = selected.category; $('summary').textContent = selected.summary;
+  surfaces?.select(selected);
   $('source').textContent = selected.source;
   const comparing = selected.qualityMode !== 'single';
   document.querySelector('.library-main').classList.toggle('comparing', comparing);
@@ -96,6 +99,7 @@ function list() {
 }
 async function load() {
   const data = await api('/api/library'); entries = isMonster ? data.monsters : data.objects;
+  if (surfaces) surfaces.setData(await api('/api/surfaces'), entries);
   $('warnings').hidden = !data.warnings.length; $('warnings').textContent = data.warnings.join('\n');
   $('total-count').textContent = `${entries.length}개 · 현재 로컬 데이터`;
   $('category').replaceChildren(new Option('모든 분류', ''));
@@ -110,7 +114,7 @@ for (const id of ['rotation', 'zoom', 'variant']) $(id).addEventListener('input'
   $('rotation-value').textContent = `${$('rotation').value}°`; $('zoom-value').textContent = `${Number($('zoom').value).toFixed(2)}×`; invalidate();
 });
 $('reload').addEventListener('click', async () => {
-  if (busy || locked) return;
+  if (busy || locked || surfaces?.isSaving()) return;
   locked = true; $('reload').disabled = true; document.querySelector('.library-layout').inert = true;
   document.querySelector('.main-nav').inert = true; document.querySelector('.brand').inert = true;
   status('현재 게임을 다시 빌드하고 데이터를 읽습니다…');

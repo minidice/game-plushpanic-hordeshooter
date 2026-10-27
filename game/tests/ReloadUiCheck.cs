@@ -57,9 +57,11 @@ public partial class ReloadUiCheck : Node
             player.SetPhysicsProcess(false);
             stage.Hud.SetProcess(false);
             var gun = player.Gun;
+            var ammo = (Label)stage.Hud.FindChild("ActiveAmmo", true, false);
             gun.SetAmmo(2, 90);
             stage.Hud._Process(.25);
             Check(!label!.Visible, "no progress strip when ready");
+            Check(ammo.GetThemeColor("font_color") == UiTheme.Danger, "ready weapon still warns about low ammo");
             await Shot("ready");
             Check(gun.StartReload(), "real M4 starts reloading");
             for (int i = 0; i <= 60; i++)
@@ -68,9 +70,14 @@ public partial class ReloadUiCheck : Node
                 stage.Hud._Process(1.0 / 30);
                 if (Sequence) { await Frames(1); await Shot($"frame-{_frame++:000}"); }
                 if (i == 3) await Shot("enter");
+                if (i == 1) await Shot("small");
+                if (i == 59) await Shot("almost");
                 if (i == 30)
                 {
                     Check(label.Visible && (label.Text.Contains("49%") || label.Text.Contains("50%")), "bottom label follows the actual half reload");
+                    Check(ammo.GetThemeColor("font_color") != UiTheme.Danger, "reload status does not compete with danger warnings");
+                    Check(ammo.GetThemeFontSize("font_size") < 28, "reload status is quieter than the ready ammo count");
+                    if (Windowed) await CheckReloadReticle(stage);
                     int rounds = gun.Mag;
                     Check(!gun.Trigger(true, true) && gun.Mag == rounds, "trigger cannot shoot during magazine reload");
                     await Shot("half");
@@ -104,7 +111,17 @@ public partial class ReloadUiCheck : Node
             gun.CancelReload();
             stage.Hud._Process(.02);
             Check(label.Visible && !label.Text.Contains("100%"), "cancellation never claims completion");
+            Check(ammo.GetThemeColor("font_color") == UiTheme.Danger && ammo.GetThemeFontSize("font_size") == 28,
+                "cancelling reload immediately restores the readable low ammo warning");
             await Shot("cancel");
+            // Stable fully visible samples exercise tiny fills independently of the entrance fade.
+            gun.StartReload();
+            stage.Hud._Process(.2);
+            await Shot("zero");
+            gun.Tick(gun.ReloadTime * .01f, false);
+            stage.Hud._Process(.2);
+            await Shot("one-percent");
+            gun.CancelReload();
             player.Weapons.SelectSlot(1);
             stage.Hud._Process(.02);
             Check(!label.Visible, "switching weapons removes the previous weapon progress immediately");
@@ -131,6 +148,11 @@ public partial class ReloadUiCheck : Node
             Check(player.Gun.CooldownLeft > 0 && label.Text.StartsWith(Loc.Text("hud_action_recharge")), "recharge is active during the hit mark check");
             if (Windowed)
             {
+                player.PressRoll();
+                player._PhysicsProcess(.016);
+                stage.Hud._Process(.016);
+                Check(player.RollCooldownLeft > 0, "leap cooldown render samples an actual roll");
+                await Shot("leap-cooldown");
                 stage.ProcessMode = ProcessModeEnum.Disabled;
                 var reticle = stage.Hud.GetNode<Control>("HudRoot/Reticle");
                 reticle.QueueRedraw();
@@ -163,6 +185,39 @@ public partial class ReloadUiCheck : Node
         catch (Exception e) { GD.PushError(e.ToString()); GD.Print("RELOAD_UI_FAIL " + e.Message); failed = true; }
         QuitHygiene.Collect();
         GetTree().Quit(failed ? 1 : 0);
+    }
+
+    private async Task CheckReloadReticle(Stage stage)
+    {
+        // Compare the same frozen world with/without the real reticle; scenery cannot masquerade as UI dots.
+        var previousMode = stage.ProcessMode;
+        stage.ProcessMode = ProcessModeEnum.Disabled;
+        var reticle = stage.Hud.GetNode<Control>("HudRoot/Reticle");
+        reticle.Visible = false;
+        await Frames(2);
+        await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+        using var background = GetViewport().GetTexture().GetImage();
+        reticle.Visible = true;
+        reticle.QueueRedraw();
+        await Frames(2);
+        await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+        using var visible = GetViewport().GetTexture().GetImage();
+        var scale = new Vector2(visible.GetWidth(), visible.GetHeight()) / GetViewport().GetVisibleRect().Size;
+        var center = stage.Cam.UnprojectPosition(stage.Player.AimPoint);
+        int dots = 0, ring = 0;
+        for (int y = Mathf.Max(0, (int)((center.Y - 36) * scale.Y)); y < Mathf.Min(visible.GetHeight(), (int)((center.Y + 36) * scale.Y)); y++)
+        for (int x = Mathf.Max(0, (int)((center.X - 36) * scale.X)); x < Mathf.Min(visible.GetWidth(), (int)((center.X + 36) * scale.X)); x++)
+        {
+            var offset = new Vector2(x / scale.X, y / scale.Y) - center;
+            float radius = offset.Length();
+            var a = visible.GetPixel(x, y); var b = background.GetPixel(x, y);
+            bool brightened = a.R - b.R > .1f && a.G - b.G > .1f;
+            if (brightened && radius > 28 && radius < 35 && Mathf.Abs(Mathf.Abs(offset.X) - Mathf.Abs(offset.Y)) < 5) dots++;
+            if (brightened && radius > 16 && radius < 22) ring++;
+        }
+        stage.ProcessMode = previousMode;
+        Check(ring > 20, $"reload progress arc remains visible ({ring} pixels)");
+        Check(dots == 0, $"reload ring has no decorative diagonal dots ({dots} pixels)");
     }
 
     private void CheckFeedback()

@@ -15,10 +15,16 @@
 - [x] A-27 최신 외형: 화염의 바닥 그림·그을음·착탄 링을 제거하고 불꽃/불티/연기만 표시. [렌더·검사](features/effects-audio/log/006-art-fire-without-ground.md).
 - [x] A-27 후속: 안개 바닥 그림 제거, 지속 불꽃의 위치를 고정하고 모양/밝기만 변화. [렌더·검사](features/effects-audio/log/007-art-stable-flames-and-unpainted-fog.md).
 - [x] A-27 최신 연출: 중앙부터 화염/연무가 퍼지고 입자별로 높이·농도가 다르게 사그라듦. 피해 종료와 잔여 시각 분리. [렌더·검사](features/effects-audio/log/008-art-center-spread-and-staggered-fade.md).
+- [x] A-19 월드 링·범위·공격 예고 외형: 줍기/곡사/수류탄과 돌진·보스·원거리·포획 준비 표시를 고정 경계·부드러운 번짐으로 통일. 전용29·무기36·모드147·통합149 검사와 두 해상도 실제 렌더 확인. [변경·검사·제약](features/menu-ui/log/004-code-world-marker-polish.md).
+
 
 - [x] **A-26 사운드 9종 적용**: 무료 CC0 소재 편집·결과 악구, 발성 변형3개, 공유 ID 분리, 근거리/군중 믹스·결과 볼륨 처리. [작업·검증](features/effects-audio/log/002-art-sound-quality-rollout.md).
 - [x] **A-26 후속 검증**: 5분 통제 전투 음향·변형별 피격 하한·실제 상태효과 캡처 확인. 시체 누적 렌더 오류(I-41)는 남음. [검사·통합 기록](features/effects-audio/log/003-check-combat-soak-main-integration.md).
-- [ ] **A-26 후속 청음**: 사용자 최종 음색 수락·종별 발성·장시간/실제 멀티플레이 환경, I-64 나머지 3D 상대 밸런스.
+- [x] **A-26 전투 반복음5종**: 소총·좀비 피격3변형, 장전 시작/완료·빈 탄창 녹음 편집, 상대 음량·27조건 출력 검사. [작업·검증](features/effects-audio/log/004-art-combat-sound-update.md).
+- [x] **A-26 재질 접촉음·데이터**: 7계열/15프리셋/93오브젝트 매핑, 발소리·환경 hitscan 명중·파손17종, Studio 속성 조회. [작업·검증](features/effects-audio/log/005-code-surface-audio.md).
+- [x] **A-26 재질 후속 구현**: 호스트 환경 명중음 동기화·Studio 프리셋/공용 게인 저장·전체 NearCap/경고 우선순위. [네트워크006](features/effects-audio/log/006-code-surface-network-audio.md) · [Studio007](features/effects-audio/log/007-code-studio-surface-editor.md) · [음량008](features/effects-audio/log/008-code-audio-balance-followup.md).
+- [x] **A-26 후속 통합 검증**: 실제 출력139조건·매분 전투가 유지된300초 검사, 출력 초과0. I-41 시체 누적 렌더 오류는 별도 남음. [통합009](features/effects-audio/log/009-check-surface-followup-integration.md).
+- [ ] **A-26 후속 청음**: 사용자 최종 음색·피로도 수락, 물리적으로 다른 두 PC/인터넷 실전 환경. 종별 발성·무기별 장전은 추가 제작 아이디어. [현재 범위·검증009](features/effects-audio/log/009-check-surface-followup-integration.md).
 > **2026-10-26부터 기록 방식이 바뀌었다**([decisions.md](decisions.md) T-26, [기록 문서 나누기](records-split-plan.md)). 새 기록의 본문 · 작업 기록은 [기능별 폴더](features/README.md)에 쓰고, 이 문서에는 짧은 줄만 추가한다. **이 문서의 기존 기록은 옮기지 않고 그대로 남아 있다**(앞으로만 새 구조, 6.4).
 
 ### 2026-10-25 캐릭터 아트 방향 정정
@@ -219,6 +225,8 @@
 - [x] [L4D2 참고 탄창·재장전 조정](combat-pacing-research.md)
 - [x] R870·Benelli 한 발씩 장전, 중간 사격, 교체 시 이미 넣은 탄 보존
 - [x] M-33 장전/충전 포인터 전환·반투명 링·하단 퍼센트 게이지, 완료/취소/쉘 반복/교체 처리 ([구현·검증·제약](features/menu-ui/log/001-code-reload-progress-ui.md), 외형 최종 수락 전).
+- [x] M-33 장전·점프 게이지의 밝은 중심/부드러운 빛 번짐, HUD 테두리와 장전 문구 강조 정리 ([검사·렌더·제약](features/menu-ui/log/002-code-hud-light-polish.md), 외형 최종 수락 전).
+- [x] M-33 장전 고정 네 점 제거·C-30 조준 정보 강조 분리, 한/영 조작법에 표시 의미 안내 ([검사·렌더·제약](features/menu-ui/log/003-code-reticle-clarity.md), 판정 규칙 유지).
 - [x] 네 동물의 공통 탄창식·한 발씩 넣는 샷건 손/총 장전 모션, 실제 장전 주기 연결·중간 사격 전 총구 복원 ([범위·제약](weapon-spec.md#61-손총-장전-모션-2026-10-20), I-55). 실제 탄창/탄 메시 교체와 쌍권총·더블배럴·중화기 전용 모션은 미구현.
 - [x] 근접 무기 준비 → 휘두르기 → 회복; 타격 시점에 부채꼴 판정
 - [x] 일반 적 접촉만으로 즉시 피해를 주지 않음; 공격 준비와 손/몸 동작 뒤 1회 타격

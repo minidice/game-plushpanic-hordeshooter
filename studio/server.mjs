@@ -5,6 +5,7 @@ import { readFile, mkdir, appendFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { listDocs, readDoc, searchDocs } from './docs.mjs';
+import { readSurfaces, saveSurfaces } from './surfaces.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const game = path.join(root, 'game');
@@ -120,6 +121,7 @@ const staticFiles = new Map([
   ['/objects', ['library.html', 'text/html; charset=utf-8']],
   ['/library.js', ['library.js', 'text/javascript; charset=utf-8']],
   ['/library.css', ['library.css', 'text/css; charset=utf-8']],
+  ['/surface-editor.js', ['surface-editor.js', 'text/javascript; charset=utf-8']],
   ['/effects', ['media.html', 'text/html; charset=utf-8']],
   ['/sounds', ['media.html', 'text/html; charset=utf-8']],
   ['/media.js', ['media.js', 'text/javascript; charset=utf-8']],
@@ -169,6 +171,20 @@ const server = http.createServer(async (req, res) => {
     }
     if (req.method === 'GET' && url.pathname === '/api/library') {
       json(200, await readCatalog('library')); return;
+    }
+    if (req.method === 'GET' && url.pathname === '/api/surfaces') {
+      json(200, await readSurfaces()); return;
+    }
+    if (req.method === 'POST' && url.pathname === '/api/surfaces') {
+      if (req.headers['content-type'] !== 'application/json') { json(415, { error: 'JSON required' }); return; }
+      let body = '';
+      for await (const chunk of req) {
+        body += chunk;
+        if (Buffer.byteLength(body) > 32768) { json(413, { error: 'Request too large' }); return; }
+      }
+      let data;
+      try { data = JSON.parse(body); } catch { json(400, { error: 'Invalid JSON' }); return; }
+      json(200, await saveSurfaces(data)); return;
     }
     if (req.method === 'GET' && url.pathname === '/api/weapons') {
       json(200, await readCatalog('weapons')); return;
@@ -237,7 +253,7 @@ const server = http.createServer(async (req, res) => {
       json(200, await request('render', data)); return;
     }
     json(404, { error: 'Not found' });
-  } catch (error) { if (!res.headersSent) json(503, { error: error.message }); else res.end(); }
+  } catch (error) { if (!res.headersSent) json(error.status || 503, { error: error.message }); else res.end(); }
 });
 server.requestTimeout = 45000;
 await startRenderer();

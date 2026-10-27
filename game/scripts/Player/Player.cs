@@ -536,7 +536,7 @@ public partial class Player : CharacterBody3D
         if (_stepDistance < .75f) return;
         _stepDistance = 0;
         _stepLeft = !_stepLeft;
-        Stage.Sfx.PlayAt("step", GlobalPosition, IsBot ? BotStepVolumeDb : 0, _stepLeft ? 1f : 1.1f);
+        SurfaceAudio.Step(Stage, this, IsBot ? BotStepVolumeDb : 0, _stepLeft ? 1f : 1.1f);
     }
 
     // ---------- dodge roll ----------

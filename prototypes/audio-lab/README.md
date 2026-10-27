@@ -1,10 +1,10 @@
 # 사운드 비교 실험실
 
-2026-10-27. 3종 A/B 시제품에 이어 **9종+발성 변형3개를 현재 작업 브랜치의 게임에 적용**했다. 사용자의 계속 진행 지시에 따라 A를 기본/B를 변형으로 선택했다. 최종 사용자 청음 취향 확정과 거위 이외 종별 발성은 후속이다.
+2026-10-27. 3종 A/B 시제품에 이어 **최초9종+전투 반복음5종, 총21파일을 현재 작업 브랜치의 게임에 적용**했다. 사용자의 계속 진행 지시에 따라 A를 기본/B를 변형으로 선택했다. 최종 사용자 청음 취향 확정과 거위 이외 종별 발성은 후속이다.
 
 ## 열기
 
-생성 후 `output/index.html`을 브라우저에서 연다. 위쪽은 9종 이전 합성음/적용본/변형을 같은 50 ms RMS로 맞춘 비교, 아래쪽은 적용 후 실제 게임 믹스20조건이다. 자동 재생하지 않으며 새 항목 재생 시 다른 항목은 멈춘다. 첫 시제품과 변경 전 캡처가 남아 있으면 `output/pilot.html`로 보존한다.
+생성 후 `output/index.html`을 브라우저에서 연다. 위쪽은 14종 이전 합성음/적용본/변형을 같은 50 ms RMS로 맞춘 비교, 아래쪽은 적용 후 실제 게임 믹스27조건이다. 자동 재생하지 않으며 새 항목 재생 시 다른 항목은 멈춘다. 첫 시제품과 변경 전 캡처가 남아 있으면 `output/pilot.html`로 보존한다.
 
 ## 재현 (저장소 루트, Windows PowerShell)
 
@@ -17,7 +17,7 @@ dotnet build game/HordeShooter.csproj --nologo -v q
 python prototypes/audio-lab/tools/release.py --page
 ```
 
-`release.py`는 매번 원본에서 배포12파일을 재생성하고 설치본/credits 해시·포맷·피크·DC·끝점·import 설정을 검증한다. 레시피 수정 후 실제 파일을 갱신할 때만 `--install`을 붙인다. 배포 `.import`도 버전 관리한다. 비교 기준은 `output/before`에 보존하며, 없으면 Integration이 내보낸 유지 중인 구형 합성 레시피 WAV를 복사한다. 이것을 변경 전 실제 믹스 녹음으로 표현하지 않는다.
+`release.py`는 매번 원본에서 배포21파일을 재생성하고 설치본/credits 해시·포맷·피크·DC·끝점·import 설정을 검증한다. 레시피 수정 후 실제 파일을 갱신할 때만 `--install`을 붙인다. 배포 `.import`도 버전 관리한다. 비교 기준은 `output/before`에 보존하며, 없으면 Integration이 내보낸 유지 중인 구형 합성 레시피 WAV를 복사한다. 이것을 변경 전 실제 믹스 녹음으로 표현하지 않는다.
 
 `AudioQualityCheck.tscn`, `AudioLevelCheck.tscn`, 창 모드 `AudioMixCheck.tscn`도 별도 실행한다. Godot 실행은 한 번에 하나씩 끝낸다.
 
@@ -50,6 +50,29 @@ Godot 경로는 PC별 설치 위치로 바꾼다. 캡처는 실제 오디오 장
 
 ## 적용 내용과 남은 작업
 
-`honk`/`honk_ability`를 분리하고, 3종은 연속 같은 변형 없이 재생한다. 대상 3D 효과의 근거리 상한·군중 제한·최종 limiter와 결과음 `Cues`의 효과음 볼륨 제어를 적용했다. I-64 중 나머지 3D 상대 밸런스, 사용자 최종 청음, 종별 발성과 장시간 멀티플레이 확인은 남았다. 무료 공개 MP3 소재의 압축/배경음 한계도 남는다.
+`honk`/`honk_ability`를 분리하고, 소총/좀비 피격3변형·피격/신음/사망2변형은 연속 같은 변형 없이 재생한다. 대상 3D 효과의 근거리 상한·군중 제한·최종 limiter와 결과음 `Cues`의 효과음 볼륨 제어를 적용했다. 후속으로 전체 NearCap 기본 적용과 거리별 믹스 검사를 추가했다. 사용자 최종 청음, 종별 발성과 실제 두 PC 멀티플레이 확인은 남았다. 무료 공개 MP3 소재의 압축/배경음 한계도 남는다.
 
 [적용 계획·진행](../../doc/features/effects-audio/sound-quality-rollout-plan.md) · [변경·검증 기록](../../doc/features/effects-audio/log/002-art-sound-quality-rollout.md)
+
+## 전투 반복음 추가
+
+소총/좀비 피격 각3변형, 장전 시작/완료·빈 탄창 단일음. 30회 반복 비교는 같은 이벤트별 RMS로 맞춘 전후 음원을 편집 합산하고 양쪽에 공통 감쇠만 적용한다. 새 총성은 Ben Jaszczak·Brian Nelson·Kevin Heras·Matthew Nanney의 CC0 **The Free Firearm Sound Library** 준비본 AR-15 D_24P/D_32P에서3발, 기계음은 SpringySpringo의 CC0 **Gun reload sounds** 에어소프트 녹음이다. 빈 탄창은 녹음의 짧은 일부를 편집한 클릭이며 실제 빈 총의 녹음이라고 주장하지 않는다.
+
+소총 레시피는 RMS 목표 -14dBFS를 지정하며 피크 -6dBFS 제한이 우선한다. 기존9종 설정/해시는 유지한다. 캡처 credits/오디오 구현/캡처 시나리오 해시가 현재 파일과 다르면 `--page`가 실패하므로 `AudioQualityCapture`를 먼저 재실행한다. 옛9종/5분 결과를 새5종의 최종 검증으로 간주하지 않는다.
+
+[추가 계획](../../doc/features/effects-audio/combat-sound-plan.md) · [추가 작업 기록](../../doc/features/effects-audio/log/004-art-combat-sound-update.md)
+
+
+## 재질 접촉음
+
+7계열/15프리셋, 새17종×2변형(34 WAV)을 추가했다. 기존21개는 불변이며 총55 WAV다. Kenney CC0 팩의 발소리/충돌 소스를 보존하고 기존 `release-recipes.json`/`release.py --install`로 재생성한다. 흙·자갈 등은 가공한 foley 조합이지 개별 재질 현장 녹음은 아니다.
+
+빌드/import 후 실제 오디오 장치에서 `res://tests/AudioSurfaceCapture.tscn`을 실행하고 `python prototypes/audio-lab/tools/surfaces.py`로 `output/surfaces.html`을 만든다. 34개 변형 단발, 7개 프리셋 발밑 접촉 발소리, 중첩1=42녹음이다. 추가 정규화 없이 실제 출력을 청취한다. 기존14종 페이지는 `AudioQualityCapture` 재실행 뒤 `release.py --page`로 갱신한다. 새 지문에는 SurfaceAudio/SurfaceProfiles/표면 JSON도 포함된다.
+
+[오브젝트 규격](../../doc/object-data-spec.md) · [작업 기록](../../doc/features/effects-audio/log/005-code-surface-audio.md)
+
+## 거리별 믹스·반복 전투 후속
+
+실제 장치에서 `AudioBalanceCapture.tscn`(69조건), `AudioBossGainCapture.tscn`(실제 보스 산탄1조건), `AudioCombatSoak.tscn`(실시간300초)을 순서대로 실행하고 `python prototypes/audio-lab/tools/followup.py`로 `output/followup.html`을 만든다. 비교 페이지의 지문이 오래되면 기존 Quality/Surface 캡처도 먼저 실행한다. 후속 페이지는 현재 구현/표면 데이터/manifest와 실제55 WAV 해시를 검사한다. 300초 전투는 기본·헬륨·먹먹함·후반 구간을20초씩 발췌하고 추가 정규화하지 않는다. 캡처/출처/표면 페이지를 만든 뒤 `release.py --page`를 실행하면 메인에 후속 링크가 나타난다.
+
+[통합 검사·실패/남은 제약](../../doc/features/effects-audio/log/009-check-surface-followup-integration.md). 최종 음색 승인이나 실제 두 PC 검사를 대신하지 않는다.

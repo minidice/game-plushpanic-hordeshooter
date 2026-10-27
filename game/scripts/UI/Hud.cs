@@ -98,7 +98,11 @@ void fragment() {
         pauseBox.AddChild(pauseTitle);
         // A host can read the join address again here (multiplayer-sync-design.md 10장).
         var hostInfo = Stage.Net is { HostInfo: { Length: > 0 } info } ? info + "\n\n" : "";
-        var pauseBody = UiTheme.Label(hostInfo + Loc.Text(OnlineKey("ui_pause_keys")) + "\n\n" + ControlsText, 18);
+        var pauseBody = UiTheme.Label(hostInfo + Loc.Text(OnlineKey("ui_pause_keys")) + "\n\n" + ControlsText
+            + "\n\n" + Loc.Text("hud_reticle_legend"), 18);
+        pauseBody.Name = "PauseControls";
+        pauseBody.CustomMinimumSize = new Vector2(880, 0);
+        pauseBody.AutowrapMode = TextServer.AutowrapMode.WordSmart;
         pauseBody.HorizontalAlignment = HorizontalAlignment.Center;
         pauseBox.AddChild(pauseBody);
         // The companion model quality can change mid-match: the models swap their meshes at once (pet-model-spec.md 품질 설정).
@@ -174,7 +178,9 @@ void fragment() {
             : gun.Reloading ? Loc.Text("ui_hud_reload")
             : $"{gun.Mag:00} / {(gun.HasInfiniteReserve ? "∞" : gun.Reserve.ToString("00"))}";
         bool low = !gun.IsMelee && gun.Mag <= Mathf.Max(1, gun.Def.MagSize / 6);
-        _ammo.AddThemeColorOverride("font_color", low ? UiTheme.Danger : HudWhite);
+        bool busy = !gun.IsMelee && (gun.Reloading || gun.CooldownLeft > 0);
+        _ammo.AddThemeColorOverride("font_color", busy ? HudMuted : low ? UiTheme.Danger : HudWhite);
+        _ammo.AddThemeFontSizeOverride("font_size", busy ? 18 : 28);
         _reserve.Text = gun.Def.DisplayName;
         _ammoHint.Text = Loc.Text(gun.IsMelee ? "hud_melee_hint" : !gun.HasInfiniteReserve && !gun.Def.Refillable ? "hud_no_refill_hint" : "hud_ammo_hint");
 
@@ -446,17 +452,18 @@ void fragment() {
     {
         if (heat > 0)
         {
-            c.DrawLine(a, b, new Color(glow, .18f * heat * color.A), width + 8, true);
-            c.DrawLine(a, b, new Color(glow, .32f * heat * color.A), width + 4, true);
+            for (int i = 6; i >= 1; i--)
+                c.DrawLine(a, b, new Color(glow, (.04f + .02f * (6 - i)) * heat * color.A), width + i * 1.5f, true);
         }
-        c.DrawLine(a, b, new Color(0, 0, 0, .4f * color.A), width + 2, true);
+        c.DrawLine(a, b, new Color(0, 0, 0, .28f * color.A), width + 2, true);
         c.DrawLine(a, b, color, width, true);
     }
 
     private static void ReticleTick(Control c, Vector2 center, Vector2 dir, float radius, Color color, float heat = 0)
     {
         var from = center + dir * (radius + 2);
-        ReticleLine(c, from, from + dir * ReticleTickLength, color, ReticleTickWidth, ReticleHot, heat);
+        // The outer cone is supporting information; keep the aimed cone visually dominant.
+        ReticleLine(c, from, from + dir * 10, color, 2.5f, ReticleHot, heat);
     }
 
     private void DrawHitMarks(Control c, Vector2 center, float radius)
@@ -515,27 +522,26 @@ void fragment() {
         // Past the effective range the reticle turns amber (damage falls off), past the maximum red (no hit; C-27, C-30).
         float reach = player.IsAiming ? gun.Def.AimRangeMultiplier : 1;
         var range = gun.IsMelee ? HudWhite : distance > gun.Def.MaxRange * reach ? ReticleOut : distance > gun.Def.EffectiveRange * reach ? ReticleFar : HudWhite;
-        var color = (player.CritReady ? HudWarm : new Color(range, .95f)).Lerp(ActionLight, actionWeight);
+        var color = player.CritReady ? HudWarm : new Color(range, .98f);
+        color.A *= 1 - actionWeight;
 
         // Straight ticks and the dot: the cone fully aimed, always white (or the range / crit colour); shots only push them
         // out. Diagonal ticks: the cone now, while it is wider (hip fire, moving, shots) - red and glowing as the gun fires,
         // cooling back to white once it stops (doc/weapon-aim-reference.md 8.3).
         foreach (var dir in new[] { Vector2.Up, Vector2.Down, Vector2.Left, Vector2.Right })
         {
-            var direction = dir.Rotated(Mathf.Pi / 4 * actionWeight);
-            var from = center + direction * Mathf.Lerp(aimed + 2, 29, actionWeight);
-            float length = Mathf.Lerp(ReticleTickLength, .5f, actionWeight);
-            ReticleLine(c, from, from + direction * length, color, Mathf.Lerp(ReticleTickWidth, 2.5f, actionWeight), ReticleHot, 0);
+            var from = center + dir * (aimed + 2);
+            ReticleLine(c, from, from + dir * ReticleTickLength, color, ReticleTickWidth, ReticleHot, 0);
         }
         c.DrawCircle(center, ReticleDot + 1, new Color(0, 0, 0, .4f * (1 - actionWeight)), true, -1, true);
-        c.DrawCircle(center, ReticleDot, new Color(color, color.A * (1 - actionWeight)), true, -1, true);
+        c.DrawCircle(center, ReticleDot, color, true, -1, true);
         if (radius - aimed > 3)
         {
             float heat = gun.Reloading ? 0 : gun.Heat;
             var outer = color.Lerp(ReticleHot, heat);
-            outer.A *= 1 - actionWeight;
+            outer.A = color.A * Mathf.Lerp(.65f, .9f, heat);
             foreach (var dir in new[] { new Vector2(1, 1), new Vector2(-1, 1), new Vector2(1, -1), new Vector2(-1, -1) })
-                ReticleTick(c, center, dir.Normalized(), Mathf.Lerp(radius, 29, actionWeight), outer, heat);
+                ReticleTick(c, center, dir.Normalized(), radius, outer, heat);
         }
         DrawHitMarks(c, center, aimed);
         DrawWeaponActionRing(c, center);
@@ -544,7 +550,9 @@ void fragment() {
         if (player.FocusTarget != null && actionWeight < .01f)
         {
             float focus = Mathf.Min(1, player.FocusTime / Player.CritFocusTime);
-            c.DrawArc(center, radius + 7, -Mathf.Pi / 2, -Mathf.Pi / 2 + Mathf.Tau * focus, 40, UiTheme.Accent, 3, true);
+            c.DrawArc(center, radius + 7, 0, Mathf.Tau, 96, new Color(0, 0, 0, .25f), 5, true);
+            if (focus > 0)
+                DrawLightArc(c, center, radius + 7, -Mathf.Pi / 2 + Mathf.Tau * focus, UiTheme.Accent, player.CritReady ? .95f : .65f);
         }
 
         var font = c.GetThemeDefaultFont();

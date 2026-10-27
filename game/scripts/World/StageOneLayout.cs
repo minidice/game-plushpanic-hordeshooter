@@ -191,7 +191,7 @@ public sealed partial class StageOneLayout : StageMap
         }
 
         // The crescendo trigger.
-        var panel = Solid(new Vector3(83.4f, 1.1f, -6.2f), new Vector3(.6f, 1.4f, 1.2f), "3a4148");
+        var panel = Solid(new Vector3(83.4f, 1.1f, -6.2f), new Vector3(.6f, 1.4f, 1.2f), "3a4148", surfaceObject: "wall_button_panel");
         Mat.Box(panel, new Vector3(-.31f, .2f, 0), new Vector3(.02f, .3f, .3f), Mat.Glow(new Color("ff3b30"), 3));
         _shutterPanel = Use(new Vector3(82.4f, 0, -6.2f), "ui_use_shutter", _stage.StartCrescendo);
         var alarm = Lamp(new Vector3(83.72f, 3.15f, -6.2f), "ff5040", 1.8f, 8, false);
@@ -209,9 +209,9 @@ public sealed partial class StageOneLayout : StageMap
         Wall(84.4f, 116, 7, 7.4f, LowWall, "4a4a3c");
         Wall(84.4f, 84.8f, -10, -7, TallWall, "4a4a3c");
 
-        Solid(new Vector3(92, 1.3f, -4.4f), new Vector3(6, 2.6f, 2.4f), "7a4a35");
-        Solid(new Vector3(100, 1.3f, 3.9f), new Vector3(6, 2.6f, 2.4f), "35587a");
-        Solid(new Vector3(109, 1.3f, -4.2f), new Vector3(5, 2.6f, 2.2f), "5b6b3a");
+        Solid(new Vector3(92, 1.3f, -4.4f), new Vector3(6, 2.6f, 2.4f), "7a4a35", surfaceObject: "container_closed");
+        Solid(new Vector3(100, 1.3f, 3.9f), new Vector3(6, 2.6f, 2.4f), "35587a", surfaceObject: "container_closed");
+        Solid(new Vector3(109, 1.3f, -4.2f), new Vector3(5, 2.6f, 2.2f), "5b6b3a", surfaceObject: "container_closed");
         Solid(new Vector3(96, .6f, -.4f), new Vector3(1.3f, 1.2f, 1.3f), "8a7755");
         Solid(new Vector3(104.5f, .55f, .2f), new Vector3(1.2f, 1.1f, 1.2f), "736749");
 
@@ -253,6 +253,7 @@ public sealed partial class StageOneLayout : StageMap
         var colors = new List<string>();
         for (float x = x0 + .8f; x < x1 - .4f; x += 1.6f)
             colors.Add(_rng.Randf() < .5f ? "ae8c62" : "82917c");
+        SurfaceAudio.Tag(body,"runtime:shelf");
         StageArt.Shelf(body, x1 - x0, colors.ToArray());
     }
 

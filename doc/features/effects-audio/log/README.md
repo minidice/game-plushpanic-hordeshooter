@@ -6,4 +6,4 @@
 - **종류**: `code` · `data` · `art` · `doc`(문서만) · `check`(검사 · 검증만).
 - **내용**: 변경 사항, 실행한 검사와 결과(통과 · 실패 · 종료 경고 구분), 렌더, 남은 제약, 관련 결정 · 이슈 ID.
 
-**옛 기록은 옮기지 않고 그대로 있다**(2026-10-26 결정, [기록 문서 나누기](../../records-split-plan.md) 6.4). 이 기능의 2026-10-26 이전 결정 · 이슈 · 확인 기록은 [decisions.md](../../decisions.md) · [issues.md](../../issues.md) · [feature-checklist.md](../../feature-checklist.md)에 있다.
+**옛 기록은 옮기지 않고 그대로 있다**(2026-10-26 결정, [기록 문서 나누기](../../../records-split-plan.md) 6.4). 이 기능의 2026-10-26 이전 결정 · 이슈 · 확인 기록은 [decisions.md](../../../decisions.md) · [issues.md](../../../issues.md) · [feature-checklist.md](../../../feature-checklist.md)에 있다.

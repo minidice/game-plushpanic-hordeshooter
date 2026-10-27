@@ -17,6 +17,29 @@
       <div class="item-info">
       <div class="item-heading"><div><span id="item-category" class="eyebrow"></span><h2 id="item-name">선택 항목</h2></div><code id="item-id"></code></div>
       <p id="summary" class="summary"></p><p id="render-error" class="warning" hidden></p>
+      <section id="surface-editor" class="surface-editor" aria-label="표면·소리 편집" hidden>
+        <h3>표면·소리 편집</h3>
+        <p class="surface-note">오디오 전용 · HP·파괴·차단·물리값은 아래 속성에서 별도로 확인합니다.</p>
+        <p id="surface-readonly" class="surface-note" hidden></p>
+        <form id="surface-form" hidden>
+          <fieldset id="surface-fields">
+            <label for="surface-profile">이 오브젝트 종류의 프리셋</label>
+            <select id="surface-profile"></select>
+            <p class="surface-note">같은 종류의 모든 배치에 사용합니다. 맵의 개별 물체 선택이 아닙니다.</p>
+            <h4>공유 프리셋 게인</h4><p id="surface-family"></p>
+            <p id="surface-impact" class="surface-note"></p>
+            <details class="surface-usage"><summary>영향받는 대상 보기</summary><p id="surface-usage"></p></details>
+            <div class="surface-gains">
+              <label for="step_db">발소리 dB <input id="step_db" type="number" min="-24" max="6" step="any" required><code id="step_db-sound"></code></label>
+              <label for="hit_db">명중 dB <input id="hit_db" type="number" min="-24" max="6" step="any" required><code id="hit_db-sound"></code></label>
+              <label for="break_db">파손 dB <input id="break_db" type="number" min="-24" max="6" step="any" required><code id="break_db-sound"></code></label>
+            </div>
+            <p class="surface-note">추가 게인 −24~+6 dB · 음원·계열은 조회 전용. 저장 후 실행 중인 게임은 재시작하고, 멀티는 양쪽 PC에 같은 데이터를 적용하세요.</p>
+            <div class="surface-actions"><button id="surface-save" type="submit" disabled>표면 변경 저장</button><button id="surface-reset" type="button">최신 값 다시 읽기 · 편집 취소</button></div>
+          </fieldset>
+        </form>
+        <p id="surface-status" role="status" aria-live="polite"></p>
+      </section>
       <section class="properties"><h3>속성 정보</h3><table><tbody id="properties"></tbody></table></section>
       <div id="details" class="raw-details"></div>
       <p class="source"><span>원본 위치</span><code id="source"></code></p>

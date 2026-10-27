@@ -106,7 +106,7 @@ public partial class ObjectBody : StaticBody3D
         if (showEffects)
         {
             for (int i = 0; i < 4; i++) _stage.Effects.Impact(at + new Vector3((i - 1.5f) * .4f, 0, 0), Vector3.Up);
-            _stage.Sfx.PlayAt("roll", at, 0, .7f);
+            SurfaceAudio.Break(_stage, this, at);
         }
         foreach (var wall in GetChildren().OfType<BreakableWallVisual>().ToArray())
         {

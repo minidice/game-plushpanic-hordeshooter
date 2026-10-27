@@ -126,6 +126,8 @@ public abstract partial class StageMap
     /// <summary>Something solid that was not made by <see cref="Solid"/> (a car, a generator) still blocks the flow field.</summary>
     protected void BlockFlow(Vector3 center, Vector3 size) => _solids.Add((center, size));
 
+    public virtual SurfaceProfile SurfaceAt(Vector3 position) => SurfaceProfiles.Current.GroundAt(GetType().Name, position);
+
     // ---------- building blocks ----------
 
     /// <summary>Tiled indoor look or plain outdoor ground for a floor starting at <paramref name="x0"/>.</summary>
@@ -137,6 +139,7 @@ public abstract partial class StageMap
         var center = new Vector3((x0 + x1) / 2, -.2f, (z0 + z1) / 2);
         var size = new Vector3(x1 - x0, .4f, z1 - z0);
         var body = new StaticBody3D { Name = "Floor", Position = center, CollisionLayer = Layers.World, CollisionMask = 0 };
+        body.SetMeta(SurfaceAudio.GroundMeta, true);
         _stage.AddChild(body);
         body.AddChild(new CollisionShape3D { Shape = new BoxShape3D { Size = size } });
         if (draw) StageArt.Floor(body, size, IndoorFloor(x0));
@@ -155,6 +158,7 @@ public abstract partial class StageMap
         var center = new Vector3((x0 + x1) / 2, (top - .4f) / 2, (z0 + z1) / 2);
         var size = new Vector3(x1 - x0, top + .4f, z1 - z0);
         var body = new StaticBody3D { Name = "Raised", Position = center, CollisionLayer = Layers.World, CollisionMask = 0 };
+        body.SetMeta(SurfaceAudio.GroundMeta, true);
         _stage.AddChild(body);
         body.AddChild(new CollisionShape3D { Shape = new BoxShape3D { Size = size } });
         if (draw) StageArt.Floor(body, size, IndoorFloor(x0));
@@ -183,6 +187,7 @@ public abstract partial class StageMap
             CollisionLayer = Layers.World,
             CollisionMask = 0,
         };
+        body.SetMeta(SurfaceAudio.GroundMeta, true);
         _stage.AddChild(body);
         if(smooth)body.SetMeta("smooth_terrain_ramp",true);
         body.AddChild(new CollisionShape3D { Shape = smooth ? wedge.CreateTrimeshShape() : wedge.CreateConvexShape() });
@@ -206,10 +211,10 @@ public abstract partial class StageMap
     /// <summary>Rim cells of a raised floor where anyone may step off and drop down (one way, L-16).</summary>
     protected void DropEdge(float x0, float x1, float z0, float z1) => _stage.Tiers.PaintDrop(x0, x1, z0, z1);
 
-    protected StaticBody3D Wall(float x0, float x1, float z0, float z1, float height, string color, bool drawWall = true, ObjectInteraction? interaction = null)
+    protected StaticBody3D Wall(float x0, float x1, float z0, float z1, float height, string color, bool drawWall = true, ObjectInteraction? interaction = null, string? surfaceObject = null)
     {
         var wallSize = new Vector3(x1 - x0, height, z1 - z0);
-        var body = Solid(new Vector3((x0 + x1) / 2, height / 2, (z0 + z1) / 2), wallSize, color, false, interaction);
+        var body = Solid(new Vector3((x0 + x1) / 2, height / 2, (z0 + z1) / 2), wallSize, color, false, interaction, surfaceObject);
         if (drawWall) ArtWalls.Add((body,wallSize));
         // Low camera-side fences get an invisible tall collider so nobody gets launched out of the map.
         if (height < 2f)
@@ -228,6 +233,7 @@ public abstract partial class StageMap
         var size=WorkshopArt.Size(kind);
         var body=Solid(at+Vector3.Up*size.Y/2,size,"",false);
         body.Name="Workshop_"+kind;
+        SurfaceAudio.Tag(body, "runtime:workshop:" + kind);
         WorkshopArt.Create(body,kind,Vector3.Down*size.Y/2);
     }
 
@@ -237,10 +243,11 @@ public abstract partial class StageMap
         WorkshopArt.Create(root,kind);
     }
 
-    protected StaticBody3D Solid(Vector3 center, Vector3 size, string color, bool drawCargo = true, ObjectInteraction? interaction = null)
+    protected StaticBody3D Solid(Vector3 center, Vector3 size, string color, bool drawCargo = true, ObjectInteraction? interaction = null, string? surfaceObject = null)
     {
         var rule = interaction ?? ObjectInteractions.Current.DefaultSolid;
         var body = Body("Solid", rule, (center, size));
+        SurfaceAudio.Tag(body, surfaceObject ?? (drawCargo ? "runtime:cargo" : "runtime:wall"));
         body.Position = center;
         _stage.AddChild(body);
         body.AddChild(new CollisionShape3D { Shape = new BoxShape3D { Size = size } });
@@ -297,6 +304,7 @@ public abstract partial class StageMap
             holder = new Node3D { Name = id, Position = at, Basis = basis };
             _stage.AddChild(holder);
         }
+        SurfaceAudio.Tag(holder, id);
         model.Scale = Vector3.One * scale;
         holder.AddChild(model);
         KitProps.Add(holder);
@@ -351,6 +359,7 @@ public abstract partial class StageMap
             };
             box.AddChild(new CollisionShape3D { Shape = new BoxShape3D { Size = Vector3.One * .6f } });
             StageArt.Carton(box, Vector3.Zero, Vector3.One * .6f);
+            SurfaceAudio.Tag(box, "runtime:carton");
             _stage.AddChild(box);
             _stage.Props.Add(box);
         }

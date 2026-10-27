@@ -124,3 +124,30 @@
 리뷰에서 확인한 회귀 예방 조치: 클라이언트 무피해 분기에서도 로컬 시체 충격은 실행, 0피해/0충격이 기존 최소15피해/최소밀침을 발생시키지 않도록 분리, 양쪽 PC의 파괴 규칙/배치 해시 일치 검사. 기존 시체 정책 T-15와 I-120 범위를 유지한다.
 
 남은 제약: 실제 서로 다른 두 PC/Steam 연결, 모든 기존 배치의 데이터화, 완성 게임 패키지 내보내기는 미검증. 참고 이미지에 맞춘 벽·드럼통 시험 배치이며 최종 아트/밸런스 확정이 아니다. 파편은 로컬 장식이고 피해·통로 차단 없음. 웹은 정지 상태 선택이며 실시간 애니메이션은 게임에서 확인한다. 좀비의 낮은 엄폐물 넘어오기는 I-120 후속이다.
+
+
+## 표면·소리 프리셋 (2026-10-27)
+
+[`surface_profiles.json`](../game/content/data/surface_profiles.json)은 오디오 전용 데이터다. `objects`는 prop ID 및 `runtime:*` 생성물 ID에서 프리셋을 찾고, `profiles`는 계열과 발소리(`step`)·명중(`hit`)·파손(`breaking`) SoundDef ID, 추가 게인(`step_db`·`hit_db`·`break_db`)을 가진다. 제작 기본 게인은 0dB이며 금속통의 명중만 -2dB다. 게인은 -24..+6dB 유한값, 소리/계열/프리셋 참조는 검증한다.
+
+| 계열 | 현재 프리셋 | 대표 연결 |
+|---|---|---|
+| 단단한 지면·석재 | asphalt / concrete / rock | 아스팔트 도로 / 방벽·건물·파괴 벽 / 바위·절벽 |
+| 금속 | metal_solid / metal_sheet / metal_hollow | 철망·사다리·크레인 / 컨테이너·함석·문·차량 / 배럴·발전기 |
+| 목재 | wood_solid / wood_hollow | 나무·팔레트·목교·작업대 / 목상자·화물 |
+| 천·충전재 | sandbag / fabric / cardboard | 모래주머니 / 예비 천 프리셋 / 골판지 상자 |
+| 흙·모래 | soil / sand | 흙길 / 예비 모래 프리셋 |
+| 자갈·잔해 | gravel | 자갈·야적장 |
+| 풀·낙엽 | grass | 풀밭·관목 |
+
+현재 76개 manifest 자산 + 17개 코드 생성 ID = 93개 명시 매핑. 물 장식3개와 탄약/조명 장식2개는 null로 접촉음 미적용이다. 이름별로 별도 녹음을 늘리지 않고 7계열 음원을 공유한다. 물체의 탄성·강도·질량·마찰·HP·파괴 가능성·관통·차단은 이 파일에서 추론하거나 덮어쓰지 않는다. 모래주머니는 기존 cover/gun/HP50을 유지한다.
+
+`ground`는 기존 맵의 기본값과 XZ 구역(뒤 구역 우선), `layouts`는 큰 맵3개의 region 50개·기본값·길 폭을 담는다. 현재 아스팔트/콘크리트 발소리는 기존 `step`, 좀비는 `zombie_step`; 다른 지면은 재질별 발소리다. 발밑 MovementWorld/Props 레이가 접촉한 위치·높이로 고르고, 경계 측면은 석재로 처리한다. 같은 XZ의 높은 단상과 아래 지면을 높이로 구분한다. 숲의 grass region 중 실제 route/ramp 폭 안만 soil로 처리한다.
+
+`StageMap.Prop`의 실제 단순 충돌체, Solid/작업장 소품/골판지, Door·AlarmCar·ExplosiveBarrel·파괴 벽에 태그를 붙인다. 별도 합성 충돌체인 작은 숲맵 컨테이너/창고/목교 난간, 큰맵 크레인/감시초소도 연결한다. 무충돌 장식 모델에 새 충돌은 만들지 않는다. 미등록 충돌체는 concrete fallback이며 각 메시의 면/복합 재질까지 자동 분석하지 않는다.
+
+Studio 오브젝트 속성에서 프리셋·계열·이벤트 ID·추가 게인·적용 범위와 원본 데이터를 조회하고, 기존 프리셋 선택과 공용 추가 게인3개를 저장한다. 같은 프리셋을 쓰는 오브젝트 수와 지면/배치 사용처를 보여 준다. null 장식과 소환수는 편집 대상이 아니다. 물리/파괴 속성은 기존 항목에 별도로 표시된다.
+
+`GET /api/surfaces`가 원본 SHA256 버전을 반환하며 `POST`는 `revision, objectId, profileId, gains {step_db,hit_db,break_db}`만 받는다. 기존 ID·유한 -24..+6dB를 검증하고 알 수 없는 입력 필드를 거부한다. 오래된 버전/동시 저장은409, 잘못된 입력은400이다. 고정 JSON 파일을 원자적으로 교체하며 기존 ground/layout/기타 메타데이터와 HP는 유지한다. Studio는 저장 후 캐시를 다시 읽고, 실행 중 게임에는 재시작이 필요하다. 멀티 양쪽 데이터가 같아야 한다. 외부 편집기와의 경쟁은 낙관적 버전 검사로 다루며 외부 프로세스를 잠그지는 않는다. [편집·화면·검증](features/effects-audio/log/007-code-studio-surface-editor.md).
+
+[설계·계획](features/effects-audio/surface-audio-plan.md) · [변경·검증](features/effects-audio/log/005-code-surface-audio.md)

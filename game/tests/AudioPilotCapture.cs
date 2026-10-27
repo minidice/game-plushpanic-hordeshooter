@@ -17,6 +17,7 @@ public partial class AudioPilotCapture : Node
     private readonly List<object> _reports = new();
     [Export] public string OutputFolder { get; set; } = "audio-pilot";
     [Export] public bool EnforceCeiling { get; set; }
+    [Export] public bool SurfaceOnly { get; set; }
     private string _out => ProjectSettings.GlobalizePath("res://output/" + OutputFolder);
 
     public override async void _Ready()
@@ -33,6 +34,13 @@ public partial class AudioPilotCapture : Node
             File.WriteAllText(Path.Combine(_out, "capture.json"), JsonSerializer.Serialize(new
             {
                 capturedUtc = DateTime.UtcNow, passed = !failed,
+                soundManifestSha256 = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(
+                    File.ReadAllBytes(ProjectSettings.GlobalizePath("res://content/sounds/credits.json")))).ToLowerInvariant(),
+                audioSourceSha256 = new[] { "scripts/Audio/SoundRecipes.cs", "scripts/Audio/Sfx.cs",
+                    "scripts/Audio/AudioSetup.cs", "tests/AudioPilotCapture.cs",
+                    "scripts/Audio/SurfaceAudio.cs", "scripts/Audio/SurfaceProfiles.cs", "content/data/surface_profiles.json" }.ToDictionary(path => path, path =>
+                    Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(
+                        File.ReadAllBytes(ProjectSettings.GlobalizePath("res://" + path)))).ToLowerInvariant()),
                 note = "Current Sfx and Stage listener; Ambience muted; capture before -80 dB monitor attenuation. PCM is clamped only on export; pre-PCM peaks are reported.",
                 enforceCeiling = EnforceCeiling,
                 loadedOverrides = _stage?.Sfx.Overridden.OrderBy(id => id).ToArray(),
@@ -73,6 +81,8 @@ public partial class AudioPilotCapture : Node
         await ToSignal(GetTree().CreateTimer(.5), SceneTreeTimer.SignalName.Timeout);
 
         Vector3 ear = _stage.Player.GlobalPosition + Vector3.Up * 1.5f;
+        if (!SurfaceOnly)
+        {
         foreach (string id in new[] { "honk", "groan", "zombie_die" })
             foreach (float distance in new[] { .5f, 3f, 8f })
                 await Capture($"{id}-{distance:0.0}m", 1.7, () => _stage.Sfx.PlayAt(id, ear + Vector3.Right * distance));
@@ -90,6 +100,27 @@ public partial class AudioPilotCapture : Node
         });
         if (EnforceCeiling)
         {
+            foreach (string id in new[] { "shot_rifle", "zombie_hit", "reload_start", "reload_end", "dry_fire" })
+                await Capture(id + "-combat-update", .8, () =>
+                {
+                    if (id == "zombie_hit") _stage.Sfx.PlayAt(id, ear + Vector3.Right * 2);
+                    else _stage.Sfx.Play(id);
+                });
+            foreach (bool withHits in new[] { false, true })
+            {
+                int rounds = 0;
+                await Capture(withHits ? "rifle-and-hits-30" : "rifle-30", 3.6, () => { }, elapsed =>
+                {
+                    while (rounds < 30 && elapsed >= rounds * .1)
+                    {
+                        _stage.Sfx.Play("shot_rifle");
+                        if (withHits)
+                            for (int i = 0; i < 6; i++) _stage.Sfx.PlayAt("zombie_hit", ear + new Vector3(2, 0, i * .3f));
+                        rounds++;
+                    }
+                });
+                if (rounds != 30) throw new InvalidOperationException("Incomplete automatic-fire scenario");
+            }
             foreach (string id in new[] { "honk_long", "balloon_inflate", "balloon_pop", "bull_bonk", "game_over", "stage_clear" })
                 await Capture(id, 2.2, () =>
                 {
@@ -130,11 +161,44 @@ public partial class AudioPilotCapture : Node
                 _stage.Sfx.Play("game_over");
             });
         }
+        }
+        else
+        {
+            foreach (var def in SoundRecipes.All.Where(d => d.Id.StartsWith("surface_")))
+                for (int take=1;take<=2;take++)
+                {
+                    int variant=take;
+                    await Capture(def.Id+"-take"+take, .9, () =>
+                    {
+                        var voice=_stage.Sfx.PlayAt(def.Id, ear + Vector3.Right * 2)!;
+                        voice.Stream=GD.Load<AudioStream>("res://content/sounds/"+def.Id+(variant==1 ? "" : "_2")+".wav");
+                        voice.Play();
+                    });
+                }
+            var floor = Rays.Cast(_stage, _stage.Player.GlobalPosition + Vector3.Up * .2f, _stage.Player.GlobalPosition + Vector3.Down, Layers.MovementWorld)!.Value.Collider as Node;
+            foreach (string profile in new[] { "asphalt", "metal_sheet", "wood_solid", "sandbag", "soil", "gravel", "grass" })
+            {
+                floor!.SetMeta(SurfaceAudio.ProfileMeta,profile);
+                int steps=0;
+                await Capture("steps-"+profile, 2.1, () => {}, elapsed =>
+                {
+                    while (steps < 10 && elapsed >= steps*.17) { SurfaceAudio.Step(_stage,_stage.Player,pitch:steps%2==0 ? 1 : 1.1f); steps++; }
+                });
+                if (steps!=10) throw new InvalidOperationException("Incomplete surface walking sequence");
+            }
+            floor!.RemoveMeta(SurfaceAudio.ProfileMeta);
+            await Capture("surface-combat-stress", 2.2, () =>
+            {
+                foreach (var def in SoundRecipes.All.Where(d=>d.Id.StartsWith("surface_")))
+                    for (int i=0;i<8;i++) _stage.Sfx.PlayAt(def.Id,ear+Vector3.Right*.5f);
+                _stage.Sfx.Play("shot_rifle"); _stage.Sfx.Play("honk");
+            });
+        }
         AudioServer.RemoveBusEffect(master, AudioServer.GetBusEffectCount(master) - 1);
         AudioServer.RemoveBusEffect(master, AudioServer.GetBusEffectCount(master) - 1);
     }
 
-    private async Task Capture(string name, double seconds, Action trigger)
+    private async Task Capture(string name, double seconds, Action trigger, Action<double>? tick = null)
     {
         _capture.ClearBuffer();
         var frames = new List<Vector2>();
@@ -142,6 +206,7 @@ public partial class AudioPilotCapture : Node
         trigger();
         while (Time.GetTicksMsec() - start < seconds * 1000)
         {
+            tick?.Invoke((Time.GetTicksMsec() - start) / 1000.0);
             await Frame();
             int count = _capture.GetFramesAvailable();
             if (count > 0) frames.AddRange(_capture.GetBuffer(count));

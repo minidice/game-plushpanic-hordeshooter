@@ -71,8 +71,31 @@ public partial class AudioMixCheck : Node
         GD.Print($"mix peak dB: standing {quiet:0.0}, walking {walk:0.0} ({walked} steps), swing {swing:0.0}, rifle {shot:0.0}");
         Check(walked >= 10, $"the goose took steps while walking ({walked})");
         Check(shot > -30, $"the capture hears the mix (rifle {shot:0.0} dB)");
+        player.SetControls(Vector2.Zero, player.GlobalPosition, false);
+        var riflePeaks = new List<float> { shot };
+        foreach (int take in new[] { 1, 2, 3 })
+            foreach (float pitch in new[] { .975f, 1.025f })
+            {
+                await Frames(20);
+                bool started = false;
+                float peak = await Peak(25, () =>
+                {
+                    if (started) return;
+                    started = true;
+                    var voice = stage.Sfx.PlayAt("shot_rifle", player.Weapons.MuzzlePosition)!;
+                    string suffix = take == 1 ? "" : "_" + take;
+                    voice.Stream = GD.Load<AudioStream>($"res://content/sounds/shot_rifle{suffix}.wav");
+                    voice.PitchScale = pitch;
+                    voice.Play();
+                });
+                riflePeaks.Add(peak);
+                Check(swing < peak - 2 && swing > peak - 10,
+                    $"rifle take {take} pitch {pitch} keeps the swing below it ({peak:0.0} vs {swing:0.0})");
+            }
+        float loudestShot = riflePeaks.Max();
+        shot = riflePeaks.Min();
         // Present but under the swing: -4 felt like stomping, -27 and -35 like nothing at all (I-63).
-        Check(walk < swing - 4 && walk > shot - 22, $"walking footsteps are clearly heard, under a pan swing ({walk:0.0} vs swing {swing:0.0}, rifle {shot:0.0})");
+        Check(walk < swing - 4 && walk > loudestShot - 22, $"walking footsteps are clearly heard, under a pan swing ({walk:0.0} vs swing {swing:0.0}, loudest rifle {loudestShot:0.0})");
         Check(swing < shot - 2 && swing > shot - 10, $"a pan swing is a little under a rifle shot ({swing:0.0} vs {shot:0.0})");
 
         // Getting hit: the honk is a warning, not a blast (I-74).
@@ -93,8 +116,8 @@ public partial class AudioMixCheck : Node
                 });
                 player.Invulnerable = true;
                 GD.Print($"mix peak dB: hit honk {hit:0.0}, pitch={pitch}, take={take}");
-                Check(hit < shot - 4 && hit > shot - 14,
-                    $"the hit honk sits clearly under a rifle shot ({hit:0.0} vs {shot:0.0}, pitch={pitch}, take={take})");
+                Check(hit < shot - 4 && hit > loudestShot - 14,
+                    $"the hit honk sits clearly under every rifle take ({hit:0.0} vs {shot:0.0}..{loudestShot:0.0}, pitch={pitch}, take={take})");
             }
 
         // The car siren right next to you: noticeable, never blaring (I-62).
