@@ -62,6 +62,10 @@ void fragment() {
         arrows.SetAnchorsPreset(Control.LayoutPreset.FullRect);
         _root.AddChild(arrows);
 
+        var holdBar = new Paint { Name = "HoldBar", Painter = DrawHoldBar };
+        holdBar.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+        _root.AddChild(holdBar);
+
         var reticle = new Paint { Name = "Reticle", Painter = DrawReticle };
         reticle.SetAnchorsPreset(Control.LayoutPreset.FullRect);
         _root.AddChild(reticle);
@@ -488,6 +492,20 @@ void fragment() {
         }
     }
 
+    /// <summary>Pixel size of the hold bar over the survivor's head (a base door, decisions.md L-35).</summary>
+    public static readonly Vector2 HoldBarSize = new(70, 8);
+
+    /// <summary>A hold-to-use in progress: a bar over the survivor's own head, not at the cursor (L-35).</summary>
+    private void DrawHoldBar(Control c)
+    {
+        var stage = Stage;
+        if (stage.HoldProgress <= 0 || stage.Player.IsDead) return;
+        var top = stage.Cam.UnprojectPosition(stage.Player.GlobalPosition + Vector3.Up * 2.35f);
+        var rect = new Rect2(top - new Vector2(HoldBarSize.X / 2, HoldBarSize.Y), HoldBarSize);
+        c.DrawRect(rect.Grow(2), new Color(0, 0, 0, .55f), true);
+        c.DrawRect(new Rect2(rect.Position, new Vector2(rect.Size.X * stage.HoldProgress, rect.Size.Y)), UiTheme.Accent, true);
+    }
+
     private void DrawReticle(Control c)
     {
         var stage = Stage;
@@ -505,6 +523,15 @@ void fragment() {
         }
         var aim = player.AimPoint;
         var center = cam.UnprojectPosition(aim);
+        if (!player.CanAttack)
+        {
+            // Cannot attack (ladder, zipline, gondola, held; decisions.md M-36): a dim grey ring with a slash where the cursor is.
+            var off = new Color(HudWhite.Lerp(new Color("8a8f94"), .7f), .7f);
+            c.DrawArc(center, 11, 0, Mathf.Tau, 40, new Color(0, 0, 0, .35f), 5, true);
+            c.DrawArc(center, 11, 0, Mathf.Tau, 40, off, 2.5f, true);
+            c.DrawLine(center + new Vector2(-7.5f, 7.5f), center + new Vector2(7.5f, -7.5f), off, 2.5f, true);
+            return;
+        }
         var gun = player.Gun;
         float actionWeight = _weaponAction.Weight;
         if (player.AimBlend > 0 && actionWeight < 1)

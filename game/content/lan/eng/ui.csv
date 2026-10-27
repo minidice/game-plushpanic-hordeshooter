@@ -52,6 +52,7 @@ msg_stage_enemies_inside,There are still enemies inside!
 msg_stage_down,You went down...
 # Use prompts (next to [E])
 ui_use_open_door,Open door
+ui_use_open_base,Open the base door
 ui_use_shutter,Open shutter (sets off the alarm!)
 ui_use_close_safehouse,Close door (clear stage)
 ui_use_ladder_up,Climb ladder
@@ -61,6 +62,7 @@ ui_use_gondola,Start the gondola
 ui_use_ammo,Refill ammo (weapon 2)
 ui_use_medkit,Pick up medkit
 fmt_use_pickup_weapon,Pick up {0}  (slot {1})
+fmt_use_pickup_weapon_infinite,Take {0} ∞ · same gun refills ammo  ({1})
 fmt_use_pickup_throwable,Pick up {0}  (G)
 # Pickup and refill messages
 fmt_pickup_throwable_max,You can carry up to {1} {0}

@@ -26,6 +26,8 @@ public partial class Interactable : Node3D
     public bool Enabled { get; set; } = true;
     /// <summary>Seconds the interact key must be held (0: a press uses it).</summary>
     public float HoldSeconds { get; set; }
+    /// <summary>A hit on the one holding breaks the hold; they must let go and start over (base doors, decisions.md L-35).</summary>
+    public bool CancelOnHit { get; set; }
     /// <summary>Called with the survivor who used it; null means this PC's player.</summary>
     public Action<Player?>? OnUse { get; set; }
     /// <summary>Same on every PC: level items get it in build order, dropped weapons from the host (multiplayer-sync-design.md 4.4).</summary>

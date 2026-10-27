@@ -4,7 +4,8 @@ namespace HordeShooter;
 
 /// <summary>
 /// A weapon or throwable lying on the floor. E picks it up into the right slot; a replaced primary
-/// (or secondary) drops back on the floor with its ammo, so you can swap back.
+/// (or secondary) drops back on the floor with its ammo, so you can swap back. A shared one (<see cref="Infinite"/>,
+/// decisions.md C-33) lies on a base's table and stays: the same gun only refills its ammo, another gun swaps.
 /// </summary>
 public partial class WeaponPickup : Interactable
 {
@@ -12,6 +13,9 @@ public partial class WeaponPickup : Interactable
     public ThrowableDefinition? Throwable { get; private set; }
     /// <summary>Ammo state of a weapon someone dropped; null = fresh from the level.</summary>
     public WeaponState? State { get; private set; }
+    /// <summary>Shared and never empty (C-33): everyone takes or refills from it as often as they like.</summary>
+    public bool Infinite { get; private set; }
+    private GroundMarker _marker = null!;
 
     private Node3D _display = null!;
     private Label3D _label = null!;
@@ -51,7 +55,7 @@ public partial class WeaponPickup : Interactable
         pickup.OnUse = who => stage.PickUp(pickup, who ?? stage.Player);
         stage.AddChild(pickup);
         stage.AddInteractable(pickup);
-        GroundMarker.Circle(pickup, Vector3.Up * .035f, .5f, color, 0, .7f, .035f);
+        pickup._marker = GroundMarker.Circle(pickup, Vector3.Up * .035f, .5f, color, 0, .7f, .035f);
         pickup._display = new Node3D { Position = Vector3.Up * .35f };
         pickup.AddChild(pickup._display);
         pickup._label = new Label3D
@@ -69,6 +73,25 @@ public partial class WeaponPickup : Interactable
         };
         pickup.AddChild(pickup._label);
         return pickup;
+    }
+
+    /// <summary>
+    /// Turns a level weapon into a shared one lying <paramref name="height"/> above its floor (a table top): a rounded square
+    /// instead of the circle, and an infinity sign by its name (C-33). Colours stay the slot's.
+    /// </summary>
+    public WeaponPickup MakeInfinite(float height)
+    {
+        if (Weapon is not { } weapon) return this;
+        Infinite = true;
+        Position += Vector3.Up * height;
+        var tint = weapon.Slot == WeaponSlot.Secondary ? new Color("6fb6ff") : new Color("ffb347");
+        // Reached from in front of the table, not only from on top of it.
+        Radius = 1.9f;
+        _marker.QueueFree();
+        _marker = GroundMarker.RoundedSquare(this, Vector3.Up * .035f, 1.1f, .22f, tint, .05f, .85f, .04f);
+        _label.Text = weapon.DisplayName + "  ∞";
+        Prompt = Loc.Format("fmt_use_pickup_weapon_infinite", weapon.DisplayName, (int)weapon.Slot);
+        return this;
     }
 
     public override void _Process(double delta)

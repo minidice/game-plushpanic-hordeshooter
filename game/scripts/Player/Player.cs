@@ -187,6 +187,13 @@ public partial class Player : CharacterBody3D
     public event Action? Died;
     /// <summary>Accepted damage with a direction (from the source toward this survivor). Drives the HUD hit arc.</summary>
     public event Action<Vector3>? HitFrom;
+    /// <summary>Any damage taken (a hold-to-use breaks on it, L-35).</summary>
+    public event Action? Hurt;
+    /// <summary>
+    /// The survivor can shoot or swing now: not on a ladder, a zipline or a gondola, not held by a grabber
+    /// (the reticle shows "cannot attack" otherwise, decisions.md M-36).
+    /// </summary>
+    public bool CanAttack => !OnLadder && !OnZipline && !OnGondola && !IsRestrained;
     /// <summary>Which way the last hit pushed (from the attacker toward this survivor); the toy train runs back up it.</summary>
     public Vector3 LastHitDirection { get; private set; } = Vector3.Back;
 
@@ -602,6 +609,7 @@ public partial class Player : CharacterBody3D
         Rig.FlashHit();
         _hurt = 1;
         DamageFlash = Mathf.Min(1, DamageFlash + .5f + damage / 40f);
+        Hurt?.Invoke();
         direction.Y = 0;
         if (direction.LengthSquared() > .0001f)
         {

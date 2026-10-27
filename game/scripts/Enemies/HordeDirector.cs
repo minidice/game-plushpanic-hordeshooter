@@ -486,7 +486,7 @@ public partial class HordeDirector : Node
     private void Scatter(EncounterGroup group)
     {
         // Waiting commons scale with the party too (named ones in Fill do not, M-5).
-        int want = Stage.ScaleCommons(group.Count);
+        int want = group.Fixed ? group.Count : Stage.ScaleCommons(group.Count);
         var identities = Stage.CommonPack(new Vector3(group.Rect.GetCenter().X, 0, group.Rect.GetCenter().Y), want, group.Area);
         int placed = 0;
         for (int pass = 0; pass < 2 && placed < want; pass++)

@@ -26,6 +26,11 @@
     "sound": "소리(경보 · 무전)"
   },
   "experiences": [
+    { "id": "melee_only", "name": "근접 무기만", "kind": "move", "status": "built", "desc": "아무것도 없이 약한 근접 무기 하나로 시작한다(튜토리얼).", "refs": ["L-34"] },
+    { "id": "melee_kill", "name": "근접으로 잡기", "kind": "enemy", "status": "built", "desc": "좀비 한 마리에 근접 5~6대 — 붙어서 때려 잡는다.", "refs": ["L-34"] },
+    { "id": "checkpoint_door_hold", "name": "기지 문 3초 누르기", "kind": "device", "status": "built", "desc": "기지로 들어가는 문은 E를 3초, 맞으면 처음부터(머리 위 게이지).", "refs": ["L-35"] },
+    { "id": "infinite_table", "name": "무한 테이블", "kind": "device", "status": "built", "desc": "기지 테이블의 총은 계속 있다 — 같은 총이면 탄약만 채운다.", "refs": ["C-33"] },
+    { "id": "medkit_use", "name": "구급상자", "kind": "device", "status": "built", "desc": "기지에 사람 수만큼 놓인 구급상자를 집어 쓴다.", "refs": ["M-35"] },
     { "id": "door_switch", "name": "스위치로 문 열기", "kind": "device", "status": "built", "desc": "벽 스위치를 눌러 문을 연다(세이프룸 출발).", "refs": ["L-32"] },
     { "id": "ramp_tiers", "name": "경사로로 단 오르내리기", "kind": "move", "status": "built", "desc": "높이 단을 경사로로 오르내린다.", "refs": ["elevation-tiers"] },
     { "id": "ladder", "name": "사다리 오르기", "kind": "move", "status": "built", "desc": "사다리로 위 단에 오른다(북 · 동으로 오름).", "refs": ["L-32"] },

@@ -198,10 +198,10 @@
 - [x] 화면 우측 상단을 주 진행 방향으로 사용; 기본/확대 카메라와 화면 기준 WASD
 - [x] 레벨 디자인 가이드 맵 형식(2026-10-27, L-33): 경험 목록 30 · Stage 1 현재 상태 가이드 · 검사기 · 가이드 보드 · 평면도 표시. [기록](features/level/log/004-code-guide-map.md)
 - [ ] 가이드 맵 설계안(plan)으로 Stage 1 · 2 · 3 고치기 — Stage 1 현재 상태 오류 1 · 경고 8, **Stage 1 설계안 확정 · 맵 반영**(오류 0 · 경고 5, 2026-10-27) — 변경 8개 모두 반영(창고 간판은 Codex 모델, [log/007](features/level/log/007-code-stage1-warehouse-sign.md)). [설계안](features/level/guide-map.md#7-stage-1-설계안plan--2026-10-27-확정)
-- [ ] Stage 1 튜토리얼(L-34, 2026-10-28 확정): 프롤로그 구역 P1 ~ P6 · 기지 C1, 근접만 시작, 첫 마당 1회 권총, 웨이브 구역 직전 투척물, 구역마다 새 경험 하나, 가이드 검사기 튜토리얼 규칙 — [시나리오](features/level/stage1-tutorial-scenario.md)
-- [ ] 무기 배치 공용(무한) · 1회(C-33): 테이블 · 둥근 네모 + ∞, 같은 총은 탄약만 채움, 무한 탄약 더미
-- [ ] 기지 문 3초 누르기(L-35): 맞으면 취소, 몸 위 진행 바
-- [ ] 기지 구급상자 · 투척물 사람 수만큼(M-35), 공격 불가 조준점(M-36)
+- [x] Stage 1 튜토리얼(L-34, 2026-10-28 확정 · 구현, [log/013](features/level/log/013-code-stage1-tutorial.md)): 프롤로그 구역 P1 ~ P6 · 기지 C1, 근접만 시작, 첫 마당 1회 권총, 웨이브 구역 직전 투척물, 구역마다 새 경험 하나, 가이드 검사기 튜토리얼 규칙 — [시나리오](features/level/stage1-tutorial-scenario.md)
+- [x] 무기 배치 공용(무한) · 1회(C-33): 테이블 · 둥근 네모 + ∞, 같은 총은 탄약만 채움, 무한 탄약 더미
+- [x] 기지 문 3초 누르기(L-35): 맞으면 취소, 몸 위 진행 바
+- [x] 기지 구급상자 · 투척물 사람 수만큼(M-35), 공격 불가 조준점(M-36)
 - [x] Stage 1 유입 · 압박(2026-10-27): 웨이브 두 방향 · 나눠 나오기, 큰 구역마다 시간 무리 · 쉼, 경로 위 경계형 무리, C 골목 드럼통 관문, G 샛길 부서지는 벽 보상, AI 동료 0.5명(M-34) — [설계안](features/level/pacing-pressure-plan.md), [log/010](features/level/log/010-code-stage1-pacing-pressure.md). 큰 구역 2분 · 스테이지 10 ~ 12분(L-31 · L-19)은 플레이로 다시 재야 함
 - [x] 구역 테스트 시작 옵션 `Start-Game.ps1 -Zone D` / `-Zone 2:D`(구역 입구에서 바로 시작, 무리 · 장치는 맵 그대로) — [가이드 맵 9장](features/level/guide-map.md#9-구역-테스트), [log/008](features/level/log/008-code-zone-start.md)
 - [x] 모든 맵 공통 기본 카메라(2026-10-27, L-2): 수직 60° · 원근 34° · 화면 높이 21 m. 실제 플레이로 수치 재조정은 남음. [기록](features/level/log/002-code-camera-default-view.md)

@@ -1,45 +1,54 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1038" viewBox="0 0 1440 1038" font-family="Noto Sans KR, Malgun Gothic, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1431" viewBox="0 0 1440 1431" font-family="Noto Sans KR, Malgun Gothic, sans-serif">
 <rect width="100%" height="100%" fill="#f7f5ef"/>
-<text x="20" y="30" font-size="18" fill="#1f1f1f" font-weight="bold" text-anchor="start">Stage 1 도시 (큰 맵) — 설계안 — 레벨 디자인 가이드 맵 (plan, 2026-10-27)</text>
-<text x="20" y="52" font-size="12" fill="#444" font-weight="normal" text-anchor="start">Stage 1 (plan): 구역 9(큰 3) · 새 경험 19 · 다시 쓰기 12 · 섞기 4 · 정점 1</text>
-<text x="20" y="72" font-size="11" fill="#2f6f3f" font-weight="normal" text-anchor="start">오류 0 · 경고 5 — 규칙: 큰 구역마다 새 경험 1개 이상(G2), 소개 전에 쓰지 않음(G3), 정점 뒤 휴식(W4), 길 안내(W5), 섞기(W6). 자세히: guide-map.md</text>
+<text x="20" y="30" font-size="18" fill="#1f1f1f" font-weight="bold" text-anchor="start">Stage 1 도시 (큰 맵) — 튜토리얼 설계안 — 레벨 디자인 가이드 맵 (plan, 2026-10-27)</text>
+<text x="20" y="52" font-size="12" fill="#444" font-weight="normal" text-anchor="start">Stage 1 (plan): 구역 15(큰 3) · 새 경험 16 · 다시 쓰기 17 · 섞기 2 · 정점 1</text>
+<text x="20" y="72" font-size="11" fill="#2f6f3f" font-weight="normal" text-anchor="start">오류 0 · 경고 7 — 규칙: 큰 구역마다 새 경험 1개 이상(G2), 소개 전에 쓰지 않음(G3), 정점 뒤 휴식(W4), 길 안내(W5), 섞기(W6). 자세히: guide-map.md</text>
 <rect x="20" y="92" width="1400" height="14" fill="#e3ded0" rx="3"/>
-<rect x="20.0" y="92" width="112.0" height="14" fill="#2f8f5b" opacity=".85"/>
-<text x="22.0" y="120" font-size="10" fill="#333" font-weight="normal" text-anchor="start">A</text>
+<rect x="20.0" y="92" width="42.0" height="14" fill="#2f8f5b" opacity=".85"/>
+<text x="22.0" y="120" font-size="10" fill="#333" font-weight="normal" text-anchor="start">P1</text>
 <circle cx="26.0" cy="87" r="2.8" fill="#c8322a"/>
-<rect x="132.0" y="92" width="140.0" height="14" fill="#c8642a" opacity=".85"/>
-<text x="134.0" y="120" font-size="10" fill="#333" font-weight="normal" text-anchor="start">B</text>
-<circle cx="138.0" cy="87" r="2.8" fill="#c8322a"/>
-<circle cx="145.0" cy="87" r="2.8" fill="#c8322a"/>
-<circle cx="152.0" cy="87" r="2.8" fill="#c8322a"/>
-<circle cx="159.0" cy="87" r="2.8" fill="#c8322a"/>
-<rect x="272.0" y="92" width="126.0" height="14" fill="#2f6fb5" opacity=".85"/>
-<text x="274.0" y="120" font-size="10" fill="#333" font-weight="normal" text-anchor="start">B-pharmacy</text>
+<rect x="62.0" y="92" width="42.0" height="14" fill="#2f6fb5" opacity=".85"/>
+<text x="64.0" y="120" font-size="10" fill="#333" font-weight="normal" text-anchor="start">P2</text>
+<circle cx="68.0" cy="87" r="2.8" fill="#c8322a"/>
+<rect x="104.0" y="92" width="56.0" height="14" fill="#2f8f5b" opacity=".85"/>
+<text x="106.0" y="120" font-size="10" fill="#333" font-weight="normal" text-anchor="start">P3</text>
+<circle cx="110.0" cy="87" r="2.8" fill="#c8322a"/>
+<rect x="160.0" y="92" width="56.0" height="14" fill="#8a8f98" opacity=".85"/>
+<text x="162.0" y="120" font-size="10" fill="#333" font-weight="normal" text-anchor="start">P4</text>
+<circle cx="166.0" cy="87" r="2.8" fill="#c8322a"/>
+<rect x="216.0" y="92" width="56.0" height="14" fill="#2f6fb5" opacity=".85"/>
+<text x="218.00000000000003" y="120" font-size="10" fill="#333" font-weight="normal" text-anchor="start">P5</text>
+<circle cx="222.0" cy="87" r="2.8" fill="#c8322a"/>
+<rect x="272.0" y="92" width="98.0" height="14" fill="#2f8f5b" opacity=".85"/>
+<text x="274.0" y="120" font-size="10" fill="#333" font-weight="normal" text-anchor="start">P6</text>
 <circle cx="278.0" cy="87" r="2.8" fill="#c8322a"/>
-<rect x="398.0" y="92" width="210.0" height="14" fill="#8a8f98" opacity=".85"/>
-<text x="400.0" y="120" font-size="10" fill="#333" font-weight="normal" text-anchor="start">C</text>
-<circle cx="404.0" cy="87" r="2.8" fill="#c8322a"/>
-<circle cx="411.0" cy="87" r="2.8" fill="#c8322a"/>
-<circle cx="418.0" cy="87" r="2.8" fill="#c8322a"/>
-<rect x="608.0" y="92" width="224.0" height="14" fill="#c8322a" opacity=".85"/>
-<text x="610.0" y="120" font-size="10" fill="#333" font-weight="normal" text-anchor="start">D</text>
-<circle cx="614.0" cy="87" r="2.8" fill="#c8322a"/>
-<circle cx="621.0" cy="87" r="2.8" fill="#c8322a"/>
-<circle cx="628.0" cy="87" r="2.8" fill="#c8322a"/>
-<rect x="832.0" y="92" width="196.0" height="14" fill="#59a96a" opacity=".85"/>
-<text x="834.0" y="120" font-size="10" fill="#333" font-weight="normal" text-anchor="start">E</text>
-<circle cx="838.0" cy="87" r="2.8" fill="#c8322a"/>
-<rect x="1028.0" y="92" width="224.0" height="14" fill="#c8642a" opacity=".85"/>
-<text x="1030.0" y="120" font-size="10" fill="#333" font-weight="normal" text-anchor="start">F</text>
-<circle cx="1034.0" cy="87" r="2.8" fill="#c8322a"/>
-<circle cx="1041.0" cy="87" r="2.8" fill="#c8322a"/>
-<rect x="1252.0" y="92" width="168.0" height="14" fill="#8a8f98" opacity=".85"/>
-<text x="1254.0" y="120" font-size="10" fill="#333" font-weight="normal" text-anchor="start">G</text>
-<circle cx="1258.0" cy="87" r="2.8" fill="#c8322a"/>
-<circle cx="1265.0" cy="87" r="2.8" fill="#c8322a"/>
+<rect x="370.0" y="92" width="70.0" height="14" fill="#c8642a" opacity=".85"/>
+<text x="372.0" y="120" font-size="10" fill="#333" font-weight="normal" text-anchor="start">B</text>
+<circle cx="376.0" cy="87" r="2.8" fill="#c8322a"/>
+<rect x="440.0" y="92" width="84.0" height="14" fill="#2f6fb5" opacity=".85"/>
+<text x="442.0" y="120" font-size="10" fill="#333" font-weight="normal" text-anchor="start">B-pharmacy</text>
+<circle cx="446.0" cy="87" r="2.8" fill="#c8322a"/>
+<rect x="524.0" y="92" width="56.0" height="14" fill="#2f8f5b" opacity=".85"/>
+<text x="526.0" y="120" font-size="10" fill="#333" font-weight="normal" text-anchor="start">C1</text>
+<circle cx="530.0" cy="87" r="2.8" fill="#c8322a"/>
+<rect x="580.0" y="92" width="210.0" height="14" fill="#8a8f98" opacity=".85"/>
+<text x="582.0" y="120" font-size="10" fill="#333" font-weight="normal" text-anchor="start">C</text>
+<circle cx="586.0" cy="87" r="2.8" fill="#c8322a"/>
+<rect x="790.0" y="92" width="154.0" height="14" fill="#c8322a" opacity=".85"/>
+<text x="792.0000000000001" y="120" font-size="10" fill="#333" font-weight="normal" text-anchor="start">D</text>
+<circle cx="796.0" cy="87" r="2.8" fill="#c8322a"/>
+<rect x="944.0" y="92" width="196.0" height="14" fill="#59a96a" opacity=".85"/>
+<text x="946.0" y="120" font-size="10" fill="#333" font-weight="normal" text-anchor="start">E</text>
+<circle cx="950.0" cy="87" r="2.8" fill="#c8322a"/>
+<rect x="1140.0" y="92" width="140.0" height="14" fill="#c8642a" opacity=".85"/>
+<text x="1142.0" y="120" font-size="10" fill="#333" font-weight="normal" text-anchor="start">F</text>
+<circle cx="1146.0" cy="87" r="2.8" fill="#c8322a"/>
+<circle cx="1153.0" cy="87" r="2.8" fill="#c8322a"/>
+<rect x="1280.0" y="92" width="140.0" height="14" fill="#8a8f98" opacity=".85"/>
+<text x="1282.0" y="120" font-size="10" fill="#333" font-weight="normal" text-anchor="start">G</text>
+<circle cx="1286.0" cy="87" r="2.8" fill="#c8322a"/>
 <rect x="1414.0" y="92" width="6.0" height="14" fill="#2f8f5b" opacity=".85"/>
 <text x="1416" y="120" font-size="10" fill="#333" font-weight="normal" text-anchor="start">H</text>
-<circle cx="1417.0" cy="79" r="2.8" fill="#c8322a"/>
 <circle cx="1417.0" cy="79" r="2.8" fill="#c8322a"/>
 <text x="24" y="142" font-size="12" fill="#333" font-weight="bold" text-anchor="start">순서 · 구역</text>
 <text x="214" y="142" font-size="12" fill="#333" font-weight="bold" text-anchor="start">역할</text>
@@ -49,124 +58,168 @@
 <text x="1104" y="142" font-size="12" fill="#333" font-weight="bold" text-anchor="start">길 안내</text>
 <text x="1274" y="142" font-size="12" fill="#333" font-weight="bold" text-anchor="start">검사</text>
 <rect x="20" y="150" width="1400" height="70" fill="#ffffff" stroke="#00000014"/>
-<text x="28" y="168" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">1. A (작은)</text>
+<text x="28" y="168" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">1. P1 (작은)</text>
 <text x="28" y="185" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 0%</text>
 <rect x="214" y="156" width="58" height="18" rx="9" fill="#2f8f5b"/>
 <text x="243" y="169" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">안전</text>
-<text x="286" y="168" font-size="12" fill="#b5651d" font-weight="normal" text-anchor="start">• 스위치로 문 열기</text>
+<text x="286" y="168" font-size="12" fill="#1f6f8b" font-weight="normal" text-anchor="start">• 근접 무기만</text>
 <text x="1106" y="168" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
-<text x="1106" y="185" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">길 모양(좁아지는 길 · 열린 문)</text>
-<text x="28" y="214" font-size="10" fill="#777" font-weight="normal" text-anchor="start">세이프룸. 스위치로 문을 열면 문밖 거리 첫 가로등이 켜진 채 보인다.</text>
-<rect x="20" y="224" width="1400" height="104" fill="#ffffff" stroke="#00000014"/>
-<text x="28" y="242" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">2. B (큰)</text>
-<text x="28" y="259" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 8%</text>
-<rect x="214" y="230" width="58" height="18" rx="9" fill="#c8642a"/>
-<text x="243" y="243" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">교전</text>
-<text x="286" y="242" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 잠든 무리</text>
-<text x="286" y="259" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 경계형 무리</text>
-<text x="286" y="276" font-size="12" fill="#5b4a9c" font-weight="normal" text-anchor="start">• 낮은 엄폐물</text>
-<text x="286" y="293" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 시간 습격</text>
-<text x="1106" y="242" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
-<text x="1276" y="242" font-size="12" fill="#c07a12" font-weight="bold" text-anchor="start">W1</text>
-<text x="28" y="322" font-size="10" fill="#777" font-weight="normal" text-anchor="start">첫 큰 구역은 기본만: 잠든 무리를 깨우지 않고 지나갈지 먼저 칠지, 경계형 무리를 방벽 뒤에서. 가로등을 주 경로 쪽에 줄지어 두고 광장 끝 출구를 가장 밝게. (창고 간판은 B에서는 60 m 넘게 떨어져 화면에 들어오지 않아 C 골목 출구의 길 안내로 옮김 — 2026-10-27 배치 렌더.) 시간 무리도 이 구역부터(2026-10-27 플레이 뒤 사용자 결정: 큰 구역마다 약 2분 · 압박) — 새 경험 4개라 W1 경고를 남긴다. 주 경로 위에 경계형 3마리 무리 둘(피해 갈 수 없는 작은 교전).</text>
-<rect x="20" y="332" width="1400" height="70" fill="#ffffff" stroke="#00000014"/>
-<text x="28" y="350" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">3. B-pharmacy (작은)</text>
-<text x="28" y="367" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 18%</text>
-<rect x="214" y="338" width="58" height="18" rx="9" fill="#2f6fb5"/>
-<text x="243" y="351" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">탐색</text>
-<text x="286" y="350" font-size="12" fill="#3f7f3f" font-weight="normal" text-anchor="start">• 보상 분기</text>
-<text x="616" y="350" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 잠든 무리</text>
-<text x="1106" y="350" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
-<text x="28" y="396" font-size="10" fill="#777" font-weight="normal" text-anchor="start">약국 간판 불빛으로 곁길이 있음을 알림. 안에 잠든 무리 하나와 보급.</text>
-<rect x="20" y="406" width="1400" height="87" fill="#ffffff" stroke="#00000014"/>
-<text x="28" y="424" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">4. C (작은)</text>
-<text x="28" y="441" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 27%</text>
-<rect x="214" y="412" width="58" height="18" rx="9" fill="#8a8f98"/>
-<text x="243" y="425" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">이동</text>
-<text x="286" y="424" font-size="12" fill="#5b4a9c" font-weight="normal" text-anchor="start">• 좁은 통로</text>
-<text x="286" y="441" font-size="12" fill="#b5651d" font-weight="normal" text-anchor="start">• 경보 함정</text>
-<text x="286" y="458" font-size="12" fill="#b5651d" font-weight="normal" text-anchor="start">• 파괴 벽 뚫기</text>
-<text x="616" y="424" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 경계형 무리</text>
-<text x="1106" y="424" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">길 모양(좁아지는 길 · 열린 문)</text>
-<text x="1106" y="441" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
-<text x="1106" y="458" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">랜드마크(멀리서 보이는 큰 것)</text>
-<text x="28" y="487" font-size="10" fill="#777" font-weight="normal" text-anchor="start">골목 입구에 경보 차(B에서 옮김): 좁은 길에서 건드리면 앞뒤로 몰려오는 짧고 피할 수 있는 위기. 골목 끝 조명. 골목을 나서면 북쪽에 창고 간판(전구 테두리 · 상자 그림 · 동쪽 화살표, 앞에 따뜻한 조명)이 다음 큰 구역 D 쪽을 가리킴. 골목 입구는 콘크리트 판 바리케이드로 막혀 있고 가운데 금 간 판 앞에 드럼통 — 쏘면 터져 길이 열린다(드럼통으로 길 뚫기 학습, 폭발 소리가 골목 무리를 깨움).</text>
-<rect x="20" y="497" width="1400" height="87" fill="#ffffff" stroke="#00000014"/>
-<text x="28" y="515" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">5. D (큰)</text>
-<text x="28" y="532" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 42%</text>
-<rect x="214" y="503" width="58" height="18" rx="9" fill="#c8322a"/>
-<text x="243" y="516" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">정점</text>
-<text x="286" y="515" font-size="12" fill="#1f6f8b" font-weight="normal" text-anchor="start">• 경사로로 단 오르내리기</text>
-<text x="286" y="532" font-size="12" fill="#b5651d" font-weight="normal" text-anchor="start">• 제어판 크레센도</text>
-<text x="286" y="549" font-size="12" fill="#3f7f3f" font-weight="normal" text-anchor="start">• 임무 왕복</text>
-<text x="616" y="515" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 잠든 무리</text>
-<text x="616" y="532" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 경계형 무리</text>
-<text x="616" y="549" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 시간 습격</text>
-<text x="916" y="515" font-size="12" fill="#5b4a9c" font-weight="normal" text-anchor="start">좁은 통로 + 낮은 엄폐물</text>
-<text x="1106" y="515" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">목표 표시(지도 · 화면)</text>
-<text x="1106" y="532" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
-<text x="1106" y="549" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">랜드마크(멀리서 보이는 큰 것)</text>
-<text x="1276" y="515" font-size="12" fill="#c07a12" font-weight="bold" text-anchor="start">W2</text>
-<text x="28" y="578" font-size="10" fill="#777" font-weight="normal" text-anchor="start">정점. 경사로로 하역장에 올라 셔터 제어판을 켜고 크레센도를 버틴다 — 하역장 입구를 좁히고 방벽을 둬 C · B에서 배운 '좁은 길 + 엄폐'로 지키게. 제어판 위 조명, 돌아오는 길 재등장. 크레센도는 Stage 2(벙커 철문)에서 다시(W2).</text>
-<rect x="20" y="588" width="1400" height="70" fill="#ffffff" stroke="#00000014"/>
-<text x="28" y="606" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">6. E (작은)</text>
-<text x="28" y="623" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 58%</text>
-<rect x="214" y="594" width="58" height="18" rx="9" fill="#59a96a"/>
-<text x="243" y="607" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">휴식</text>
-<text x="286" y="606" font-size="12" fill="#3f7f3f" font-weight="normal" text-anchor="start">• 중간 안전 구역</text>
-<text x="1106" y="606" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
-<text x="28" y="652" font-size="10" fill="#777" font-weight="normal" text-anchor="start">경비 초소, 정점 바로 뒤 휴식. 따뜻한 색 조명(L4D 세이프룸 색).</text>
-<rect x="20" y="662" width="1400" height="104" fill="#ffffff" stroke="#00000014"/>
-<text x="28" y="680" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">7. F (큰)</text>
-<text x="28" y="697" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 72%</text>
-<rect x="214" y="668" width="58" height="18" rx="9" fill="#c8642a"/>
-<text x="243" y="681" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">교전</text>
-<text x="286" y="680" font-size="12" fill="#1f6f8b" font-weight="normal" text-anchor="start">• 사다리 오르기</text>
-<text x="286" y="697" font-size="12" fill="#5b4a9c" font-weight="normal" text-anchor="start">• 높은 단 교전</text>
-<text x="616" y="680" font-size="12" fill="#1f6f8b" font-weight="normal" text-anchor="start">• 경사로로 단 오르내리기</text>
-<text x="616" y="697" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 잠든 무리</text>
-<text x="616" y="714" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 경계형 무리</text>
-<text x="616" y="731" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 시간 습격</text>
-<text x="916" y="680" font-size="12" fill="#5b4a9c" font-weight="normal" text-anchor="start">경보 함정 + 경사로로 단 오르내리기</text>
-<text x="916" y="697" font-size="12" fill="#5b4a9c" font-weight="normal" text-anchor="start">낮은 엄폐물 + 경계형 무리</text>
-<text x="1106" y="680" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">랜드마크(멀리서 보이는 큰 것)</text>
-<text x="1106" y="697" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
-<text x="1276" y="680" font-size="12" fill="#c07a12" font-weight="bold" text-anchor="start">W2</text>
-<text x="28" y="760" font-size="10" fill="#777" font-weight="normal" text-anchor="start">사다리로 컨테이너 위에 올라 위에서 쏘기를 처음. 시간 습격은 이 구역부터(B · D에서는 뺌). 경보 트럭이 울리면 경사로 위 단으로 올라가 버티기. 크레인이 랜드마크, 크레인 조명이 출구 쪽. 사다리 · 시간 습격은 Stage 2에서 다시(W2). (시간 무리는 B부터로 바뀜, 여기선 다시 쓰기.)</text>
-<rect x="20" y="770" width="1400" height="70" fill="#ffffff" stroke="#00000014"/>
-<text x="28" y="788" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">8. G (작은)</text>
-<text x="28" y="805" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 88%</text>
-<rect x="214" y="776" width="58" height="18" rx="9" fill="#8a8f98"/>
-<text x="243" y="789" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">이동</text>
-<text x="286" y="788" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 특수 적</text>
-<text x="286" y="805" font-size="12" fill="#b5651d" font-weight="normal" text-anchor="start">• 폭발 드럼통</text>
-<text x="616" y="788" font-size="12" fill="#1f6f8b" font-weight="normal" text-anchor="start">• 경사로로 단 오르내리기</text>
-<text x="616" y="805" font-size="12" fill="#b5651d" font-weight="normal" text-anchor="start">• 파괴 벽 뚫기</text>
-<text x="916" y="788" font-size="12" fill="#5b4a9c" font-weight="normal" text-anchor="start">높은 단 교전 + 낮은 엄폐물</text>
-<text x="1106" y="788" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">길 모양(좁아지는 길 · 열린 문)</text>
-<text x="1106" y="805" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
-<text x="1276" y="788" font-size="12" fill="#c07a12" font-weight="bold" text-anchor="start">W2</text>
-<text x="28" y="834" font-size="10" fill="#777" font-weight="normal" text-anchor="start">마지막 도전: 고가 오르막에서 특수 적이 처음 내려온다(B · F에서 옮김). 위 단 방벽 뒤에서, 드럼통으로 아래 무리를 날린다. 특수 적 · 드럼통은 Stage 2에서 다시(W2). 진입로 남쪽 구석에 C에서 배운 금 간 벽 + 드럼통 — 샛길 보상(산탄총 · 수류탄 · 구급상자), 따뜻한 조명으로 안내.</text>
-<rect x="20" y="844" width="1400" height="70" fill="#ffffff" stroke="#00000014"/>
-<text x="28" y="862" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">9. H (작은)</text>
-<text x="28" y="879" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 100%</text>
-<rect x="214" y="850" width="58" height="18" rx="9" fill="#2f8f5b"/>
-<text x="243" y="863" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">안전</text>
-<text x="286" y="862" font-size="12" fill="#3f7f3f" font-weight="normal" text-anchor="start">• 세이프하우스 닫기</text>
-<text x="286" y="879" font-size="12" fill="#3f7f3f" font-weight="normal" text-anchor="start">• 해치로 다음 스테이지</text>
-<text x="616" y="862" font-size="12" fill="#b5651d" font-weight="normal" text-anchor="start">• 스위치로 문 열기</text>
-<text x="1106" y="862" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
-<text x="28" y="908" font-size="10" fill="#777" font-weight="normal" text-anchor="start">세이프하우스 문 위 따뜻한 조명. 처음 배운 스위치로 문을 닫고 해치로 Stage 2.</text>
-<text x="20" y="934" font-size="11" fill="#444" font-weight="normal" text-anchor="start">색: 경험 종류 — 이동 · 지형 · 장치 · 임무 · 적 · 교전 공간 · 진행 · 보상</text>
-<rect x="20" y="944" width="12" height="12" fill="#1f6f8b"/>
-<text x="36" y="955" font-size="11" fill="#1f6f8b" font-weight="normal" text-anchor="start">이동 · 지형</text>
-<rect x="140" y="944" width="12" height="12" fill="#b5651d"/>
-<text x="156" y="955" font-size="11" fill="#b5651d" font-weight="normal" text-anchor="start">장치 · 임무</text>
-<rect x="260" y="944" width="12" height="12" fill="#a02c2c"/>
-<text x="276" y="955" font-size="11" fill="#a02c2c" font-weight="normal" text-anchor="start">적</text>
-<rect x="380" y="944" width="12" height="12" fill="#5b4a9c"/>
-<text x="396" y="955" font-size="11" fill="#5b4a9c" font-weight="normal" text-anchor="start">교전 공간</text>
-<rect x="500" y="944" width="12" height="12" fill="#3f7f3f"/>
-<text x="516" y="955" font-size="11" fill="#3f7f3f" font-weight="normal" text-anchor="start">진행 · 보상</text>
-<text x="20" y="980" font-size="11" fill="#444" font-weight="normal" text-anchor="start">역할 막대: 진행 위치에 따라 구역을 놓고 역할 색으로 칠함, 빨간 점 = 그 구역의 새 경험 수. 검사 칸: G = 오류, W = 경고(guide-map.md 4장).</text>
+<text x="1276" y="168" font-size="12" fill="#c07a12" font-weight="bold" text-anchor="start">W2</text>
+<text x="28" y="214" font-size="10" fill="#777" font-weight="normal" text-anchor="start">시작 방. 근접 무기(프라이팬)만, 아무것도 없음. 스위치로 문을 열면 바로 첫 마당.</text>
+<rect x="20" y="224" width="1400" height="70" fill="#ffffff" stroke="#00000014"/>
+<text x="28" y="242" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">2. P2 (작은)</text>
+<text x="28" y="259" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 3%</text>
+<rect x="214" y="230" width="58" height="18" rx="9" fill="#2f6fb5"/>
+<text x="243" y="243" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">탐색</text>
+<text x="286" y="242" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 근접으로 잡기</text>
+<text x="1106" y="242" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">랜드마크(멀리서 보이는 큰 것)</text>
+<text x="1106" y="259" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
+<text x="1276" y="242" font-size="12" fill="#c07a12" font-weight="bold" text-anchor="start">W2</text>
+<text x="28" y="288" font-size="10" fill="#777" font-weight="normal" text-anchor="start">좀비 2(잠든 · 경계형 1씩, 인원 보정 없음). 길 한가운데 조명 아래 1회 권총 1자루(먼저 집은 한 명). 화면 끝에 첫 기지 문 조명.</text>
+<rect x="20" y="298" width="1400" height="70" fill="#ffffff" stroke="#00000014"/>
+<text x="28" y="316" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">3. P3 (작은)</text>
+<text x="28" y="333" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 6%</text>
+<rect x="214" y="304" width="58" height="18" rx="9" fill="#2f8f5b"/>
+<text x="243" y="317" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">안전</text>
+<text x="286" y="316" font-size="12" fill="#b5651d" font-weight="normal" text-anchor="start">• 기지 문 3초 누르기</text>
+<text x="1106" y="316" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
+<text x="28" y="362" font-size="10" fill="#777" font-weight="normal" text-anchor="start">첫 기지. 들어가는 문 E 3초(맞으면 처음부터), 안에 무한 권총 테이블 · 탄약. 나가는 문은 그냥 E.</text>
+<rect x="20" y="372" width="1400" height="70" fill="#ffffff" stroke="#00000014"/>
+<text x="28" y="390" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">4. P4 (작은)</text>
+<text x="28" y="407" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 10%</text>
+<rect x="214" y="378" width="58" height="18" rx="9" fill="#8a8f98"/>
+<text x="243" y="391" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">이동</text>
+<text x="286" y="390" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 경계형 무리</text>
+<text x="1106" y="390" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">길 모양(좁아지는 길 · 열린 문)</text>
+<text x="28" y="436" font-size="10" fill="#777" font-weight="normal" text-anchor="start">뒷골목. 경계형 3을 권총으로 — 근접보다 세다. 웨이브 없음.</text>
+<rect x="20" y="446" width="1400" height="70" fill="#ffffff" stroke="#00000014"/>
+<text x="28" y="464" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">5. P5 (작은)</text>
+<text x="28" y="481" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 14%</text>
+<rect x="214" y="452" width="58" height="18" rx="9" fill="#2f6fb5"/>
+<text x="243" y="465" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">탐색</text>
+<text x="286" y="464" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 잠든 무리</text>
+<text x="1106" y="464" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">길 모양(좁아지는 길 · 열린 문)</text>
+<text x="1106" y="481" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
+<text x="28" y="510" font-size="10" fill="#777" font-weight="normal" text-anchor="start">주차장. 가운데 잠든 무리 6, 남쪽 가장자리로 돌아가면 깨우지 않음. 웨이브 없음.</text>
+<rect x="20" y="520" width="1400" height="70" fill="#ffffff" stroke="#00000014"/>
+<text x="28" y="538" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">6. P6 (작은)</text>
+<text x="28" y="555" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 18%</text>
+<rect x="214" y="526" width="58" height="18" rx="9" fill="#2f8f5b"/>
+<text x="243" y="539" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">안전</text>
+<text x="286" y="538" font-size="12" fill="#b5651d" font-weight="normal" text-anchor="start">• 무한 테이블</text>
+<text x="616" y="538" font-size="12" fill="#b5651d" font-weight="normal" text-anchor="start">• 기지 문 3초 누르기</text>
+<text x="1106" y="538" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
+<text x="28" y="584" font-size="10" fill="#777" font-weight="normal" text-anchor="start">보급 기지(옛 시작 방). 무한 MP5 테이블 · 무한 탄약, 투척물 사람 수만큼(B 웨이브 직전).</text>
+<rect x="20" y="594" width="1400" height="70" fill="#ffffff" stroke="#00000014"/>
+<text x="28" y="612" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">7. B (큰)</text>
+<text x="28" y="629" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 25%</text>
+<rect x="214" y="600" width="58" height="18" rx="9" fill="#c8642a"/>
+<text x="243" y="613" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">교전</text>
+<text x="286" y="612" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 시간 습격</text>
+<text x="616" y="612" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 잠든 무리</text>
+<text x="616" y="629" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 경계형 무리</text>
+<text x="1106" y="612" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
+<text x="28" y="658" font-size="10" fill="#777" font-weight="normal" text-anchor="start">첫 큰 구역 · 첫 웨이브: 시간 무리가 뒤 · 옆 두 방향에서. 주무기와 투척물을 쓰는 이유. 가로등 줄, 광장 끝 출구를 가장 밝게.</text>
+<rect x="20" y="668" width="1400" height="70" fill="#ffffff" stroke="#00000014"/>
+<text x="28" y="686" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">8. B-pharmacy (작은)</text>
+<text x="28" y="703" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 30%</text>
+<rect x="214" y="674" width="58" height="18" rx="9" fill="#2f6fb5"/>
+<text x="243" y="687" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">탐색</text>
+<text x="286" y="686" font-size="12" fill="#3f7f3f" font-weight="normal" text-anchor="start">• 보상 분기</text>
+<text x="616" y="686" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 잠든 무리</text>
+<text x="1106" y="686" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
+<text x="28" y="732" font-size="10" fill="#777" font-weight="normal" text-anchor="start">약국 간판 불빛으로 곁길이 있음을 알림. 안에 잠든 무리 하나와 보급.</text>
+<rect x="20" y="742" width="1400" height="70" fill="#ffffff" stroke="#00000014"/>
+<text x="28" y="760" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">9. C1 (작은)</text>
+<text x="28" y="777" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 36%</text>
+<rect x="214" y="748" width="58" height="18" rx="9" fill="#2f8f5b"/>
+<text x="243" y="761" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">안전</text>
+<text x="286" y="760" font-size="12" fill="#b5651d" font-weight="normal" text-anchor="start">• 구급상자</text>
+<text x="616" y="760" font-size="12" fill="#b5651d" font-weight="normal" text-anchor="start">• 기지 문 3초 누르기</text>
+<text x="1106" y="760" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
+<text x="28" y="806" font-size="10" fill="#777" font-weight="normal" text-anchor="start">골목 앞 기지. 구급상자 사람 수만큼. 들어가지 않고 지나갈 수도 있음.</text>
+<rect x="20" y="816" width="1400" height="87" fill="#ffffff" stroke="#00000014"/>
+<text x="28" y="834" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">10. C (작은)</text>
+<text x="28" y="851" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 40%</text>
+<rect x="214" y="822" width="58" height="18" rx="9" fill="#8a8f98"/>
+<text x="243" y="835" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">이동</text>
+<text x="286" y="834" font-size="12" fill="#b5651d" font-weight="normal" text-anchor="start">• 파괴 벽 뚫기</text>
+<text x="616" y="834" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 경계형 무리</text>
+<text x="1106" y="834" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">길 모양(좁아지는 길 · 열린 문)</text>
+<text x="1106" y="851" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
+<text x="1106" y="868" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">랜드마크(멀리서 보이는 큰 것)</text>
+<text x="28" y="897" font-size="10" fill="#777" font-weight="normal" text-anchor="start">골목 입구 바리케이드 — 드럼통을 쏘면 길이 열린다(폭발 소리가 골목을 깨움). 골목 끝에 투척물 사람 수만큼(D 웨이브 직전). 경보 차는 뺌(경보는 F).</text>
+<rect x="20" y="907" width="1400" height="87" fill="#ffffff" stroke="#00000014"/>
+<text x="28" y="925" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">11. D (큰)</text>
+<text x="28" y="942" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 55%</text>
+<rect x="214" y="913" width="58" height="18" rx="9" fill="#c8322a"/>
+<text x="243" y="926" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">정점</text>
+<text x="286" y="925" font-size="12" fill="#b5651d" font-weight="normal" text-anchor="start">• 제어판 크레센도</text>
+<text x="616" y="925" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 잠든 무리</text>
+<text x="616" y="942" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 경계형 무리</text>
+<text x="616" y="959" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 시간 습격</text>
+<text x="916" y="925" font-size="12" fill="#5b4a9c" font-weight="normal" text-anchor="start">잠든 무리 + 시간 습격</text>
+<text x="1106" y="925" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">목표 표시(지도 · 화면)</text>
+<text x="1106" y="942" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
+<text x="1106" y="959" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">랜드마크(멀리서 보이는 큰 것)</text>
+<text x="1276" y="925" font-size="12" fill="#c07a12" font-weight="bold" text-anchor="start">W2</text>
+<text x="28" y="988" font-size="10" fill="#777" font-weight="normal" text-anchor="start">정점. 셔터 제어판으로 크레센도를 버틴다. 하역장 입구 진지.</text>
+<rect x="20" y="998" width="1400" height="70" fill="#ffffff" stroke="#00000014"/>
+<text x="28" y="1016" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">12. E (작은)</text>
+<text x="28" y="1033" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 66%</text>
+<rect x="214" y="1004" width="58" height="18" rx="9" fill="#59a96a"/>
+<text x="243" y="1017" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">휴식</text>
+<text x="286" y="1016" font-size="12" fill="#3f7f3f" font-weight="normal" text-anchor="start">• 중간 안전 구역</text>
+<text x="616" y="1016" font-size="12" fill="#b5651d" font-weight="normal" text-anchor="start">• 무한 테이블</text>
+<text x="616" y="1033" font-size="12" fill="#b5651d" font-weight="normal" text-anchor="start">• 구급상자</text>
+<text x="1106" y="1016" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
+<text x="28" y="1062" font-size="10" fill="#777" font-weight="normal" text-anchor="start">중간 보급 기지. 무한 M4 테이블 · 탄약, 구급상자 · 투척물 사람 수만큼(F 웨이브 직전).</text>
+<rect x="20" y="1072" width="1400" height="87" fill="#ffffff" stroke="#00000014"/>
+<text x="28" y="1090" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">13. F (큰)</text>
+<text x="28" y="1107" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 80%</text>
+<rect x="214" y="1078" width="58" height="18" rx="9" fill="#c8642a"/>
+<text x="243" y="1091" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">교전</text>
+<text x="286" y="1090" font-size="12" fill="#5b4a9c" font-weight="normal" text-anchor="start">• 높은 단 교전</text>
+<text x="286" y="1107" font-size="12" fill="#b5651d" font-weight="normal" text-anchor="start">• 경보 함정</text>
+<text x="616" y="1090" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 시간 습격</text>
+<text x="616" y="1107" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 경계형 무리</text>
+<text x="616" y="1124" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 잠든 무리</text>
+<text x="916" y="1090" font-size="12" fill="#5b4a9c" font-weight="normal" text-anchor="start">경계형 무리 + 시간 습격</text>
+<text x="1106" y="1090" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">랜드마크(멀리서 보이는 큰 것)</text>
+<text x="1106" y="1107" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
+<text x="1276" y="1090" font-size="12" fill="#c07a12" font-weight="bold" text-anchor="start">W2</text>
+<text x="1276" y="1107" font-size="12" fill="#c07a12" font-weight="bold" text-anchor="start">W9</text>
+<text x="28" y="1153" font-size="10" fill="#777" font-weight="normal" text-anchor="start">사다리로 컨테이너 위에 올라 위에서 쏘기. 경보 트럭도 여기 있어 새 경험 2개 — 튜토리얼 규칙(하나씩) 경고, 경보를 다른 곳으로 옮길지 사용자 확인 필요.</text>
+<rect x="20" y="1163" width="1400" height="70" fill="#ffffff" stroke="#00000014"/>
+<text x="28" y="1181" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">14. G (작은)</text>
+<text x="28" y="1198" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 90%</text>
+<rect x="214" y="1169" width="58" height="18" rx="9" fill="#8a8f98"/>
+<text x="243" y="1182" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">이동</text>
+<text x="286" y="1181" font-size="12" fill="#a02c2c" font-weight="normal" text-anchor="start">• 특수 적</text>
+<text x="616" y="1181" font-size="12" fill="#b5651d" font-weight="normal" text-anchor="start">• 파괴 벽 뚫기</text>
+<text x="1106" y="1181" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
+<text x="1276" y="1181" font-size="12" fill="#c07a12" font-weight="bold" text-anchor="start">W2</text>
+<text x="28" y="1227" font-size="10" fill="#777" font-weight="normal" text-anchor="start">특수 적 1. 진입로 남쪽 구석의 금 간 벽 + 드럼통 뒤에 보상.</text>
+<rect x="20" y="1237" width="1400" height="70" fill="#ffffff" stroke="#00000014"/>
+<text x="28" y="1255" font-size="13" fill="#1f1f1f" font-weight="bold" text-anchor="start">15. H (작은)</text>
+<text x="28" y="1272" font-size="11" fill="#555" font-weight="normal" text-anchor="start">진행 100%</text>
+<rect x="214" y="1243" width="58" height="18" rx="9" fill="#2f8f5b"/>
+<text x="243" y="1256" font-size="11" fill="#fff" font-weight="bold" text-anchor="middle">안전</text>
+<text x="286" y="1255" font-size="12" fill="#3f7f3f" font-weight="normal" text-anchor="start">• 세이프하우스 닫기</text>
+<text x="616" y="1255" font-size="12" fill="#b5651d" font-weight="normal" text-anchor="start">• 기지 문 3초 누르기</text>
+<text x="616" y="1272" font-size="12" fill="#b5651d" font-weight="normal" text-anchor="start">• 구급상자</text>
+<text x="1106" y="1255" font-size="12" fill="#2f6f3f" font-weight="normal" text-anchor="start">조명(빛으로 이끔)</text>
+<text x="28" y="1301" font-size="10" fill="#777" font-weight="normal" text-anchor="start">세이프하우스: 들어가는 문 3초, 안에서 닫기, 구급상자 사람 수만큼, 해치로 Stage 2.</text>
+<text x="20" y="1327" font-size="11" fill="#444" font-weight="normal" text-anchor="start">색: 경험 종류 — 이동 · 지형 · 장치 · 임무 · 적 · 교전 공간 · 진행 · 보상</text>
+<rect x="20" y="1337" width="12" height="12" fill="#1f6f8b"/>
+<text x="36" y="1348" font-size="11" fill="#1f6f8b" font-weight="normal" text-anchor="start">이동 · 지형</text>
+<rect x="140" y="1337" width="12" height="12" fill="#b5651d"/>
+<text x="156" y="1348" font-size="11" fill="#b5651d" font-weight="normal" text-anchor="start">장치 · 임무</text>
+<rect x="260" y="1337" width="12" height="12" fill="#a02c2c"/>
+<text x="276" y="1348" font-size="11" fill="#a02c2c" font-weight="normal" text-anchor="start">적</text>
+<rect x="380" y="1337" width="12" height="12" fill="#5b4a9c"/>
+<text x="396" y="1348" font-size="11" fill="#5b4a9c" font-weight="normal" text-anchor="start">교전 공간</text>
+<rect x="500" y="1337" width="12" height="12" fill="#3f7f3f"/>
+<text x="516" y="1348" font-size="11" fill="#3f7f3f" font-weight="normal" text-anchor="start">진행 · 보상</text>
+<text x="20" y="1373" font-size="11" fill="#444" font-weight="normal" text-anchor="start">역할 막대: 진행 위치에 따라 구역을 놓고 역할 색으로 칠함, 빨간 점 = 그 구역의 새 경험 수. 검사 칸: G = 오류, W = 경고(guide-map.md 4장).</text>
 </svg>

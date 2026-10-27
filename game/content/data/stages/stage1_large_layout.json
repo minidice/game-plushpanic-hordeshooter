@@ -1,5 +1,5 @@
 {
-  "_comment": "Large Stage 1 (decisions.md L-30..L-32, doc/large-stages.md): the warehouse district at the Stage 3 scale. Urban theme: asphalt floors, buildings and fences beyond the edge. World metres, x east, z toward the camera. Zones are the plan's large/small zones (L-31); ladders climb north or east and every button faces the camera (L-32).",
+  "_comment": "Large Stage 1 (decisions.md L-30..L-32, doc/large-stages.md): the warehouse district at the Stage 3 scale. Urban theme: asphalt floors, buildings and fences beyond the edge. World metres, x east, z toward the camera. Zones are the plan's large/small zones (L-31); ladders climb north or east and every button faces the camera (L-32). Tutorial (decisions.md L-34, doc/features/level/stage1-tutorial-scenario.md): a prologue P1-P5 west of x 0, the old start room is base P6, base C1 at the street end.",
   "version": 1,
   "stage": 1,
   "next_stage": 2,
@@ -14,12 +14,127 @@
     "crescendo_done": "msg_stage_shutter_open"
   },
   "bounds": [
-    -10,
+    -142,
     -178,
     640,
     30
   ],
   "regions": [
+    {
+      "id": "p_start_lot",
+      "label": "P1 시작 방",
+      "tier": 0,
+      "poly": [
+        [
+          -138,
+          -6
+        ],
+        [
+          -122,
+          -6
+        ],
+        [
+          -122,
+          6
+        ],
+        [
+          -138,
+          6
+        ]
+      ]
+    },
+    {
+      "id": "p_yard",
+      "label": "P2 첫 마당",
+      "tier": 0,
+      "poly": [
+        [
+          -124,
+          -10
+        ],
+        [
+          -100,
+          -10
+        ],
+        [
+          -100,
+          10
+        ],
+        [
+          -124,
+          10
+        ]
+      ]
+    },
+    {
+      "id": "p_base",
+      "label": "P3 첫 기지",
+      "tier": 0,
+      "poly": [
+        [
+          -102,
+          -5
+        ],
+        [
+          -88,
+          -5
+        ],
+        [
+          -88,
+          5
+        ],
+        [
+          -102,
+          5
+        ]
+      ]
+    },
+    {
+      "id": "p_alley",
+      "label": "P4 뒷골목",
+      "tier": 0,
+      "poly": [
+        [
+          -89,
+          -4
+        ],
+        [
+          -60,
+          -4
+        ],
+        [
+          -60,
+          4
+        ],
+        [
+          -89,
+          4
+        ]
+      ]
+    },
+    {
+      "id": "p_lot",
+      "label": "P5 주차장",
+      "tier": 0,
+      "poly": [
+        [
+          -61,
+          -14
+        ],
+        [
+          -4,
+          -14
+        ],
+        [
+          -4,
+          14
+        ],
+        [
+          -61,
+          14
+        ]
+      ]
+    },
     {
       "id": "saferoom_lot",
       "label": "A 세이프룸",
@@ -625,6 +740,34 @@
   "routes": {
     "main": [
       [
+        -130,
+        0
+      ],
+      [
+        -112,
+        0
+      ],
+      [
+        -95,
+        0
+      ],
+      [
+        -75,
+        0
+      ],
+      [
+        -58,
+        8
+      ],
+      [
+        -14,
+        8
+      ],
+      [
+        -3,
+        0
+      ],
+      [
         6,
         0
       ],
@@ -645,8 +788,16 @@
         -30
       ],
       [
-        150,
+        131,
         -54
+      ],
+      [
+        140,
+        -54
+      ],
+      [
+        149,
+        -54.5
       ],
       [
         198,
@@ -760,9 +911,124 @@
   },
   "zones": [
     {
-      "id": "A",
+      "id": "P1",
       "size": "small",
-      "label": "A 세이프룸",
+      "label": "P1 시작 방",
+      "poly": [
+        [
+          -138,
+          -6
+        ],
+        [
+          -122,
+          -6
+        ],
+        [
+          -122,
+          6
+        ],
+        [
+          -138,
+          6
+        ]
+      ]
+    },
+    {
+      "id": "P2",
+      "size": "small",
+      "label": "P2 첫 마당",
+      "poly": [
+        [
+          -124,
+          -10
+        ],
+        [
+          -100,
+          -10
+        ],
+        [
+          -100,
+          10
+        ],
+        [
+          -124,
+          10
+        ]
+      ]
+    },
+    {
+      "id": "P3",
+      "size": "small",
+      "label": "P3 첫 기지",
+      "poly": [
+        [
+          -101,
+          -5
+        ],
+        [
+          -89,
+          -5
+        ],
+        [
+          -89,
+          5
+        ],
+        [
+          -101,
+          5
+        ]
+      ]
+    },
+    {
+      "id": "P4",
+      "size": "small",
+      "label": "P4 뒷골목",
+      "poly": [
+        [
+          -89,
+          -4
+        ],
+        [
+          -60,
+          -4
+        ],
+        [
+          -60,
+          4
+        ],
+        [
+          -89,
+          4
+        ]
+      ]
+    },
+    {
+      "id": "P5",
+      "size": "small",
+      "label": "P5 주차장",
+      "poly": [
+        [
+          -61,
+          -14
+        ],
+        [
+          -4,
+          -14
+        ],
+        [
+          -4,
+          14
+        ],
+        [
+          -61,
+          14
+        ]
+      ]
+    },
+    {
+      "id": "P6",
+      "size": "small",
+      "label": "P6 보급 기지",
       "poly": [
         [
           -4,
@@ -802,6 +1068,29 @@
         [
           16,
           16
+        ]
+      ]
+    },
+    {
+      "id": "C1",
+      "size": "small",
+      "label": "C1 골목 앞 기지",
+      "poly": [
+        [
+          134,
+          -58
+        ],
+        [
+          146,
+          -58
+        ],
+        [
+          146,
+          -50
+        ],
+        [
+          134,
+          -50
         ]
       ]
     },
@@ -972,31 +1261,42 @@
     {
       "type": "start",
       "pos": [
-        6,
+        -130,
         0
       ],
-      "label": "세이프룸"
+      "label": "P1 시작 방"
     },
     {
       "type": "start_room",
       "pos": [
-        6,
+        -130,
         0
       ],
       "label": ""
     },
     {
-      "type": "noise",
+      "type": "base",
       "pos": [
-        167,
-        -55
+        -95,
+        0
       ],
-      "label": "경보 차(골목, 실수로 켜면 웨이브)",
-      "model": "car_wreck",
-      "label_offset": [
-        10,
-        16
-      ]
+      "label": "P3 첫 기지"
+    },
+    {
+      "type": "base",
+      "pos": [
+        6,
+        0
+      ],
+      "label": "P6 보급 기지"
+    },
+    {
+      "type": "base",
+      "pos": [
+        140,
+        -54
+      ],
+      "label": "C1 골목 앞 기지"
     },
     {
       "type": "blocked",
@@ -1702,6 +2002,33 @@
       ],
       "yaw": 0,
       "solid": true
+    },
+    {
+      "id": "car_wreck",
+      "pos": [
+        -46,
+        -8
+      ],
+      "yaw": 10,
+      "solid": true
+    },
+    {
+      "id": "car_wreck",
+      "pos": [
+        -28,
+        -9
+      ],
+      "yaw": -8,
+      "solid": true
+    },
+    {
+      "id": "dumpster",
+      "pos": [
+        -82,
+        -2.6
+      ],
+      "yaw": 0,
+      "solid": true
     }
   ],
   "lamps": [
@@ -1783,8 +2110,8 @@
     },
     {
       "pos": [
-        146,
-        -50
+        149,
+        -47
       ],
       "color": "ffe9c2",
       "energy": 3.0,
@@ -1876,6 +2203,28 @@
       "energy": 2.2,
       "range": 7,
       "post": false
-    }
+    },
+    {
+      "pos": [
+        -112,
+        0
+      ],
+      "color": "ffe6b8",
+      "energy": 2.6,
+      "range": 8,
+      "post": false
+    },
+    [
+      -76,
+      -3
+    ],
+    [
+      -40,
+      12
+    ],
+    [
+      -18,
+      12
+    ]
   ]
 }

@@ -66,6 +66,7 @@ public partial class LargeStageCheck : Node
             await Frames(2);
         }
         await CheckZoneStart();
+        await CheckSharedSupplies();
     }
 
     /// <summary>A level test run started at Stage 1's D (--zone=D): the player, the open safe room and the running director.</summary>
@@ -90,6 +91,46 @@ public partial class LargeStageCheck : Node
         await Frames(3);
         Check(none.StartedZone == "" && none.Player.GlobalPosition.DistanceTo(none.Map.PlayerStart) < 1 && none.Objective == Objective.LeaveSafeRoom,
             "an unknown zone falls back to the safe-room start");
+        _stage.Free();
+        _stage = null!;
+        await Frames(2);
+    }
+
+    /// <summary>
+    /// Shared tables and per-person supplies (C-33, M-35) in the tutorial Stage 1 for a party of three: a medkit and a molotov
+    /// each, the same gun refills from its table, another gun swaps in and the table keeps its gun.
+    /// </summary>
+    private async Task CheckSharedSupplies()
+    {
+        var map = LayoutMap.ForStage(1);
+        _stage = new Stage { CharacterOverride = "goose", ThemeOverride = "zombie", ModeOverride = GameMode.Scenario, MapOverride = map, DirectorEnabled = false, SquadOverride = 0, PartyOverride = 3 };
+        AddChild(_stage);
+        await Frames(3);
+        var player = _stage.Player;
+        player.ManualControl = true;
+        player.Invulnerable = true;
+        int Near(System.Func<Interactable, bool> what, Vector2 at, float r) =>
+            _stage.Interactables.Count(i => i.Enabled && what(i) && new Vector2(i.GlobalPosition.X, i.GlobalPosition.Z).DistanceTo(at) < r);
+        Check(_stage.HumanCount == 3 && Near(i => i.Pickup == PickupKind.Medkit, new Vector2(140, -52), 3) == 3
+              && Near(i => i is WeaponPickup { Throwable: not null }, new Vector2(4, 1.6f), 3) == 3,
+            "three people: base C1 lays out three medkits, base P6 three molotovs");
+        var mp5 = _stage.Interactables.OfType<WeaponPickup>().Single(w => w.Infinite && w.Weapon!.Id == "mp5");
+        mp5.Use(player);
+        await Frames(2);
+        var gun = player.Loadout.Primary!;
+        int full = gun.Reserve;
+        gun.AddReserve(-full / 2);
+        mp5.Use(player);
+        await Frames(2);
+        Check(gun.Def.Id == "mp5" && player.Loadout.Primary == gun && gun.Reserve == gun.Def.ReserveMax && gun.Mag == gun.Def.MagSize && IsInstanceValid(mp5) && mp5.Enabled,
+            $"the MP5 table: taking it again fills the same gun to the top ({gun.Reserve}/{gun.Def.ReserveMax}, was {full - full / 2}), nothing dropped, the table keeps its gun");
+        int dropsBefore = _stage.Interactables.OfType<WeaponPickup>().Count(w => !w.Infinite && w.Weapon?.Id == ArmoryCatalog.StartingWeapon);
+        var pistol = _stage.Interactables.OfType<WeaponPickup>().Single(w => w.Infinite && w.Weapon!.Id == "glock17");
+        pistol.Use(player);
+        await Frames(2);
+        int dropsAfter = _stage.Interactables.OfType<WeaponPickup>().Count(w => !w.Infinite && w.Weapon?.Id == ArmoryCatalog.StartingWeapon);
+        Check(player.Loadout.Secondary.Def.Id == "glock17" && dropsAfter == dropsBefore + 1 && IsInstanceValid(pistol) && pistol.Enabled,
+            "the pistol table swaps the pistol in, the frying pan drops on the floor, the table keeps its pistol");
         _stage.Free();
         _stage = null!;
         await Frames(2);
@@ -132,9 +173,11 @@ public partial class LargeStageCheck : Node
             if (layout.ZoneAt(new Vector2(path[i].X, path[i].Z)) is { Branch: false } z && (zones.Count == 0 || zones[^1] != z)) zones.Add(z);
         }
         Measure($"{name}: exit route walked {walked:0} m (pure walking {walked / player.Definition.MoveSpeed / 60:0.0} min), zones {string.Join("-", zones.Select(z => z.Id))}");
-        Check(walked is > 500 and < 800, $"{name}: the route is at the Stage 3 scale ({walked:0} m, L-30 ~550-650 m on the plan)");
+        // Stage 1 is the base campaign's tutorial (L-34): a short prologue of small zones and bases runs before the street.
+        bool tutorial = n == 1;
+        Check(walked is > 500 && walked < (tutorial ? 950 : 800), $"{name}: the route is at the Stage 3 scale ({walked:0} m, L-30 ~550-650 m on the plan{(tutorial ? ", plus the tutorial prologue" : "")})");
         int large = layout.Zones.Count(z => z.Size == "large"), small = layout.Zones.Count(z => z.Size == "small" && !z.Branch);
-        Check(large is >= 3 and <= 4 && small is >= 4 and <= 6, $"{name}: {large} large and {small} small zones on the route (L-31: 3-4 and 4-6)");
+        Check(large is >= 3 and <= 4 && small >= 4 && small <= (tutorial ? 12 : 6), $"{name}: {large} large and {small} small zones on the route (L-31: 3-4 and 4-6{(tutorial ? ", tutorial prologue and bases up to 12" : "")})");
         var pairs = zones.Zip(zones.Skip(1)).Where(p => p.First.Size == "large" && p.Second.Size == "large").Select(p => $"{p.First.Id}-{p.Second.Id}").ToList();
         Check(pairs.Count == 0, $"{name}: the walked route never goes from a large zone straight into another (L-31) " + string.Join(", ", pairs));
         if (map.Shutter is { } shut) shut.SetOpen(false, 0);
@@ -176,11 +219,18 @@ public partial class LargeStageCheck : Node
         Check(_stage.Director.EncounterErrors.Count == 0, $"{name}: every wave entry and named monster stands on open floor " + string.Join("; ", _stage.Director.EncounterErrors));
         if (n == 1)
         {
-            // Stage 1 guide plan (L-33): the alley car and the yard truck are two separate alarms, the first stays AlarmDevice.
+            // The tutorial (L-34) teaches alarms in F only: the yard truck stays, the alley car went.
             var alarms = map.AlarmDevices;
-            Check(alarms.Count == 2 && alarms.All(a => _stage.AlarmCars.Contains(a)) && map.AlarmDevice == alarms[0]
-                  && alarms[0].GlobalPosition.X < 200 && alarms[1].GlobalPosition.X > 450,
-                $"{name}: the alley car and the yard truck are both alarms ({string.Join(", ", alarms.Select(a => a.GlobalPosition))})");
+            Check(alarms.Count == 1 && _stage.AlarmCars.Contains(alarms[0]) && map.AlarmDevice == alarms[0] && alarms[0].GlobalPosition.X > 450,
+                $"{name}: the yard truck is the stage's one alarm ({string.Join(", ", alarms.Select(a => a.GlobalPosition))})");
+            // Tutorial supplies (L-34, C-33, M-35): no start kit, one pistol in the first yard, shared tables in the bases.
+            var shared = _stage.Interactables.OfType<WeaponPickup>().Where(w => w.Infinite).Select(w => w.Weapon!.Id).OrderBy(id => id).ToList();
+            Check(shared.SequenceEqual(new[] { "glock17", "m4", "mp5" }) && map.BaseEntries.Count == 4 && map.BaseExits.Count == 3
+                  && map.BaseEntries.All(e => e.HoldSeconds == LayoutMap.BaseDoorHold && e.CancelOnHit),
+                $"{name}: shared tables {string.Join(", ", shared)}; {map.BaseEntries.Count} hold doors (three bases and the safehouse)");
+            var yard = _stage.Interactables.OfType<WeaponPickup>().Where(w => !w.Infinite && w.GlobalPosition.X < -100).ToList();
+            Check(yard.Count == 1 && yard[0].Weapon!.Id == "glock17" && player.Loadout.Primary == null && player.Loadout.Secondary.Def.Id == ArmoryCatalog.StartingWeapon,
+                $"{name}: a run starts with the frying pan only, one pistol lies in the first yard");
             // B wayfinding landmark (L-33): the warehouse sign north of the alley exit; its legs block, the road in front stays open.
             var sign = map.KitProps.FirstOrDefault(p => p.GetNodeOrNull("warehouse_sign") != null);
             var signAt = sign?.GlobalPosition ?? Vector3.Zero;
@@ -214,7 +264,10 @@ public partial class LargeStageCheck : Node
             await Frames(3);
         }
         var pickups = _stage.Interactables.Where(i => i is WeaponPickup || i.Pickup is PickupKind.Medkit or PickupKind.Ammo).ToList();
-        var off = pickups.Where(i => Mathf.Abs(i.GlobalPosition.Y - tiers.GroundY(i.GlobalPosition)) > .3f || _stage.Flow.IsBlocked(i.GlobalPosition))
+        // A shared gun lies on its base's table (C-33): on the table top, reached from the floor in front of it.
+        static bool OnTable(Interactable i) => i is WeaponPickup { Infinite: true };
+        Vector3 Stand(Interactable i) => OnTable(i) ? i.GlobalPosition + new Vector3(0, -StageMap.TableTop, 1.6f) : i.GlobalPosition;
+        var off = pickups.Where(i => Mathf.Abs(i.GlobalPosition.Y - tiers.GroundY(i.GlobalPosition) - (OnTable(i) ? StageMap.TableTop : 0)) > .3f || _stage.Flow.IsBlocked(Stand(i)))
             .Select(i => $"{i.Name} at {i.GlobalPosition}").ToList();
         Check(pickups.Count > 10 && off.Count == 0, $"{name}: {pickups.Count} pickups lie on their floors, off walls " + string.Join("; ", off));
         if (map.Shutter is { } open) open.SetOpen(true, 0);
@@ -227,7 +280,7 @@ public partial class LargeStageCheck : Node
         var cut = new List<string>();
         foreach (var pickup in pickups)
         {
-            reach.Update(pickup.GlobalPosition);
+            reach.Update(Stand(pickup));
             if (!reach.Reachable(map.PlayerStart)) cut.Add($"{pickup.Name} {pickup.GlobalPosition}");
         }
         Check(cut.Count == 0, $"{name}: every pickup can be walked to from the start " + string.Join(", ", cut));
@@ -278,6 +331,42 @@ public partial class LargeStageCheck : Node
         var panel = map.ShutterPanel!;
         if (n == 1)
         {
+            // The bases on the way (L-35): hold E at the entry, a hit starts it over; a plain E opens the exit.
+            for (int b = 0; b < map.BaseExits.Count; b++)
+            {
+                var entry = map.BaseEntries[b];
+                var (sb, stuckB, _) = await Walk(Toward(entry.GlobalPosition), entry.GlobalPosition, .6f, 3);
+                Check(!stuckB, $"{name}: a survivor walks up to base {b + 1}'s door ({sb:0} s, at {player.GlobalPosition})");
+                if (b == 0)
+                {
+                    player.ManualControl = false;
+                    player.Invulnerable = false;
+                    Input.ActionPress(GameInput.Interact);
+                    await Frames(60);
+                    float half = _stage.HoldProgress;
+                    player.TakeDamage(1, Vector3.Right);
+                    await Frames(2);
+                    bool broken = _stage.HoldProgress == 0 && _stage.HoldCancelled;
+                    await Frames(30);
+                    bool stays = _stage.HoldProgress == 0;
+                    Input.ActionRelease(GameInput.Interact);
+                    await Frames(2);
+                    Input.ActionPress(GameInput.Interact);
+                    await Frames((int)(60 * LayoutMap.BaseDoorHold) + 20);
+                    Input.ActionRelease(GameInput.Interact);
+                    player.ManualControl = true;
+                    player.Invulnerable = true;
+                    Check(half is > .25f and < .5f && broken && stays && !entry.Enabled,
+                        $"{name}: the first base door fills over 3 s ({half:0.00} after 1 s), a hit breaks it until E is let go, a full hold opens it");
+                }
+                else entry.Use(player);
+                await Frames(3);
+                var leave = map.BaseExits[b];
+                var (sx, stuckX, _) = await Walk(Toward(leave.GlobalPosition), leave.GlobalPosition, .5f, 2);
+                Check(!stuckX, $"{name}: inside base {b + 1}, a survivor reaches the exit door ({sx:0} s)");
+                leave.Use(player);
+                await Frames(3);
+            }
             // The barrel lesson (pacing-pressure-plan.md 4.4): the alley mouth is shut until its barrel goes off.
             var alleyGate = DestructionPlacements.Load("stage1_large").Single(p => p.Id == "alley_gate");
             var gateWall = _stage.Breakables.Single(b => b.HasMeta("destruction_placement") && b.GetMeta("destruction_placement").AsString() == alleyGate.Id);
@@ -306,6 +395,12 @@ public partial class LargeStageCheck : Node
         Check(map.Shutter!.IsOpen && _stage.Objective == Objective.ReachSafehouse, $"{name}: the way on opens when the crescendo is held out");
         _stage.Director.Stop();
         await ClearEnemies();
+        // The safehouse door opens with a held E from outside (L-35); the checks skip the waiting.
+        var safehouseEntry = map.BaseEntries[^1];
+        var (sh, stuckH, _) = await Walk(Toward(safehouseEntry.GlobalPosition), safehouseEntry.GlobalPosition, .6f, 8);
+        Check(!stuckH && map.SafehouseDoor is { IsOpen: false }, $"{name}: a survivor reaches the shut safehouse door ({sh / 60:0.0} min)");
+        safehouseEntry.Use(player);
+        await Frames(3);
         var (s2, stuck2, uses2) = await Walk(exit, map.RouteGoal, 2f, 8);
         Measure($"{name}: mission device → safehouse {s2 / 60:0.0} min simulated, {uses2}");
         Check(!stuck2 && player.GlobalPosition.DistanceTo(map.RouteGoal) <= 2f, $"{name}: a survivor walks on to the safehouse ({player.GlobalPosition})");

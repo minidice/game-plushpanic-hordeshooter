@@ -56,6 +56,15 @@ public sealed partial class LayoutMap : StageMap
     private Door? _gate, _safehouseDoor, _startDoor;
     private Interactable? _pump, _safehouseSwitch, _startSwitch, _exit;
     private readonly List<AlarmCar> _alarms = new();
+    /// <summary>Doors of the small bases along the way (entry and exit of each, decisions.md L-35).</summary>
+    private readonly List<Door> _baseDoors = new();
+    /// <summary>The hold-to-open spots outside each base's entry door, safehouse last (checks walk through them).</summary>
+    public List<Interactable> BaseEntries { get; } = new();
+    /// <summary>The plain-E spots inside each base by its exit door (checks walk through them).</summary>
+    public List<Interactable> BaseExits { get; } = new();
+    /// <summary>Seconds to hold E at a base's or the safehouse's entry door (L-35).</summary>
+    public const float BaseDoorHold = 3f;
+    public static readonly Vector2 BaseSize = new(12, 8);
     private Rect2 _safehouseRoom;
     /// <summary>The key of this map's rows in destruction_placements.json, or null.</summary>
     private readonly string? _destructionKey;
@@ -86,7 +95,7 @@ public sealed partial class LayoutMap : StageMap
     public override int NextStage => Mode == GameMode.Scenario ? Layout.NextStage : 0;
     public override Objective ScenarioStart => _startDoor != null ? Objective.LeaveSafeRoom : _gate != null ? Objective.ReachShutter : Objective.ReachSafehouse;
     public override EncounterSet? Encounters => _encountersPath == null ? null : SpawnDatabase.Current.Load(_encountersPath);
-    public override IReadOnlyList<Door> Doors => new[] { _startDoor, _gate, _safehouseDoor }.OfType<Door>().ToArray();
+    public override IReadOnlyList<Door> Doors => new[] { _startDoor, _gate, _safehouseDoor }.OfType<Door>().Concat(_baseDoors).ToArray();
     public override Door? StartDoor => _startDoor;
     public override Interactable? StartDoorSwitch => _startSwitch;
     public override Door? Shutter => _gate;
@@ -203,6 +212,7 @@ public sealed partial class LayoutMap : StageMap
             else BuildBridgeMission(blocked.Pos, mission.Pos);
         }
         if (Layout.FindMarker("safe_zone") is { } zone) BuildHut(zone.Pos);
+        foreach (var marker in Layout.Markers.Where(m => m.Type == "base")) BuildBase(marker.Pos);
         if (Layout.FindMarker("safehouse") is { } safehouse) BuildSafehouse(safehouse.Pos);
         BuildLandmarks();
         BuildDataProps();
@@ -273,8 +283,10 @@ public sealed partial class LayoutMap : StageMap
         Landmark("safehouse_b", at);
         _safehouseRoom = new Rect2(x0 + WallThick, z0 + WallThick, SafehouseSize.X - 2 * WallThick, SafehouseSize.Y - 2 * WallThick);
         var leaf = PropLibrary.Instance("safehouse_door");
-        _safehouseDoor = Door.Create(_stage, new Vector3(x0 + WallThick / 2, y, center.Y), new Vector3(.3f, 2.4f, door), new Color("4f6b4a"), new Vector3(0, 0, 2.5f), open: true, visual: leaf);
+        // Shut until someone holds E outside for a few seconds (L-35); the button inside closes it again.
+        _safehouseDoor = Door.Create(_stage, new Vector3(x0 + WallThick / 2, y, center.Y), new Vector3(.3f, 2.4f, door), new Color("4f6b4a"), new Vector3(0, 0, 2.5f), visual: leaf);
         if (leaf != null) PropOcclusion.Attach(_stage, leaf);
+        HoldDoor(_safehouseDoor, new Vector3(x0 - 1.1f, y, center.Y));
         _safehouseSwitch = Use(at + SafehouseSwitchLocal, "ui_use_close_safehouse", () => _stage.TryCloseSafehouse());
         _safehouseSwitch.Enabled = false;
         Lamp(new Vector3(center.X, y + 2.85f, center.Y), "b5e6c3", 3.6f, 12, false);
@@ -308,6 +320,47 @@ public sealed partial class LayoutMap : StageMap
         _startDoor = Door.Create(_stage, new Vector3(x1 - WallThick / 2, y, center.Y), new Vector3(.3f, 2.4f, door), new Color("4f6b4a"), new Vector3(0, 0, 2.5f));
         _startSwitch = WallPanel(new Vector3(x1 - 2.2f, y, z0 + WallThick), "ui_use_open_door", _stage.LeaveSafeRoom);
         Lamp(new Vector3(center.X, y + 2.6f, center.Y), "ffd6a0", 3.4f, 9, false);
+    }
+
+    /// <summary>
+    /// A small base along the way (L-34, L-35): walls, a door on the west side held open from outside, a door on the east
+    /// side opened from inside with a plain E, a low camera-side wall and a warm light. What lies inside is supply data.
+    /// </summary>
+    private void BuildBase(Vector2 center)
+    {
+        float y = FloorAt(center).Y;
+        float x0 = center.X - BaseSize.X / 2, x1 = center.X + BaseSize.X / 2, z0 = center.Y - BaseSize.Y / 2, z1 = center.Y + BaseSize.Y / 2;
+        const float door = 2.6f;
+        RoomWall(x0, x1, z0, z0 + WallThick, y);
+        foreach (float x in new[] { x0, x1 - WallThick })
+        {
+            RoomWall(x, x + WallThick, z0, center.Y - door / 2, y);
+            RoomWall(x, x + WallThick, center.Y + door / 2, z1, y);
+        }
+        var low = new Vector3((x0 + x1) / 2, y + .55f, z1 - WallThick / 2);
+        Solid(low, new Vector3(x1 - x0, 1.1f, WallThick), "", drawCargo: false);
+        Mat.Box(_stage, low, new Vector3(x1 - x0, 1.1f, WallThick), Mat.Solid("6b7a68", .9f));
+        var entry = Door.Create(_stage, new Vector3(x0 + WallThick / 2, y, center.Y), new Vector3(.3f, 2.4f, door), new Color("4f6b4a"), new Vector3(0, 0, 2.5f));
+        var exit = Door.Create(_stage, new Vector3(x1 - WallThick / 2, y, center.Y), new Vector3(.3f, 2.4f, door), new Color("4f6b4a"), new Vector3(0, 0, 2.5f));
+        _baseDoors.Add(entry);
+        _baseDoors.Add(exit);
+        HoldDoor(entry, new Vector3(x0 - 1.1f, y, center.Y));
+        Interactable? leave = null;
+        leave = Use(new Vector3(x1 - 1.2f, y, center.Y), "ui_use_open_door", () => { exit.SetOpen(true); leave!.Enabled = false; });
+        BaseExits.Add(leave);
+        Lamp(new Vector3(center.X, y + 2.6f, center.Y), "ffd6a0", 3.4f, 9, false);
+        Lamp(new Vector3(x0 - 1.5f, y + 2.8f, center.Y), "ffc46b", 2.2f, 7, false);
+    }
+
+    /// <summary>The spot outside an entry door: hold E for <see cref="BaseDoorHold"/> s, a hit starts it over (L-35).</summary>
+    private void HoldDoor(Door door, Vector3 outside)
+    {
+        Interactable? hold = null;
+        hold = Use(outside, "ui_use_open_base", () => { door.SetOpen(true); hold!.Enabled = false; });
+        hold.HoldSeconds = BaseDoorHold;
+        hold.CancelOnHit = true;
+        hold.Radius = 1.8f;
+        BaseEntries.Add(hold);
     }
 
     /// <summary>

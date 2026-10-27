@@ -13,6 +13,7 @@ render_mode unshaded, cull_disabled, depth_draw_never, shadows_disabled, fog_dis
 uniform vec4 tint : source_color = vec4(1.0);
 uniform vec2 half_size = vec2(1.0);
 uniform bool circle = true;
+uniform float corner = 0.0;
 uniform float line_width = 0.045;
 uniform float fill_alpha = 0.04;
 uniform float opacity = 1.0;
@@ -21,8 +22,8 @@ varying vec2 position_on_floor;
 void vertex() { position_on_floor = VERTEX.xz; }
 void fragment() {
     vec2 p = position_on_floor;
-    vec2 q = abs(p) - half_size;
-    float d = circle ? length(p) - half_size.x : length(max(q, vec2(0.0))) + min(max(q.x, q.y), 0.0);
+    vec2 q = abs(p) - half_size + corner;
+    float d = circle ? length(p) - half_size.x : length(max(q, vec2(0.0))) + min(max(q.x, q.y), 0.0) - corner;
     float aa = max(fwidth(d), 0.003);
     float inside = 1.0 - smoothstep(-aa, aa, d);
     // The bright edge sits inside the actual boundary. The outside halo never becomes a filled danger area.
@@ -62,6 +63,16 @@ void fragment() {
         marker._surface.SetShaderParameter("circle", false);
         marker.SetSize(new Vector2(width, Mathf.Max(.01f, from.DistanceTo(to))));
         if (from.DistanceSquaredTo(to) > .0001f) marker.LookAt(to, Vector3.Up);
+        return marker;
+    }
+
+    /// <summary>A square with rounded corners (a shared, never-empty pickup: decisions.md C-33).</summary>
+    public static GroundMarker RoundedSquare(Node parent, Vector3 at, float side, float corner, Color tint, float fill = .04f, float opacity = 1, float width = .045f)
+    {
+        var marker = Create(parent, at, tint, fill, opacity, width);
+        marker._surface.SetShaderParameter("circle", false);
+        marker._surface.SetShaderParameter("corner", Mathf.Clamp(corner, 0, side * .5f));
+        marker.SetSize(Vector2.One * Mathf.Max(.01f, side));
         return marker;
     }
 

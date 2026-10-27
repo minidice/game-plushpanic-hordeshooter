@@ -1,38 +1,62 @@
 {
-  "description": "Large Stage 1 supply points (decisions.md L-30, the 20-minute budget for a 4-player team, [임시]). Main points on the route (alley end, the guard post, the freight yard's far end); optional ones on the two reward branches (pharmacy, container top); the event reward by the shutter panel. Ammo piles only in main points, none within 10 m of the panel (L-12). The game lays each item on the floor of the tier it stands on.",
+  "description": "Large Stage 1 supply points (decisions.md L-30, the 20-minute budget for a 4-player team, [임시]). Main points on the route (alley end, the guard post, the freight yard's far end); optional ones on the two reward branches (pharmacy, container top); the event reward by the shutter panel. Ammo piles only in main points, none within 10 m of the panel (L-12). The game lays each item on the floor of the tier it stands on. Tutorial (L-34): no start kit (melee only); a single pistol in the first yard; shared tables (infinite) in bases P3 (pistol), P6 (MP5) and E (M4); per-person medkits in bases and throwables right before each wave zone (M-35).",
   "points": [
     {
-      "id": "saferoom_kit",
+      "id": "p_yard_pistol",
+      "kind": "main",
+      "area": "p_yard",
+      "items": [
+        {
+          "item": "weapon",
+          "id": "glock17",
+          "at": [
+            -112,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "p_base",
+      "kind": "main",
+      "area": "p_base",
+      "items": [
+        {
+          "item": "weapon",
+          "id": "glock17",
+          "at": [
+            -95,
+            -2
+          ],
+          "infinite": true
+        },
+        {
+          "item": "ammo",
+          "at": [
+            -92,
+            1.8
+          ]
+        }
+      ]
+    },
+    {
+      "id": "p6_base",
       "kind": "start",
       "area": "saferoom",
       "items": [
         {
+          "item": "weapon",
+          "id": "mp5",
+          "at": [
+            6,
+            -2
+          ],
+          "infinite": true
+        },
+        {
           "item": "ammo",
           "at": [
-            3,
-            -2.5
-          ]
-        },
-        {
-          "item": "medkit",
-          "at": [
-            4.5,
-            -2.5
-          ]
-        },
-        {
-          "item": "weapon",
-          "id": "m4",
-          "at": [
-            2.5,
-            1.5
-          ]
-        },
-        {
-          "item": "weapon",
-          "id": "r870",
-          "at": [
-            4,
+            9.5,
             1.8
           ]
         },
@@ -40,8 +64,31 @@
           "item": "throwable",
           "id": "molotov",
           "at": [
-            6,
-            2
+            4,
+            1.6
+          ],
+          "per_person": true
+        }
+      ]
+    },
+    {
+      "id": "c1_base",
+      "kind": "main",
+      "area": "street",
+      "items": [
+        {
+          "item": "medkit",
+          "at": [
+            140,
+            -52
+          ],
+          "per_person": true
+        },
+        {
+          "item": "ammo",
+          "at": [
+            143.5,
+            -55.5
           ]
         }
       ]
@@ -81,19 +128,13 @@
           ]
         },
         {
-          "item": "medkit",
-          "at": [
-            186.5,
-            -69
-          ]
-        },
-        {
           "item": "throwable",
           "id": "frag",
           "at": [
             188,
             -68.5
-          ]
+          ],
+          "per_person": true
         }
       ]
     },
@@ -141,18 +182,37 @@
       "area": "post",
       "items": [
         {
+          "item": "weapon",
+          "id": "m4",
+          "at": [
+            359,
+            -91.5
+          ],
+          "infinite": true
+        },
+        {
           "item": "ammo",
           "at": [
-            358,
-            -92
+            361.5,
+            -89.5
           ]
         },
         {
           "item": "medkit",
           "at": [
-            360,
-            -92.5
-          ]
+            357,
+            -89.5
+          ],
+          "per_person": true
+        },
+        {
+          "item": "throwable",
+          "id": "frag",
+          "at": [
+            359,
+            -87.5
+          ],
+          "per_person": true
         }
       ]
     },
@@ -204,6 +264,14 @@
             617,
             -131
           ]
+        },
+        {
+          "item": "medkit",
+          "at": [
+            617,
+            -127.5
+          ],
+          "per_person": true
         }
       ]
     },

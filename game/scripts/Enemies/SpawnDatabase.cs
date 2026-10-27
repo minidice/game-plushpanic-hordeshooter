@@ -74,6 +74,8 @@ public sealed class EncounterGroup
     public Vector3 At { get; init; }
     /// <summary>"mission": not placed when the area fills but when the stage's mission ends, on its way back (decisions.md L-27).</summary>
     public string After { get; init; } = "";
+    /// <summary>Placed as written whatever the party (a tutorial's two first zombies, decisions.md L-34).</summary>
+    public bool Fixed { get; init; }
 }
 
 /// <summary>
@@ -307,7 +309,8 @@ public sealed class SpawnDatabase
                 int count = j.Int("count", 0);
                 if (count <= 0) { _errors.Add($"{where}: count must be positive"); continue; }
                 if (r[1] <= r[0] || r[3] <= r[2]) { _errors.Add($"{where}: rect is [x0, x1, z0, z1] with x1 > x0 and z1 > z0"); continue; }
-                set.Groups.Add(new EncounterGroup { Area = area, Reaction = reaction, Count = count, Rect = new Rect2(r[0], r[2], r[1] - r[0], r[3] - r[2]), After = after });
+                bool fixedCount = g.TryGetProperty("fixed", out var fixedValue) && fixedValue.ValueKind == System.Text.Json.JsonValueKind.True;
+                set.Groups.Add(new EncounterGroup { Area = area, Reaction = reaction, Count = count, Rect = new Rect2(r[0], r[2], r[1] - r[0], r[3] - r[2]), After = after, Fixed = fixedCount });
             }
 
             i = 0;

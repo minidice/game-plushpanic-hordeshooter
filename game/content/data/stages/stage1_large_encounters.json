@@ -1,9 +1,34 @@
 {
-  "description": "Large Stage 1 encounters (decisions.md L-30, doc/large-stages.md). Areas run along +X (the zones). Entering area N fills area N+1. Hidden entries stand inside every region the route reaches, on its own tier, so raised spaces get arrivals too. safe_zones: the middle safe zone (L-24). raids: timed mobs and specials only in the large travel zones. Small watcher packs (3) stand right on the main route in every large zone, so a run meets a few it cannot walk around (wanderers, pacing-pressure-plan.md 4.2). Groups with after = mission are placed when the shutter opens, on the way back from the panel (L-27). All counts and radii are [임시] starting values.",
+  "description": "Large Stage 1 encounters (decisions.md L-30, doc/large-stages.md). Areas run along +X (the zones). Entering area N fills area N+1. Hidden entries stand inside every region the route reaches, on its own tier, so raised spaces get arrivals too. safe_zones: the middle safe zone (L-24). raids: timed mobs and specials only in the large travel zones. Small watcher packs (3) stand right on the main route in every large zone, so a run meets a few it cannot walk around (wanderers, pacing-pressure-plan.md 4.2). Groups with after = mission are placed when the shutter opens, on the way back from the panel (L-27). All counts and radii are [임시] starting values. Tutorial (L-34): prologue areas p_* before the street, no waves there; the first yard has exactly two zombies (fixed: not scaled for the party); bases P3, P6 and C1 are safe zones.",
   "areas": [
     {
+      "id": "p_start",
+      "x0": -142,
+      "x1": -124
+    },
+    {
+      "id": "p_yard",
+      "x0": -124,
+      "x1": -100
+    },
+    {
+      "id": "p_base",
+      "x0": -100,
+      "x1": -89
+    },
+    {
+      "id": "p_alley",
+      "x0": -89,
+      "x1": -60
+    },
+    {
+      "id": "p_lot",
+      "x0": -60,
+      "x1": -4
+    },
+    {
       "id": "saferoom",
-      "x0": -10,
+      "x0": -4,
       "x1": 16
     },
     {
@@ -43,6 +68,52 @@
     }
   ],
   "groups": [
+    {
+      "area": "p_yard",
+      "reaction": "dormant",
+      "count": 1,
+      "rect": [
+        -117,
+        -114,
+        -6,
+        -3
+      ],
+      "fixed": true
+    },
+    {
+      "area": "p_yard",
+      "reaction": "watcher",
+      "count": 1,
+      "rect": [
+        -108,
+        -105,
+        3,
+        6
+      ],
+      "fixed": true
+    },
+    {
+      "area": "p_alley",
+      "reaction": "watcher",
+      "count": 3,
+      "rect": [
+        -80,
+        -68,
+        -3,
+        3
+      ]
+    },
+    {
+      "area": "p_lot",
+      "reaction": "dormant",
+      "count": 6,
+      "rect": [
+        -48,
+        -32,
+        -12,
+        -4
+      ]
+    },
     {
       "area": "street",
       "reaction": "dormant",
@@ -92,8 +163,8 @@
       "reaction": "watcher",
       "count": 3,
       "rect": [
-        120,
-        146,
+        118,
+        132,
         -56,
         -30
       ]
@@ -797,6 +868,33 @@
       "inside_m": 8,
       "no_place_m": 15,
       "no_wave_m": 25
+    },
+    {
+      "at": [
+        -95,
+        0
+      ],
+      "inside_m": 5,
+      "no_place_m": 8,
+      "no_wave_m": 14
+    },
+    {
+      "at": [
+        6,
+        0
+      ],
+      "inside_m": 5,
+      "no_place_m": 8,
+      "no_wave_m": 14
+    },
+    {
+      "at": [
+        140,
+        -54
+      ],
+      "inside_m": 5,
+      "no_place_m": 8,
+      "no_wave_m": 14
     }
   ],
   "raids": {

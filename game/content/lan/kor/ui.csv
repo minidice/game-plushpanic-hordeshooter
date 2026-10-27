@@ -52,6 +52,7 @@ msg_stage_enemies_inside,안에 적이 남아 있습니다!
 msg_stage_down,쓰러졌습니다...
 # 상호작용 안내 ([E] 옆)
 ui_use_open_door,문 열기
+ui_use_open_base,기지 문 열기
 ui_use_shutter,셔터 열기 (경보 작동!)
 ui_use_close_safehouse,문 닫기 (스테이지 클리어)
 ui_use_ladder_up,사다리 오르기
@@ -61,6 +62,7 @@ ui_use_gondola,곤돌라 출발
 ui_use_ammo,탄약 보충 (2번 무기)
 ui_use_medkit,구급상자 줍기
 fmt_use_pickup_weapon,{0} 줍기  ({1}번)
+fmt_use_pickup_weapon_infinite,{0} ∞ 집기 · 같은 총이면 탄약 채우기  ({1}번)
 fmt_use_pickup_throwable,{0} 줍기  (G)
 # 줍기·보충 메시지
 fmt_pickup_throwable_max,{0}은(는) {1}개까지

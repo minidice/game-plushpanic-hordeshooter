@@ -181,6 +181,8 @@ public partial class SizeDraftCheck : Node
             .Select(i => $"{i.Name} at {i.GlobalPosition} (floor {tiers.GroundY(i.GlobalPosition):0.0}, blocked {_stage.Flow.IsBlocked(i.GlobalPosition)})").ToList();
         Check(off.Count == 0, "every pickup lies on the floor of its tier, off walls " + string.Join("; ", off));
         map.Shutter!.SetOpen(true, 0);
+        // The safehouse door opens with a held E from outside (L-35): open it here, its arrival supply lies inside.
+        map.SafehouseDoor?.SetOpen(true, 0);
         // Toward each point in turn: the gondola only goes one way, so "back to the hatch" is not the same question.
         var reach = _stage.Flow.CopyLayout();
         reach.Riders = true;

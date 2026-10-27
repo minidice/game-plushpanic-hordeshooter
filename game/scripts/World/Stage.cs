@@ -65,6 +65,8 @@ public partial class Stage : Node3D
     public bool? ArrivalOverride { get; set; }
     /// <summary>How long the interact key has been held on a hold-to-use thing (0..1).</summary>
     public float HoldProgress { get; private set; }
+    /// <summary>The last hold was broken by a hit; cleared when the key is let go (so it does not restart under fire by itself).</summary>
+    public bool HoldCancelled { get; private set; }
     private Interactable? _holding;
     /// <summary>Set before adding to the tree to run other rules than the mode's own (the card lab).</summary>
     public ModeRules? RulesOverride { get; set; }
@@ -166,6 +168,12 @@ public partial class Stage : Node3D
             return Role == NetRole.Host && NetLaunch.Lobby is { } lobby ? System.Math.Max(people, lobby.Members.Count) : people;
         }
     }
+    /// <summary>
+    /// People (no AI squadmates) for things a base lays out one each, like its medkits (decisions.md M-35): the party override
+    /// in checks, the room's members in a match (host and clients count the same room), else one.
+    /// </summary>
+    public int HumanCount => PartyOverride is { } forced ? Mathf.Max(1, Mathf.FloorToInt(forced))
+        : Role != NetRole.Offline && NetLaunch.Lobby is { } lobby ? Mathf.Max(1, lobby.Members.Count) : 1;
     /// <summary>The party table's row in effect now (the 4-person row, i.e. the data as written, in test scenes).</summary>
     public PartyScale Party => PartyOverride != null || GetTree().CurrentScene == this ? PartyScaling.For(PartySize) : PartyScale.Baseline;
     private float _commonCarry;
@@ -295,6 +303,8 @@ public partial class Stage : Node3D
         AddChild(Player);
         Players.Add(Player);
         Player.Died += CheckWipe;
+        // A hit cancels a hold-to-use (a base door, L-35): it starts over from nothing.
+        Player.Hurt += () => { if (_holding is { CancelOnHit: true }) { _holding = null; HoldProgress = 0; HoldCancelled = true; } };
         ThemeId = StageTheme.Normalize(ThemeOverride ?? GameSession.SelectedTheme);
         CommonDefinition = CommonRoster.Current.Compose(CommonRoster.Current.CreatePack(DefaultCommonPack(ThemeId), 1)[0]);
 
@@ -926,7 +936,9 @@ public partial class Stage : Node3D
             }
         }
         // Hold-to-use (the stage exit): the key stays down for HoldSeconds; letting go or walking away starts over.
-        if (FocusedInteractable is { HoldSeconds: > 0 } hold && RevivePromptTarget == null && !Player.ManualControl && Input.IsActionPressed(GameInput.Interact))
+        if (!Input.IsActionPressed(GameInput.Interact)) HoldCancelled = false;
+        if (FocusedInteractable is { HoldSeconds: > 0 } hold && RevivePromptTarget == null && !Player.ManualControl && Input.IsActionPressed(GameInput.Interact)
+            && !HoldCancelled)
         {
             if (_holding != hold) HoldProgress = 0;
             _holding = hold;
@@ -1131,6 +1143,7 @@ public partial class Stage : Node3D
             return;
         }
         if (pickup.Weapon is not { } weapon) return;
+        if (pickup.Infinite && TakeShared(pickup, weapon, who, at)) return;
         var (result, dropped) = who.Weapons.Pickup(weapon, pickup.State);
         switch (result)
         {
@@ -1164,6 +1177,42 @@ public partial class Stage : Node3D
             if (Flow.IsBlocked(spot)) spot = who.GlobalPosition;
             WeaponPickup.ForWeapon(this, spot, dropped.Def, dropped);
         }
+    }
+
+    /// <summary>
+    /// A shared table weapon (C-33): the same gun in hand fills its magazine and reserve and nothing is dropped; another
+    /// gun is swapped in as usual (the old one drops by the table). The table's weapon always stays.
+    /// </summary>
+    private bool TakeShared(WeaponPickup pickup, WeaponDefinition weapon, Player who, Vector3 at)
+    {
+        var held = weapon.Slot switch
+        {
+            WeaponSlot.Secondary => who.Loadout.Secondary,
+            WeaponSlot.Special => who.Loadout.Special,
+            _ => who.Loadout.Primary,
+        };
+        if (held != null && held.Def.Id == weapon.Id)
+        {
+            if (!held.FillUp())
+            {
+                if (who.IsLocal) ShowNotice(Loc.Text("msg_pickup_full"), 2);
+                return true;
+            }
+            Effects.FloatingText(at, Loc.Text("msg_pickup_ammo"), new Color("ffd36b"));
+            PickupSound(who);
+            return true;
+        }
+        var (result, dropped) = who.Weapons.Pickup(weapon, null);
+        if (result == PickupResult.Full) return true;
+        Effects.FloatingText(at, weapon.DisplayName, new Color("ffb347"));
+        PickupSound(who);
+        if (dropped != null)
+        {
+            var spot = who.GlobalPosition - who.AimDirection * .9f;
+            if (Flow.IsBlocked(spot)) spot = who.GlobalPosition;
+            WeaponPickup.ForWeapon(this, spot, dropped.Def, dropped);
+        }
+        return true;
     }
 
     private void PickupSound(Player who)

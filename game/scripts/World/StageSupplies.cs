@@ -22,7 +22,11 @@ public enum SupplyKind
 
 public enum SupplyItemKind { Weapon, Throwable, Ammo, Medkit }
 
-public sealed record SupplyItem(SupplyItemKind Kind, string Id, Vector3 At);
+/// <summary>
+/// <see cref="Infinite"/>: a shared weapon on a table (decisions.md C-33). <see cref="PerPerson"/>: laid out once for each
+/// person in the party (no AI squadmates, M-35), side by side from <see cref="At"/> along +X.
+/// </summary>
+public sealed record SupplyItem(SupplyItemKind Kind, string Id, Vector3 At, bool Infinite = false, bool PerPerson = false);
 
 public sealed class SupplyPoint
 {
@@ -151,7 +155,11 @@ public sealed class StageSupplies
             _errors.Add($"{where}: at must be [x, z]");
             return null;
         }
-        return new SupplyItem(kind, id, new Vector3(at[0].GetSingle(), Mathf.Max(0, j.Float("height", 0)), at[1].GetSingle()));
+        bool infinite = it.TryGetProperty("infinite", out var inf) && inf.ValueKind == JsonValueKind.True;
+        bool perPerson = it.TryGetProperty("per_person", out var pp) && pp.ValueKind == JsonValueKind.True;
+        if (infinite && kind != SupplyItemKind.Weapon) { _errors.Add($"{where}: only weapons can be infinite (ammo piles always are)"); return null; }
+        if (infinite && perPerson) { _errors.Add($"{where}: an infinite weapon is already for everyone"); return null; }
+        return new SupplyItem(kind, id, new Vector3(at[0].GetSingle(), Mathf.Max(0, j.Float("height", 0)), at[1].GetSingle()), infinite, perPerson);
     }
 
     /// <summary>Points stay grouped, and no two items share a spot (scenario-level-design.md 5.4).</summary>

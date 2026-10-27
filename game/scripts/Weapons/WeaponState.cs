@@ -212,6 +212,17 @@ public sealed class WeaponState
         return Reserve - before;
     }
 
+    /// <summary>A shared table's gun (C-33): a full magazine and a full reserve. False when it already was.</summary>
+    public bool FillUp()
+    {
+        int reserve = Def.InfiniteReserve ? Reserve : Def.ReserveMax;
+        if (Mag >= Def.MagSize && Reserve >= reserve) return false;
+        CancelReload();
+        Mag = Def.MagSize;
+        Reserve = reserve;
+        return true;
+    }
+
     /// <summary>Ammo pile. Heavy weapons are not refillable.</summary>
     public int Refill() => Def.Refillable ? AddReserve(Def.ReserveMax) : 0;
 

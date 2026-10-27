@@ -117,6 +117,9 @@ def check(paths, catalog):
                     rep.warn(where, "W1", f"새 경험 {len(z['new'])}개가 한꺼번에 나옴(큰 구역 {MAX_NEW_PER_LARGE}개 이하 권장 — 하나씩 소개)")
                 if not z.get("wayfinding"):
                     rep.warn(where, "W5", "큰 구역에 길 안내 수단이 없음")
+            if g.get("tutorial") and len(z.get("new", [])) != 1 and not z.get("branch"):
+                # A tutorial stage teaches one thing per zone (decisions.md L-34).
+                rep.warn(where, "W9", f"튜토리얼 스테이지: 새 경험이 {len(z.get('new', []))}개(구역마다 정확히 1개)")
             if not z.get("new") and not z.get("reuse") and not z.get("mix") and z["role"] not in ("safe", "transit"):
                 rep.warn(where, "W7", "목적 없는 구역(새 · 다시 · 섞기가 모두 비어 있음)")
             for e in z.get("new", []):

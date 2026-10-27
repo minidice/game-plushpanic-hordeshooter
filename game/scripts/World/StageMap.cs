@@ -452,20 +452,45 @@ public abstract partial class StageMap
         };
     }
 
-    /// <summary>Weapons, throwables, ammo and medkits from supply-point data (decisions.md L-12).</summary>
+    /// <summary>Height of a base's weapon table top (the workshop bench, C-33).</summary>
+    public const float TableTop = .95f;
+    /// <summary>Copies of a per-person item stand this far apart along +X (M-35).</summary>
+    public const float PerPersonSpacing = 1.1f;
+
+    /// <summary>
+    /// Weapons, throwables, ammo and medkits from supply-point data (decisions.md L-12). Shared weapons of a point lie on one
+    /// workbench under their middle (C-33); per-person items are laid out once for each person (M-35).
+    /// </summary>
     protected void PlaceSupplies(StageSupplies supplies)
     {
-        foreach (var item in supplies.Points.SelectMany(p => p.Items))
+        foreach (var point in supplies.Points)
         {
-            // On a raised tier the item lies on that tier's floor (L-15); a flat map keeps the data's height.
-            var at = _stage.Tiers.Any ? item.At with { Y = item.At.Y + _stage.Tiers.GroundY(item.At) } : item.At;
-            switch (item.Kind)
+            var shared = point.Items.Where(i => i.Infinite).ToList();
+            if (shared.Count > 0)
             {
-                case SupplyItemKind.Weapon: Weapon(at, item.Id); break;
-                case SupplyItemKind.Throwable: Throwable(at, item.Id); break;
-                case SupplyItemKind.Ammo: AmmoPile(at); break;
-                case SupplyItemKind.Medkit: Medkit(at); break;
+                var middle = shared.Aggregate(Vector3.Zero, (s, i) => s + i.At) / shared.Count;
+                WorkshopProp(WorkshopArt.Kind.Workbench, Floor(middle with { Y = 0 }));
+            }
+            foreach (var item in point.Items)
+            {
+                int copies = item.PerPerson ? _stage.HumanCount : 1;
+                for (int n = 0; n < copies; n++)
+                {
+                    var at = Floor(item.At + Vector3.Right * PerPersonSpacing * (n - (copies - 1) / 2f));
+                    switch (item.Kind)
+                    {
+                        case SupplyItemKind.Weapon:
+                            var pickup = WeaponPickup.ForWeapon(_stage, at, ArmoryCatalog.Weapon(item.Id));
+                            if (item.Infinite) pickup.MakeInfinite(TableTop);
+                            break;
+                        case SupplyItemKind.Throwable: Throwable(at, item.Id); break;
+                        case SupplyItemKind.Ammo: AmmoPile(at); break;
+                        case SupplyItemKind.Medkit: Medkit(at); break;
+                    }
+                }
             }
         }
+        // On a raised tier the item lies on that tier's floor (L-15); a flat map keeps the data's height.
+        Vector3 Floor(Vector3 p) => _stage.Tiers.Any ? p with { Y = p.Y + _stage.Tiers.GroundY(p) } : p;
     }
 }
