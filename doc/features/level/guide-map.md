@@ -146,6 +146,8 @@ python tools/floorplan/render_floorplan.py game/content/data/stages/stage1_large
 
 ## 8. 남은 것
 
+- 기본 캠페인 Stage 1을 튜토리얼로(**L-34 확정** 2026-10-28): 구역마다 새 경험 하나, 앞에 프롤로그 구역 P1 ~ P6 · 기지 C1, 웨이브 구역 직전 투척물 — [플레이 시나리오](stage1-tutorial-scenario.md). 구현 때 설계안 가이드를 다시 쓰고 검사기에 튜토리얼 규칙(구역당 새 경험 정확히 1개)을 넣는다.
+
 - Stage 1 유입 · 압박 반영(2026-10-27, [설계안](pacing-pressure-plan.md) 7장) 뒤: 플레이로 큰 구역 약 2분 · 위험한 순간이 생기는지 다시 재기.
 
 - Stage 1: 어두운 기조 적용 뒤 길 안내 조명(창고 간판 앞 조명 포함) 밝기 조정, 실제 손 플레이로 진지 · 경보 · 마지막 도전 확인. Stage 2 · 3 현재 상태 · 설계안 가이드(Stage 2가 Stage 1 W2 다섯 개를 다시 쓰는지).
