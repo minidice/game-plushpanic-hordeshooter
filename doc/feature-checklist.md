@@ -19,6 +19,9 @@
 - [x] A-27 최신 연출: 중앙부터 화염/연무가 퍼지고 입자별로 높이·농도가 다르게 사그라듦. 피해 종료와 잔여 시각 분리. [렌더·검사](features/effects-audio/log/008-art-center-spread-and-staggered-fade.md).
 - [x] A-19 월드 링·범위·공격 예고 외형: 줍기/곡사/수류탄과 돌진·보스·원거리·포획 준비 표시를 고정 경계·부드러운 번짐으로 통일. 전용29·무기36·모드147·통합149 검사와 두 해상도 실제 렌더 확인. [변경·검사·제약](features/menu-ui/log/004-code-world-marker-polish.md).
 
+- [x] **D-14 목표 문서화**: [캠페인·난전 Blueprint](features/direction/campaign-onslaught-blueprint.md)에 사용자 목표·임시 제안·미결 사항 보존. **게임 기능 완료 표시가 아님.** [작업 기록](features/direction/log/001-doc-campaign-onslaught-blueprint.md).
+- [ ] **D-14 후속 검증**: AI·밀도·순찰·난이도·새 스테이지 경험·난전 빌드와 캠페인 8시간 구성 검증. 최대 30시간의 단계/시기는 미결.
+
 
 - [x] **A-26 사운드 9종 적용**: 무료 CC0 소재 편집·결과 악구, 발성 변형3개, 공유 ID 분리, 근거리/군중 믹스·결과 볼륨 처리. [작업·검증](features/effects-audio/log/002-art-sound-quality-rollout.md).
 - [x] **A-26 후속 검증**: 5분 통제 전투 음향·변형별 피격 하한·실제 상태효과 캡처 확인. 시체 누적 렌더 오류(I-41)는 남음. [검사·통합 기록](features/effects-audio/log/003-check-combat-soak-main-integration.md).

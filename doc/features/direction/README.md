@@ -12,6 +12,7 @@
 
 ## 상세 규격
 
+- [캠페인과 난전 Blueprint](campaign-onslaught-blueprint.md): AI·밀도·난이도·새 경험·난전 빌드·캠페인 8~30시간 목표. 사용자 목표와 검토 제안 구분.
 - [idea.md](../../idea.md)
 - [grounded-art-direction.md](../../grounded-art-direction.md)
 - [glossary.md](../../glossary.md)
