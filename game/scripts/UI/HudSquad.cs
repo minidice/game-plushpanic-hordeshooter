@@ -7,7 +7,7 @@ namespace HordeShooter;
 public partial class Hud
 {
     private VBoxContainer? _squadBox;
-    private readonly Dictionary<Player, (Label Name, ColorRect Fill, Label State)> _squadRows = new();
+    private readonly Dictionary<Player, (Label Name, ProgressBar Bar, StyleBoxFlat Fill, Label State)> _squadRows = new();
     private const float SquadBarWidth = 150f;
 
     private void UpdateSquadPanel(Stage stage)
@@ -27,8 +27,8 @@ public partial class Hud
         {
             if (!IsInstanceValid(survivor)) continue;
             float hp = survivor.MaxHealth > 0 ? Mathf.Clamp((float)survivor.Health / survivor.MaxHealth, 0, 1) : 0;
-            row.Fill.Size = new Vector2(SquadBarWidth * hp, row.Fill.Size.Y);
-            row.Fill.Color = hp > .5f ? UiTheme.Heal : hp > .25f ? UiTheme.Accent : UiTheme.Danger;
+            row.Bar.Value = hp;
+            row.Fill.BgColor = hp > .5f ? UiTheme.Heal : hp > .25f ? UiTheme.Accent : UiTheme.Danger;
             row.State.Text = survivor.IsDead ? Loc.Text("hud_squad_dead")
                 : survivor.IsDowned ? Loc.Format("fmt_hud_squad_down", Mathf.CeilToInt(Mathf.Max(0, survivor.BleedLeft)))
                 : survivor.IsRestrained ? Loc.Text("hud_squad_held")
@@ -54,15 +54,17 @@ public partial class Hud
         var name = HudLabel(survivor.DisplayLabel.Length > 0 ? survivor.DisplayLabel : Loc.Text(survivor.Definition.DisplayName), 14);
         name.CustomMinimumSize = new Vector2(120, 0);
         line.AddChild(name);
-        var bar = new Control { CustomMinimumSize = new Vector2(SquadBarWidth, 10), MouseFilter = Control.MouseFilterEnum.Ignore, SizeFlagsVertical = Control.SizeFlags.ShrinkCenter };
-        bar.AddChild(new ColorRect { Color = new Color(0, 0, 0, .55f), Size = new Vector2(SquadBarWidth, 10), MouseFilter = Control.MouseFilterEnum.Ignore });
-        var fill = new ColorRect { Color = UiTheme.Heal, Size = new Vector2(SquadBarWidth, 10), MouseFilter = Control.MouseFilterEnum.Ignore };
-        bar.AddChild(fill);
+        var bar = new ProgressBar { CustomMinimumSize = new Vector2(SquadBarWidth, 10),
+            MaxValue = 1, Step = 0, ShowPercentage = false, MouseFilter = Control.MouseFilterEnum.Ignore,
+            SizeFlagsVertical = Control.SizeFlags.ShrinkCenter };
+        bar.AddThemeStyleboxOverride("background", UiTheme.Plate(new Color(0, 0, 0, .55f), Colors.Transparent, 0, 5));
+        var fill = UiTheme.Plate(UiTheme.Heal, Colors.Transparent, 0, 5);
+        bar.AddThemeStyleboxOverride("fill", fill);
         line.AddChild(bar);
         var state = HudLabel("", 13, UiTheme.Danger);
         state.CustomMinimumSize = new Vector2(64, 0);
         line.AddChild(state);
         _squadBox.AddChild(line);
-        _squadRows[survivor] = (name, fill, state);
+        _squadRows[survivor] = (name, bar, fill, state);
     }
 }

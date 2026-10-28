@@ -291,3 +291,10 @@ ui_objective_large2_gate,발전기 단의 제어판으로 벙커 철문 열기  
 fmt_objective_hold_gate,철문이 올라갈 때까지 버티기  {0}초
 msg_stage_gate_alarm,발전기 가동! 철문이 올라갈 때까지 버티세요
 msg_stage_gate_open,철문이 열렸습니다! 산림 초소를 지나 언덕으로
+hud_interaction_revive,{0} 일으키기
+hud_interaction_hold,길게 누르기
+hud_interaction_done,완료
+hud_interaction_interrupted,피격으로 중단
+hud_interaction_release,키를 떼고 다시 누르기
+hud_interaction_out_of_reach,범위 밖
+hud_interaction_other_reviver,동료가 구조 중

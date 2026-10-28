@@ -86,10 +86,13 @@ public partial class GraphicsOptionsCheck : Node
         var high=(Button)_stage.Hud.FindChild("Graphics_Shadow_High",true,false);
         var low=(Button)_stage.Hud.FindChild("Graphics_Shadow_Low",true,false);
         Check(_stage.Hud.GraphicsOpen && low.ButtonPressed && !high.ButtonPressed,"graphics page exposes mutually exclusive current state");await Shot("menu-low");
+        // GetGlobalRect uses logical viewport pixels (1600x900), not the physical window size.
+        // Push local coordinates so a scaled window still clicks the actual button.
         var click=high.GetGlobalRect().GetCenter();
-        Input.ParseInputEvent(new InputEventMouseMotion{Position=click,GlobalPosition=click});
-        Input.ParseInputEvent(new InputEventMouseButton{Position=click,GlobalPosition=click,ButtonIndex=MouseButton.Left,Pressed=true});await Frames(2);
-        Input.ParseInputEvent(new InputEventMouseButton{Position=click,GlobalPosition=click,ButtonIndex=MouseButton.Left,Pressed=false});await Frames(3);
+        GetViewport().NotifyMouseEntered();
+        GetViewport().PushInput(new InputEventMouseMotion{Position=click,GlobalPosition=click}, true);
+        GetViewport().PushInput(new InputEventMouseButton{Position=click,GlobalPosition=click,ButtonIndex=MouseButton.Left,Pressed=true}, true);await Frames(2);
+        GetViewport().PushInput(new InputEventMouseButton{Position=click,GlobalPosition=click,ButtonIndex=MouseButton.Left,Pressed=false}, true);await Frames(3);
         Check(high.ButtonPressed && !low.ButtonPressed && sun.ShadowEnabled && lamp.ShadowEnabled && env.SsaoEnabled && !blobs.Visible,"high restores authored state immediately while paused");
         ((Button)_stage.Hud.FindChild("Graphics_Surface_High",true,false)).EmitSignal(BaseButton.SignalName.Pressed);await Shot("menu-high");
         ((Button)_stage.Hud.FindChild("Graphics_Back",true,false)).EmitSignal(BaseButton.SignalName.Pressed);

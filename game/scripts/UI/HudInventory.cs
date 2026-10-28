@@ -113,14 +113,16 @@ public partial class InventoryCell : Control
         QueueRedraw();
     }
 
+    private readonly StyleBoxFlat _cellPlate = UiTheme.Plate(pad: 0, radius: 8);
+    private readonly StyleBoxFlat _slotPlate = UiTheme.Plate(UiTheme.SelectedSurface, new Color(UiTheme.Selection, .4f), 0, 8);
+
     public override void _Draw()
     {
         var size = Size;
         bool slot = InventoryOps.IsSlot(Place);
-        DrawRect(new Rect2(Vector2.Zero, size), slot ? new Color(.16f, .14f, .1f, .92f) : new Color(.06f, .09f, .14f, .9f));
-        DrawRect(new Rect2(Vector2.Zero, size), slot ? new Color(Hud.HudWarm, .55f) : new Color(.45f, .57f, .72f, .35f), false, 1.5f);
+        DrawStyleBox(slot ? _slotPlate : _cellPlate, new Rect2(Vector2.Zero, size));
         var font = GetThemeDefaultFont();
-        if (_key != "") DrawString(font, new Vector2(5, 15), _key, HorizontalAlignment.Left, 20, 12, Hud.HudWarm);
+        if (_key != "") DrawString(font, new Vector2(5, 15), _key, HorizontalAlignment.Left, 20, 12, UiTheme.Selection);
         if (_hud.InventoryItem(Place) is not { } item) return;
         var icon = new Rect2(8, 14, size.X - 16, size.Y - 32);
         switch (item.Kind)
@@ -157,7 +159,7 @@ public partial class InventoryCell : Control
     public override Variant _GetDragData(Vector2 atPosition)
     {
         if (_hud.InventoryItem(Place) is not { } item) return default;
-        var preview = Hud.HudLabel(item.DisplayName, 14, Hud.HudWarm);
+        var preview = Hud.HudLabel(item.DisplayName, 14, UiTheme.Selection);
         SetDragPreview(preview);
         return Place;
     }

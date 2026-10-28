@@ -5,8 +5,8 @@ namespace HordeShooter;
 public partial class Hud
 {
     // One material language for gun sights, magazine arcs and the existing action ring.
-    private static readonly Color SightGlass = new(.008f, .016f, .025f, .48f);
-    private static readonly Color SightBlue = new(.42f, .68f, .83f);
+    private static readonly Color SightGlass = UiTheme.Glass;
+    private static readonly Color SightBlue = UiTheme.SightTint;
     private static readonly Vector2[] SightAxes = { Vector2.Up, Vector2.Right, Vector2.Down, Vector2.Left };
 
     private static bool HasMagazineSight(WeaponState gun) => gun.Def.MagSize > 0

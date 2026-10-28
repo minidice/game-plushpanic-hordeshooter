@@ -74,6 +74,7 @@ void fragment() {
         _root.AddChild(reticle);
 
         BuildCompactHud();
+        BuildInteraction();
 
         // Flashbang: you looked at it.
         _blind = new ColorRect { Color = new Color(1, 1, 1, 0), MouseFilter = Control.MouseFilterEnum.Ignore };
@@ -105,7 +106,7 @@ void fragment() {
         _pausePanel = CenterPanel(out var pauseBox);
         _pausePanel.Name = "PausePanel";
         _pausePanel.MouseFilter = Control.MouseFilterEnum.Stop;
-        var pauseTitle = UiTheme.Label(Loc.Text("ui_pause_title"), 40, UiTheme.Accent);
+        var pauseTitle = UiTheme.Label(Loc.Text("ui_pause_title"), 40, UiTheme.Selection);
         pauseTitle.HorizontalAlignment = HorizontalAlignment.Center;
         pauseBox.AddChild(pauseTitle);
         // A host can read the join address again here (multiplayer-sync-design.md 10장).
@@ -125,7 +126,7 @@ void fragment() {
         _graphicsPanel.Name = "PauseGraphicsPanel";
         _graphicsPanel.MouseFilter = Control.MouseFilterEnum.Stop;
         graphicsBox.CustomMinimumSize = new Vector2(650, 0);
-        var graphicsTitle = UiTheme.Label(Loc.Text("settings_graphics"), 36, UiTheme.Accent);
+        var graphicsTitle = UiTheme.Label(Loc.Text("settings_graphics"), 36, UiTheme.Selection);
         graphicsTitle.HorizontalAlignment = HorizontalAlignment.Center;
         graphicsBox.AddChild(graphicsTitle);
         _graphicsOptions = new GraphicsOptions { Name = "GraphicsOptions" };
@@ -175,7 +176,7 @@ void fragment() {
     {
         var panel = Place(new PanelContainer(), .5f, .5f, Vector2.Zero, true, false, centerX: true);
         panel.GrowVertical = Control.GrowDirection.Both;
-        panel.AddThemeStyleboxOverride("panel", UiTheme.Panel(new Color(.04f, .05f, .06f, .92f), 36, UiTheme.Accent));
+        panel.AddThemeStyleboxOverride("panel", UiTheme.Panel(new Color(UiTheme.Surface, .94f), 36, new Color(UiTheme.Selection, .3f)));
         box = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
         box.AddThemeConstantOverride("separation", 16);
         panel.AddChild(box);
@@ -245,11 +246,8 @@ void fragment() {
             : player.HeliumTime > 0 ? Loc.Format("fmt_hud_helium", Mathf.CeilToInt(player.HeliumTime))
             : player.IsStunned ? Loc.Text("ui_hud_stunned")
             : player.OnLastDown && stage.ReviveEnabled ? Loc.Text("hud_last_down") : "";
-        _prompt.Text = player.IsRestrained ? Loc.Text(GameSession.DebugEscapeEnabled ? "restrained_cheat" : "restrained_rescue")
-            : playing && stage.RevivePromptTarget is { } downed
-            ? Loc.Format("fmt_use_revive", downed.DisplayLabel.Length > 0 ? downed.DisplayLabel : Loc.Text(downed.Definition.DisplayName), Mathf.RoundToInt(downed.ReviveProgress * 100))
-            : playing && stage.FocusedInteractable is { HoldSeconds: > 0 } hold ? Loc.Format("fmt_use_hold", hold.Prompt, Mathf.RoundToInt(stage.HoldProgress * 100))
-            : playing && stage.FocusedInteractable is { } use ? $"[E]  {use.Prompt}" : "";
+        _prompt.Text = player.IsRestrained ? Loc.Text(GameSession.DebugEscapeEnabled ? "restrained_cheat" : "restrained_rescue") : "";
+        UpdateInteractionUi((float)delta);
         _help.Visible = stage.Objective == Objective.LeaveSafeRoom || stage.Elapsed < 20;
 
         _darkVignette.SetShaderParameter("strength", player.HeliumTime > 0 ? 1f : .25f);
@@ -529,17 +527,16 @@ void fragment() {
     }
 
     /// <summary>Pixel size of the hold bar over the survivor's head (a base door, decisions.md L-35).</summary>
-    public static readonly Vector2 HoldBarSize = new(70, 8);
+    public static readonly Vector2 HoldBarSize = new(80, 12);
 
     /// <summary>A hold-to-use in progress: a bar over the survivor's own head, not at the cursor (L-35).</summary>
     private void DrawHoldBar(Control c)
     {
         var stage = Stage;
-        if (stage.HoldProgress <= 0 || stage.Player.IsDead) return;
+        if (stage.HoldProgress <= 0 || !ShowInteractions) return;
         var top = stage.Cam.UnprojectPosition(stage.Player.GlobalPosition + Vector3.Up * 2.35f);
         var rect = new Rect2(top - new Vector2(HoldBarSize.X / 2, HoldBarSize.Y), HoldBarSize);
-        c.DrawRect(rect.Grow(2), new Color(0, 0, 0, .55f), true);
-        c.DrawRect(new Rect2(rect.Position, new Vector2(rect.Size.X * stage.HoldProgress, rect.Size.Y)), UiTheme.Accent, true);
+        UiTheme.DrawProgress(c, rect, stage.HoldProgress, 2);
     }
 
     private void DrawReticle(Control c)
@@ -562,7 +559,7 @@ void fragment() {
         if (!player.CanAttack)
         {
             // Cannot attack (ladder, zipline, gondola, held; decisions.md M-36): a dim grey ring with a slash where the cursor is.
-            var off = new Color(HudWhite.Lerp(new Color("8a8f94"), .7f), .7f);
+            var off = new Color(UiTheme.Muted, .7f);
             c.DrawArc(center, 11, 0, Mathf.Tau, 40, new Color(0, 0, 0, .35f), 5, true);
             c.DrawArc(center, 11, 0, Mathf.Tau, 40, off, 2.5f, true);
             c.DrawLine(center + new Vector2(-7.5f, 7.5f), center + new Vector2(7.5f, -7.5f), off, 2.5f, true);

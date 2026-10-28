@@ -48,8 +48,8 @@ public partial class GraphicsOptions : VBoxContainer
                 FocusMode = FocusModeEnum.All, MouseFilter = MouseFilterEnum.Stop,
                 CustomMinimumSize = new Vector2(142, 42),
             };
-            button.AddThemeStyleboxOverride("pressed", UiTheme.Panel(new Color("384635"), 10, UiTheme.Accent));
-            button.AddThemeStyleboxOverride("hover_pressed", UiTheme.Panel(new Color("43503c"), 10, UiTheme.Accent));
+            button.AddThemeStyleboxOverride("pressed", UiTheme.Panel(UiTheme.SelectedSurface, 10, UiTheme.Selection));
+            button.AddThemeStyleboxOverride("hover_pressed", UiTheme.Panel(UiTheme.SelectedSurface, 10, UiTheme.Selection));
             button.Pressed += () => { choose(high); GameSettings.Save(); Refresh(); };
             row.AddChild(button);
             return button;
@@ -79,7 +79,7 @@ public partial class GraphicsOptions : VBoxContainer
         button.SetPressedNoSignal(selected);
         button.Text = (selected ? "✓  " : "") + Loc.Text(key);
         foreach (var color in new[] { "font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_focus_color" })
-            button.AddThemeColorOverride(color, selected ? UiTheme.Accent : UiTheme.Muted);
+            button.AddThemeColorOverride(color, selected ? UiTheme.Selection : UiTheme.Muted);
     }
 
     public void FocusSelected()

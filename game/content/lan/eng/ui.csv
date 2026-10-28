@@ -291,3 +291,10 @@ ui_objective_large2_gate,Open the bunker gate at the generator terrace panel  [E
 fmt_objective_hold_gate,Hold out until the gate is up  {0}s
 msg_stage_gate_alarm,Generator running! Hold out until the gate is up
 msg_stage_gate_open,The gate is open! Through the ranger post and up the hill
+hud_interaction_revive,Revive {0}
+hud_interaction_hold,Hold to use
+hud_interaction_done,Complete
+hud_interaction_interrupted,Interrupted by damage
+hud_interaction_release,Release and hold again
+hud_interaction_out_of_reach,Out of reach
+hud_interaction_other_reviver,Teammate is reviving

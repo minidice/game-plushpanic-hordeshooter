@@ -46,7 +46,7 @@ internal sealed class WeaponActionFeedback
             if (_completed) Progress = 1;
         }
         Active = next != ActionKind.None;
-        Blend = Mathf.MoveToward(Blend, Active ? 1 : 0, Mathf.Max(0, dt) / (Active ? .16f : .20f));
+        Blend = Mathf.MoveToward(Blend, Active ? 1 : 0, Mathf.Max(0, dt) / (Active ? UiTheme.EnterSeconds : UiTheme.ActionReturnSeconds));
         _lastMag = weapon.Mag;
         if (Blend == 0) Kind = ActionKind.None;
     }
@@ -57,26 +57,8 @@ public partial class Hud
     private readonly WeaponActionFeedback _weaponAction = new();
     private Paint _weaponActionGauge = null!;
     private Label _weaponActionLabel = null!;
-    private static readonly Color ActionLight = new(.94f, .98f, 1f, .98f);
-    private static readonly Color ActionGlow = new(.22f, .70f, 1f);
-    // Shared vector resources: a quiet track, opaque light core and soft coloured shadow.
-    private static readonly StyleBoxFlat ActionTrack = ActionPlate(new Color(.008f, .016f, .025f, .62f), 11);
-    private static readonly StyleBoxFlat ActionFill = new()
-    {
-        BgColor = ActionLight,
-        CornerRadiusTopLeft = 7, CornerRadiusTopRight = 7,
-        CornerRadiusBottomLeft = 7, CornerRadiusBottomRight = 7,
-        ShadowColor = new Color(.18f, .68f, 1, .65f), ShadowSize = 10,
-        AntiAliasing = true, AntiAliasingSize = 1,
-    };
-
-    private static StyleBoxFlat ActionPlate(Color fill, int radius) => new()
-    {
-        BgColor = fill,
-        CornerRadiusTopLeft = radius, CornerRadiusTopRight = radius,
-        CornerRadiusBottomLeft = radius, CornerRadiusBottomRight = radius,
-        AntiAliasing = true, AntiAliasingSize = 1,
-    };
+    private static readonly Color ActionLight = UiTheme.ActionLight;
+    private static readonly Color ActionGlow = UiTheme.ActionGlow;
 
     private bool ShowWeaponAction => Stage.State == StageState.Playing && !Stage.Player.IsDead && !Stage.Player.IsDowned
         && !Paused && !Stage.AllStopped && !InventoryOpen && !CardWindowOpen && !Stage.Player.Weapons.AimingThrow;
@@ -110,10 +92,7 @@ public partial class Hud
 
     private void DrawWeaponActionGauge(Control c)
     {
-        c.DrawStyleBox(ActionTrack, new Rect2(Vector2.Zero, c.Size));
-        var inside = new Rect2(new Vector2(4, 4), new Vector2((c.Size.X - 8) * _weaponAction.Progress, c.Size.Y - 8));
-        if (inside.Size.X <= 0) return;
-        c.DrawStyleBox(ActionFill, inside);
+        UiTheme.DrawProgress(c, new Rect2(Vector2.Zero, c.Size), _weaponAction.Progress, 4);
     }
 
     private void DrawWeaponActionRing(Control c, Vector2 center)

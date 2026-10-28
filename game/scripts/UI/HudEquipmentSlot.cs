@@ -8,7 +8,7 @@ public partial class HudEquipmentSlot : PanelContainer
     private readonly Label _name;
     private readonly Label _count;
     private readonly StyleBoxFlat _normal = Hud.HudPlate(pad: 7, radius: 12);
-    private readonly StyleBoxFlat _selected = Hud.HudPlate(new Color(.12f, .12f, .15f, .94f), new Color(Hud.HudWarm, .5f), 7, 12);
+    private readonly StyleBoxFlat _selected = Hud.HudPlate(UiTheme.SelectedSurface, new Color(UiTheme.Selection, .5f), 7, 12);
     private readonly StyleBoxFlat _medkitPlate = Hud.HudPlate(new Color(.12f, .18f, .2f, .9f), Hud.HudMuted, 0, 6);
     private Texture2D? _texture;
     private string _iconPath = "", _kind = "";
@@ -26,7 +26,7 @@ public partial class HudEquipmentSlot : PanelContainer
         box.AddThemeConstantOverride("separation", 0);
         AddChild(box);
         var top = new HBoxContainer { MouseFilter = MouseFilterEnum.Ignore };
-        top.AddChild(Hud.HudLabel(key, 12, Hud.HudWarm));
+        top.AddChild(Hud.HudLabel(key, 12, UiTheme.Selection));
         _count = Hud.HudLabel("", 11, Hud.HudMuted);
         _count.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         _count.HorizontalAlignment = HorizontalAlignment.Right;
@@ -60,7 +60,7 @@ public partial class HudEquipmentSlot : PanelContainer
     private void DrawIcon(Control c)
     {
         var center = c.Size / 2;
-        var color = _available ? (_active ? Hud.HudWarm : new Color("c0c8d2")) : new Color(.4f, .47f, .58f, .35f);
+        var color = _available ? (_active ? UiTheme.Selection : new Color("c0c8d2")) : new Color(.4f, .47f, .58f, .35f);
         if (_texture != null)
         {
             var size = _texture.GetSize();

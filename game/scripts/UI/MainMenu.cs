@@ -92,7 +92,7 @@ public partial class MainMenu : Control
         _rig = null;
         _sfx = new Sfx { Pool3DSize = 0, Pool2DSize = 4 };
         AddChild(_sfx);
-        var bg = new ColorRect { Color = new Color("0d1214") };
+        var bg = new ColorRect { Color = new Color("090e18") };
         bg.SetAnchorsPreset(LayoutPreset.FullRect);
         AddChild(bg);
         var margin = new MarginContainer();
@@ -104,7 +104,7 @@ public partial class MainMenu : Control
         margin.AddChild(column);
         var heading = new HBoxContainer();
         heading.AddThemeConstantOverride("separation", 24);
-        heading.AddChild(UiTheme.Label(Loc.Text("ui_menu_title"), 34, UiTheme.Accent));
+        heading.AddChild(UiTheme.Label(Loc.Text("ui_menu_title"), 34, UiTheme.Selection));
         heading.AddChild(UiTheme.Label(Loc.Text("ui_menu_subtitle"), 17, UiTheme.Muted));
         column.AddChild(heading);
 
@@ -204,7 +204,7 @@ public partial class MainMenu : Control
         page.AddChild(Title("menu_customize_title"));
         var species = new HBoxContainer { Name = "SpeciesSelection" };
         species.AddThemeConstantOverride("separation", 10);
-        species.AddChild(UiTheme.Label(Loc.Text("custom_species_step"), 18, UiTheme.Accent));
+        species.AddChild(UiTheme.Label(Loc.Text("custom_species_step"), 18, UiTheme.Selection));
         for (int i = 0; i < _characters.Count; i++)
         {
             int index = i;
@@ -431,7 +431,7 @@ public partial class MainMenu : Control
         _lobbyModeHint = Hint("");
         page.AddChild(_lobbyModeHint);
 
-        _lobbyCount = UiTheme.Label("", 17, UiTheme.Accent);
+        _lobbyCount = UiTheme.Label("", 17, UiTheme.Selection);
         _lobbyCount.Name = "Lobby_Count";
         page.AddChild(_lobbyCount);
         _lobbyPlayers = new VBoxContainer { Name = "Lobby_Players" };
@@ -517,7 +517,7 @@ public partial class MainMenu : Control
             name.SizeFlagsHorizontal = SizeFlags.ExpandFill;
             row.AddChild(name);
             string state = isHost ? "lobby_state_host" : member.Ready ? "lobby_state_ready" : "lobby_state_waiting";
-            row.AddChild(UiTheme.Label(Loc.Text(state), 18, member.Ready ? UiTheme.Accent : UiTheme.Muted));
+            row.AddChild(UiTheme.Label(Loc.Text(state), 18, member.Ready ? UiTheme.Selection : UiTheme.Muted));
             _lobbyPlayers.AddChild(row);
         }
 
@@ -627,8 +627,8 @@ public partial class MainMenu : Control
         return button;
     }
 
-    private static Label Title(string key) => UiTheme.Label(Loc.Text(key), 26, UiTheme.Accent);
-    private static Label Section(string key) => UiTheme.Label(Loc.Text(key), 17, UiTheme.Accent);
+    private static Label Title(string key) => UiTheme.Label(Loc.Text(key), 26, UiTheme.Selection);
+    private static Label Section(string key) => UiTheme.Label(Loc.Text(key), 17, UiTheme.Selection);
 
     private static Label Hint(string text)
     {
@@ -670,7 +670,7 @@ public partial class MainMenu : Control
         previewColumn.AddThemeConstantOverride("separation", 8);
         previewColumn.AddChild(BuildPreview());
         var nameRow = new HBoxContainer();
-        _name = UiTheme.Label("", 26, UiTheme.Accent);
+        _name = UiTheme.Label("", 26, UiTheme.Selection);
         _name.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         nameRow.AddChild(_name);
         _details = UiTheme.Label("", 15, UiTheme.Muted);
@@ -731,7 +731,7 @@ public partial class MainMenu : Control
         container.AddChild(viewport);
         var env = new Godot.Environment
         {
-            BackgroundMode = Godot.Environment.BGMode.Color, BackgroundColor = new Color("1a2224"),
+            BackgroundMode = Godot.Environment.BGMode.Color, BackgroundColor = new Color("101827"),
             AmbientLightSource = Godot.Environment.AmbientSource.Color, AmbientLightColor = new Color("c6dddf"),
             AmbientLightEnergy = .45f, TonemapMode = Godot.Environment.ToneMapper.Agx,
         };
@@ -755,7 +755,7 @@ public partial class MainMenu : Control
         if (playSound) _sfx.Play("ui_click");
         _description.Text = Loc.Text(def.Description);
         _details.Text = $"HP {def.MaxHealth}    ·    {Loc.Text("custom_speed")} {def.MoveSpeed:0.0}";
-        for (int i = 0; i < _buttons.Count; i++) _buttons[i].Modulate = i == _index ? UiTheme.Accent : Colors.White;
+        for (int i = 0; i < _buttons.Count; i++) _buttons[i].Modulate = i == _index ? UiTheme.Selection : Colors.White;
         if (_rig != null) { _turntable.RemoveChild(_rig); _rig.QueueFree(); }
         _rig = CharacterRig.Create(def);
         _turntable.AddChild(_rig);

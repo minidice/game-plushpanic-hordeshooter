@@ -84,6 +84,8 @@ public partial class Stage : Node3D
     public event System.Action<Enemy, HitInfo>? EnemyHit;
     /// <summary>A client asks the host to use an interactable instead of using it itself.</summary>
     public System.Action<Interactable>? RequestUse { get; set; }
+    /// <summary>Local hold reached its duration. This is submission, not host-confirmed success.</summary>
+    public event System.Action<Interactable>? HoldSubmitted;
     private int _nextInteractableId;
     internal int NextPropId;
     /// <summary>The network link when this stage is part of a match (null offline).</summary>
@@ -951,6 +953,7 @@ public partial class Stage : Node3D
             {
                 HoldProgress = 0;
                 _holding = null;
+                HoldSubmitted?.Invoke(hold);
                 if (Authoritative) hold.Use(Player);
                 else RequestUse?.Invoke(hold);
             }

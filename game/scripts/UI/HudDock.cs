@@ -4,8 +4,8 @@ namespace HordeShooter;
 
 public partial class Hud
 {
-    internal static readonly Color HudWhite = new("f3f4f1");
-    internal static readonly Color HudMuted = new("a8b6c9");
+    internal static readonly Color HudWhite = UiTheme.Paper;
+    internal static readonly Color HudMuted = UiTheme.Muted;
     internal static readonly Color HudWarm = new("f5d6ad");
     private static readonly StyleBoxFlat HealthTrack = HudPlate(new Color("351e29"), new Color("713742"), 0, 16);
     private static readonly StyleBoxFlat HealthFill = HudPlate(new Color("ef575e"), new Color("ff8680"), 0, 13);
@@ -19,19 +19,7 @@ public partial class Hud
     }
 
     internal static StyleBoxFlat HudPlate(Color? fill = null, Color? border = null, int pad = 12, int radius = 12)
-    {
-        return new StyleBoxFlat
-        {
-            BgColor = fill ?? new Color(.025f, .045f, .09f, .83f),
-            BorderColor = border ?? new Color(.45f, .57f, .72f, .10f),
-            BorderWidthTop = 1, BorderWidthRight = 1, BorderWidthBottom = 1, BorderWidthLeft = 1,
-            CornerRadiusTopLeft = radius, CornerRadiusTopRight = radius,
-            CornerRadiusBottomLeft = radius, CornerRadiusBottomRight = radius,
-            ContentMarginLeft = pad, ContentMarginRight = pad,
-            ContentMarginTop = pad, ContentMarginBottom = pad,
-            ShadowColor = new Color(0, .01f, .04f, .3f), ShadowSize = 5,
-        };
-    }
+        => UiTheme.Plate(fill, border, pad, radius);
 
     private void BuildCompactHud()
     {
@@ -113,7 +101,7 @@ public partial class Hud
         c.DrawArc(center, 26, 0, Mathf.Tau, 96, new Color(.28f, .36f, .48f, .25f), 3, true);
         var progress = 1 - Mathf.Clamp(left / Player.RollCooldown, 0, 1);
         if (progress > 0)
-            DrawLightArc(c, center, 26, -Mathf.Pi / 2 + Mathf.Tau * progress, new Color(1, .55f, .18f), ready ? 1 : .55f);
+            DrawLightArc(c, center, 26, -Mathf.Pi / 2 + Mathf.Tau * progress, UiTheme.ActionGlow, ready ? 1 : .55f);
         var font = c.GetThemeDefaultFont();
         if (ready)
         {
