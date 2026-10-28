@@ -15,7 +15,7 @@ public partial class NetLobby : Node
     public const string NodeName = "NetLobby";
     public const int HostPeer = 1;
     /// <summary>Bump when lobby or match messages change shape: older builds then show as another version.</summary>
-    public const int Protocol = 18;
+    public const int Protocol = 19;
     /// <summary>Two PCs can play together only on the same version: messages and data ids (multiplayer-sync-design.md 6장).</summary>
     public static string Version => $"p{Protocol}-{(uint)NetIds.DataHash():x8}";
     /// <summary>Seconds between the host's refreshes of its room on the public list (it expires after 45 s).</summary>
@@ -38,6 +38,21 @@ public partial class NetLobby : Node
     public bool InMatch { get; private set; }
     /// <summary>Host: its stage is running, so newcomers go straight in.</summary>
     public bool Live { get; private set; }
+    public int CampaignStage { get; private set; } = 1;
+    public int MatchEpoch { get; private set; }
+    public bool Transitioning { get; private set; }
+    private readonly Dictionary<int, byte[]> _carryByPeer = new();
+    private readonly HashSet<int> _prepared = new(), _waitingForStage = new();
+    private Stage? _loadingStage;
+    private double _loadingSeconds;
+
+    public void ApplyCarry(Player player)
+    {
+        if (_carryByPeer.Remove(player.PeerId, out var bytes)) StageCarry.Decode(bytes).ApplyTo(player);
+    }
+
+    private void SendMatch(int peer) => RpcId(peer, MethodName.MatchStarted, (int)Mode, Setup.Choice,
+        (int)Setup.Difficulty, GameSession.MapSeed, CampaignStage, MatchEpoch, _carryByPeer.GetValueOrDefault(peer, Array.Empty<byte>()));
     /// <summary>Client: the host has answered our hello.</summary>
     public bool Joined { get; private set; }
     public int Me => Role == NetRole.Host ? HostPeer : Multiplayer.GetUniqueId();
@@ -129,7 +144,8 @@ public partial class NetLobby : Node
         GD.Print($"[lobby] peer {peer} came in as {character}");
         Broadcast();
         // A match is already running: join it (the stage gives late survivors a place beside the host).
-        if (Live) RpcId(peer, MethodName.MatchStarted, (int)Mode, Setup.Choice, (int)Setup.Difficulty, GameSession.MapSeed);
+        if (Live) { if (_loadingStage != null) _waitingForStage.Add(peer); SendMatch(peer); }
+        else if (Transitioning) RpcId(peer, MethodName.PrepareStage, MatchEpoch);
     }
 
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
@@ -166,16 +182,80 @@ public partial class NetLobby : Node
         // One seed for the whole room: a scattered map comes out the same on every PC.
         GameSession.MapSeed = (int)(GD.Randi() % 1000000) + 1;
         GameSession.StartCampaign();
+        CampaignStage = GameSession.ScenarioStage; MatchEpoch++;
+        _carryByPeer.Clear(); Transitioning = false;
         EnterMatch(this);
         return true;
     }
 
     /// <summary>Host: the stage can take survivors now. Everyone in the room loads it.</summary>
-    public void HostLive()
+    public void HostLive(Stage? stage = null)
     {
         if (Role != NetRole.Host || !InMatch || Live) return;
         Live = true;
-        foreach (var m in Members.Where(m => m.Peer != HostPeer)) RpcId(m.Peer, MethodName.MatchStarted, (int)Mode, Setup.Choice, (int)Setup.Difficulty, GameSession.MapSeed);
+        _waitingForStage.Clear();
+        foreach (var m in Members.Where(m => m.Peer != HostPeer)) { _waitingForStage.Add(m.Peer); SendMatch(m.Peer); }
+        if (stage != null && _waitingForStage.Count > 0) { _loadingStage = stage; _loadingSeconds = 0; stage.SetAllStop(true); }
+        else Transitioning = false;
+    }
+
+    public void StageReady(int peer)
+    {
+        if (Role != NetRole.Host) return;
+        _waitingForStage.Remove(peer);
+        if (_waitingForStage.Count != 0) return;
+        if (_loadingStage == null) { if (Live && Members.Any(m => m.Peer == peer)) RpcId(peer, MethodName.PlayStage, MatchEpoch); return; }
+        _loadingStage.SetAllStop(false); _loadingStage = null; Transitioning = false;
+        foreach (var member in Members.Where(m => m.Peer != HostPeer)) RpcId(member.Peer, MethodName.PlayStage, MatchEpoch);
+    }
+
+    [Rpc(MultiplayerApi.RpcMode.Authority, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
+    private void PlayStage(int epoch)
+    {
+        if (epoch != MatchEpoch) return;
+        Transitioning = false;
+        if (GetTree().CurrentScene is Stage stage && !stage.Gondolas.Any(g => g.Riding)) stage.SetAllStop(false);
+    }
+
+    public async void AdvanceCampaign(Stage stage)
+    {
+        if (Role != NetRole.Host || Transitioning || !InMatch || stage.Map.NextStage <= 0 || stage.Net == null) return;
+        Transitioning = true; Live = false; _prepared.Clear(); _carryByPeer.Clear();
+        foreach (var (peer, player) in stage.Net.Peers) _carryByPeer[peer] = StageCarry.From(player).Encode();
+        stage.Net.Ending = true; stage.SetAllStop(true);
+        MatchEpoch++;
+        int transitionEpoch = MatchEpoch;
+        foreach (var member in Members.Where(m => m.Peer != HostPeer))
+        {
+            NetLaunch.SetLoadingTimeout(Multiplayer, member.Peer, true);
+            RpcId(member.Peer, MethodName.PrepareStage, MatchEpoch);
+        }
+        ulong deadline = Time.GetTicksMsec() + 60000;
+        while (IsInstanceValid(this) && IsInsideTree() && InMatch && Transitioning && MatchEpoch == transitionEpoch
+            && Members.Any(m => m.Peer != HostPeer && !_prepared.Contains(m.Peer)) && Time.GetTicksMsec() < deadline)
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        if (!IsInstanceValid(this) || !IsInsideTree() || !InMatch || !Transitioning || MatchEpoch != transitionEpoch || !IsInstanceValid(stage)) return;
+        if (Members.Any(m => m.Peer != HostPeer && !_prepared.Contains(m.Peer))) { ReturnToLobby(); return; }
+        CampaignStage = stage.Map.NextStage;
+        stage.SetAllStop(false);
+        StageTransition.Leave(stage, CampaignStage, StageCarry.Decode(_carryByPeer[HostPeer]));
+        _carryByPeer.Remove(HostPeer);
+    }
+
+    [Rpc(MultiplayerApi.RpcMode.Authority, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
+    private void PrepareStage(int epoch)
+    {
+        if (epoch <= MatchEpoch) return;
+        Transitioning = true;
+        NetLaunch.SetLoadingTimeout(Multiplayer, HostPeer, true);
+        if (GetTree().CurrentScene is Stage stage) { if (stage.Net != null) stage.Net.Ending = true; stage.SetAllStop(true); }
+        RpcId(HostPeer, MethodName.PreparedStage, epoch);
+    }
+
+    [Rpc(MultiplayerApi.RpcMode.AnyPeer, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
+    private void PreparedStage(int epoch)
+    {
+        if (Role == NetRole.Host && Transitioning && epoch == MatchEpoch) _prepared.Add(Multiplayer.GetRemoteSenderId());
     }
 
     /// <summary>
@@ -185,7 +265,10 @@ public partial class NetLobby : Node
     public void ReturnToLobby()
     {
         if (Role != NetRole.Host || !InMatch) return;
+        StageTransition.Cancel();
         InMatch = Live = false;
+        Transitioning = false; _loadingStage = null; _waitingForStage.Clear(); _carryByPeer.Clear();
+        if (GetTree().CurrentScene is Stage stage) stage.SetAllStop(false);
         foreach (var m in Members.Where(m => m.Peer != HostPeer)) NetLaunch.SetLoadingTimeout(Multiplayer, m.Peer, true);
         foreach (var m in Members) m.Ready = m.Peer == HostPeer;
         GD.Print("[lobby] back to the room");
@@ -197,6 +280,8 @@ public partial class NetLobby : Node
     private void OnPeerLeft(long id)
     {
         if (Members.RemoveAll(m => m.Peer == (int)id) == 0) return;
+        _carryByPeer.Remove((int)id);
+        StageReady((int)id);
         GD.Print($"[lobby] peer {id} left");
         Broadcast();
     }
@@ -220,6 +305,7 @@ public partial class NetLobby : Node
 
     public override void _Process(double delta)
     {
+        if (_loadingStage != null && (_loadingSeconds += delta) > 60) ReturnToLobby();
         if (!Advertise || Role != NetRole.Host || _adBusy) return;
         _adTimer -= delta;
         // Player count and state go out soon after they change, but no more than once a second.
@@ -285,24 +371,37 @@ public partial class NetLobby : Node
     }
 
     [Rpc(MultiplayerApi.RpcMode.Authority, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
-    private void MatchStarted(int mode, string choice, int difficulty, int seed)
+    private void MatchStarted(int mode, string choice, int difficulty, int seed, int stageNumber, int epoch, byte[] carryBytes)
     {
         if (Role != NetRole.Client) return;
         InMatch = true;
         Setup = new PlaySetup((GameMode)mode, choice, (Difficulty)difficulty).Valid();
         Setup.Apply();
         GameSession.MapSeed = seed;
-        GameSession.StartCampaign();
+        CampaignStage = stageNumber; MatchEpoch = epoch;
+        var carry = carryBytes.Length == 0 ? null : StageCarry.Decode(carryBytes);
         Changed?.Invoke();
-        EnterMatch(this);
+        if (GetTree().CurrentScene is Stage old && Transitioning)
+        {
+            old.SetAllStop(false);
+            StageTransition.Leave(old, stageNumber, carry);
+        }
+        else
+        {
+            GameSession.ScenarioStage = stageNumber; GameSession.Carry = carry;
+            EnterMatch(this);
+        }
     }
 
     [Rpc(MultiplayerApi.RpcMode.Authority, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
     private void BackToRoom()
     {
         if (Role != NetRole.Client) return;
+        StageTransition.Cancel();
         NetLaunch.SetLoadingTimeout(Multiplayer, HostPeer, true);
         InMatch = false;
+        Transitioning = false;
+        if (GetTree().CurrentScene is Stage stage) stage.SetAllStop(false);
         Changed?.Invoke();
         LeaveMatch(this);
     }
@@ -312,7 +411,12 @@ public partial class NetLobby : Node
 
     private void OnHostLeft()
     {
-        // During a match the stage says so and goes back to the menu itself (StageNet.LeaveMatch).
-        if (!InMatch) Closed?.Invoke("msg_net_host_left");
+        if (!InMatch) { Closed?.Invoke("msg_net_host_left"); return; }
+        StageTransition.Cancel();
+        Transitioning = false;
+        if (GetTree().CurrentScene is Stage stage) stage.SetAllStop(false);
+        // This persistent node survives the curtain and scene replacement; the old stage may already be gone.
+        // Keep InMatch true so the menu closes the broken link instead of reopening an empty room.
+        LeaveMatch(this);
     }
 }

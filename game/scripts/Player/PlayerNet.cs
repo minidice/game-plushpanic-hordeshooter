@@ -15,7 +15,34 @@ public partial class Player
     /// <summary>Client: the host has this survivor grabbed; blocks actions like a real grab.</summary>
     public bool NetRestrained { get; set; }
     /// <summary>Host: the host is moving this survivor right now (grabbed, stunned or launched, down), not its owner.</summary>
-    public bool HostMovesMe => OnGondola || IsRestrained || StunTime > 0 || IsDowned || IsDead;
+    public bool HostMovesMe => OnLadder || OnZipline || OnGondola || IsRestrained || StunTime > 0 || IsDowned || IsDead;
+    public int MotionRevision { get; private set; }
+    public byte NetTravelKind { get; set; }
+    public byte TravelKind => OnLadder ? (byte)1 : OnZipline ? (byte)2 : OnGondola ? (byte)3 : NetTravelKind;
+
+    /// <summary>Repeated snapshots carry this revision until the owner acknowledges it in its input.</summary>
+    internal void CommitNetPosition()
+    {
+        if (!Stage.Authoritative || Stage.Net == null) return;
+        MotionRevision++;
+        NetMotion = null;
+    }
+
+    public bool ApplyNetPosition(NetPlayerState state)
+    {
+        if (state.MotionRevision < MotionRevision) return false;
+        if (state.MotionRevision > MotionRevision)
+        {
+            MotionRevision = state.MotionRevision;
+            if (_gondola != null && state.TravelKind != 3) EndGondolaRide(_gondola);
+            TeleportTo(state.Position);
+            NetMotion = null;
+        }
+        if (NetTravelKind == 2 && state.TravelKind != 2) Rig.EndZiplinePose();
+        NetTravelKind = state.TravelKind;
+        if (NetTravelKind != 0) SetAim(state.Aim);
+        return true;
+    }
 
     private readonly byte[] _pressCounts = new byte[(int)NetPress.Count];
     private readonly byte[] _pressSeen = new byte[(int)NetPress.Count];
@@ -46,7 +73,7 @@ public partial class Player
         if (_aimHeld) held |= NetHeld.Aim;
         return new NetInput
         {
-            Seq = seq, Aim = AimPoint, Held = held, Presses = (byte[])_pressCounts.Clone(),
+            Seq = seq, MotionRevision = MotionRevision, Aim = AimPoint, Held = held, Presses = (byte[])_pressCounts.Clone(),
             Slot = _slotAsked, SlotPresses = _slotPresses, Position = GlobalPosition,
         };
     }
@@ -62,6 +89,13 @@ public partial class Player
     /// <summary>Host: a remote player's input drives this survivor like the AI drives a squadmate.</summary>
     public void ApplyNetInput(NetInput input)
     {
+        if (input.MotionRevision != MotionRevision || TravelKind != 0)
+        {
+            System.Array.Copy(input.Presses, _pressSeen, _pressSeen.Length);
+            _slotPressesSeen = input.SlotPresses;
+            ClearGondolaControls(); NetMotion = null;
+            return;
+        }
         bool held = input.Held.HasFlag(NetHeld.Fire);
         bool fired = Pressed(input, NetPress.Fire);
         SetControls(Vector2.Zero, input.Aim, held || fired);
@@ -85,6 +119,8 @@ public partial class Player
     /// <summary>Velocity that walks the body to <paramref name="target"/>; jumps there when far behind.</summary>
     private Vector3 FollowVelocity(Vector3 target, float dt)
     {
+        // The owner already resolved ground/cliffs. Re-simulating gravity at an old height strands its remote body.
+        GlobalPosition = GlobalPosition with { Y = target.Y };
         var to = target - GlobalPosition;
         to.Y = 0;
         if (to.Length() > 4f)
@@ -110,7 +146,7 @@ public partial class Player
         var l = Loadout;
         return new NetPlayerState
         {
-            Peer = PeerId, Position = GlobalPosition, Aim = AimPoint, Health = Health, Medkits = Medkits, BleedLeft = BleedLeft, Flags = flags,
+            Peer = PeerId, MotionRevision = MotionRevision, TravelKind = TravelKind, Position = GlobalPosition, Aim = TravelKind != 0 ? GlobalPosition + Rig.Forward * 8 : AimPoint, Health = Health, Medkits = Medkits, BleedLeft = BleedLeft, Flags = flags,
             ActiveSlot = l.ActiveSlot, TapStacks = TapStacks, Mad = (MadSize > 0 ? 1 : MadSize < 0 ? 2 : 0) + MadLevel * 4,
             Daze = Mathf.Clamp(Mathf.CeilToInt(DazeTime * 10), 0, 255), Weak = Mathf.Clamp(Mathf.CeilToInt(WeakTime * 10), 0, 255),
             Pole = Pole > 0 ? 1 : Pole < 0 ? 2 : 0,

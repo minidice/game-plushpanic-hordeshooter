@@ -193,7 +193,7 @@ public partial class Player : CharacterBody3D
     /// The survivor can shoot or swing now: not on a ladder, a zipline or a gondola, not held by a grabber
     /// (the reticle shows "cannot attack" otherwise, decisions.md M-36).
     /// </summary>
-    public bool CanAttack => !OnLadder && !OnZipline && !OnGondola && !IsRestrained;
+    public bool CanAttack => TravelKind == 0 && !IsRestrained;
     /// <summary>Which way the last hit pushed (from the attacker toward this survivor); the toy train runs back up it.</summary>
     public Vector3 LastHitDirection { get; private set; } = Vector3.Back;
 
@@ -355,6 +355,15 @@ public partial class Player : CharacterBody3D
 
     public override void _PhysicsProcess(double delta)
     {
+        if (Stage.Role == NetRole.Client && NetTravelKind != 0)
+        {
+            if (NetMotion is { } at) GlobalPosition = at;
+            Velocity = Vector3.Zero; ClearGondolaControls();
+            Rig.Face(AimDirection);
+            Rig.Animate((float)delta, NetTravelKind == 1 ? .7f : 0, 0, _hurt, Vector3.Zero);
+            if (NetTravelKind == 2) Rig.ZiplinePose(false, 0, .6f);
+            return;
+        }
         if (OnGondola) { HoldGondolaPosition(); return; }
         float dt = (float)delta;
         _hurt = Mathf.MoveToward(_hurt, 0, dt * 3);

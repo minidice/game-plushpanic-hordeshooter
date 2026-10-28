@@ -25,7 +25,7 @@ public readonly record struct NetSurfaceHit(SurfaceProfile Profile, Vector3 Posi
     public static NetSurfaceHit[] Read(NetReader reader)
     {
         int count = reader.U8();
-        if (count > MaxPerShot || reader.Remaining < count * 8) throw new FormatException("Invalid shot surface contacts");
+        if (count > MaxPerShot || reader.Remaining < count * (2 + NetWriter.PositionBytes)) throw new FormatException("Invalid shot surface contacts");
         var hits = new NetSurfaceHit[count];
         for (int i = 0; i < count; i++) hits[i] = new(NetIds.SurfaceAt(reader.U16()), reader.Pos());
         return hits;

@@ -35,6 +35,18 @@ public partial class StageTransition : CanvasLayer
     private Control _title = null!;
     private float _closed;
     private Stage? _stage;
+    private bool _cancelled;
+
+    public static void Cancel()
+    {
+        if (_current is { } current)
+        {
+            current._cancelled = true;
+            current.Hide();
+            current.QueueFree();
+        }
+        _current = null; Arriving = false; GameSession.Carry = null;
+    }
 
     private const string IrisShader = @"
 shader_type canvas_item;
@@ -48,13 +60,13 @@ void fragment() {
 }";
 
     /// <summary>Leave <paramref name="stage"/> for scenario stage <paramref name="next"/>, carrying the survivor's kit.</summary>
-    public static void Leave(Stage stage, int next)
+    public static void Leave(Stage stage, int next, StageCarry? carry = null)
     {
         if (Busy) return;
         var t = new StageTransition { Name = "StageTransition", Layer = 90, ProcessMode = ProcessModeEnum.Always };
         _current = t;
         stage.GetTree().Root.AddChild(t);
-        t.Run(stage, next);
+        t.Run(stage, next, carry);
     }
 
     /// <summary>The next stage is built: drop the title and open the circle on its survivor.</summary>
@@ -91,20 +103,20 @@ void fragment() {
         return box;
     }
 
-    private async void Run(Stage stage, int next)
+    private async void Run(Stage stage, int next, StageCarry? carry)
     {
         _stage = stage;
         FromView = stage.Map.View;
-        GameSession.Carry = StageCarry.From(stage.Player);
+        GameSession.Carry = carry ?? StageCarry.From(stage.Player);
         // The survivor stands still at the hatch while the circle closes.
         stage.Player.ManualControl = true;
         stage.Player.SetControls(Vector2.Zero, stage.Player.AimPoint, false);
-        await Tween(CloseSeconds, k => SetClosed(Ease(k), Focus(stage)));
+        if (!await Tween(CloseSeconds, k => SetClosed(Ease(k), Focus(stage)))) return;
         SetClosed(1, new Vector2(.5f, .5f));
         _title.GetNode<Label>("Number").Text = Loc.Format("ui_transition_stage_number", next);
         _title.GetNode<Label>("Name").Text = Loc.Text($"ui_transition_stage{next}");
-        await Tween(.35f, k => _title.Modulate = new Color(1, 1, 1, k));
-        await Tween(TitleSeconds, _ => { });
+        if (!await Tween(.35f, k => _title.Modulate = new Color(1, 1, 1, k))) return;
+        if (!await Tween(TitleSeconds, _ => { })) return;
         GameSession.ScenarioStage = next;
         Arriving = true;
         _stage = null;
@@ -118,8 +130,9 @@ void fragment() {
         _stage = stage;
         // Let the new stage settle a frame so the survivor's screen spot is right.
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        await Tween(.3f, k => _title.Modulate = new Color(1, 1, 1, 1 - k));
-        await Tween(OpenSeconds, k => SetClosed(1 - Ease(k), Focus(stage)));
+        if (_cancelled) return;
+        if (!await Tween(.3f, k => _title.Modulate = new Color(1, 1, 1, 1 - k))) return;
+        if (!await Tween(OpenSeconds, k => SetClosed(1 - Ease(k), Focus(stage)))) return;
         Arriving = false;
         _current = null;
         QueueFree();
@@ -150,15 +163,17 @@ void fragment() {
     }
 
     /// <summary>Runs <paramref name="step"/> with 0..1 over <paramref name="seconds"/> of real frames (pause-proof).</summary>
-    private async Task Tween(float seconds, Action<float> step)
+    private async Task<bool> Tween(float seconds, Action<float> step)
     {
         float t = 0;
         while (t < seconds)
         {
             step(t / seconds);
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            if (_cancelled) return false;
             t += (float)GetProcessDeltaTime();
         }
         step(1);
+        return true;
     }
 }

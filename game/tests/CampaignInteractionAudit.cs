@@ -13,6 +13,9 @@ public partial class CampaignInteractionAudit : Node
     private Stage _host = null!, _client = null!;
     private SubViewport _hv = null!, _cv = null!;
     private Player Remote => _host.Net!.Peers[_client.Player.PeerId];
+    private bool Finished(Stage stage) => stage.Map.NextStage > 0
+        ? stage.Objective == Objective.TakeExit && stage.Map.StageExit!.Enabled && stage.State == StageState.Playing
+        : stage.State == StageState.Cleared;
     private StageMap Map() => _short ? (_stageNumber == 1 ? new StageOneLayout() : new StageTwoMap()) : LayoutMap.ForStage(_stageNumber);
     private void Check(bool ok, string text) { if (ok) _pass++; else _fail++; GD.Print($"{(ok ? "PASS" : "FAIL")}: {text}"); }
     private async Task Frames(int count) { for (int i = 0; i < count; i++) await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame); }
@@ -46,7 +49,7 @@ public partial class CampaignInteractionAudit : Node
         if (peer.CreateClient("127.0.0.1", _port) != Error.Ok) throw new Exception("client socket");
         _cv.GetMultiplayer().MultiplayerPeer = peer;
         for (int n = 0; n < 300 && peer.GetConnectionStatus() != MultiplayerPeer.ConnectionStatus.Connected; n++) await Frames(1);
-        _client = new Stage { Name = "Stage", Role = NetRole.Client, MapOverride = Map(), ModeOverride = GameMode.Scenario, CharacterOverride = "duck", DirectorEnabled = false, SquadOverride = 0 };
+        _client = new Stage { Name = "Stage", Role = NetRole.Client, MapOverride = Map(), ModeOverride = GameMode.Scenario, CharacterOverride = "duck", DirectorEnabled = false, SquadOverride = 0, NextStageOverride = true };
         _cv.AddChild(_client); _client.Player.ManualControl = true;
         for (int n = 0; n < 300 && !(_client.Net!.Started && _host.Net!.Peers.Count == 2); n++) await Frames(1);
         if (!_client.Net!.Started || _host.Net!.Peers.Count != 2) throw new Exception("join timeout");
@@ -58,13 +61,8 @@ public partial class CampaignInteractionAudit : Node
     {
         var near = item.GlobalPosition + Vector3.Back * .35f;
         var p = at ?? (near with { Y = _client.Tiers.GroundY(near) });
-        // Each interaction is independent: do not let an earlier clipped position/fall poison later requests.
-        Remote.TeleportTo(p + Vector3.Up * .05f);
         _client.Player.TeleportTo(p + Vector3.Up * .05f);
         await Frames(35);
-        // Flush old input first, then align once. Subsequent packets still expose coordinate clipping.
-        Remote.TeleportTo(_client.Player.GlobalPosition); Remote.NetMotion = null;
-        await Frames(10);
         GD.Print($"USE id={item.NetId} name={item.Name} pos={item.GlobalPosition} local={_client.Player.GlobalPosition} host={Remote.GlobalPosition}");
         _client.RequestUse!(ClientItem(item));
         await Frames(25);
@@ -82,7 +80,7 @@ public partial class CampaignInteractionAudit : Node
         _hv = View("HostView"); var peer = new ENetMultiplayerPeer();
         if (peer.CreateServer(_port, 4) != Error.Ok) throw new Exception("host socket");
         _hv.GetMultiplayer().MultiplayerPeer = peer;
-        _host = new Stage { Name = "Stage", Role = NetRole.Host, MapOverride = Map(), ModeOverride = GameMode.Scenario, CharacterOverride = "goose", DirectorEnabled = false, SquadOverride = 0 };
+        _host = new Stage { Name = "Stage", Role = NetRole.Host, MapOverride = Map(), ModeOverride = GameMode.Scenario, CharacterOverride = "goose", DirectorEnabled = false, SquadOverride = 0, NextStageOverride = true };
         _hv.AddChild(_host); _host.Player.ManualControl = true; _host.Player.Invulnerable = true;
         foreach (var e in _host.AllEnemies.ToArray()) e.Die(Vector3.Zero, 0);
         await Join();
@@ -126,6 +124,7 @@ public partial class CampaignInteractionAudit : Node
         Check(_host.Map.AlarmDevices.Select((a, i) => a.Triggered == _client.Map.AlarmDevices[i].Triggered).All(b => b), "all alarms");
         foreach (var ladder in _host.Ladders)
         {
+            Check(ladder.Top.Y > ladder.Bottom.Y && !_host.Flow.IsBlocked(ladder.Bottom), "ladder connects a walkable foot to a higher landing");
             if (ladder.Top.Y - ladder.Bottom.Y > .5f)
             {
                 Remote.TeleportTo(ladder.Bottom); _client.Player.TeleportTo(ladder.Top + Vector3.Up * .05f);
@@ -136,41 +135,70 @@ public partial class CampaignInteractionAudit : Node
             {
                 var from = up ? ladder.Bottom : ladder.Top; var to = up ? ladder.Top : ladder.Bottom;
                 var item = critical.First(i => i.Prompt == Loc.Text(up ? "ui_use_ladder_up" : "ui_use_ladder_down") && i.GlobalPosition.DistanceTo(from) < .1f);
-                Remote.TeleportTo(from + Vector3.Up * .05f); // Separate traversal defect from ordinary height following.
                 await Request(item, from);
                 await Frames((int)(ladder.Tiers * (up ? Player.LadderUpSeconds : Player.LadderDownSeconds) * 60) + 30);
                 Check(_client.Player.GlobalPosition.DistanceTo(to) < .8f, $"client ladder {(up ? "up" : "down")} {from} -> {to}, actual={_client.Player.GlobalPosition}");
                 Check(Remote.GlobalPosition.DistanceTo(_client.Player.GlobalPosition) < .8f, "ladder host/client final position agrees");
+                int revision = Remote.MotionRevision;
+                Remote.ApplyNetInput(new NetInput { MotionRevision = revision - 1, Position = from, Presses = new byte[(int)NetPress.Count] });
+                Check(Remote.NetMotion == null, "pre-landing input cannot overwrite authoritative arrival");
+                var before = _client.Player.GlobalPosition;
+                Check(!_client.Player.ApplyNetPosition(new NetPlayerState { MotionRevision = revision - 1, Position = from }) && _client.Player.GlobalPosition == before, "old snapshot cannot undo arrival");
+                await Frames(5);
+                Check(_client.Player.TravelKind == 0 && Remote.NetMotion != null, "owner acknowledges arrival and normal movement resumes");
             }
         }
         foreach (var line in _host.Ziplines)
         {
             var item = critical.First(i => i.Prompt == Loc.Text("ui_use_zipline") && i.GlobalPosition.DistanceTo(line.Start) < 4);
-            Remote.TeleportTo(item.GlobalPosition + Vector3.Up * .05f);
             await Request(item, item.GlobalPosition);
             await Frames((int)(line.Seconds * 60) + 30);
             Check(_client.Player.GlobalPosition.DistanceTo(line.Landing) < 1, $"client zipline reaches {line.Landing}, actual={_client.Player.GlobalPosition}");
+        }
+        if (_host.Ladders.FirstOrDefault() is { } cancelLadder)
+        {
+            _client.Player.TeleportTo(cancelLadder.Bottom); await Frames(20);
+            Remote.ClimbLadder(cancelLadder, true); await Frames(8);
+            Remote.TeleportTo(cancelLadder.Bottom); await Frames(20);
+            Check(!Remote.OnLadder && _client.Player.TravelKind == 0 && _client.Player.GlobalPosition.DistanceTo(cancelLadder.Bottom) < .3f,
+                "cancelled ladder releases owner at authoritative position");
+        }
+        if (_host.Ziplines.FirstOrDefault() is { } cancelLine)
+        {
+            _client.Player.TeleportTo(cancelLine.Start); await Frames(20);
+            Remote.RideZipline(cancelLine); await Frames(8);
+            Remote.TeleportTo(cancelLine.Start); await Frames(20);
+            Check(!Remote.OnZipline && _client.Player.TravelKind == 0 && _client.Player.GlobalPosition.DistanceTo(cancelLine.Start) < .3f,
+                "cancelled zipline releases owner at authoritative position");
         }
         foreach (var ride in _host.Gondolas)
         {
             // Both peers share a SceneTree only in this fixture. Keep the client link polling during the host pause.
             _client.Net!.ProcessMode = ProcessModeEnum.Always;
+            _host.Net!.ProcessMode = ProcessModeEnum.Always;
             var center = ride.GlobalPosition;
             _host.Player.TeleportTo(center + Vector3.Left * .7f);
             _client.Player.TeleportTo(center + Vector3.Right * .7f);
             await Frames(20);
-            Remote.TeleportTo(center + Vector3.Right * .7f);
             bool began = ride.TryDepart();
             Check(began, "host can depart gondola with all survivors aboard");
-            await Frames(10);
-            Check(_client.Gondolas.Any(g => g.Riding), "client receives gondola departure");
-            ride.Arrive(); await Frames(35);
+            var departure = new NetWriter(); ride.WriteNet(departure);
+            ride.Arrive();
+            _host.Net!.ProcessMode = ProcessModeEnum.Always;
+            // Reliable world and unreliable snapshots have different channels: arrival may be seen first.
+            var arrived = Remote.CaptureNetState();
+            _client.Player.ApplyNetPosition(arrived);
+            _client.Gondolas.Single().ApplyNet(new NetReader(departure.ToArray()));
+            Check(!_client.Player.OnGondola && _client.Player.GlobalPosition.DistanceTo(arrived.Position) < .02f, "delayed departure cannot undo an already acknowledged arrival");
+            await Frames(35);
             Check(_client.Player.GlobalPosition.DistanceTo(ride.Arrival) < 4, $"client arrives at gondola destination {ride.Arrival}, actual={_client.Player.GlobalPosition}");
             Check(_client.Gondolas.Any(g => g.Completed), "client receives completed gondola");
         }
         // A fresh join must receive completed doors/alarms, not only live change events.
         Check(_client.Net!.ApplyErrors == 0, "original client has no decode errors");
         Close(_cv); await Frames(30); await Join(); WorldMatches("late join");
+        foreach (var ride in _host.Gondolas.Where(g => g.Completed))
+            Check(_client.Gondolas.Any(g => g.Completed) && _client.Player.GlobalPosition.DistanceTo(ride.Arrival) < 5, "late join starts beyond completed gondola");
         Check(_host.Map.AlarmDevices.Select((a, i) => a.Triggered == _client.Map.AlarmDevices[i].Triggered).All(b => b), "late join alarms");
         foreach (var e in _host.AllEnemies.ToArray()) e.Die(Vector3.Zero, 0);
         var goal = _host.Map.RouteGoal;
@@ -181,13 +209,21 @@ public partial class CampaignInteractionAudit : Node
         if (_host.Map.SafehouseSwitch is { } close)
         {
             await Request(close);
-            Check(_host.State == StageState.Cleared, "client can close destination safehouse");
+            Check(Finished(_host) && Finished(_client), "client can close destination and enable next hatch or final clear");
             // Fallback separates world replication from a rejected far-coordinate request.
-            _host.ApplyNetObjective(Objective.CloseSafehouse); close.Use(_host.Player); await Frames(20);
-            Check(_host.State == StageState.Cleared && _client.State == StageState.Cleared, "host-forced destination clear reaches client");
+            if (!Finished(_host)) { _host.ApplyNetObjective(Objective.CloseSafehouse); close.Use(_host.Player); }
+            await Frames(20);
+            Check(Finished(_host) && Finished(_client), "destination completion reaches client");
             WorldMatches("destination clear");
         }
-        if (_host.Map.NextStage > 0) Check(_host.NextStageEnabled, "campaign continues to next stage online (known I-90)");
+        if (_host.Map.NextStage > 0) Check(_client.Map.StageExit!.Enabled, "next-stage hatch state reaches client (scene reload checked by CampaignProgressionCheck)");
         Check(_client.Net!.ApplyErrors == 0, "no decode errors");
+        var departing = _client.Net;
+        _cv.RemoveChild(_client);
+        int received = departing.SnapshotsReceived;
+        typeof(StageNet).GetMethod("HostSnapshot", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+            .Invoke(departing, new object[] { 0, Array.Empty<byte>() });
+        Check(departing.Ending && departing.SnapshotsReceived == received, "detached scene rejects packets before touching player transforms");
+        _client.Free();
     }
 }

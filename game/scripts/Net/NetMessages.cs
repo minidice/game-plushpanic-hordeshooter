@@ -1,4 +1,5 @@
 using Godot;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -107,6 +108,7 @@ public enum NetPress { Fire, Reload, Heal, Throw, Cancel, Roll, CycleUp, CycleDo
 public struct NetInput
 {
     public int Seq;
+    public int MotionRevision;
     public Vector3 Aim;
     public NetHeld Held;
     public byte[] Presses;
@@ -118,6 +120,7 @@ public struct NetInput
     public void Write(NetWriter w)
     {
         w.I32(Seq);
+        w.I32(MotionRevision);
         w.Pos(Aim);
         w.U8((int)Held);
         for (int i = 0; i < (int)NetPress.Count; i++) w.U8(Presses?[i] ?? 0);
@@ -128,7 +131,7 @@ public struct NetInput
 
     public static NetInput Read(NetReader r)
     {
-        var input = new NetInput { Seq = r.I32(), Aim = r.Pos(), Held = (NetHeld)r.U8(), Presses = new byte[(int)NetPress.Count] };
+        var input = new NetInput { Seq = r.I32(), MotionRevision = r.I32(), Aim = r.Pos(), Held = (NetHeld)r.U8(), Presses = new byte[(int)NetPress.Count] };
         for (int i = 0; i < (int)NetPress.Count; i++) input.Presses[i] = (byte)r.U8();
         input.Slot = r.U8();
         input.SlotPresses = r.U8();
@@ -147,6 +150,8 @@ public enum NetPlayerFlags
 public struct NetPlayerState
 {
     public int Peer;
+    public int MotionRevision;
+    public byte TravelKind;
     public Vector3 Position, Aim;
     public int Health, Medkits;
     public float BleedLeft;
@@ -168,6 +173,7 @@ public struct NetPlayerState
     public void Write(NetWriter w)
     {
         w.I32(Peer);
+        w.I32(MotionRevision); w.U8(TravelKind);
         w.Pos(Position);
         w.Pos(Aim);
         w.U8(Health);
@@ -193,7 +199,7 @@ public struct NetPlayerState
     {
         var s = new NetPlayerState
         {
-            Peer = r.I32(), Position = r.Pos(), Aim = r.Pos(), Health = r.U8(), Medkits = r.U8(), BleedLeft = r.U8() / 4f,
+            Peer = r.I32(), MotionRevision = r.I32(), TravelKind = (byte)r.U8(), Position = r.Pos(), Aim = r.Pos(), Health = r.U8(), Medkits = r.U8(), BleedLeft = r.U8() / 4f,
             Flags = (NetPlayerFlags)r.U8(), ActiveSlot = r.U8(), TapStacks = r.U8(), Mad = r.U8(), Daze = r.U8(), Weak = r.U8(), Pole = r.U8(),
             Secondary = r.U16(), SecondaryMag = r.U16(), SecondaryReserve = r.U16(),
             Primary = r.S16(), PrimaryMag = r.U16(), PrimaryReserve = r.U16(),
@@ -215,7 +221,7 @@ public struct NetPlayerState
 [System.Flags]
 public enum NetEnemyFlags { None = 0, Awake = 1, Stunned = 2, Charging = 4, Winding = 8 }
 
-/// <summary>An enemy in a snapshot: 10 bytes.</summary>
+/// <summary>An enemy in a snapshot: 13 bytes (signed24 centimetres on all axes).</summary>
 public struct NetEnemyState
 {
     public int Id;
@@ -226,7 +232,7 @@ public struct NetEnemyState
     {
         w.U16(Id);
         w.FlatPos(Position);
-        w.S16(Mathf.RoundToInt(Position.Y * 100));
+        w.Cm(Position.Y);
         w.Yaw(Facing);
         w.U8((int)Flags);
     }
@@ -235,7 +241,7 @@ public struct NetEnemyState
     {
         int id = r.U16();
         var flat = r.FlatPos();
-        float y = r.S16() / 100f;
+        float y = r.Cm();
         return new NetEnemyState { Id = id, Position = new Vector3(flat.X, y, flat.Z), Facing = r.Yaw(), Flags = (NetEnemyFlags)r.U8() };
     }
 }
@@ -243,10 +249,35 @@ public struct NetEnemyState
 /// <summary>Host → client, 20 per second; enemies ride in every other one (10 per second, decided 2026-10-20).</summary>
 public sealed class NetSnapshot
 {
+    public const int MaxPacketBytes = 1100; // Leave ENet/Godot RPC overhead below the datagram MTU.
     public double Time;
     public float Shutter;
     public List<NetPlayerState> Players = new();
     public List<NetEnemyState>? Enemies;
+
+    public IEnumerable<byte[]> EncodePackets()
+    {
+        var part = new NetSnapshot { Time = Time, Shutter = Shutter };
+        int size = 8;
+        foreach (var player in Players)
+        {
+            var measure = new NetWriter(); player.Write(measure);
+            if (measure.Length + 8 > MaxPacketBytes) throw new InvalidOperationException("Survivor snapshot exceeds packet budget");
+            if (size + measure.Length > MaxPacketBytes) { yield return part.Encode(); part = new NetSnapshot { Time = Time, Shutter = Shutter }; size = 8; }
+            part.Players.Add(player); size += measure.Length;
+        }
+        if (Enemies != null)
+        {
+            part.Enemies = new();
+            foreach (var enemy in Enemies)
+            {
+                var measure = new NetWriter(); enemy.Write(measure);
+                if (size + measure.Length > MaxPacketBytes) { yield return part.Encode(); part = new NetSnapshot { Time = Time, Shutter = Shutter, Enemies = new() }; size = 8; }
+                part.Enemies!.Add(enemy); size += measure.Length;
+            }
+        }
+        yield return part.Encode();
+    }
 
     public byte[] Encode()
     {

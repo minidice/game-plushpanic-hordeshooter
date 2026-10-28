@@ -22,6 +22,7 @@ public partial class Gondola : Node3D
     public float Progress { get; private set; }
     /// <summary>How far the backdrop has scrolled (checks).</summary>
     public float BackdropTravel { get; private set; }
+    private double _startedAt;
 
     private Stage _stage = null!;
     private Vector3 _travel;
@@ -67,7 +68,7 @@ public partial class Gondola : Node3D
     /// <summary>Leaves when every living survivor is aboard; otherwise says so and waits.</summary>
     public bool TryDepart()
     {
-        if (Riding || Completed || _stage.AllStopped) return false;
+        if (!_stage.Authoritative || Riding || Completed || _stage.AllStopped) return false;
         var passengers = _stage.AlivePlayers.ToList();
         if (passengers.Count == 0 || !passengers.All(Aboard))
         {
@@ -75,6 +76,7 @@ public partial class Gondola : Node3D
             return false;
         }
         Riding = true;
+        _startedAt = _stage.Net?.Clock ?? 0;
         _passengers.AddRange(passengers);
         foreach (var passenger in _passengers) passenger.BeginGondolaRide(this);
         _use.Enabled = false;
@@ -92,7 +94,7 @@ public partial class Gondola : Node3D
         foreach (var passenger in _passengers)
             if (IsInstanceValid(passenger)) passenger.HoldGondolaPosition();
         float dt = (float)delta;
-        Progress += dt / RideSeconds;
+        Progress = _stage.Net != null ? Mathf.Clamp((float)(_stage.Net.Clock - _startedAt) / RideSeconds, 0, 1) : Progress + dt / RideSeconds;
         BackdropTravel += dt * 6f;
         // Far layers drift slowly, near ones fast: the depth of a gorge without building it.
         foreach (var (layer, depth) in _layers)
@@ -101,13 +103,13 @@ public partial class Gondola : Node3D
             float shift = Mathf.PosMod(BackdropTravel / depth, span) - span / 2;
             layer.Position = -_travel * shift + Vector3.Down * (8f * depth);
         }
-        if (Progress >= 1) Arrive();
+        if (Progress >= 1 && _stage.Authoritative) Arrive();
     }
 
     /// <summary>Ends the ride at once (also when the ride time is up): everyone steps off at the far station.</summary>
     public void Arrive()
     {
-        if (!Riding) return;
+        if (!_stage.Authoritative || !Riding) return;
         Riding = false;
         Completed = true;
         Progress = 1;
@@ -123,11 +125,49 @@ public partial class Gondola : Node3D
             p.EndGondolaRide(this);
             var side = _travel.Cross(Vector3.Up) * ((i % 3) - 1) * 1.1f - _travel * (i / 3) * 1.1f;
             p.TeleportTo(Arrival + side + Vector3.Up * .05f);
+            p.CommitNetPosition();
             i++;
         }
         _passengers.Clear();
         _stage.SetAllStop(false);
         _stage.Cam.SnapTo(_stage.Player.GlobalPosition + Vector3.Up * .8f);
+    }
+
+    internal void WriteNet(NetWriter writer)
+    {
+        writer.U8(Completed ? 2 : Riding ? 1 : 0);
+        writer.F32((float)_startedAt);
+        var riders = _passengers.Where(IsInstanceValid).ToArray();
+        writer.U8(riders.Length);
+        foreach (var rider in riders) { writer.I32(rider.PeerId); writer.I32(rider.MotionRevision); writer.Pos(rider.GlobalPosition); }
+    }
+
+    internal void ApplyNet(NetReader reader)
+    {
+        int state = reader.U8();
+        _startedAt = reader.F32();
+        int count = reader.U8();
+        for (int i = 0; i < count; i++)
+        {
+            int peer = reader.I32(); int revision = reader.I32(); var at = reader.Pos();
+            if (state != 1 || Completed || _stage.Net == null || !_stage.Net.Peers.TryGetValue(peer, out var rider)
+                || rider.MotionRevision > revision || _passengers.Contains(rider)) continue;
+            rider.TeleportTo(at); rider.BeginGondolaRide(this); _passengers.Add(rider);
+        }
+        if (state == 1 && !Riding && !Completed)
+        {
+            Riding = true; _use.Enabled = false;
+            BuildBackdrop(); HideWorld(); _stage.SetAllStop(true);
+        }
+        if (state == 2 && !Completed)
+        {
+            Riding = false; Completed = true; Progress = 1; _use.Enabled = false;
+            foreach (var rider in _passengers) if (IsInstanceValid(rider)) rider.EndGondolaRide(this);
+            _passengers.Clear(); _backdrop?.QueueFree(); _backdrop = null; _layers.Clear();
+            RestoreWorld();
+            if (_cabin != null) _cabin.GlobalPosition = Arrival + Vector3.Up * FloorClearance;
+            _stage.SetAllStop(false);
+        }
     }
 
     private void BuildLook()

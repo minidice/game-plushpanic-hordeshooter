@@ -160,7 +160,15 @@ public partial class NetSyncCheck : Node
             foreach (var puppet in _client.Enemies.Where(p => !p.IsDead && _hostHistory.ContainsKey(p.NetId)))
             {
                 var hostAt = AtTime(_hostHistory[puppet.NetId], _client.Net!.RenderTime);
-                if (hostAt is { } h) errors.Add(Flat(puppet.GlobalPosition - h));
+                if (hostAt is { } h)
+                {
+                    float error = Flat(puppet.GlobalPosition - h); errors.Add(error);
+                    if (error > 1 && errors.Count(e => e > 1) <= 4)
+                    {
+                        var sampled = AtTime(_hostHistory[puppet.NetId], puppet.Track!.SampledTime);
+                        GD.Print($"NET_POSITION_PROBE error={error:F3} render={_client.Net.RenderTime:F3} sampled={puppet.Track.SampledTime:F3} newest={puppet.Track.LatestTime:F3} host={_host.Net!.Clock:F3} sampledError={(sampled.HasValue ? Flat(puppet.GlobalPosition - sampled.Value) : -1):F3}");
+                    }
+                }
             }
         }
         Check(errors.Count > 100 && errors.Average() < .3f && errors.Max() < 1f,

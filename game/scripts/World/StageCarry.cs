@@ -34,6 +34,29 @@ public sealed class StageCarry
         return carry;
     }
 
+    public byte[] Encode()
+    {
+        var w = new NetWriter();
+        foreach (var weapon in new[] { Secondary, Primary, Special })
+        {
+            w.S16(weapon == null ? -1 : NetIds.Weapon(weapon.Def.Id));
+            if (weapon != null) { w.I32(weapon.Mag); w.I32(weapon.Reserve); }
+        }
+        w.U8(ActiveSlot); w.U8(Medkits); w.U8(Health); w.U8(Throwables.Count);
+        foreach (var (def, count) in Throwables) { w.U16(NetIds.Throwable(def.Id)); w.U16(count); }
+        return w.ToArray();
+    }
+
+    public static StageCarry Decode(byte[] bytes)
+    {
+        var r = new NetReader(bytes);
+        WeaponState? ReadWeapon() { int id = r.S16(); return id < 0 ? null : new WeaponState(NetIds.WeaponDef(id), r.I32(), r.I32()); }
+        var carry = new StageCarry { Secondary = ReadWeapon(), Primary = ReadWeapon(), Special = ReadWeapon(), ActiveSlot = r.U8(), Medkits = r.U8(), Health = r.U8() };
+        int count = r.U8();
+        for (int i = 0; i < count; i++) carry.Throwables.Add((ArmoryCatalog.Throwable(NetIds.ThrowableAt(r.U16())), r.U16()));
+        return carry;
+    }
+
     public void ApplyTo(Player player)
     {
         var loadout = player.Loadout;

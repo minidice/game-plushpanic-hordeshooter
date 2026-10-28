@@ -50,6 +50,28 @@ public partial class StageTransitionCheck : Node
               && StageMap.Create(GameMode.Survival, 2) is StageOneLayout, "the scenario picks Stage 2 only once it has reached it");
         await StageOneExit();
         await StageTwo();
+        await CancelNetworkTransition();
+    }
+
+    private async Task CancelNetworkTransition()
+    {
+        foreach (bool disconnect in new[] { false, true })
+        {
+            int loads = 0;
+            StageTransition.LoadOverride = _ => loads++;
+            var lobby = NetLobby.Create(NetRole.Host, "goose");
+            lobby.EnterMatch = _ => { }; lobby.LeaveMatch = _ => { };
+            AddChild(lobby); lobby.Start();
+            StageTransition.Leave(_stage, 2);
+            await Frames(12);
+            if (disconnect) typeof(NetLobby).GetMethod("OnHostLeft", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.Invoke(lobby, null);
+            else lobby.ReturnToLobby();
+            await Frames(180);
+            Check(!StageTransition.Busy && !StageTransition.Arriving && loads == 0, disconnect
+                ? "host disconnect cancels curtain without loading another scene"
+                : "return to lobby cancels curtain without loading another scene");
+            lobby.Free();
+        }
     }
 
     /// <summary>Every kit and transition model loads with its contract parts (guide 2장).</summary>

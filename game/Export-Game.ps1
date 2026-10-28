@@ -14,17 +14,36 @@ if (-not (Test-Path -LiteralPath $templates)) { throw "Export templates missing:
 
 Push-Location $PSScriptRoot
 try {
+    # A green result belongs to exact source/assets/tests, not just a branch name or an old successful run.
+    $reportPath = Join-Path $PSScriptRoot 'output/campaign-validation.json'
+    $fingerprint = & "$PSScriptRoot/tests/Get-CampaignBuildFingerprint.ps1"
+    $version = (& $console --version | Out-String).Trim()
+    $report = if (Test-Path -LiteralPath $reportPath) { Get-Content -LiteralPath $reportPath -Raw | ConvertFrom-Json } else { $null }
+    if (-not ($report -and $report.Passed -and $report.Windowed -and $report.Fingerprint -eq $fingerprint -and $report.GodotVersion -eq $version)) {
+        & "$PSScriptRoot/tests/Run-CampaignMultiplayerChecks.ps1" -Godot $console -Windowed
+        $report = Get-Content -LiteralPath $reportPath -Raw | ConvertFrom-Json
+    }
+    $fingerprint = & "$PSScriptRoot/tests/Get-CampaignBuildFingerprint.ps1"
+    if (-not ($report.Passed -and $report.Windowed -and $report.Fingerprint -eq $fingerprint -and $report.GodotVersion -eq $version)) { throw 'Campaign multiplayer validation failed or source changed; export blocked.' }
     $out = Join-Path (Split-Path $PSScriptRoot -Parent) 'build\windows'
-    if (Test-Path $out) { Remove-Item -Recurse -Force $out }
+    $expected = [IO.Path]::GetFullPath((Join-Path (Split-Path $PSScriptRoot -Parent) 'build/windows'))
+    if ([IO.Path]::GetFullPath($out) -ne $expected) { throw 'Unexpected export cleanup path.' }
+    if (Test-Path -LiteralPath $out) {
+        if ((Get-Item -LiteralPath $out).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Refusing to clean an export junction.' }
+        Remove-Item -LiteralPath $out -Recurse -Force
+    }
     New-Item -ItemType Directory -Force $out | Out-Null
     & dotnet build HordeShooter.csproj --nologo -v q
     if ($LASTEXITCODE -ne 0) { throw 'C# build failed.' }
     & $console --headless --editor --import --path $PSScriptRoot --quit *> (Join-Path $PSScriptRoot 'output/import.log')
+    if ($LASTEXITCODE -ne 0) { throw 'Godot import failed.' }
     & $console --headless --path $PSScriptRoot --export-release 'Windows Desktop' (Join-Path $out 'HordeShooter.exe') *> (Join-Path $PSScriptRoot 'output/export.log')
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path (Join-Path $out 'HordeShooter.exe'))) { throw 'Export failed. See game/output/export.log' }
     # Without the .NET data folder the game starts with no scripts at all: treat that as a failed export.
     if (-not (Get-ChildItem $out -Directory -Filter 'data_HordeShooter_*')) { throw 'Export has no .NET data folder (C# not exported). See game/output/export.log' }
+    if ((& "$PSScriptRoot/tests/Get-CampaignBuildFingerprint.ps1") -ne $fingerprint) { throw 'Source changed during export; packaging blocked.' }
     Copy-Item (Join-Path $PSScriptRoot 'PLAY-README.txt') $out
+    Copy-Item -LiteralPath $reportPath -Destination (Join-Path $out 'VALIDATION.json')
     if (-not $NoZip) {
         $zip = Join-Path (Split-Path $out -Parent) 'HordeShooter-windows.zip'
         if (Test-Path $zip) { Remove-Item -Force $zip }

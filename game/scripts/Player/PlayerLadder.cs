@@ -50,6 +50,7 @@ public partial class Player
         _ladder = null;
         CollisionMask = _maskBeforeLadder;
         Velocity = Vector3.Zero;
+        CommitNetPosition();
         if (!_ladderUp || !arrived) return;
         // Stepping off at the top shoves whoever is standing in the way.
         foreach (var other in Stage.AlivePlayers)
@@ -94,6 +95,7 @@ public partial class Player
         Rig.EndZiplinePose();
         CollisionMask = _maskBeforeLadder;
         Velocity = Vector3.Zero;
+        CommitNetPosition();
     }
 
     private void ZiplineStep(float dt)

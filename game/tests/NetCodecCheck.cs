@@ -27,6 +27,18 @@ public partial class NetCodecCheck : Node
 
     private void Run()
     {
+        foreach (float x in new[] { -8192.25f, -327.69f, 327.68f, 633.25f, 8192.25f })
+        {
+            var position = new Vector3(x, 400.25f, -x);
+            var coordinate = new NetWriter(); coordinate.Pos(position);
+            Check(Near(new NetReader(coordinate.ToArray()).Pos(), position), $"large signed coordinates survive: {position}");
+        }
+        foreach (float invalid in new[] { float.NaN, float.PositiveInfinity, 100000f, -100000f })
+        {
+            bool rejected = false;
+            try { new NetWriter().Pos(new Vector3(invalid, 0, 0)); } catch (ArgumentOutOfRangeException) { rejected = true; }
+            Check(rejected, $"invalid coordinate is rejected instead of clipped: {invalid}");
+        }
         var presses = new byte[(int)NetPress.Count];
         presses[(int)NetPress.Roll] = 3;
         presses[(int)NetPress.CycleDown] = 255;
@@ -102,6 +114,12 @@ public partial class NetCodecCheck : Node
             if (count == 70) Check(bytes.Length < 1200 - 0, $"70 enemies fit one 1,200-byte packet ({bytes.Length} bytes)");
         }
         Check(NetIds.WeaponAt(NetIds.Weapon("ak47")) == "ak47" && NetIds.MonsterAt(NetIds.Monster("spitter")) == "spitter", "data ids map both ways");
+        var crowd = new NetSnapshot { Time = 10, Players = Enumerable.Range(1, 6).Select(id => { var p = player; p.Peer = id; return p; }).ToList(),
+            Enemies = Enumerable.Range(1, 200).Select(id => new NetEnemyState { Id = id, Position = new Vector3(600 + id, 400, -900) }).ToList() };
+        var packets = crowd.EncodePackets().ToArray(); var pieces = packets.Select(NetSnapshot.Decode).ToArray();
+        Check(packets.Length > 1 && packets.All(p => p.Length <= NetSnapshot.MaxPacketBytes), "six survivors and 200 enemies stay below the datagram budget");
+        Check(pieces.SelectMany(p => p.Players).Select(p => p.Peer).SequenceEqual(Enumerable.Range(1, 6)) &&
+            pieces.SelectMany(p => p.Enemies ?? new()).Select(e => e.Id).SequenceEqual(Enumerable.Range(1, 200)), "splitting never loses or duplicates a survivor or enemy");
 
         // The client draws the host's world 100 ms in the past, blending the samples around that moment.
         var track = new NetTrack();

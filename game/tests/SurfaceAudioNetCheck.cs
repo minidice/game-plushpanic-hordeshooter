@@ -133,7 +133,7 @@ public partial class SurfaceAudioNetCheck : Node
             new NetSurfaceHit(SurfaceProfiles.Current.Profiles["sandbag"],new Vector3(-2,3,4)),
             new NetSurfaceHit(SurfaceProfiles.Current.Profiles["grass"],new Vector3(1,0,2))};
         var writer=new NetWriter(); NetSurfaceHit.Write(writer,hits);
-        Check(writer.Length==25,"three contacts need only 25 bytes");
+        Check(writer.Length==1+3*(2+NetWriter.PositionBytes),"three contacts match the shared signed24 position size");
         var reader=new NetReader(writer.ToArray()); var decoded=NetSurfaceHit.Read(reader);
         Check(decoded.Length==3 && decoded[0].Profile.Id=="metal_hollow" && decoded[0].Position.DistanceTo(new Vector3(12.34f,1.25f,-4.56f))<.001f
             && decoded[1].Profile.Id=="sandbag" && decoded[2].Profile.Id=="grass" && !reader.More,"wire roundtrip retains host material and centimeter position");
@@ -143,7 +143,7 @@ public partial class SurfaceAudioNetCheck : Node
         foreach (var (bytes,label) in new[] {
             (new byte[]{4},"over-budget contact count"),
             (new byte[]{1,0,0},"truncated contact"),
-            (new byte[]{1,255,255,0,0,0,0,0,0},"unknown profile") })
+            (new byte[]{1,255,255,0,0,0,0,0,0,0,0,0},"unknown profile") })
         {
             bool rejected=false;
             try { NetSurfaceHit.Read(new NetReader(bytes)); } catch(FormatException) { rejected=true; }

@@ -268,6 +268,19 @@
 
 `NetLobby.Protocol` 17→18. `World`의 목표 U8·스테이지 상태 U8 다음에 문 개수 U16 + 각 문의 열림 U8(0/1), 경보 개수 U16 + 각 경보의 발동 U8(0/1)을 보낸다. 이후 상호작용/드럼통/파손 상태 형식은 유지한다. 수신 개수가 로컬 맵과 다르면 해석 오류로 처리한다. 이전 단일 U8 비트 필드는 문·경보 합계8개를 넘으면 상태를 잘라 C1 출구 통과를 막았다. 기존 버전 거절 경로로 구형 빌드 혼합 접속을 차단한다. `CampaignDoorNetCheck.tscn`에서 실제 ENet 동기화와 통과를 검사한다. [원인·실패/통과 기록](features/multiplayer/log/004-code-campaign-door-sync.md).
 
-### 2026-10-29 전체 캠페인 점검: 현재 미해결 진행 차단
+### 2026-10-29 전체 캠페인 점검: 수정 전 진행 차단
 
 문·경보 World 전송은 정상이어도 큰 캠페인 전체를 멀티로 완주할 수 있는 상태는 아니다. 현재 좌표 코덱은 S16 cm(−327.68~327.67m)인데 큰 맵은600m를 넘으므로 후반 위치/상호작용/도착 판정이 잘린다(I-135). 사다리·집라인의 소유자 이동 상태와 높이 추종(I-136), 곤돌라 출발/도착·중간 합류 상태(I-137)는 누락돼 있다. 온라인 다음 스테이지 전환은 여전히 비활성화(I-90)다. 이번 점검은 프로토콜18을 유지하며 제품 동작을 바꾸지 않았다. [5개 맵의 실제 ENet 검사·한계](features/multiplayer/log/006-check-campaign-interaction-audit.md).
+
+### 2026-10-29 캠페인 연속 진행 계약 — 프로토콜19
+
+이 절이 위 MVP/과거 점검 당시 계약의 현재 변경분이다. [수정·검증·남은 범위](features/multiplayer/log/007-code-campaign-network-progression.md).
+
+- `Cm`: signed24 little-endian cm, −83886.08~83886.07m. NaN/무한/범위 밖은 송신 오류로 처리한다. `Pos`는9B이며 적의 Y도 동일하다. 환경 접촉 하나는 프리셋2B+위치9B=11B, 최대3개는 개수 포함34B다.
+- `NetSnapshot.EncodePackets`: 같은 시각의 스냅샷을 완전한 플레이어/적 레코드 단위로1100B 이하로 분할한다. 각 조각은 기존 헤더를 가지며 개별 해석 가능하다. 시계 보정은 해당 시각당 한 번만 한다. 송신 집계/수신 카운트는 조각 단위다.
+- `NetInput`에 Seq 다음 MotionRevision I32, `NetPlayerState`에 peer 다음 MotionRevision I32·TravelKind U8(0일반/1사다리/2집라인/3곤돌라). 이동 중 호스트 위치를 따르고 공격/사용을 막는다. 착지·취소 때 호스트 revision 증가, 오래된 입력은 소유권을 되찾지 못하며 새로운 revision 입력부터 평상시 소유자 이동을 인정한다. 대역 위치의 Y도 소유자의 지면 높이를 따른다.
+- World의 경보 뒤에 곤돌라 개수 U16, 각 단계 U8(0준비/1운행/2완료)·출발 시각 F32·탑승자 수 U8·각 peer I32/revision I32/Pos를 보낸다. 수신자는 로컬 곤돌라 개수를 검증한다. 도착보다 늦은 출발 메시지는 낮은 revision 때문에 탑승 위치를 덮어쓰지 못한다. 완료 시각 판정은 호스트만 한다.
+- 모든 StageNet RPC 앞에 epoch I32가 있다. 현재 맵과 다른 epoch는 payload를 읽기 전에 버린다. NetLobby가 MatchEpoch와 현재 CampaignStage를 유지한다. 다음 구간은 PrepareStage→PreparedStage→호스트 로딩→MatchStarted(현재 맵·epoch·개인 Carry)→ClientReady→PlayStage 순서다. 이전 맵 Net은 Ending으로 송신/수신을 멈춘다. 준비/로딩 최대60초를 넘으면 로비로 돌아간다.
+- Carry는 보조/주/특수무기의 ID S16(없음−1)·탄창/예비탄 I32, 선택칸/구급상자/체력 U8, 투척 종류 수 U8와 각 ID/개수 U16이다. 호스트가 확정한 개인별 상태를 새 캐릭터 생성 때 적용한다. 전환 중 로비 복귀/호스트 단절은 커튼·예약된 장면 로딩을 취소한다.
+- 새 참가자에게 현재 맵을 보내고 명단에 담긴 실제 시작 위치를 사용한다. 같은 맵에 운행 중/완료한 곤돌라가 있으면 그 도착 구역에 배치한다. 운행 중에는 완료까지 함께 기다린다.
+- 표준 배포 `game/Export-Game.ps1`은 `Run-CampaignMultiplayerChecks.ps1 -Windowed`가 같은 소스 지문과 Godot 버전에서 통과했는지 확인한다. 소스 변경·검사 실패·시간 초과·엔진 오류·MTU 경고는 통과 기록을 만들지 않는다. 종료 ObjectDB 경고는 결과에 별도 기록한다.

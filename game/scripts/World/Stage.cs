@@ -287,7 +287,7 @@ public partial class Stage : Node3D
 
         if (Role == NetRole.Offline && GetTree().CurrentScene == this) Role = NetLaunch.Pending;
         ReviveEnabled = ReviveOverride ?? GetTree().CurrentScene == this;
-        NextStageEnabled = NextStageOverride ?? (running && Role == NetRole.Offline);
+        NextStageEnabled = NextStageOverride ?? (running && (Role == NetRole.Offline || NetLaunch.Lobby != null));
         // A random field per match offline; in a match everyone builds the host's (GameSession.MapSeed from the room; 1 without a room).
         if (MapOverride == null && GetTree().CurrentScene == this)
             map.Seed = Role == NetRole.Offline ? (int)(GD.Randi() % 1000000) + 1 : GameSession.MapSeed != 0 ? GameSession.MapSeed : 1;
@@ -948,7 +948,7 @@ public partial class Stage : Node3D
         FocusedInteractable = null;
         RevivePromptTarget = null;
         if(Hud?.Paused==true){_holding=null;HoldProgress=0;HoldCancelled=true;return;}
-        if (Player.IsDead || Player.IsDowned || Player.IsStunned || Player.IsRestrained) return;
+        if (Player.IsDead || Player.IsDowned || Player.IsStunned || Player.IsRestrained || Player.TravelKind != 0) return;
         RevivePromptTarget = Player.Reviving ?? Player.DownedTeammateInReach();
         float best = float.MaxValue;
         foreach (var item in Interactables)
@@ -1063,6 +1063,11 @@ public partial class Stage : Node3D
     public void TakeStageExit()
     {
         if (Objective != Objective.TakeExit || StageTransition.Busy) return;
+        if (Role != NetRole.Offline)
+        {
+            if (Role == NetRole.Host) NetLaunch.Lobby?.AdvanceCampaign(this);
+            return;
+        }
         SetEnabled(Map.StageExit, false);
         Sfx.PlayAt("door", Player.GlobalPosition + Vector3.Up);
         StageTransition.Leave(this, Map.NextStage);
@@ -1356,7 +1361,11 @@ public partial class Stage : Node3D
         }
     }
 
-    public void BackToMenu() => GetTree().ChangeSceneToFile("res://scenes/Menu.tscn");
+    public void BackToMenu()
+    {
+        if (Net != null) Net.Ending = true;
+        StageTransition.Cancel(); GetTree().ChangeSceneToFile("res://scenes/Menu.tscn");
+    }
 
     public override void _Notification(int what)
     {

@@ -15,6 +15,8 @@ public sealed class NetTrack
 
     public int Flags { get; private set; }
     public int Count => _samples.Count;
+    public double LatestTime => _samples.Count == 0 ? 0 : _samples[^1].Time;
+    public double SampledTime { get; private set; }
 
     public void Push(double time, Vector3 pos, Vector3 facing, int flags)
     {
@@ -28,6 +30,7 @@ public sealed class NetTrack
     {
         pos = facing = Vector3.Zero;
         if (_samples.Count == 0) return false;
+        SampledTime = System.Math.Clamp(time, _samples[0].Time, _samples[^1].Time);
         if (time <= _samples[0].Time || _samples.Count == 1)
         {
             (pos, facing, Flags) = (_samples[0].Pos, _samples[0].Facing, _samples[0].Flags);
