@@ -78,12 +78,88 @@ public static class UiTheme
         _theme.SetColor("font_hover_color", "Button", Selection);
         _theme.SetColor("font_pressed_color", "Button", Selection);
         _theme.SetColor("font_disabled_color", "Button", new Color(Muted, .45f));
-        _theme.SetStylebox("panel", "PopupMenu", Plate());
-        _theme.SetStylebox("panel", "TooltipPanel", Plate());
+        _theme.SetStylebox("panel", "PopupMenu", Plate(new Color(Surface, .98f)));
+        _theme.SetStylebox("panel", "TooltipPanel", Plate(new Color(Surface, .98f)));
         _theme.SetStylebox("normal", "LineEdit", Panel(Surface, 10));
         _theme.SetStylebox("focus", "LineEdit", Panel(SelectedSurface, 10, Selection));
         _theme.SetColor("font_color", "LineEdit", Paper);
+        StyleMenuControls(_theme);
         return _theme;
+    }
+
+    // Native controls share the same state palette instead of falling back to the engine theme.
+    private static void StyleMenuControls(Theme theme)
+    {
+        foreach (string type in new[] { "Button", "OptionButton", "CheckButton", "CheckBox" })
+        {
+            if (type != "Button")
+                foreach (string state in new[] { "normal", "hover", "pressed", "hover_pressed", "focus", "disabled" })
+                    theme.SetStylebox(state, type, theme.GetStylebox(state, "Button"));
+            theme.SetColor("font_color", type, Paper);
+            foreach (string state in new[] { "hover", "pressed", "hover_pressed", "focus" })
+                theme.SetColor("font_" + state + "_color", type, Selection);
+            theme.SetColor("font_disabled_color", type, new Color(Muted, .45f));
+            theme.SetColor("icon_normal_color", type, Muted);
+            theme.SetColor("icon_hover_color", type, Selection);
+            theme.SetColor("icon_pressed_color", type, Selection);
+        }
+        theme.SetIcon("arrow", "OptionButton", MenuIcon(16, 16, "<path d='M4 6 L8 10 L12 6' fill='none' stroke='#b8e5ff' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/>"));
+        foreach (string type in new[] { "TabContainer", "TabBar" })
+        {
+            theme.SetStylebox("tab_selected", type, Panel(SelectedSurface, 12, new Color(Selection, .5f)));
+            theme.SetStylebox("tab_unselected", type, Panel(Surface, 12));
+            theme.SetStylebox("tab_hovered", type, Panel(SelectedSurface, 12));
+            theme.SetStylebox("tab_disabled", type, Panel(Surface, 12));
+            theme.SetStylebox("tab_focus", type, Panel(Colors.Transparent, 12, Selection));
+            theme.SetColor("font_selected_color", type, Selection);
+            theme.SetColor("font_unselected_color", type, Muted);
+            theme.SetColor("font_hovered_color", type, Paper);
+            theme.SetColor("font_disabled_color", type, new Color(Muted, .45f));
+        }
+        theme.SetStylebox("panel", "TabContainer", Plate(Surface, Edge, 8));
+        theme.SetStylebox("hover", "PopupMenu", Panel(SelectedSurface, 8, new Color(Selection, .25f)));
+        theme.SetColor("font_color", "PopupMenu", Paper);
+        theme.SetColor("font_hover_color", "PopupMenu", Selection);
+        theme.SetColor("font_disabled_color", "PopupMenu", new Color(Muted, .45f));
+        theme.SetColor("selection_color", "LineEdit", SelectedSurface);
+        theme.SetColor("caret_color", "LineEdit", Selection);
+        theme.SetColor("font_selected_color", "LineEdit", Paper);
+        var handle = MenuIcon(18, 18, "<circle cx='9' cy='9' r='7' fill='#203b52' stroke='#b8e5ff' stroke-width='1.4'/><circle cx='9' cy='9' r='3' fill='#f3f4f1'/>" );
+        var activeHandle = MenuIcon(18, 18, "<circle cx='9' cy='9' r='8' fill='#b8e5ff'/><circle cx='9' cy='9' r='3' fill='#f3f4f1'/>" );
+        foreach (string type in new[] { "HSlider", "VSlider" })
+        {
+            theme.SetStylebox("slider", type, Plate(Glass, Edge, 2, 4));
+            theme.SetStylebox("grabber_area", type, Plate(SightTint, Colors.Transparent, 2, 4));
+            theme.SetStylebox("grabber_area_highlight", type, Plate(Selection, Colors.Transparent, 2, 4));
+            theme.SetIcon("grabber", type, handle);
+            theme.SetIcon("grabber_highlight", type, activeHandle);
+            theme.SetIcon("grabber_disabled", type, handle);
+        }
+        foreach (string type in new[] { "HScrollBar", "VScrollBar" })
+        {
+            theme.SetStylebox("scroll", type, Plate(Glass, Colors.Transparent, 3, 4));
+            theme.SetStylebox("grabber", type, Plate(SightTint, Colors.Transparent, 3, 4));
+            theme.SetStylebox("grabber_highlight", type, Plate(Selection, Colors.Transparent, 3, 4));
+            theme.SetStylebox("grabber_pressed", type, Plate(Selection, Colors.Transparent, 3, 4));
+        }
+        foreach (bool on in new[] { false, true })
+        {
+            string state = on ? "checked" : "unchecked";
+            var icon = MenuIcon(36, 20, $"<rect x='1' y='1' width='34' height='18' rx='9' fill='{(on ? "#31536c" : "#101b29")}' stroke='{(on ? "#b8e5ff" : "#61738a")}'/><circle cx='{(on ? 26 : 10)}' cy='10' r='6' fill='{(on ? "#e8f6ff" : "#a8b6c9")}'/>");
+            theme.SetIcon(state, "CheckButton", icon);
+            theme.SetIcon(state + "_disabled", "CheckButton", icon);
+            theme.SetIcon(state + "_mirrored", "CheckButton", icon);
+        }
+    }
+
+    private static Texture2D MenuIcon(int width, int height, string shapes)
+    {
+        using var image = new Image();
+        image.LoadSvgFromString($"<svg xmlns='http://www.w3.org/2000/svg' width='{width}' height='{height}' viewBox='0 0 {width} {height}'>{shapes}</svg>", 2);
+        var texture = ImageTexture.CreateFromImage(image);
+        // Render at logical size while retaining a sharper source on a scaled window.
+        texture.SetSizeOverride(new Vector2I(width, height));
+        return texture;
     }
 
     public static StyleBoxFlat Panel(Color bg, int pad = 14, Color? border = null)

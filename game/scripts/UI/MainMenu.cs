@@ -105,16 +105,24 @@ public partial class MainMenu : Control
         var heading = new HBoxContainer();
         heading.AddThemeConstantOverride("separation", 24);
         heading.AddChild(UiTheme.Label(Loc.Text("ui_menu_title"), 34, UiTheme.Selection));
-        heading.AddChild(UiTheme.Label(Loc.Text("ui_menu_subtitle"), 17, UiTheme.Muted));
+        var subtitle = UiTheme.Label(Loc.Text("ui_menu_subtitle"), 17, UiTheme.Muted);
+        subtitle.VerticalAlignment = VerticalAlignment.Center;
+        heading.AddChild(subtitle);
         column.AddChild(heading);
 
         var row = new HBoxContainer { SizeFlagsVertical = SizeFlags.ExpandFill };
         row.AddThemeConstantOverride("separation", 24);
         column.AddChild(row);
-        row.AddChild(BuildPreviewColumn());
+        var previewPanel = new PanelContainer { Name = "PreviewPanel", SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsStretchRatio = .95f };
+        previewPanel.AddThemeStyleboxOverride("panel", UiTheme.Plate(UiTheme.Surface, UiTheme.Edge, 18, 18));
+        previewPanel.AddChild(BuildPreviewColumn());
+        row.AddChild(previewPanel);
 
         var right = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsStretchRatio = 1.05f };
-        row.AddChild(right);
+        var pagePanel = new PanelContainer { Name = "MenuPanel", SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsStretchRatio = 1.05f };
+        pagePanel.AddThemeStyleboxOverride("panel", UiTheme.Plate(UiTheme.Surface, UiTheme.Edge, 24, 18));
+        pagePanel.AddChild(right);
+        row.AddChild(pagePanel);
         AddPage(right, MenuPage.Home, BuildHome());
         AddPage(right, MenuPage.Customize, BuildCustomize());
         AddPage(right, MenuPage.Single, BuildSingle());
@@ -205,10 +213,11 @@ public partial class MainMenu : Control
         var species = new HBoxContainer { Name = "SpeciesSelection" };
         species.AddThemeConstantOverride("separation", 10);
         species.AddChild(UiTheme.Label(Loc.Text("custom_species_step"), 18, UiTheme.Selection));
+        var speciesGroup = new ButtonGroup();
         for (int i = 0; i < _characters.Count; i++)
         {
             int index = i;
-            var button = new Button { Name = "Species_" + _characters[i].Id, Text = Loc.Text(_characters[i].DisplayName), CustomMinimumSize = new Vector2(0, 40), SizeFlagsHorizontal = SizeFlags.ExpandFill };
+            var button = new Button { Name = "Species_" + _characters[i].Id, Text = Loc.Text(_characters[i].DisplayName), ToggleMode = true, ButtonGroup = speciesGroup, CustomMinimumSize = new Vector2(0, 40), SizeFlagsHorizontal = SizeFlags.ExpandFill };
             button.Pressed += () => Select(index);
             species.AddChild(button);
             _buttons.Add(button);
@@ -277,6 +286,7 @@ public partial class MainMenu : Control
         page.AddChild(new Control { SizeFlagsVertical = SizeFlags.ExpandFill });
         var start = new Button { Name = "StartGame", Text = Loc.Text("ui_menu_start"), CustomMinimumSize = new Vector2(0, 50) };
         start.AddThemeFontSizeOverride("font_size", 24);
+        StylePrimary(start);
         start.Pressed += StartGame;
         page.AddChild(start);
         page.AddChild(BackButton(MenuPage.Single));
@@ -444,10 +454,12 @@ public partial class MainMenu : Control
         page.AddChild(_lobbyStatus);
         _lobbyReady = new Button { Name = "Lobby_Ready", ToggleMode = true, CustomMinimumSize = new Vector2(0, 50) };
         _lobbyReady.AddThemeFontSizeOverride("font_size", 22);
+        StylePrimary(_lobbyReady);
         _lobbyReady.Toggled += on => { _sfx.Play("ui_click"); _lobby?.SetReady(on); };
         page.AddChild(_lobbyReady);
         _lobbyStart = new Button { Name = "Lobby_Start", Text = Loc.Text("menu_lobby_start"), CustomMinimumSize = new Vector2(0, 50) };
         _lobbyStart.AddThemeFontSizeOverride("font_size", 24);
+        StylePrimary(_lobbyStart);
         _lobbyStart.Pressed += () => { _sfx.Play("ui_click"); _lobby?.Start(); };
         page.AddChild(_lobbyStart);
         var leave = new Button { Name = "Lobby_Leave", Text = Loc.Text("menu_lobby_leave"), CustomMinimumSize = new Vector2(0, 40) };
@@ -624,7 +636,14 @@ public partial class MainMenu : Control
     {
         var button = new Button { Name = name, Text = text, Disabled = disabled, CustomMinimumSize = new Vector2(0, 54), Alignment = HorizontalAlignment.Left };
         button.AddThemeFontSizeOverride("font_size", 22);
+        if (name == "Menu_Single") StylePrimary(button);
         return button;
+    }
+
+    private static void StylePrimary(Button button)
+    {
+        button.AddThemeStyleboxOverride("normal", UiTheme.Panel(UiTheme.SelectedSurface, 14, new Color(UiTheme.Selection, .4f)));
+        button.AddThemeColorOverride("font_color", UiTheme.Selection);
     }
 
     private static Label Title(string key) => UiTheme.Label(Loc.Text(key), 26, UiTheme.Selection);
@@ -726,19 +745,19 @@ public partial class MainMenu : Control
 
     private Control BuildPreview()
     {
-        var container = new SubViewportContainer { Name = "CharacterPreview", Stretch = true, CustomMinimumSize = new Vector2(560, 360), SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill };
+        var container = new SubViewportContainer { Name = "CharacterPreview", Stretch = true, CustomMinimumSize = new Vector2(520, 320), SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill };
         var viewport = new SubViewport { OwnWorld3D = true, Msaa3D = Viewport.Msaa.Msaa4X };
         container.AddChild(viewport);
         var env = new Godot.Environment
         {
             BackgroundMode = Godot.Environment.BGMode.Color, BackgroundColor = new Color("101827"),
-            AmbientLightSource = Godot.Environment.AmbientSource.Color, AmbientLightColor = new Color("c6dddf"),
+            AmbientLightSource = Godot.Environment.AmbientSource.Color, AmbientLightColor = new Color("d4e3f2"),
             AmbientLightEnergy = .45f, TonemapMode = Godot.Environment.ToneMapper.Agx,
         };
         viewport.AddChild(new WorldEnvironment { Environment = env });
-        viewport.AddChild(new DirectionalLight3D { RotationDegrees = new Vector3(-50, -35, 0), LightEnergy = 1.2f, LightColor = new Color("ffe2b8"), ShadowEnabled = true });
+        viewport.AddChild(new DirectionalLight3D { RotationDegrees = new Vector3(-50, -35, 0), LightEnergy = 1.2f, LightColor = new Color("edf4ff"), ShadowEnabled = true });
         viewport.AddChild(new DirectionalLight3D { RotationDegrees = new Vector3(-20, 150, 0), LightEnergy = .35f, LightColor = new Color("a8c8ff") });
-        Mat.Mesh(viewport, new CylinderMesh { TopRadius = 1.6f, BottomRadius = 1.6f, Height = .1f }, new Vector3(0, -.05f, 0), Mat.Solid("3a4440"));
+        Mat.Mesh(viewport, new CylinderMesh { TopRadius = 1.6f, BottomRadius = 1.6f, Height = .1f }, new Vector3(0, -.05f, 0), Mat.Solid("253549"));
         _turntable = new Node3D();
         viewport.AddChild(_turntable);
         _previewCamera = new Camera3D { Fov = 35 };
@@ -755,7 +774,7 @@ public partial class MainMenu : Control
         if (playSound) _sfx.Play("ui_click");
         _description.Text = Loc.Text(def.Description);
         _details.Text = $"HP {def.MaxHealth}    ·    {Loc.Text("custom_speed")} {def.MoveSpeed:0.0}";
-        for (int i = 0; i < _buttons.Count; i++) _buttons[i].Modulate = i == _index ? UiTheme.Selection : Colors.White;
+        for (int i = 0; i < _buttons.Count; i++) _buttons[i].SetPressedNoSignal(i == _index);
         if (_rig != null) { _turntable.RemoveChild(_rig); _rig.QueueFree(); }
         _rig = CharacterRig.Create(def);
         _turntable.AddChild(_rig);

@@ -74,7 +74,11 @@ public partial class MenuCheck : Node
         Click("Species_raccoon");
         await Frames(2);
         Check(_menu.Selected.Id == "raccoon" && GameSession.SelectedCharacterId == "raccoon", "picking a species makes it the character to play");
+        Check(Ui<Button>("Species_raccoon").ButtonPressed && !Ui<Button>("Species_goose").ButtonPressed,
+            "species selection remains explicit when keyboard focus moves away");
         await Shot("menu-customize");
+        Ui<TabContainer>("PartTabs").CurrentTab = 5;
+        await Shot("menu-customize-gear");
         Click("Back_Customize");
         await Frames(2);
         Check(_menu.Page == MenuPage.Home && !Ui<Control>("PreviewTools").Visible, "back returns home and hides preview tools");
@@ -99,6 +103,12 @@ public partial class MenuCheck : Node
         Check(Ui<Button>("StartGame") is { Disabled: false } && _menu.FindChild("StageThemeChoice", true, false) != null && _menu.FindChild("DebugEscape", true, false) != null,
             "start button and test options stay on the single page");
         await Shot("menu-single");
+        if (DisplayServer.GetName() != "headless")
+        {
+            squad.ShowPopup();
+            await Shot("menu-squad-popup");
+            squad.GetPopup().Hide();
+        }
         _menu._UnhandledInput(new InputEventAction { Action = "ui_cancel", Pressed = true });
         await Frames(2);
         Check(_menu.Page == MenuPage.Home, "Esc goes back to the home page");
@@ -161,6 +171,7 @@ public partial class MenuCheck : Node
         Click("Menu_Settings");
         Click("Settings_Graphics");
         Check(_menu.Page==MenuPage.Graphics,"settings opens separate graphics page");
+        await Shot("menu-graphics");
         var petQuality=Ui<Button>("Graphics_Pet_High");
         Check(petQuality.ButtonPressed && GameSettings.PetQuality==PetModelQuality.High,"pet quality defaults to high");
         Click("Graphics_Pet_Low");
@@ -182,6 +193,7 @@ public partial class MenuCheck : Node
         revive.ButtonPressed = false;
         Check(!GameSettings.ReviveEnabled, "revive option can be turned off");
         revive.ButtonPressed = true;
+        await Shot("menu-settings-kor");
         string koreanTitle = Loc.Text("menu_settings_title");
         var languageChoice = Ui<OptionButton>("Settings_Language");
         int english = GameSettings.Languages.ToList().IndexOf("eng");
