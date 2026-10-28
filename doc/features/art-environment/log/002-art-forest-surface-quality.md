@@ -49,7 +49,7 @@
 - [절벽](../../../../game/output/terrain-edge-surface-after-wall.png) · [개선 구역 적 등장](../../../../game/output/forest-expansion-surface-pilot-enemies.png)
 - [Blender 생성기](../../../../prototypes/outdoor-kit/tools/forest_surface_boulder.py), [원본](../../../../prototypes/outdoor-kit/source/forest-surface-boulder.blend), [별도 manifest](../../../../game/assets/stage2-props/manifest_forest_surface.json).
 
-작업 트리 루트에서 `./game/Start-Game.ps1 -Zone 3:B -Squad 0`으로 숲 시작점에 진입해 경사로를 지나 x84..104 부근에서 비교한다. main 폴더 실행에는 아직 이 변경이 없다. 전용 렌더 재실행: Godot `--path game --fixed-fps 60 res://tests/TerrainEdgeCheck.tscn -- surface-after`. 성능 검사는 `--fixed-fps` 없이 실행한다.
+저장소 루트에서 `./game/Start-Game.ps1 -Zone 3:B -Squad 0`으로 숲 시작점에 진입해 경사로를 지나 x84..104 부근에서 비교한다. 최초 작성 이후 main에도 병합했다([통합 검증](../../menu-ui/log/008-check-graphics-main-integration.md)). 전용 렌더 재실행: Godot `--path game --fixed-fps 60 res://tests/TerrainEdgeCheck.tscn -- surface-after`. 성능 검사는 `--fixed-fps` 없이 실행한다.
 
 ## 남은 범위
 
