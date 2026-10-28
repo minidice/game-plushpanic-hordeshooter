@@ -65,6 +65,7 @@
 - 곤돌라 재합류 검사는 새 맵 로딩 시간을 확보하려고 검사에서만 운행을30초로 늘린다. 제품의 임시12초 설정은 바꾸지 않았다. 클라이언트는 자기 연출 시간이 지나도 호스트 완료를 기다린다.
 - `campaign-final-*` 실행은 모든 게임 단언과 두 프로세스 종료 코드가0이어도 창 모드 종료 시 Transform 오류4개 때문에 게이트가 실패했다. BackToMenu에서 Ending을 먼저 설정하고 StageNet의 트리 이탈 때 콜백을 해제했다. 이후 등록하지 않은 신호까지 해제한 오류를 발견해 역할별 등록 신호만 해제하도록 수정했다. 최종 게이트는 이 두 오류 모두0이다.
 - 수정 전 검증 지문과 수정 후 소스 지문이 달라 이전 결과가 재사용되지 않음을 읽기 전용 비교로 확인했다(`campaign-fingerprint-check.log`). 문서 로컬 링크 검사와 `git diff --check` 통과.
+- main에 `5378599`를 fast-forward한 뒤 병합 체크아웃도 C# 빌드0경고/0오류·NetCodec23 통과(`D:/Project/Game/game-hordeshooter/game/output/campaign-merged-build.log`, `campaign-merged-codec.log`). 두 체크아웃의 모든 게임 파일 비교에서 차이는 기존 텍스트의 CRLF/LF뿐이며 다른 내용/바이너리 차이는 없었다. 원시 바이트 지문은 다르므로 작업 트리의 검증 manifest를 main 체크아웃에 복사하거나 일치한다고 처리하지 않았다. 제공 ZIP은 위 지문의 검증된 작업 트리에서 만든 결과다.
 
 ## 남은 범위
 
