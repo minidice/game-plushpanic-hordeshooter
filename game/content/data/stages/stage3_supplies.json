@@ -1,5 +1,5 @@
 {
-  "description": "Stage 2 size draft supply points (decisions.md L-29, doc/stage2-floorplan.md 5장: the 20-minute budget for a 4-player team, [임시]). Replaces stage2_supplies.json once the draft replaces today's Stage 2. The game lays each item on the floor of the tier it stands on. Main points sit on the route (rim checkpoint before the bridge, the watch post, the yard's far end); optional ones on the two reward branches (watchtower, workshop); the event reward at the pump house. Ammo piles only in main points, none within 10 m of the pump (L-12). kind: start | main | optional | event | arrival. at = [x, z].",
+  "description": "Stage 2 size draft supply points (decisions.md L-29, doc/stage2-floorplan.md 5장: the 20-minute budget for a 4-player team, [임시]). Replaces stage2_supplies.json once the draft replaces today's Stage 2. The game lays each item on the floor of the tier it stands on. Main points sit on the route (rim checkpoint before the bridge, the watch post, the yard's far end); optional ones on the two reward branches (watchtower, workshop); the event reward at the pump house. Ammo refills only at the arrival hatch, intermediate watch post and final safehouse (L-12, 2026-10-29); loose route ammo removed. kind: start | main | optional | event | arrival. at = [x, z].",
   "points": [
     {
       "id": "hatch_kit", "kind": "start", "area": "clearing",
@@ -21,7 +21,6 @@
     {
       "id": "rim_checkpoint", "kind": "main", "area": "canyon",
       "items": [
-        { "item": "ammo", "at": [171, -37] },
         { "item": "medkit", "at": [172.5, -37] },
         { "item": "throwable", "id": "frag", "at": [174, -36.5] }
       ]
@@ -49,7 +48,6 @@
     {
       "id": "yard_end", "kind": "main", "area": "yard",
       "items": [
-        { "item": "ammo", "at": [432, -64] },
         { "item": "medkit", "at": [433.5, -64] },
         { "item": "throwable", "id": "frag", "at": [432.8, -62.6] }
       ]

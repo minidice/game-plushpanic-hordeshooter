@@ -50,6 +50,9 @@ public partial class WeaponController : Node
     {
         _player = player;
         Name = "Weapons";
+        // Only the first full campaign stage has the weak starter; carry-over is applied afterwards.
+        if (player.Stage.Mode == GameMode.Scenario && player.Stage.Map is LayoutMap { StageNumber: 1 })
+            Loadout.SetSlot(1, ArmoryCatalog.Weapon("wooden_club"));
     }
 
     public override void _Ready()

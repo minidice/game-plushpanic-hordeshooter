@@ -1,6 +1,7 @@
 id,type,name,slot,category,fire_mode,automatic,damage,max_range_m,effective_range_m,falloff_min,fire_interval_ms,reload_ms,reload_shell_ms,mag_size,max_mags,start_mags,refillable,pierce,spread_deg,spread_per_shot_deg,move_spread_deg,max_spread_deg,recoil_power,hit_power,traits,fire_sound,model,icon,color,accent_color,length_m,caliber,aim_spread_deg,aim_time_s,spread_recovery_dps,recoil_up,recoil_side,recoil_return
 #무기ID,분류ID(weapon_types.csv),이름 키 (content/lan/<언어>/*.csv),빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,1발씩 추가 장전 시간(ms; 0=탄창 교체),빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,탄 종류(빈칸=분류 기본값),빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값,빈칸이면 분류 기본값
 frying_pan,melee,name_weapon_frying_pan,,,,,,,,,,,,,,,,,,,,,,,,,,res://assets/icons/frying_pan.png,,,,,,,,,,
+wooden_club,melee,name_weapon_wooden_club,,,,,8.5,,,,,,,,,,,,,,,,,,,,,res://assets/icons/wooden_club.svg,896644,44382c,0.85,,,,,,,
 m1911,pistol,name_weapon_m1911,,,,,,,,,,,,,,,,,,,,,,,,,res://assets/weapons/m1911.glb,res://assets/icons/m1911.png,,,,,,,,,,
 glock17,pistol,name_weapon_glock17,,,,,4,,,,110,,,17,,,,,,,,,6,,,,res://assets/weapons/glock17.glb,res://assets/icons/glock17.png,1d1f21,,,,,,,10,8,
 mp5,smg,name_weapon_mp5,,,,,6,,,,,,,,,,,,,,,,,,,,res://assets/weapons/mp5.glb,res://assets/icons/mp5.png,,,,,,,,,,

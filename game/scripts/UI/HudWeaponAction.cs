@@ -81,13 +81,15 @@ public partial class Hud
         else _weaponAction.Update(player.Gun, player.Weapons.Charging || player.Weapons.WindupProgress > 0,
             player.Weapons.WindupProgress, dt);
         float weight = _weaponAction.Weight;
-        _weaponActionGauge.Visible = _weaponActionLabel.Visible = weight > 0;
+        _weaponActionGauge.Visible = _weaponActionLabel.Visible = weight > 0 && !InteractionInDock;
         _weaponActionGauge.Modulate = _weaponActionLabel.Modulate = new Color(1, 1, 1, weight);
         string key = _weaponAction.Kind == WeaponActionFeedback.ActionKind.Reload ? "ui_hud_reload"
             : _weaponAction.Kind == WeaponActionFeedback.ActionKind.Recharge ? "hud_action_recharge" : "hud_action_charge";
         _weaponActionLabel.Text = $"{Loc.Text(key)}  ·  {_weaponAction.Percent}%";
         // Leave the existing interaction/status lines below, and move status icons above the action strip.
-        _statusEffects.OffsetTop = _statusEffects.OffsetBottom = -200 - 70 * weight;
+        float interactionTop = _worldInteraction.Position.Y - _root.Size.Y;
+        _statusEffects.OffsetTop = _statusEffects.OffsetBottom = InteractionInDock ? interactionTop - 86 : -200 - 70 * weight;
+        _status.OffsetTop = _status.OffsetBottom = InteractionInDock ? interactionTop - 34 : -166;
     }
 
     private void DrawWeaponActionGauge(Control c)

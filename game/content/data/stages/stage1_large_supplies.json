@@ -1,5 +1,5 @@
 {
-  "description": "Large Stage 1 supply points (decisions.md L-30, the 20-minute budget for a 4-player team, [임시]). Main points on the route (alley end, the guard post, the freight yard's far end); optional ones on the two reward branches (pharmacy, container top); the event reward by the shutter panel. Ammo piles only in main points, none within 10 m of the panel (L-12). The game lays each item on the floor of the tier it stands on. Tutorial (L-34): no start kit (melee only); a single pistol in the first yard; shared tables (infinite) in bases P3 (pistol), P6 (MP5) and E (M4); per-person medkits in bases and throwables right before each wave zone (M-35).",
+  "description": "Large Stage 1 supply points (decisions.md L-30, the 20-minute budget for a 4-player team, [임시]). Main points on the route (alley end, the guard post, the freight yard's far end); optional ones on the two reward branches (pharmacy, container top); the event reward by the shutter panel. Ammo piles only in main points, none within 10 m of the panel (L-12). The game lays each item on the floor of the tier it stands on. Tutorial (L-34): no start kit (melee only); a single pistol in the first yard; shared tables (infinite) in bases P3 (pistol), P6 (MP5) and E (M4); per-person medkits in bases and throwables right before each wave zone (M-35). 2026-10-29: Campaign ammo refills remain only at arrival/start safehouses and marked transition bases; loose route/optional ammo removed.",
   "points": [
     {
       "id": "p_yard_pistol",
@@ -121,13 +121,6 @@
       "area": "alley",
       "items": [
         {
-          "item": "ammo",
-          "at": [
-            185,
-            -69
-          ]
-        },
-        {
           "item": "throwable",
           "id": "frag",
           "at": [
@@ -222,13 +215,6 @@
       "area": "yard",
       "items": [
         {
-          "item": "ammo",
-          "at": [
-            509,
-            -112
-          ]
-        },
-        {
           "item": "medkit",
           "at": [
             510.5,
@@ -311,46 +297,11 @@
       "area": "street",
       "items": [
         {
-          "item": "ammo",
-          "at": [
-            98.5,
-            -14
-          ]
-        },
-        {
           "item": "throwable",
           "id": "frag",
           "at": [
             101,
             -14
-          ]
-        }
-      ]
-    },
-    {
-      "id": "b_back_west",
-      "kind": "optional",
-      "area": "street",
-      "items": [
-        {
-          "item": "ammo",
-          "at": [
-            20,
-            12
-          ]
-        }
-      ]
-    },
-    {
-      "id": "b_terrace",
-      "kind": "optional",
-      "area": "street",
-      "items": [
-        {
-          "item": "ammo",
-          "at": [
-            104,
-            -46
           ]
         }
       ]
@@ -370,65 +321,16 @@
       ]
     },
     {
-      "id": "d_shutter_ammo",
-      "kind": "optional",
-      "area": "depot",
-      "items": [
-        {
-          "item": "ammo",
-          "at": [
-            333,
-            -80
-          ]
-        }
-      ]
-    },
-    {
       "id": "f_crane_cache",
       "kind": "optional",
       "area": "yard",
       "items": [
-        {
-          "item": "ammo",
-          "at": [
-            450,
-            -150
-          ]
-        },
         {
           "item": "throwable",
           "id": "frag",
           "at": [
             452.5,
             -150
-          ]
-        }
-      ]
-    },
-    {
-      "id": "f_cross_ammo",
-      "kind": "optional",
-      "area": "yard",
-      "items": [
-        {
-          "item": "ammo",
-          "at": [
-            497,
-            -130
-          ]
-        }
-      ]
-    },
-    {
-      "id": "p5_trunk",
-      "kind": "optional",
-      "area": "p_lot",
-      "items": [
-        {
-          "item": "ammo",
-          "at": [
-            -32,
-            9
           ]
         }
       ]
@@ -449,20 +351,6 @@
       ]
     },
     {
-      "id": "h_corner",
-      "kind": "optional",
-      "area": "safehouse",
-      "items": [
-        {
-          "item": "ammo",
-          "at": [
-            624,
-            -125
-          ]
-        }
-      ]
-    },
-    {
       "id": "e_shotgun",
       "kind": "optional",
       "area": "post",
@@ -473,34 +361,6 @@
           "at": [
             350,
             -97
-          ]
-        }
-      ]
-    },
-    {
-      "id": "p6_outside",
-      "kind": "optional",
-      "area": "saferoom",
-      "items": [
-        {
-          "item": "ammo",
-          "at": [
-            12,
-            -7.5
-          ]
-        }
-      ]
-    },
-    {
-      "id": "p2_corner",
-      "kind": "optional",
-      "area": "p_yard",
-      "items": [
-        {
-          "item": "ammo",
-          "at": [
-            -120,
-            -7
           ]
         }
       ]

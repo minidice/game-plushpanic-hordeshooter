@@ -79,6 +79,17 @@ public static class WeaponVisual
         switch (def.Category)
         {
             case WeaponCategory.Melee:
+                if (def.Id == "wooden_club")
+                {
+                    var club = Mat.Mesh(root, new CylinderMesh { TopRadius = .11f, BottomRadius = .045f, Height = l, RadialSegments = 10 }, new Vector3(0, 0, l * .42f), body, "ClubHead");
+                    club.RotationDegrees = new Vector3(90, 0, 0);
+                    for (int band = 0; band < 3; band++)
+                    {
+                        var wrap = Mat.Mesh(root, new CylinderMesh { TopRadius = .051f, BottomRadius = .051f, Height = .025f, RadialSegments = 10 }, new Vector3(0, 0, .025f + band * .04f), accent, "GripWrap");
+                        wrap.RotationDegrees = new Vector3(90, 0, 0);
+                    }
+                    return Point(root, new Vector3(0, 0, l));
+                }
                 // Frying pan: handle + pan. The classic.
                 Mat.Box(root, new Vector3(0, 0, l * .3f), new Vector3(t * .6f, t * .6f, l * .6f), accent);
                 var pan = Mat.Mesh(root, new CylinderMesh { TopRadius = .2f, BottomRadius = .17f, Height = .06f }, new Vector3(0, 0, l * .6f + .18f), body);

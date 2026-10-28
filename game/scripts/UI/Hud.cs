@@ -65,10 +65,6 @@ void fragment() {
         arrows.SetAnchorsPreset(Control.LayoutPreset.FullRect);
         _root.AddChild(arrows);
 
-        var holdBar = new Paint { Name = "HoldBar", Painter = DrawHoldBar };
-        holdBar.SetAnchorsPreset(Control.LayoutPreset.FullRect);
-        _root.AddChild(holdBar);
-
         var reticle = new Paint { Name = "Reticle", Painter = DrawReticle };
         reticle.SetAnchorsPreset(Control.LayoutPreset.FullRect);
         _root.AddChild(reticle);
@@ -524,19 +520,6 @@ void fragment() {
                     ReticleLine(c, mid - dir * 6 + s, mid + dir * 6 + s, tint, 3, crit ? HitMarkCrit : HitMarkHot, Mathf.Min(1, t * 2.5f));
             }
         }
-    }
-
-    /// <summary>Pixel size of the hold bar over the survivor's head (a base door, decisions.md L-35).</summary>
-    public static readonly Vector2 HoldBarSize = new(80, 12);
-
-    /// <summary>A hold-to-use in progress: a bar over the survivor's own head, not at the cursor (L-35).</summary>
-    private void DrawHoldBar(Control c)
-    {
-        var stage = Stage;
-        if (stage.HoldProgress <= 0 || !ShowInteractions) return;
-        var top = stage.Cam.UnprojectPosition(stage.Player.GlobalPosition + Vector3.Up * 2.35f);
-        var rect = new Rect2(top - new Vector2(HoldBarSize.X / 2, HoldBarSize.Y), HoldBarSize);
-        UiTheme.DrawProgress(c, rect, stage.HoldProgress, 2);
     }
 
     private void DrawReticle(Control c)

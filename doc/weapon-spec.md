@@ -28,6 +28,8 @@ type=assault_rifle  ◀──── m4,assault_rifle,M4,11,,,,       buckshot.js
 
 ## 2. 열 목록 (분류·무기 공통)
 
+**캠페인 시작 무기(2026-10-29, L-34)**: 큰 캠페인 Stage 1의 사람 시작 장비는 `wooden_club`(몽둥이) 하나다. `weapons.csv`의 `damage=8.5`는 이전 시작 프라이팬17의 절반이며, `weapon_types.csv`의 근접 기본 피해17은 유지한다. 길이0.85m·갈색 목재 모델·전용 SVG 아이콘은 외형 제작값이다. `WeaponController.Setup`의 캠페인1 조건에만 적용하며, 짧은 시나리오/거점/난전의 기본 프라이팬과 스테이지 이월 장비는 유지한다. [검사·제약](features/level/log/018-code-campaign-supply-start.md).
+
 | 열 | 의미 | 단위·값 |
 |---|---|---|
 | `type` | 분류 ID (weapons.csv에서는 어느 분류를 따를지) | weapon_types.csv의 type |

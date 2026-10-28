@@ -13,6 +13,7 @@ public partial class Hud
     private Interactable? _submittedHold;
     private float _interactionBlend, _interactionProgress, _interruptLeft, _completeLeft, _markerClock;
     private bool _interactionActive, _reviveWasLocal;
+    private bool InteractionInDock => _worldInteraction.Visible && (_interactionProgress > 0 || _completeLeft > 0 || _interruptLeft > 0);
     private readonly List<Interactable> _discoverable = new();
     private readonly StyleBoxFlat _keyPlate = UiTheme.Plate(UiTheme.SelectedSurface, new Color(UiTheme.Selection, .3f), 6, 6);
     private bool ShowInteractions => Stage.State == StageState.Playing && !Stage.Player.IsDead && !Stage.Player.IsDowned
@@ -134,7 +135,7 @@ public partial class Hud
             _interactionKey.Text = _completeLeft > 0 ? "✓" : "E";
             _interactionKey.Modulate = blocked ? new Color(1, 1, 1, .35f) : Colors.White;
             _keyPlate.BorderColor = new Color(UiTheme.Selection, blocked ? .06f : .35f);
-            _interactionHint.Text = _completeLeft > 0 ? Loc.Text("hud_interaction_done")
+            _interactionHint.Text = _completeLeft > 0 ? $"{Loc.Text("hud_interaction_done")}  ·  100%"
                 : _interruptLeft > 0 ? Loc.Text("hud_interaction_interrupted")
                 : otherReviver ? Loc.Text("hud_interaction_other_reviver")
                 : _interactionProgress > 0 ? $"{Loc.Text("hud_interaction_hold")}  ·  {Mathf.Min(99, Mathf.FloorToInt(_interactionProgress * 100))}%"
@@ -147,11 +148,7 @@ public partial class Hud
             _worldInteraction.Modulate = new Color(1, 1, 1, weight);
             PlaceInteraction(weight);
         }
-        // L-35 keeps the lower percentage while the world label identifies the object.
-        if (_interruptLeft > 0) _prompt.Text = Loc.Text("hud_interaction_interrupted");
-        else if (_interactionActive && _interactionProgress > 0)
-            _prompt.Text = $"{_interactionTitle.Text}  ·  {Mathf.Min(99, Mathf.FloorToInt(_interactionProgress * 100))}%";
-        else if (!stage.Player.IsRestrained) _prompt.Text = "";
+        // The same panel moves to the dock during a hold; no second percentage line or head bar.
         _reviveWasLocal = _interactionActive && _interactionTarget is Player reviving
             && reviving.RevivedBy == stage.Player && stage.Player.Reviving == reviving;
         UpdateDiscovery(dt);
@@ -162,12 +159,24 @@ public partial class Hud
     private void PlaceInteraction(float weight)
     {
         var viewport = _root.Size;
+        bool docked = InteractionInDock;
+        _interactionTitle.AddThemeFontSizeOverride("font_size", docked ? 22 : 17);
+        _interactionHint.AddThemeFontSizeOverride("font_size", docked ? 20 : 13);
+        _interactionTitle.HorizontalAlignment = docked ? HorizontalAlignment.Center : HorizontalAlignment.Left;
+        _interactionHint.HorizontalAlignment = docked ? HorizontalAlignment.Center : HorizontalAlignment.Left;
+        _interactionKey.GetParent<Control>().Visible = !docked;
+        _interactionGauge.CustomMinimumSize = new(0, docked ? 24 : 12);
         // Fixed width cap avoids label/layout feedback loops on long translated item names.
         float titleWidth = _interactionTitle.GetThemeFont("font").GetStringSize(_interactionTitle.Text, fontSize: 17).X;
-        float width = Mathf.Min(Mathf.Clamp(titleWidth + 78, 190, 330), viewport.X - 32);
-        _interactionTitle.CustomMinimumSize = new(width - 75, 0);
+        float width = Mathf.Min(docked ? 460 : Mathf.Clamp(titleWidth + 78, 190, 330), viewport.X - 32);
+        _interactionTitle.CustomMinimumSize = new(width - (docked ? 24 : 75), 0);
         _worldInteraction.ResetSize();
         var size = _worldInteraction.GetCombinedMinimumSize();
+        if (docked)
+        {
+            _worldInteraction.Position = new Vector2((viewport.X - size.X) / 2, viewport.Y - size.Y - 126);
+            return;
+        }
         var anchor = InteractionAnchor(_interactionTarget!);
         var at = anchor + new Vector2(22, -size.Y - 8 + (1 - weight) * 5);
         var aim = Stage.Cam.UnprojectPosition(Stage.Player.AimPoint);
@@ -210,7 +219,7 @@ public partial class Hud
             c.DrawArc(at, 5, 0, Mathf.Tau, 24, new Color(UiTheme.SightTint, .65f), 1.4f, true);
             c.DrawCircle(at, 1.8f, UiTheme.Paper, true, -1, true);
         }
-        if (!_worldInteraction.Visible || !Live(_interactionTarget)) return;
+        if (!_worldInteraction.Visible || InteractionInDock || !Live(_interactionTarget)) return;
         var anchor = InteractionAnchor(_interactionTarget!);
         var rect = new Rect2(_worldInteraction.Position, _worldInteraction.Size);
         var edge = new Vector2(Mathf.Clamp(anchor.X, rect.Position.X + 10, rect.End.X - 10), Mathf.Clamp(anchor.Y, rect.Position.Y + 8, rect.End.Y - 8));

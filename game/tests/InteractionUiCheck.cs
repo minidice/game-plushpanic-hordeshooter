@@ -70,11 +70,26 @@ public partial class InteractionUiCheck : Node
             second.Enabled = false; Tick();
             Check(hud.InteractionTarget == item, "disabled target immediately relinquishes focus");
             _stage.Interactables.Remove(second); second.Free();
+            var witness = _stage.AddRemoteSurvivor(CharacterCatalog.Player("duck"), at + Vector3.Right * 10, 9);
+            witness.SetPhysicsProcess(false);
+            p.Invulnerable = false;
+            for (int down = 0; down < _stage.DownsPerLife; down++) { p.TakeDamage(9999, Vector3.Zero, 0); p.Revive(); }
+            p.Invulnerable = true;
             p.ManualControl = false;
             Input.ActionPress(GameInput.Interact); Advance(1.4f);
             Check(_stage.HoldProgress > .4f && _stage.HoldProgress < .55f && gauge.Visible, "actual three-second hold drives world progress");
             Check(hint.Text.Contains("%"), "hold exposes progress without replacing the aim cursor");
+            await Frames(3);
+            Check(panel.Position.Y > GetViewport().GetVisibleRect().Size.Y * .65f && panel.Size.X >= 430,
+                "hold has one large progress panel directly above the weapon dock");
+            Check(hud.GetNodeOrNull("HudRoot/HoldBar") == null && hud.GetNode<Label>("HudRoot/InteractionPrompt").Text == "",
+                "hold has no duplicate head bar or lower percentage line");
+            var status = hud.GetNode<Label>("HudRoot/Status");
+            Check(p.OnLastDown && status.Text == Loc.Text("hud_last_down") && !status.GetGlobalRect().Intersects(panel.GetGlobalRect()),
+                "last-down warning stays readable above the active interaction panel");
             await Shot("hold");
+            p.ResetDowns();
+            _stage.Players.Remove(witness); witness.Free();
             p.Gun.SetAmmo(20, 90); p.Gun.StartReload(); p.Gun.Tick(p.Gun.ReloadTime / 2, false); hud._Process(.2);
             await Shot("hold-and-reload"); p.Gun.CancelReload();
             p.Invulnerable = false; p.TakeDamage(1, Vector3.Zero, 0); p.Invulnerable = true; Tick();
@@ -86,16 +101,16 @@ public partial class InteractionUiCheck : Node
             Input.ActionRelease(GameInput.Interact); Tick();
             Check(!gauge.Visible && !hint.Text.Contains("100"), "release cancels without false full progress");
             Input.ActionPress(GameInput.Interact); Advance(3.04f); Input.ActionRelease(GameInput.Interact);
-            Check(!item.Enabled && hint.Text == Loc.Text("hud_interaction_done"), "real disabled door state shows a short completion acknowledgement");
+            Check(!item.Enabled && hint.Text.Contains(Loc.Text("hud_interaction_done")), "real disabled door state shows a short completion acknowledgement");
             await Shot("complete"); Advance(1);
             Check(!panel.Visible, "completion acknowledgement expires instead of restarting forever");
             item.Enabled = true; Advance(.3f);
             // Delay the host's state response after the real client hold dispatch. No success at send time.
             int requests = 0; _stage.Role = NetRole.Client; _stage.RequestUse = _ => requests++;
             Input.ActionPress(GameInput.Interact); Advance(3.04f); Input.ActionRelease(GameInput.Interact); Advance(.3f);
-            Check(requests == 1 && item.Enabled && hint.Text != Loc.Text("hud_interaction_done"), "client hold dispatch cannot announce success before host confirmation");
+            Check(requests == 1 && item.Enabled && !hint.Text.Contains(Loc.Text("hud_interaction_done")), "client hold dispatch cannot announce success before host confirmation");
             item.Enabled = false; Tick();
-            Check(hint.Text == Loc.Text("hud_interaction_done"), "delayed host confirmation acknowledges the submitted hold after E is released");
+            Check(hint.Text.Contains(Loc.Text("hud_interaction_done")), "delayed host confirmation acknowledges the submitted hold after E is released");
             Advance(1); Check(!panel.Visible, "confirmed client completion also expires");
             _stage.Role = NetRole.Offline; _stage.RequestUse = null;
             item.Enabled = true; Advance(.3f);

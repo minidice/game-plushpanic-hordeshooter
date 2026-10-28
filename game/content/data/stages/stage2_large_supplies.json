@@ -1,5 +1,5 @@
 {
-  "description": "Large Stage 2 supply points (decisions.md L-30, the 20-minute budget for a 4-player team, [임시]). Main points on the route (the ford, the ranger post, the hill top); optional ones on the two reward branches (hunting cabin ledge, log deck); the event reward by the generator panel. Ammo piles only in main points, none within 10 m of the panel (L-12). The game lays each item on the floor of the tier it stands on.",
+  "description": "Large Stage 2 supply points (decisions.md L-30, the 20-minute budget for a 4-player team, [임시]). Main points on the route (the ford, the ranger post, the hill top); optional ones on the two reward branches (hunting cabin ledge, log deck); the event reward by the generator panel. Ammo piles only in main points, none within 10 m of the panel (L-12). The game lays each item on the floor of the tier it stands on. 2026-10-29: Campaign ammo refills remain only at arrival/start safehouses and marked transition bases; loose route/optional ammo removed.",
   "points": [
     {
       "id": "drain_kit",
@@ -74,13 +74,6 @@
       "kind": "main",
       "area": "ford",
       "items": [
-        {
-          "item": "ammo",
-          "at": [
-            199,
-            -44
-          ]
-        },
         {
           "item": "medkit",
           "at": [
@@ -162,13 +155,6 @@
       "kind": "main",
       "area": "hill",
       "items": [
-        {
-          "item": "ammo",
-          "at": [
-            529,
-            -96
-          ]
-        },
         {
           "item": "medkit",
           "at": [
