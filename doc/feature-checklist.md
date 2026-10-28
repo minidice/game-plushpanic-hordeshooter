@@ -182,6 +182,7 @@
 - [x] 멀티 메뉴: 방 만들기, 주소로 참가(2인 테스트). 방 코드·공개방은 준비 중
 - [x] 멀티 테스트 실행: 한 PC 두 창(`Start-Multi-Test.cmd`), 방장 LAN 주소 안내, 다른 PC용 Windows 실행 파일(`Export-Game.cmd` → `build/HordeShooter-windows.zip`)
 - [x] 로비 동시 시작 중 맵 로딩 연결 해제 수정(I-133): 로딩 대기 시간 분리·동기화 후 복구, 실제 두 프로세스의 시작/로비 복귀/재시작 검증 — [기록](features/multiplayer/log/002-code-lobby-loading-timeout.md).
+- [x] 캠페인 C1 출구 멀티 통과 수정(I-134): 9번째 이후 문·경보 상태 누락 제거, 거위/오리의 실제 통과와 10개 문 동기화 검증 — [기록](features/multiplayer/log/004-code-campaign-door-sync.md).
 - [x] AI 분대원 선택(없음 / 1명 기본 / 3명) 저장
 - [x] AI 분대원 등장(싱글): 역할 3종·무기 풀, 따라가기·교전·구출·치료·줍기, 지나온 길에서 따라잡기 ([설계](ai-squad-plan.md))
 - [x] 쓰러짐·일으키기(4초, 맞으면 끊김), 한 생명 2회, 출혈 30초, NPC 재등장 60초·2회 — 설정의 "부활" 옵션(기본 켬)

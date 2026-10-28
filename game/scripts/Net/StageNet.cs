@@ -495,7 +495,7 @@ public partial class StageNet : Node
         w.U16(p.NetId); w.U16(NetIds.Weapon(p.Weapon!.Id)); w.Pos(p.GlobalPosition); w.U16(p.State?.Mag ?? -1 & 0xFFFF); w.U16(p.State?.Reserve ?? 0);
     }
 
-    /// <summary>Objective, doors (bit i = the map's door i), the alarm (the bit after the doors) and every usable thing's on/off state.</summary>
+    /// <summary>Objective, counted door/alarm states and every usable thing's on/off state.</summary>
     private byte[] World()
     {
         var w = new NetWriter();
@@ -508,11 +508,11 @@ public partial class StageNet : Node
         var map = _stage.Map;
         w.U8((int)_stage.Objective);
         w.U8((int)_stage.State);
-        int bits = 0;
-        for (int i = 0; i < map.Doors.Count; i++) if (map.Doors[i].IsOpen) bits |= 1 << i;
-        // Doors, then alarms, one bit each in a byte (a map with more than 8 of them would lose the rest).
-        for (int i = 0; i < map.AlarmDevices.Count; i++) if (map.AlarmDevices[i].Triggered) bits |= 1 << (map.Doors.Count + i);
-        w.U8(bits);
+        // Large campaigns exceed eight doors; alarms must not compete for those same bits either.
+        w.U16(map.Doors.Count);
+        foreach (var door in map.Doors) w.U8(door.IsOpen ? 1 : 0);
+        w.U16(map.AlarmDevices.Count);
+        foreach (var alarm in map.AlarmDevices) w.U8(alarm.Triggered ? 1 : 0);
         w.U16(_stage.Interactables.Count);
         foreach (var i in _stage.Interactables) { w.U16(i.NetId); w.U8((i.Enabled ? 1 : 0) | (i.Visible ? 2 : 0)); }
         var barrels = _stage.Props.OfType<ExplosiveBarrel>().ToList();
@@ -846,16 +846,19 @@ public partial class StageNet : Node
     {
         var objective = (Objective)r.U8();
         var state = (StageState)r.U8();
-        int bits = r.U8();
         var map = _stage.Map;
         _stage.ApplyNetObjective(objective);
-        for (int i = 0; i < map.Doors.Count; i++)
+        int doorCount = r.U16();
+        if (doorCount != map.Doors.Count) throw new InvalidOperationException($"world door count differs: host {doorCount}, client {map.Doors.Count}");
+        for (int i = 0; i < doorCount; i++)
         {
             var door = map.Doors[i];
-            bool open = (bits & (1 << i)) != 0;
+            bool open = r.U8() != 0;
             if (open != door.IsOpen) door.SetOpen(open, door.OpenSeconds);
         }
-        for (int i = 0; i < map.AlarmDevices.Count; i++) if ((bits & (1 << (map.Doors.Count + i))) != 0) map.AlarmDevices[i].Sound();
+        int alarmCount = r.U16();
+        if (alarmCount != map.AlarmDevices.Count) throw new InvalidOperationException($"world alarm count differs: host {alarmCount}, client {map.AlarmDevices.Count}");
+        for (int i = 0; i < alarmCount; i++) if (r.U8() != 0) map.AlarmDevices[i].Sound();
         int n = r.U16();
         var listed = new HashSet<int>();
         for (int i = 0; i < n; i++)
