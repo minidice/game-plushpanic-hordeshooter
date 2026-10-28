@@ -1,5 +1,8 @@
 # 게임 기능 체크리스트
 
+- [x] 조준점 실험실: `game/Start-Game.ps1 -ReticleLab`로 전체21종(쌍권총 포함) 직접 선택/F11·F12 순환, 무적·무한 예비탄·장전 비교. [변경·검사·사용법](features/menu-ui/log/010-code-reticle-lab.md).
+
+
 - [x] C-30/M-33 무기 계열별 조준점·언어 독립 단발/n점사/자동 글리프·탄창 잔량 원호와 장전 링 전환. 충전 UI와 반투명 경계 재질 통일, 가장자리 보정. 두 해상도 실제 렌더52개씩·장전42·조준32·조작36·통합149 검사. [변경·검사·렌더·제약](features/menu-ui/log/009-code-weapon-reticles.md).
 
 

@@ -23,10 +23,11 @@ public partial class CardLab : Node
     private Label _cards = null!, _keys = null!, _stats = null!, _specials = null!;
     private int _gun1, _gun2, _named;
     private IReadOnlyList<string> _pool = new List<string>();
+    private bool ReticleOnly => System.Array.Exists(OS.GetCmdlineUserArgs(), a => a == "--reticle-lab");
 
     public override void _Ready()
     {
-        Rules = new CardLabRules { Name = "CardLabRules" };
+        Rules = new CardLabRules { Name = "CardLabRules", ReticlePreview = ReticleOnly };
         Stage = new Stage
         {
             CharacterOverride = "goose", ThemeOverride = "zombie", ModeOverride = GameMode.Survivor,
@@ -34,6 +35,7 @@ public partial class CardLab : Node
         };
         AddChild(Stage);
         Stage.Player.Invulnerable = true;
+        if (ReticleOnly) { BuildReticleLab(); return; }
         _pool = ModeTuning.Current.Survivor.WeaponPool;
         _gun1 = Mathf.Max(0, _pool.ToList().IndexOf("m4"));
         _gun2 = Mathf.Max(0, _pool.ToList().IndexOf("r870"));
@@ -68,6 +70,7 @@ public partial class CardLab : Node
 
     public override void _Process(double delta)
     {
+        if (ReticleOnly) { UpdateReticleLab(); return; }
         var cards = Rules.Cards;
         _cards.Text = string.Join("\n", LabCards.All.Select((c, i) =>
             Loc.Format("fmt_cardlab_card", i + 1, Loc.Text(cards.IsOn(c) ? "ui_cardlab_on" : "ui_cardlab_off"), Loc.Text(CardKey("name_card_", c))) +
@@ -85,6 +88,7 @@ public partial class CardLab : Node
     public override void _UnhandledInput(InputEvent e)
     {
         if (e is not InputEventKey { Pressed: true, Echo: false } key) return;
+        if (ReticleOnly) { ReticleLabKey(key.Keycode); return; }
         var cards = Rules.Cards;
         switch (key.Keycode)
         {

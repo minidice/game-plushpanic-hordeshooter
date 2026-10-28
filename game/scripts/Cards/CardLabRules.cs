@@ -11,7 +11,8 @@ namespace HordeShooter;
 public partial class CardLabRules : ModeRules
 {
     public override GameMode Mode => GameMode.Survivor;
-    public override string ObjectiveText => Loc.Text("ui_cardlab_objective");
+    public bool ReticlePreview { get; set; }
+    public override string ObjectiveText => Loc.Text(ReticlePreview ? "reticle_lab_title" : "ui_cardlab_objective");
     public LabCards Cards { get; private set; } = null!;
     public override LabCards? CardEffects => Cards;
     /// <summary>The local survivor's waiting card offers (arming after a cheat reset, test level-ups).</summary>

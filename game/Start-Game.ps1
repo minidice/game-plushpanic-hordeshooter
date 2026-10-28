@@ -5,6 +5,8 @@ param(
     [switch]$Capture,
     # Onslaught card lab (doc/onslaught-card-ideas.md): switch the lab cards on and off while playing.
     [switch]$CardLab,
+    # Every weapon and dual variant, direct picker and F11/F12 cycling, actual ammo/reload feedback.
+    [switch]$ReticleLab,
     # Two-player test (doc/multiplayer-sync-design.md): one window hosts, another joins.
     [switch]$NetHost,
     [string]$NetJoin,
@@ -39,6 +41,8 @@ try {
     } elseif ($InputCheck) {
         & $console --path $PSScriptRoot res://tests/InputCheck.tscn
         if ($LASTEXITCODE -ne 0) { throw 'Input check failed (exit 2 = window had no focus).' }
+    } elseif ($ReticleLab) {
+        & $console --path $PSScriptRoot res://tests/CardLab.tscn -- --reticle-lab
     } elseif ($CardLab) {
         & $console --path $PSScriptRoot res://tests/CardLab.tscn
     } elseif ($Capture) {
