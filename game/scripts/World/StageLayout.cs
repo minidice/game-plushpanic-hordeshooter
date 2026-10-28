@@ -35,6 +35,8 @@ public sealed class StageLayout
     public int NextStage { get; private set; }
     /// <summary>"forest" (outdoor kit, groves outside the edge) or "urban" (asphalt, buildings and fences outside the edge).</summary>
     public string Theme { get; private set; } = "forest";
+    /// <summary>Key "enemy_theme": the enemy family a scenario here meets (zombie when absent, M-39).</summary>
+    public string EnemyTheme { get; private set; } = "zombie";
     /// <summary>Hand-placed dressing written in code for this layout ("stage3": LayoutMapEnvironment's lists), or empty.</summary>
     public string Dressing { get; private set; } = "";
     /// <summary>Language keys the layout overrides (title, route_start, crescendo_objective, crescendo_hold, crescendo_alarm, crescendo_done).</summary>
@@ -75,6 +77,7 @@ public sealed class StageLayout
             layout.Stage = root.TryGetProperty("stage", out var st) ? st.GetInt32() : 0;
             if (root.TryGetProperty("next_stage", out var ns)) layout.NextStage = ns.GetInt32();
             if (root.TryGetProperty("theme", out var theme)) layout.Theme = theme.GetString() ?? "forest";
+            if (root.TryGetProperty("enemy_theme", out var enemies)) layout.EnemyTheme = enemies.GetString() ?? "zombie";
             if (root.TryGetProperty("dressing", out var dressing)) layout.Dressing = dressing.GetString() ?? "";
             if (root.TryGetProperty("keys", out var keys))
                 foreach (var key in keys.EnumerateObject()) layout.Keys[key.Name] = key.Value.GetString() ?? "";

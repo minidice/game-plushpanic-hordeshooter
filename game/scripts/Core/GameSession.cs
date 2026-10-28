@@ -5,13 +5,32 @@ namespace HordeShooter;
 
 public enum GameMode { Scenario, Survival, Survivor }
 
+/// <summary>Game difficulty (decisions.md M-40): for now it sets how often a survivor can go down and come back.</summary>
+public enum Difficulty { Easy, Normal, Hard }
+
 /// <summary>State carried from the menu into the stage (single player, so a static holder is enough).</summary>
 public static class GameSession
 {
     public const string DefaultCharacterId = "goose";
     public static string SelectedCharacterId { get; set; } = DefaultCharacterId;
+    /// <summary>
+    /// The enemy family of the survival and onslaught maps (zombie · animals = the hunters · armed, C-31), picked as a
+    /// card in the menu's game setup (M-39). A scenario takes its family from the map instead (<see cref="StageMap.EnemyTheme"/>).
+    /// </summary>
     public static string SelectedTheme { get; set; } = "zombie";
+    public static readonly string[] Themes = { "zombie", "animals", "armed" };
     public static GameMode Mode { get; set; } = GameMode.Scenario;
+
+    /// <summary>
+    /// The scenario picked in the menu (M-39): "campaign" is the planned campaign on the large stages (L-39), "short" the
+    /// short one on today's small Stage 1 and 2 (temporary). The code default stays "short" so test scenes and scenes
+    /// opened straight away keep building the small maps; the menu's saved choice (<see cref="GameSettings.Load"/>)
+    /// defaults to "campaign".
+    /// </summary>
+    public static string Campaign { get; set; } = "short";
+    public static readonly string[] Campaigns = { "campaign", "short" };
+    public static string ValidCampaign(string id) => Campaigns.Contains(id) ? id : Campaigns[0];
+    public static Difficulty Difficulty { get; set; } = Difficulty.Normal;
     /// <summary>The host's map seed for this match, sent with the start (0 = none: offline picks its own).</summary>
     public static int MapSeed { get; set; }
     /// <summary>Scenario stage being played (1 from the menu; the Stage 1 exit hatch moves on to 2, decisions.md L-14).</summary>
@@ -63,7 +82,7 @@ public static class GameSession
     }
 
     /// <summary>Whether the scenario builds the large campaign's maps (<see cref="StageMap.Create"/>).</summary>
-    public static bool LargeCampaign => LargeStages || Stage3Draft || StartZone != "";
+    public static bool LargeCampaign => LargeStages || Stage3Draft || StartZone != "" || Campaign == "campaign";
 
     /// <summary>A new run from the menu or the room: back to Stage 1 (Stage 3 with --stage3-draft), nothing carried.</summary>
     public static void StartCampaign()
@@ -87,6 +106,9 @@ public static class GameSession
     public static int SquadSize { get; set; } = DefaultSquadSize;
     public static int ValidSquad(int size) => SquadChoices.Contains(size) ? size : DefaultSquadSize;
 
-    // Temporary solo-test escape. Disable when teammate rescue is available.
-    public static bool DebugEscapeEnabled { get; set; } = true;
+    /// <summary>
+    /// Launch option <c>--debug-escape</c> (Start-Game.ps1 -DebugEscape): F8 frees a restrained survivor, for solo tests.
+    /// Off in a normal run (it left the menu with the test options, M-39).
+    /// </summary>
+    public static bool DebugEscapeEnabled { get; set; } = OS.GetCmdlineUserArgs().Contains("--debug-escape");
 }

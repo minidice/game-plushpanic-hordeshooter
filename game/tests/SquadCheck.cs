@@ -205,6 +205,13 @@ public partial class SquadCheck : Node
         for (; frames < 60 * 10 && downed.IsDowned; frames++) await Frames(1);
         Check(!downed.IsDowned && frames >= 60 * rules.ReviveTime * .9f, $"two squadmates beside one patient still take the full {rules.ReviveTime:0} s ({frames / 60f:0.0} s)");
         downed.ResetDowns();
+        // The difficulty sets how often a survivor can go down (M-40): Hard once, Easy three times; the HUD dots follow it.
+        stage.Difficulty = Difficulty.Hard;
+        bool hardLast = !downed.OnLastDown && Hud.DownPips(stage, downed) == "  ●";
+        stage.Difficulty = Difficulty.Easy;
+        bool easy = stage.DownsPerLife == 3 && Hud.DownPips(stage, downed) == "  ●●●" && rules.Respawns(Difficulty.Easy) == 3 && rules.Respawns(Difficulty.Hard) == 1;
+        stage.Difficulty = Difficulty.Normal;
+        Check(hardLast && easy && stage.DownsPerLife == rules.DownsPerLife, "downs per life and squadmate returns follow the difficulty (Hard 1 · Normal 2 · Easy 3)");
         third.TeleportTo(new Vector3(60, 0, 0));
         third.Launch(Vector3.Zero, 30f);
 

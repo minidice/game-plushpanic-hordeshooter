@@ -12,7 +12,8 @@ param(
     [string]$NetJoin,
     # One PC, two windows: builds once, opens a host window, then a window that joins it.
     [switch]$NetPair,
-    # Play the large campaign drafts (decisions.md L-30): urban Stage 1 -> forest Stage 2 -> Stage 3. Single player only.
+    # Play the large campaign drafts (decisions.md L-30): urban Stage 1 -> forest Stage 2 -> Stage 3, whatever the menu's
+    # scenario card says (the menu's "City to River" card does the same, M-39).
     [switch]$LargeStages,
     # Start a large-campaign run on Stage 3, the size draft (doc/stage2-floorplan.md 11-12장). Single player only.
     [Alias('Stage2Draft')]
@@ -20,10 +21,13 @@ param(
     # Level test (doc/features/level/guide-map.md 9장): open the large campaign straight at a zone's entry, e.g. -Zone D or -Zone 2:D.
     [string]$Zone,
     # AI squadmates for this run (0, 1 or 3), over the menu's saved choice: -Squad 0 tests alone.
-    [int]$Squad = -1
+    [int]$Squad = -1,
+    # Solo test: F8 frees a restrained survivor (it left the menu's test options, M-39).
+    [switch]$DebugEscape
 )
 $ErrorActionPreference = 'Stop'
 $squadArg = if ($Squad -ge 0) { @('--squad=' + $Squad) } else { @() }
+if ($DebugEscape) { $squadArg += '--debug-escape' }
 $console = Join-Path $GodotDir 'Godot_v4.7.2-stable_mono_win64_console.exe'
 $windowed = Join-Path $GodotDir 'Godot_v4.7.2-stable_mono_win64.exe'
 if (-not (Test-Path -LiteralPath $console)) { throw "Godot 4.7.2 .NET not found in $GodotDir. Pass -GodotDir." }
@@ -63,6 +67,8 @@ try {
         Start-Process -FilePath $windowed -ArgumentList (@('--path', ('"' + $PSScriptRoot + '"'), '--', '--large-stages') + $squadArg) -WorkingDirectory $PSScriptRoot
     } elseif ($Stage3Draft) {
         Start-Process -FilePath $windowed -ArgumentList '--path', ('"' + $PSScriptRoot + '"'), '--', '--stage3-draft' -WorkingDirectory $PSScriptRoot
+    } elseif ($squadArg.Count -gt 0) {
+        Start-Process -FilePath $windowed -ArgumentList (@('--path', ('"' + $PSScriptRoot + '"'), '--') + $squadArg) -WorkingDirectory $PSScriptRoot
     } else {
         Start-Process -FilePath $windowed -ArgumentList '--path', ('"' + $PSScriptRoot + '"') -WorkingDirectory $PSScriptRoot
     }

@@ -12,6 +12,8 @@
 
 ## 상세 규격
 
+- [게임 설정 설계안 · 사용자 선택](play-setup-plan.md) (M-39 · M-40): 모드 → 카드 → 난이도, 인게임 쓰러짐 표시
+
 - [localization.md](../../localization.md)
 - [app-icon.md](../../app-icon.md)
 - [장전·충전 UI 규격](../../weapon-spec.md#64-장전충전-진행-ui-m-33)

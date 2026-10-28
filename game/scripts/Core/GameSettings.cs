@@ -19,13 +19,14 @@ public static class GameSettings
     public static string Path { get; set; } = DefaultPath;
     public static bool Loaded { get; private set; }
 
-    /// <summary>1 = as authored, 0 = no self-knockback when shooting.</summary>
+    /// <summary>
+    /// 1 = as authored, 0 = no self-knockback when shooting. Always 1 in a run: the settings slider went with M-39 (a rule
+    /// like this belongs to the difficulty, not to a player option); checks still scale it.
+    /// </summary>
     public static float RecoilScale { get; set; } = 1f;
     public static float MasterVolume { get; set; } = 1f;
     public static float SfxVolume { get; set; } = 1f;
     public static float AmbienceVolume { get; set; } = 1f;
-    /// <summary>Game option "revive" for single player (multiplayer: a room option). Default on (decisions.md M-18).</summary>
-    public static bool ReviveEnabled { get; set; } = true;
     private static GraphicsQualityLevel _shadowQuality=GraphicsQualityLevel.High, _surfaceQuality=GraphicsQualityLevel.High;
     public static event Action? GraphicsQualityChanged;
     public static GraphicsQualityLevel ShadowQuality
@@ -70,20 +71,22 @@ public static class GameSettings
         {
             string language = (string)cfg.GetValue("options", "language", Loc.Fallback);
             Loc.Language = Languages.Contains(language) ? language : Loc.Fallback;
-            RecoilScale = Unit(cfg.GetValue("options", "recoil_scale", 1f));
             MasterVolume = Unit(cfg.GetValue("options", "volume_master", 1f));
             SfxVolume = Unit(cfg.GetValue("options", "volume_sfx", 1f));
             AmbienceVolume = Unit(cfg.GetValue("options", "volume_ambience", 1f));
-            ReviveEnabled = (bool)cfg.GetValue("options", "revive", true);
             int petQuality=(int)cfg.GetValue("graphics","pet_quality",0);
             PetQuality=petQuality == 1 ? PetModelQuality.Low : PetModelQuality.High;
             ShadowQuality=ReadQuality(cfg,"shadow_quality");
             SurfaceQuality=ReadQuality(cfg,"surface_quality");
             GameSession.SelectedCharacterId = (string)cfg.GetValue("menu", "character", GameSession.DefaultCharacterId);
             GameSession.SquadSize = GameSession.ValidSquad((int)cfg.GetValue("menu", "squad_size", GameSession.DefaultSquadSize));
-            GameSession.SelectedTheme = (string)cfg.GetValue("menu", "theme", GameSession.SelectedTheme);
+            string theme = (string)cfg.GetValue("menu", "theme", GameSession.SelectedTheme);
+            GameSession.SelectedTheme = GameSession.Themes.Contains(theme) ? theme : GameSession.Themes[0];
+            GameSession.Campaign = GameSession.ValidCampaign((string)cfg.GetValue("menu", "campaign", GameSession.Campaigns[0]));
+            GameSession.Difficulty = Enum.TryParse<Difficulty>((string)cfg.GetValue("menu", "difficulty", nameof(Difficulty.Normal)), out var difficulty) ? difficulty : Difficulty.Normal;
             NetLaunch.LastAddress = (string)cfg.GetValue("menu", "join_address", "");
         }
+        else GameSession.Campaign = GameSession.Campaigns[0];
         Loaded = true;
         ApplyAudio();
         ApplySurfaceQuality();
@@ -95,17 +98,17 @@ public static class GameSettings
         if (!Loaded) return;
         using var cfg = new ConfigFile();
         cfg.SetValue("options", "language", Loc.Language);
-        cfg.SetValue("options", "recoil_scale", RecoilScale);
         cfg.SetValue("options", "volume_master", MasterVolume);
         cfg.SetValue("options", "volume_sfx", SfxVolume);
         cfg.SetValue("options", "volume_ambience", AmbienceVolume);
-        cfg.SetValue("options", "revive", ReviveEnabled);
         cfg.SetValue("graphics","pet_quality",(int)PetQuality);
         cfg.SetValue("graphics","shadow_quality",(int)ShadowQuality);
         cfg.SetValue("graphics","surface_quality",(int)SurfaceQuality);
         cfg.SetValue("menu", "character", GameSession.SelectedCharacterId);
         cfg.SetValue("menu", "squad_size", GameSession.SquadSize);
         cfg.SetValue("menu", "theme", GameSession.SelectedTheme);
+        cfg.SetValue("menu", "campaign", GameSession.Campaign);
+        cfg.SetValue("menu", "difficulty", GameSession.Difficulty.ToString());
         cfg.SetValue("menu", "join_address", NetLaunch.LastAddress);
         var error = cfg.Save(Path);
         if (error != Error.Ok) GD.PushWarning($"Settings not saved to {Path}: {error}");
@@ -117,7 +120,6 @@ public static class GameSettings
         Loaded = false;
         Path = DefaultPath;
         RecoilScale = MasterVolume = SfxVolume = AmbienceVolume = 1f;
-        ReviveEnabled = true;
         PetQuality=PetModelQuality.High;
         ShadowQuality=SurfaceQuality=GraphicsQualityLevel.High;
         ApplySurfaceQuality();

@@ -8,7 +8,7 @@ ui_menu_subtitle,쿼터뷰 협동 호드 슈터 — 프로토타입
 ui_menu_start,출격  [Enter]
 # HUD
 ui_hud_stage,STAGE 1 · 창고 지구
-fmt_hud_timer,{0:00}:{1:00}    처치 {2}
+fmt_hud_timer,{3} · {0:00}:{1:00}    처치 {2}
 fmt_hud_healing,치료 중... {0}%
 ui_hud_reload,장전 중
 hud_action_charge,발사 준비
@@ -102,11 +102,11 @@ ui_floor_safehouse,SAFEHOUSE
 menu_home_customize,커스터마이징
 menu_home_customize_desc,"종 선택, 색·체형·장비 편집. 종마다 자동 저장"
 menu_home_single,싱글 플레이
-menu_home_single_desc,"시나리오 · 거점 · 난전 중 선택, AI 분대원 설정"
+menu_home_single_desc,"시나리오 · 거점 · 난전, 캠페인이나 적 계열 · 난이도 · AI 분대원"
 menu_home_multi,멀티플레이
 menu_home_multi_desc,최대 6명 비공개방 — 준비 중
 menu_home_settings,설정
-menu_home_settings_desc,"그래픽, 언어, 볼륨, 사격 반동"
+menu_home_settings_desc,"그래픽, 언어, 볼륨"
 menu_home_quit,종료
 menu_back,← 뒤로  [Esc]
 menu_customize_title,커스터마이징
@@ -119,14 +119,30 @@ mode_survivor,난전
 mode_scenario_desc,A에서 B로 일자 진행. 레벨 없이 바닥의 무기를 주워 달려드는 좀비를 뚫고 나갑니다.
 mode_survival_desc,"창고의 발전기를 웨이브 3번 동안 지키는 디펜스(첫 버전, 약 3분). 뒤 웨이브에는 총을 쓰는 적이 섞입니다. 인벤토리·파밍은 아직 없습니다."
 mode_survivor_desc,사방에서 몰려오는 약한 무리를 2분 30초 버티면 스킬을 쓰는 보스가 나옵니다(첫 버전). 레벨업 능력 선택은 아직 없습니다.
+# 게임 설정: 모드 → 카드 → 난이도 (M-39 · M-40)
+play_campaign_campaign,도시에서 강까지
+play_campaign_campaign_desc,도시 거리(튜토리얼) → 건물 지하 → 풀밭 → 물과 다리. 지금은 도시 · 숲 · 풀밭 큰 스테이지로 진행합니다(만드는 중).
+play_campaign_short,창고 지구 (짧게)
+play_campaign_short_desc,창고 홀 실내 → 숲속 벙커길. 짧게 한 판 하는 임시 캠페인입니다.
+play_theme_zombie,감염무리
+play_theme_zombie_desc,맨손으로 달려드는 감염체 무리. 많고 빠릅니다.
+play_theme_animals,수렵단
+play_theme_animals_desc,몽둥이 · 칼 · 나무활을 든 동물 사냥꾼들. 가까이서 세게 칩니다.
+play_theme_armed,무장단
+play_theme_armed_desc,총과 방탄복으로 무장한 동물들. 멀리서 쏩니다.
+difficulty_label,난이도
+difficulty_easy,쉬움
+difficulty_normal,보통
+difficulty_hard,어려움
+fmt_difficulty_rule,한 생명에 쓰러짐 {0}번까지 · AI 동료는 스테이지마다 {1}번 다시 합류
+fmt_pause_setup,{0} · {1} · {2} — 쓰러짐 {3}번까지 · AI 동료 다시 합류 {4}번
+fmt_hud_squad_return,{0}초 뒤 합류 · 남은 {1}번
+hud_squad_no_return,사망 · 합류 없음
 fmt_menu_coming_soon,{0} · 준비 중
-menu_stage_auto,스테이지: STAGE 1 · 창고 지구 (지금은 하나뿐이라 자동 선택)
 menu_squad_label,AI 분대원
 squad_0,없음
 squad_1,1명 (기본)
 squad_3,3명 (영상 촬영용 4인)
-menu_squad_hint,"아직 게임에 나오지 않습니다. 선택은 저장되고, AI 분대원 작업 때 적용됩니다. 멀티플레이에는 AI가 없습니다."
-menu_test_options,테스트 옵션
 menu_multi_title,멀티플레이
 menu_multi_rules,테스트 빌드 · 지금은 2명 · 열린 방은 모두 방 목록에 보임 · AI 분대원 없음
 menu_multi_host,방 만들기
@@ -185,9 +201,6 @@ settings_sound,소리
 settings_volume_master,전체 볼륨
 settings_volume_sfx,효과음
 settings_volume_ambience,배경음
-settings_gameplay,게임플레이
-settings_recoil,사격 반동 밀림
-settings_recoil_hint,총을 쏠 때 내가 뒤로 밀리는 정도입니다. 0%면 밀리지 않습니다. 적이 밀리는 정도는 바뀌지 않습니다.
 settings_saved_hint,바꾸면 바로 적용되고 저장됩니다.
 settings_not_saved_hint,테스트 실행이라 설정을 저장하지 않습니다.
 # 동료 목록 (HUD)
@@ -198,8 +211,6 @@ name_squad_assault,돌격
 name_squad_cover,엄호
 name_squad_support,지원
 # 쓰러짐 · 부활 (doc/ai-squad-plan.md 6장)
-settings_revive,부활 (쓰러진 동료 일으키기)
-settings_revive_hint,"켜면 체력이 0이 되어도 바로 죽지 않고 쓰러집니다. 동료가 옆에서 4초 동안 일으킬 수 있고, 한 생명에 2번까지입니다. AI 분대원은 죽어도 잠시 뒤 지나온 길에서 다시 합류합니다."
 fmt_hud_downed,쓰러짐 — 동료를 기다리는 중  {0}초
 hud_last_down,위험: 한 번 더 쓰러지면 사망 (구급상자로 회복)
 fmt_use_revive,[E 길게]  {0} 일으키기  {1}%

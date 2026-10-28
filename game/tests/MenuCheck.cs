@@ -83,25 +83,41 @@ public partial class MenuCheck : Node
         await Frames(2);
         Check(_menu.Page == MenuPage.Home && !Ui<Control>("PreviewTools").Visible, "back returns home and hides preview tools");
 
-        // Single: modes, squad option, start.
+        // Single: the game setup (mode → card → difficulty, M-39 · M-40), squad option, start.
         Click("Menu_Single");
         await Frames(2);
         Check(_menu.Page == MenuPage.Single && PageVisible(MenuPage.Single) && !PageVisible(MenuPage.Home), "single page opens");
-        Check(Ui<Button>("Mode_scenario") is { Disabled: false, ButtonPressed: true } && !Ui<Button>("Mode_survival").Disabled && !Ui<Button>("Mode_survivor").Disabled,
+        Check(Ui<Button>("Play_Mode_scenario") is { Disabled: false, ButtonPressed: true } && !Ui<Button>("Play_Mode_survival").Disabled && !Ui<Button>("Play_Mode_survivor").Disabled,
             "all three modes are playable, scenario selected by default");
-        Check(Ui<Button>("Mode_survival").Text == Loc.Text("mode_survival") && Ui<Button>("Mode_survivor").Text == Loc.Text("mode_survivor"),
+        Check(Ui<Button>("Play_Mode_survival").Text == Loc.Text("mode_survival") && Ui<Button>("Play_Mode_survivor").Text == Loc.Text("mode_survivor"),
             "survival and survivor are no longer marked coming soon");
-        Ui<Button>("Mode_survivor").EmitSignal(BaseButton.SignalName.Pressed);
-        Check(GameSession.Mode == GameMode.Survivor, "picking Survivor stores the mode for the stage");
-        Ui<Button>("Mode_scenario").EmitSignal(BaseButton.SignalName.Pressed);
-        Check(GameSession.Mode == GameMode.Scenario, "back to Scenario");
+        var scenarioCards = Ui<Container>("Play_Cards").GetChildren().OfType<Button>().Select(b => b.Name.ToString()).ToList();
+        Check(scenarioCards.SequenceEqual(new[] { "Play_Card_campaign", "Play_Card_short" }) && Ui<Button>("Play_Card_" + GameSession.Campaign).ButtonPressed,
+            "a scenario offers the planned campaign and the short one, the current one picked");
+        Ui<Button>("Play_Card_campaign").EmitSignal(BaseButton.SignalName.Pressed);
+        Check(GameSession.Campaign == "campaign" && GameSession.LargeCampaign && Ui<Label>("Play_CardName").Text == Loc.Text("play_campaign_campaign"),
+            "picking the planned campaign plays the large stages and names it");
+        Ui<Button>("Play_Mode_survivor").EmitSignal(BaseButton.SignalName.Pressed);
+        await Frames(1);
+        var themeCards = Ui<Container>("Play_Cards").GetChildren().OfType<Button>().Where(b => !b.IsQueuedForDeletion()).Select(b => b.Name.ToString()).ToList();
+        Check(GameSession.Mode == GameMode.Survivor && themeCards.SequenceEqual(new[] { "Play_Card_zombie", "Play_Card_animals", "Play_Card_armed" }),
+            $"picking Survivor stores the mode and offers the three enemy families instead of scenarios ({string.Join(", ", themeCards)})");
+        Ui<Button>("Play_Card_armed").EmitSignal(BaseButton.SignalName.Pressed);
+        Check(GameSession.SelectedTheme == "armed" && Ui<Label>("Play_CardName").Text == Loc.Text("play_theme_armed"), "an enemy family card sets the onslaught's enemies");
+        Ui<Button>("Play_Mode_scenario").EmitSignal(BaseButton.SignalName.Pressed);
+        await Frames(1);
+        Check(GameSession.Mode == GameMode.Scenario && GameSession.Campaign == "campaign" && Ui<Button>("Play_Card_campaign").ButtonPressed, "back to Scenario, the campaign picked before");
+        Check(Ui<Button>("Play_Difficulty_normal").ButtonPressed && GameSession.Difficulty == Difficulty.Normal
+              && Ui<Label>("Play_DifficultyRule").Text == Loc.Format("fmt_difficulty_rule", 2, 2), "difficulty defaults to Normal: down twice, squadmates back twice");
+        Ui<Button>("Play_Difficulty_hard").EmitSignal(BaseButton.SignalName.Pressed);
+        Check(GameSession.Difficulty == Difficulty.Hard && Ui<Label>("Play_DifficultyRule").Text == Loc.Format("fmt_difficulty_rule", 1, 1), "Hard: down once, back once");
         var squad = Ui<OptionButton>("SquadChoice");
         Check(squad.ItemCount == 3 && squad.GetItemId(squad.Selected) == 1, "AI squadmates: none / 1 / 3, defaulting to 1");
         squad.Select(2);
         squad.EmitSignal(OptionButton.SignalName.ItemSelected, 2);
         Check(GameSession.SquadSize == 3, "choosing 3 squadmates is stored for the stage");
-        Check(Ui<Button>("StartGame") is { Disabled: false } && _menu.FindChild("StageThemeChoice", true, false) != null && _menu.FindChild("DebugEscape", true, false) != null,
-            "start button and test options stay on the single page");
+        Check(Ui<Button>("StartGame") is { Disabled: false } && _menu.FindChild("StageThemeChoice", true, false) == null && _menu.FindChild("DebugEscape", true, false) == null,
+            "start button stays, the test options are gone (the scenario's map picks its enemies, M-39)");
         await Shot("menu-single");
         if (DisplayServer.GetName() != "headless")
         {
@@ -151,8 +167,9 @@ public partial class MenuCheck : Node
             Check(_menu.Page == MenuPage.Lobby && PageVisible(MenuPage.Lobby), "Create Room opens the room page");
             Check(Ui<Button>("Lobby_Start") is { Visible: true, Disabled: false } && !Ui<Button>("Lobby_Ready").Visible,
                 "the host alone sees [Start] enabled and no [Ready]");
-            Check(Ui<Button>("Lobby_Mode_scenario") is { Disabled: false, ButtonPressed: true } && !Ui<Button>("Lobby_Mode_survival").Disabled && !Ui<Button>("Lobby_Mode_survivor").Disabled,
-                "the host picks the mode in the room; the new modes are offered too");
+            Check(Ui<Button>("Lobby_Mode_scenario") is { Disabled: false, ButtonPressed: true } && !Ui<Button>("Lobby_Mode_survival").Disabled && !Ui<Button>("Lobby_Mode_survivor").Disabled
+                  && Ui<Button>("Lobby_Card_campaign") is { Disabled: false } && Ui<Button>("Lobby_Difficulty_hard") is { Disabled: false, ButtonPressed: true },
+                "the host sets the game up in the room as on the single page (mode, card, difficulty)");
             Check(Ui<Container>("Lobby_Players").GetChildCount() == 1 && Ui<Label>("Lobby_Count").Text == Loc.Format("fmt_lobby_players", 1, NetLaunch.MaxPlayers),
                 "the player list shows the host");
             await Shot("menu-lobby");
@@ -178,21 +195,14 @@ public partial class MenuCheck : Node
         Check(GameSettings.PetQuality==PetModelQuality.Low,"low pet quality can be selected");
         Click("Graphics_Back");
         await Frames(2);
-        float fullRecoil = Knockback.Recoil(100);
-        Ui<HSlider>("Settings_Recoil").Value = 40;
         Ui<HSlider>("Settings_SfxVolume").Value = 50;
-        Check(Mathf.IsEqualApprox(GameSettings.RecoilScale, .4f) && Mathf.IsEqualApprox(Knockback.Recoil(100), fullRecoil * .4f),
-            "recoil slider scales shooting push live");
+        Check(_menu.FindChild("Settings_Recoil", true, false) == null && _menu.FindChild("Settings_Revive", true, false) == null && GameSettings.RecoilScale == 1f,
+            "settings hold no rules any more: shooting push is always 100%, revive follows the difficulty (M-39 · M-40)");
         int sfxBus = AudioServer.GetBusIndex(AudioSetup.SfxBus);
         Check(sfxBus >= 0 && Mathf.Abs(AudioServer.GetBusVolumeDb(sfxBus) - Mathf.LinearToDb(.5f)) < .1f, "effects volume slider changes the SFX bus");
         Ui<HSlider>("Settings_MasterVolume").Value = 0;
         Check(AudioServer.IsBusMute(AudioServer.GetBusIndex("Master")), "master volume 0% mutes");
         Ui<HSlider>("Settings_MasterVolume").Value = 100;
-        var revive = Ui<CheckButton>("Settings_Revive");
-        Check(revive.ButtonPressed && GameSettings.ReviveEnabled, "revive option is on by default");
-        revive.ButtonPressed = false;
-        Check(!GameSettings.ReviveEnabled, "revive option can be turned off");
-        revive.ButtonPressed = true;
         await Shot("menu-settings-kor");
         string koreanTitle = Loc.Text("menu_settings_title");
         var languageChoice = Ui<OptionButton>("Settings_Language");
@@ -211,11 +221,13 @@ public partial class MenuCheck : Node
         GameSettings.Reset();
         GameSession.SquadSize = GameSession.DefaultSquadSize;
         GameSession.SelectedCharacterId = GameSession.DefaultCharacterId;
+        GameSession.Difficulty = Difficulty.Normal;
+        GameSession.Campaign = "short";
         Check(Loc.Language == "kor" && GameSettings.RecoilScale == 1f, "reset returns to defaults");
         GameSettings.Path = SettingsPath;
         GameSettings.Load();
-        Check(Loc.Language == "eng" && Mathf.IsEqualApprox(GameSettings.RecoilScale, .4f) && Mathf.IsEqualApprox(GameSettings.SfxVolume, .5f),
-            "language, recoil and volume are restored from the settings file");
+        Check(Loc.Language == "eng" && Mathf.IsEqualApprox(GameSettings.SfxVolume, .5f) && GameSession.Difficulty == Difficulty.Hard && GameSession.Campaign == "campaign"
+              && GameSession.SelectedTheme == "armed", "language, volume, difficulty, campaign and enemy family are restored from the settings file");
         Check(GameSession.SquadSize == 3 && GameSession.SelectedCharacterId == "raccoon", "squad size and character are restored from the settings file");
         Check(GameSettings.PetQuality==PetModelQuality.Low,"pet quality is restored from settings");
 
@@ -227,13 +239,20 @@ public partial class MenuCheck : Node
             bad.SetValue("options", "language", "xx");
             bad.SetValue("options", "recoil_scale", 7f);
             bad.SetValue("menu", "squad_size", 2);
+            bad.SetValue("menu", "difficulty", "nightmare");
+            bad.SetValue("menu", "campaign", "nowhere");
+            bad.SetValue("menu", "theme", "robots");
             bad.SetValue("graphics","pet_quality",99);
             bad.Save(SettingsPath);
         }
         GameSettings.Path = SettingsPath;
         GameSettings.Load();
-        Check(Loc.Language == "kor" && GameSettings.RecoilScale == 1f && GameSettings.SfxVolume == 1f && GameSession.SquadSize == GameSession.DefaultSquadSize,
-            "unknown language, out-of-range recoil, NaN volume and invalid squad size fall back to defaults");
+        Check(Loc.Language == "kor" && GameSettings.RecoilScale == 1f && GameSettings.SfxVolume == 1f && GameSession.SquadSize == GameSession.DefaultSquadSize
+              && GameSession.Difficulty == Difficulty.Normal && GameSession.Campaign == "campaign" && GameSession.SelectedTheme == "zombie",
+            "unknown language, an old recoil value, NaN volume, invalid squad size, difficulty, campaign and enemy family fall back to defaults");
+        GameSession.Campaign = "short";
+        GameSession.SelectedTheme = "zombie";
+        GameSession.Difficulty = Difficulty.Normal;
         Check(GameSettings.PetQuality==PetModelQuality.High,"invalid pet quality falls back to high");
     }
 

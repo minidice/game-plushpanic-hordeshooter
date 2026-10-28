@@ -111,7 +111,7 @@ void fragment() {
         pauseBox.AddChild(pauseTitle);
         // A host can read the join address again here (multiplayer-sync-design.md 10장).
         var hostInfo = Stage.Net is { HostInfo: { Length: > 0 } info } ? info + "\n\n" : "";
-        var pauseBody = UiTheme.Label(hostInfo + Loc.Text(OnlineKey("ui_pause_keys")) + "\n\n" + ControlsText
+        var pauseBody = UiTheme.Label(hostInfo + SetupLine(Stage) + "\n\n" + Loc.Text(OnlineKey("ui_pause_keys")) + "\n\n" + ControlsText
             + "\n\n" + Loc.Text("hud_reticle_legend"), 18);
         pauseBody.Name = "PauseControls";
         pauseBody.CustomMinimumSize = new Vector2(880, 0);
@@ -206,11 +206,11 @@ void fragment() {
         _objective.Text = stage.ObjectiveText;
         UpdateSquadPanel(stage);
         int t = (int)stage.Elapsed;
-        _timer.Text = Loc.Format("fmt_hud_timer", t / 60, t % 60, stage.Kills);
+        _timer.Text = Loc.Format("fmt_hud_timer", t / 60, t % 60, stage.Kills, Loc.Text(PlaySetup.DifficultyKey(stage.Difficulty)));
         _notice.Text = stage.NoticeTime > 0 ? stage.Notice : "";
         _notice.Modulate = new Color(1, 1, 1, Mathf.Clamp(stage.NoticeTime, 0, 1));
 
-        _hp.Text = player.IsHealing ? Loc.Format("fmt_hud_healing", (int)(player.HealProgress * 100)) : player.DisplayLabel.Length > 0 ? player.DisplayLabel : Loc.Text(player.Definition.DisplayName);
+        _hp.Text = player.IsHealing ? Loc.Format("fmt_hud_healing", (int)(player.HealProgress * 100)) : (player.DisplayLabel.Length > 0 ? player.DisplayLabel : Loc.Text(player.Definition.DisplayName)) + DownPips(stage, player);
         _medkit.UpdateSlot(Loc.Text("hud_medkit"), player.IsHealing ? $"{(int)(player.HealProgress * 100)}%" : $"×{player.Medkits}", "", "medkit", player.IsHealing, player.Medkits > 0);
         _ammo.Text = gun.IsMelee ? Loc.Text("hud_melee")
             : gun.CooldownLeft > 0 ? Loc.Format("fmt_hud_cooldown", Mathf.CeilToInt(gun.CooldownLeft))
@@ -601,5 +601,22 @@ void fragment() {
             if (focus > 0)
                 DrawLightArc(c, center, radius + 26, -Mathf.Pi / 2 + Mathf.Tau * focus, UiTheme.Accent, player.CritReady ? .95f : .65f);
         }
+    }
+
+    /// <summary>Downs left in this life as dots after the name (M-40): ● still there, ○ used; none without revive.</summary>
+    public static string DownPips(Stage stage, Player survivor)
+    {
+        if (!stage.ReviveEnabled || survivor.IsDead) return "";
+        int total = stage.DownsPerLife, left = Mathf.Clamp(total - survivor.DownCount, 0, total);
+        return "  " + new string('●', left) + new string('○', total - left);
+    }
+
+    /// <summary>The pause screen's first line: mode · campaign or enemy family · difficulty and what it allows (M-39 · M-40).</summary>
+    private static string SetupLine(Stage stage)
+    {
+        string card = PlaySetup.CardKey(stage.Mode, stage.Mode == GameMode.Scenario ? GameSession.Campaign : stage.ThemeId);
+        var rules = SquadDatabase.Current.Rules;
+        return Loc.Format("fmt_pause_setup", Loc.Text("mode_" + stage.Mode.ToString().ToLowerInvariant()), Loc.Text(card),
+            Loc.Text(PlaySetup.DifficultyKey(stage.Difficulty)), rules.Downs(stage.Difficulty), rules.Respawns(stage.Difficulty));
     }
 }

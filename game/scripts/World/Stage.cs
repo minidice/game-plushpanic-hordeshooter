@@ -193,8 +193,12 @@ public partial class Stage : Node3D
         return n;
     }
 
-    /// <summary>Game option "revive". Null = the saved setting when this is the running game scene, off in test scenes.</summary>
+    /// <summary>Revive: always on in the running game scene (how often is the difficulty's, M-40), off in test scenes. Null = that.</summary>
     public bool? ReviveOverride { get; set; }
+    /// <summary>This run's difficulty (M-40), the menu's or the room's. Checks set it.</summary>
+    public Difficulty Difficulty { get; set; } = GameSession.Difficulty;
+    /// <summary>Downs a survivor has per life at this difficulty.</summary>
+    public int DownsPerLife => SquadDatabase.Current.Rules.Downs(Difficulty);
     public bool ReviveEnabled { get; private set; }
     /// <summary>The downed teammate the local player can pick up right now (for the prompt).</summary>
     public Player? RevivePromptTarget { get; private set; }
@@ -282,7 +286,7 @@ public partial class Stage : Node3D
         BuildEnvironment(map);
 
         if (Role == NetRole.Offline && GetTree().CurrentScene == this) Role = NetLaunch.Pending;
-        ReviveEnabled = ReviveOverride ?? (GetTree().CurrentScene == this && GameSettings.ReviveEnabled);
+        ReviveEnabled = ReviveOverride ?? GetTree().CurrentScene == this;
         NextStageEnabled = NextStageOverride ?? (running && Role == NetRole.Offline);
         // A random field per match offline; in a match everyone builds the host's (GameSession.MapSeed from the room; 1 without a room).
         if (MapOverride == null && GetTree().CurrentScene == this)
@@ -309,7 +313,8 @@ public partial class Stage : Node3D
         Player.Died += CheckWipe;
         // A hit cancels a hold-to-use (a base door, L-35): it starts over from nothing.
         Player.Hurt += () => { if (_holding is { CancelOnHit: true }) { _holding = null; HoldProgress = 0; HoldCancelled = true; } };
-        ThemeId = StageTheme.Normalize(ThemeOverride ?? GameSession.SelectedTheme);
+        // A scenario's enemies follow its map (M-39); survival and onslaught take the family picked on their card.
+        ThemeId = StageTheme.Normalize(ThemeOverride ?? (Mode == GameMode.Scenario ? Map.EnemyTheme : GameSession.SelectedTheme));
         CommonDefinition = CommonRoster.Current.Compose(CommonRoster.Current.CreatePack(DefaultCommonPack(ThemeId), 1)[0]);
 
         Cam = new CameraRig { Name = "Camera", Target = Player, Player = Player, View = Map.View, Bounds = Map.CameraBounds };
@@ -563,14 +568,29 @@ public partial class Stage : Node3D
         }
     }
 
+    private readonly Dictionary<Player, int> _squadSlots = new();
+
+    /// <summary>
+    /// A squadmate's returns left this stage at this difficulty (M-40) and, while it is gone, seconds until it walks back
+    /// in (the HUD's squad list). Null for a survivor that is no squadmate.
+    /// </summary>
+    public (int Left, float? In)? SquadReturn(Player bot)
+    {
+        if (!_squadSlots.TryGetValue(bot, out int slot)) return null;
+        int left = SquadDatabase.Current.Rules.Respawns(Difficulty) - _respawnsUsed.GetValueOrDefault(slot);
+        var queued = _respawnQueue.FirstOrDefault(r => r.Slot == slot);
+        return (Mathf.Max(0, left), queued.Role != null ? Mathf.Max(0, queued.At - Elapsed) : null);
+    }
+
     private void WatchSquadmate(Player bot, SquadRole role, int slot)
     {
+        _squadSlots[bot] = slot;
         bot.Died += () =>
         {
             CheckWipe();
             // With revive on, a fallen squadmate walks back in from the walked route after a while (M-17, M-18).
             var rules = SquadDatabase.Current.Rules;
-            if (!ReviveEnabled || State != StageState.Playing || _respawnsUsed.GetValueOrDefault(slot) >= rules.RespawnsPerStage) return;
+            if (!ReviveEnabled || State != StageState.Playing || _respawnsUsed.GetValueOrDefault(slot) >= rules.Respawns(Difficulty)) return;
             _respawnsUsed[slot] = _respawnsUsed.GetValueOrDefault(slot) + 1;
             _respawnQueue.Add((role, slot, bot.Definition.Id, Elapsed + rules.RespawnDelay));
         };

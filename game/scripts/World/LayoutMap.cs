@@ -88,6 +88,7 @@ public sealed partial class LayoutMap : StageMap
     };
 
     public override Rect2 Area => Layout.Bounds;
+    public override string EnemyTheme => Layout.EnemyTheme;
     public override string TitleKey => Key("title", "ui_hud_stage3");
     public override bool HasRoute => true;
     public override Vector3 RouteGoal => _goal;

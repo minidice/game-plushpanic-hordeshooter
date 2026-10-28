@@ -8,7 +8,7 @@ ui_menu_subtitle,Isometric co-op horde shooter — prototype
 ui_menu_start,Deploy  [Enter]
 # HUD
 ui_hud_stage,STAGE 1 · Warehouse District
-fmt_hud_timer,{0:00}:{1:00}    Kills {2}
+fmt_hud_timer,{3} · {0:00}:{1:00}    Kills {2}
 fmt_hud_healing,Healing... {0}%
 ui_hud_reload,Reloading
 hud_action_charge,Charging
@@ -102,11 +102,11 @@ ui_floor_safehouse,SAFEHOUSE
 menu_home_customize,Customize
 menu_home_customize_desc,"Pick a species and edit colors, shape and gear. Saved per species."
 menu_home_single,Single Player
-menu_home_single_desc,"Choose Scenario, Outpost or Onslaught and set AI squadmates."
+menu_home_single_desc,"Scenario, Outpost or Onslaught: campaign or enemies, difficulty, AI squadmates."
 menu_home_multi,Multiplayer
 menu_home_multi_desc,Private rooms for up to 6 players — coming soon
 menu_home_settings,Settings
-menu_home_settings_desc,"Graphics, language, volume, shooting recoil"
+menu_home_settings_desc,"Graphics, language, volume"
 menu_home_quit,Quit
 menu_back,← Back  [Esc]
 menu_customize_title,Customize
@@ -119,14 +119,30 @@ mode_survivor,Onslaught
 mode_scenario_desc,Push from A to B. No levels: grab weapons off the floor and break through the rushing horde.
 mode_survival_desc,"Hold the warehouse generator through 3 waves (first version, about 3 min). Later waves bring armed enemies. No inventory or looting yet."
 mode_survivor_desc,"Hold out 2:30 against a swarm of weak enemies from every side, then fight a skill-using boss (first version). No level-up abilities yet."
+# Game setup: mode → card → difficulty (M-39 · M-40)
+play_campaign_campaign,City to River
+play_campaign_campaign_desc,"City streets (tutorial) → a basement → grassland → water and bridge. For now it runs on the large city, forest and grassland stages (in progress)."
+play_campaign_short,Warehouse District (short)
+play_campaign_short_desc,"The warehouse hall indoors → the forest bunker road. A short, temporary campaign."
+play_theme_zombie,Infected
+play_theme_zombie_desc,"A bare-handed infected horde. Many, and fast."
+play_theme_animals,Hunters
+play_theme_animals_desc,"Animal hunters with clubs, knives and wooden bows. They hit hard up close."
+play_theme_armed,Armed Gang
+play_theme_armed_desc,Animals with guns and body armour. They shoot from range.
+difficulty_label,Difficulty
+difficulty_easy,Easy
+difficulty_normal,Normal
+difficulty_hard,Hard
+fmt_difficulty_rule,Go down up to {0} times per life · AI squadmates come back {1} times per stage
+fmt_pause_setup,{0} · {1} · {2} — down up to {3} times · AI squadmates come back {4} times
+fmt_hud_squad_return,Back in {0}s · {1} left
+hud_squad_no_return,Dead · no return
 fmt_menu_coming_soon,{0} · Coming soon
-menu_stage_auto,"Stage: STAGE 1 · Warehouse District (only one for now, picked automatically)"
 menu_squad_label,AI Squadmates
 squad_0,None
 squad_1,1 (default)
 squad_3,3 (4-player shots for video)
-menu_squad_hint,Not in the game yet. Your choice is saved and will apply once AI squadmates are added. Multiplayer has no AI.
-menu_test_options,Test options
 menu_multi_title,Multiplayer
 menu_multi_rules,Test build · 2 players for now · every open room is on the room list · no AI squadmates
 menu_multi_host,Create Room
@@ -185,9 +201,6 @@ settings_sound,Sound
 settings_volume_master,Master volume
 settings_volume_sfx,Effects
 settings_volume_ambience,Ambience
-settings_gameplay,Gameplay
-settings_recoil,Shooting recoil push
-settings_recoil_hint,How far you slide back when firing. 0% means no push. Enemy knockback is not affected.
 settings_saved_hint,Changes apply right away and are saved.
 settings_not_saved_hint,Test run: settings are not saved.
 # 동료 목록 (HUD)
@@ -198,8 +211,6 @@ name_squad_assault,Assault
 name_squad_cover,Cover
 name_squad_support,Support
 # 쓰러짐 · 부활 (doc/ai-squad-plan.md 6장)
-settings_revive,Revive (pick up downed teammates)
-settings_revive_hint,"When on, reaching 0 health knocks you down instead of killing you. A teammate can pick you up in 4 seconds, twice per life. Fallen AI squadmates rejoin from behind after a while."
 fmt_hud_downed,Down — waiting for a teammate  {0}s
 hud_last_down,Danger: one more fall is death (a medkit resets it)
 fmt_use_revive,[Hold E]  Pick up {0}  {1}%

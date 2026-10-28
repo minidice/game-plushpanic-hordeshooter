@@ -74,7 +74,6 @@ custom_hair_hint,모자를 쓰면 머리털이 가려집니다. 미리보기 장
 custom_hat_choice,모자
 custom_vest_style,조끼 모양
 custom_shape_hint,체형은 외형만 변경하며 능력치와 피격 판정은 동일합니다.
-custom_stage_theme,스테이지 테마
 preview_rotation,회전
 preview_zoom,확대
 preview_auto_rotate,자동 회전

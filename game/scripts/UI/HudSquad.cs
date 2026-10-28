@@ -29,10 +29,13 @@ public partial class Hud
             float hp = survivor.MaxHealth > 0 ? Mathf.Clamp((float)survivor.Health / survivor.MaxHealth, 0, 1) : 0;
             row.Bar.Value = hp;
             row.Fill.BgColor = hp > .5f ? UiTheme.Heal : hp > .25f ? UiTheme.Accent : UiTheme.Danger;
-            row.State.Text = survivor.IsDead ? Loc.Text("hud_squad_dead")
+            // Gone: when it walks back in and how often it still can (M-40); standing: its downs left as dots.
+            var back = stage.SquadReturn(survivor);
+            row.State.Text = survivor.IsDead ? back is { In: { } wait } ? Loc.Format("fmt_hud_squad_return", Mathf.CeilToInt(wait), back.Value.Left)
+                    : back is { Left: 0 } ? Loc.Text("hud_squad_no_return") : Loc.Text("hud_squad_dead")
                 : survivor.IsDowned ? Loc.Format("fmt_hud_squad_down", Mathf.CeilToInt(Mathf.Max(0, survivor.BleedLeft)))
                 : survivor.IsRestrained ? Loc.Text("hud_squad_held")
-                : "";
+                : DownPips(stage, survivor).Trim();
             // Numbers for the same character can change as people come and go (M-30).
             row.Name.Text = survivor.DisplayLabel.Length > 0 ? survivor.DisplayLabel : Loc.Text(survivor.Definition.DisplayName);
             row.Name.Modulate = survivor.IsDead ? new Color(1, 1, 1, .45f) : Colors.White;

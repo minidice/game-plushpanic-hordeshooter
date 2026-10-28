@@ -31,7 +31,9 @@ public partial class NetLobby : Node
     public NetRole Role { get; private set; }
     /// <summary>The host first, then everyone else in the order they came in.</summary>
     public List<Member> Members { get; } = new();
-    public GameMode Mode { get; private set; } = GameMode.Scenario;
+    /// <summary>The host's game setup (mode, card, difficulty — M-39 · M-40); guests get it with the roster.</summary>
+    public PlaySetup Setup { get; private set; } = new(GameMode.Scenario, GameSession.Campaigns[0], Difficulty.Normal);
+    public GameMode Mode => Setup.Mode;
     /// <summary>The host pressed start (it may still be loading the stage).</summary>
     public bool InMatch { get; private set; }
     /// <summary>Host: its stage is running, so newcomers go straight in.</summary>
@@ -70,7 +72,7 @@ public partial class NetLobby : Node
     public static NetLobby Create(NetRole role, string character) => new()
     {
         Name = NodeName, Role = role, _character = character,
-        Mode = GameSession.PlayableModes.Contains(GameSession.Mode) ? GameSession.Mode : GameMode.Scenario,
+        Setup = GameSession.PlayableModes.Contains(GameSession.Mode) ? PlaySetup.FromSession() : PlaySetup.FromSession() with { Mode = GameMode.Scenario },
     };
 
     private string _character = "";
@@ -125,7 +127,7 @@ public partial class NetLobby : Node
         GD.Print($"[lobby] peer {peer} came in as {character}");
         Broadcast();
         // A match is already running: join it (the stage gives late survivors a place beside the host).
-        if (Live) RpcId(peer, MethodName.MatchStarted, (int)Mode, GameSession.MapSeed);
+        if (Live) RpcId(peer, MethodName.MatchStarted, (int)Mode, Setup.Choice, (int)Setup.Difficulty, GameSession.MapSeed);
     }
 
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
@@ -139,10 +141,14 @@ public partial class NetLobby : Node
     }
 
     /// <summary>Host: a new mode clears everyone's ready (they agreed to the old one).</summary>
-    public void SetMode(GameMode mode)
+    public void SetMode(GameMode mode) => SetSetup(Setup with { Mode = mode });
+
+    /// <summary>Host: a new setup (mode, card or difficulty) clears everyone's ready, as a new mode did.</summary>
+    public void SetSetup(PlaySetup setup)
     {
-        if (Role != NetRole.Host || InMatch || mode == Mode || !GameSession.PlayableModes.Contains(mode)) return;
-        Mode = mode;
+        setup = setup.Valid();
+        if (Role != NetRole.Host || InMatch || setup == Setup || !GameSession.PlayableModes.Contains(setup.Mode)) return;
+        Setup = setup;
         foreach (var m in Members) m.Ready = m.Peer == HostPeer;
         Broadcast();
     }
@@ -154,7 +160,7 @@ public partial class NetLobby : Node
         InMatch = true;
         GD.Print($"[lobby] starting {Mode} with {Members.Count} player(s)");
         Broadcast();
-        GameSession.Mode = Mode;
+        Setup.Apply();
         // One seed for the whole room: a scattered map comes out the same on every PC.
         GameSession.MapSeed = (int)(GD.Randi() % 1000000) + 1;
         GameSession.StartCampaign();
@@ -167,7 +173,7 @@ public partial class NetLobby : Node
     {
         if (Role != NetRole.Host || !InMatch || Live) return;
         Live = true;
-        foreach (var m in Members.Where(m => m.Peer != HostPeer)) RpcId(m.Peer, MethodName.MatchStarted, (int)Mode, GameSession.MapSeed);
+        foreach (var m in Members.Where(m => m.Peer != HostPeer)) RpcId(m.Peer, MethodName.MatchStarted, (int)Mode, Setup.Choice, (int)Setup.Difficulty, GameSession.MapSeed);
     }
 
     /// <summary>
@@ -196,6 +202,8 @@ public partial class NetLobby : Node
     {
         var w = new NetWriter();
         w.U8((int)Mode);
+        w.Str(Setup.Choice);
+        w.U8((int)Setup.Difficulty);
         w.U8(InMatch ? 1 : 0);
         w.U8(Members.Count);
         foreach (var m in Members) { w.I32(m.Peer); w.Str(m.Character); w.U8(m.Ready ? 1 : 0); }
@@ -263,7 +271,7 @@ public partial class NetLobby : Node
     {
         if (Role != NetRole.Client) return;
         var r = new NetReader(data);
-        Mode = (GameMode)r.U8();
+        Setup = new PlaySetup((GameMode)r.U8(), r.Str(), (Difficulty)r.U8());
         InMatch = r.U8() != 0;
         int count = r.U8();
         Members.Clear();
@@ -273,12 +281,12 @@ public partial class NetLobby : Node
     }
 
     [Rpc(MultiplayerApi.RpcMode.Authority, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
-    private void MatchStarted(int mode, int seed)
+    private void MatchStarted(int mode, string choice, int difficulty, int seed)
     {
         if (Role != NetRole.Client) return;
         InMatch = true;
-        Mode = (GameMode)mode;
-        GameSession.Mode = Mode;
+        Setup = new PlaySetup((GameMode)mode, choice, (Difficulty)difficulty).Valid();
+        Setup.Apply();
         GameSession.MapSeed = seed;
         GameSession.StartCampaign();
         Changed?.Invoke();

@@ -74,7 +74,6 @@ custom_hair_hint,Hair is hidden beneath headwear. Turn off preview gear to inspe
 custom_hat_choice,Headwear
 custom_vest_style,Vest style
 custom_shape_hint,Body shape changes appearance only; stats and hitboxes stay the same.
-custom_stage_theme,Stage theme
 preview_rotation,Rotation
 preview_zoom,Zoom
 preview_auto_rotate,Auto rotate

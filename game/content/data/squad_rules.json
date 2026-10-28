@@ -17,5 +17,10 @@
   "revive_health": 30,
   "respawn_delay_s": 60,
   "respawns_per_stage": 2,
-  "respawn_health": 50
+  "respawn_health": 50,
+  "difficulty": {
+    "easy": { "downs_per_life": 3, "respawns_per_stage": 3 },
+    "normal": { "downs_per_life": 2, "respawns_per_stage": 2 },
+    "hard": { "downs_per_life": 1, "respawns_per_stage": 1 }
+  }
 }

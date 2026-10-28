@@ -16,7 +16,7 @@ public partial class Player
     /// <summary>Times this survivor went down in the current life.</summary>
     public int DownCount { get; private set; }
     /// <summary>One more down would be death (shown as a warning).</summary>
-    public bool OnLastDown => DownCount >= Rules.DownsPerLife;
+    public bool OnLastDown => DownCount >= Stage.DownsPerLife;
     /// <summary>0..1 while someone is picking this survivor up.</summary>
     public float ReviveProgress { get; private set; }
     /// <summary>The downed teammate this survivor is picking up right now.</summary>
@@ -34,7 +34,7 @@ public partial class Player
     /// <summary>A down only makes sense if someone else is still standing to pick you up.</summary>
     private bool CanGoDown()
     {
-        if (!Stage.ReviveEnabled || IsDowned || DownCount >= Rules.DownsPerLife) return false;
+        if (!Stage.ReviveEnabled || IsDowned || DownCount >= Stage.DownsPerLife) return false;
         foreach (var other in Stage.Players)
             if (other != this && IsInstanceValid(other) && !other.IsDead && !other.IsDowned) return true;
         return false;

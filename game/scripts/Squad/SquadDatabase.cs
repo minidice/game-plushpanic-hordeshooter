@@ -52,6 +52,10 @@ public sealed class SquadRules
     public float RespawnDelay { get; init; } = 60;
     public int RespawnsPerStage { get; init; } = 2;
     public int RespawnHealth { get; init; } = 50;
+    /// <summary>Downs per life and squadmate returns per stage by difficulty (M-40); Normal is the two values above.</summary>
+    public IReadOnlyDictionary<Difficulty, (int Downs, int Respawns)> ByDifficulty { get; init; } = new Dictionary<Difficulty, (int, int)>();
+    public int Downs(Difficulty difficulty) => ByDifficulty.TryGetValue(difficulty, out var d) ? d.Downs : DownsPerLife;
+    public int Respawns(Difficulty difficulty) => ByDifficulty.TryGetValue(difficulty, out var d) ? d.Respawns : RespawnsPerStage;
 }
 
 /// <summary>Loads squad roles and rules. Errors are collected with file/row context, never thrown.</summary>
@@ -145,10 +149,24 @@ public sealed class SquadDatabase
                     RespawnDelay = j.Float("respawn_delay_s", d.RespawnDelay),
                     RespawnsPerStage = j.Int("respawns_per_stage", d.RespawnsPerStage),
                     RespawnHealth = j.Int("respawn_health", d.RespawnHealth),
+                    ByDifficulty = ReadDifficulty(doc.RootElement, db._errors),
                 };
             }
             catch (System.Exception e) { db._errors.Add($"squad_rules.json: {e.Message}"); }
         }
         return db;
+    }
+
+    private static Dictionary<Difficulty, (int, int)> ReadDifficulty(JsonElement root, List<string> errors)
+    {
+        var table = new Dictionary<Difficulty, (int, int)>();
+        if (!root.TryGetProperty("difficulty", out var levels)) return table;
+        foreach (var level in levels.EnumerateObject())
+        {
+            if (!System.Enum.TryParse<Difficulty>(level.Name, true, out var difficulty)) { errors.Add($"squad_rules.json: unknown difficulty '{level.Name}'"); continue; }
+            var j = new JsonFields(level.Value, $"squad_rules.json difficulty.{level.Name}", errors);
+            table[difficulty] = (j.Int("downs_per_life", 2), j.Int("respawns_per_stage", 2));
+        }
+        return table;
     }
 }

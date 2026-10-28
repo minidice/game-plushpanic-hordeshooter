@@ -41,6 +41,8 @@ public abstract partial class StageMap
     public Vector3 PlayerStart { get; protected set; }
     /// <summary>Language key of the map's name for the HUD title (empty: the title shows the mode alone).</summary>
     public virtual string TitleKey => "";
+    /// <summary>The enemy family a scenario on this map meets (zombie · animals · armed, C-31; M-39: the map decides, not the menu).</summary>
+    public virtual string EnemyTheme => "zombie";
     /// <summary>Ground covered by the flow field (x, z), with a margin around the walkable floors.</summary>
     public abstract Rect2 Area { get; }
     /// <summary>A scenario route runs to <see cref="RouteGoal"/>: squadmates stay behind the leader along it. Open maps have none.</summary>

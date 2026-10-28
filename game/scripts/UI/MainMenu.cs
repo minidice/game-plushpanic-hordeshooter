@@ -31,11 +31,11 @@ public partial class MainMenu : Control
     private bool _previewGear = true, _previewWeapon = true;
     private bool _starting;
     // Multiplayer: join by address, then the room.
-    private Label _multiStatus = null!, _lobbyInfo = null!, _lobbyCount = null!, _lobbyModeHint = null!, _lobbyStatus = null!;
+    private Label _multiStatus = null!, _lobbyInfo = null!, _lobbyCount = null!, _lobbyStatus = null!;
+    private PlaySetupPanel _playSetup = null!, _lobbySetup = null!;
     private LineEdit _address = null!;
     private Button _joinButton = null!, _lobbyReady = null!, _lobbyStart = null!;
     private VBoxContainer _lobbyPlayers = null!;
-    private readonly Dictionary<GameMode, Button> _lobbyModes = new();
     private NetLobby? _lobby;
     // The public room list (RoomDirectory): refreshed while the multiplayer page is open.
     private VBoxContainer _roomList = null!;
@@ -238,50 +238,22 @@ public partial class MainMenu : Control
         _singleCharacter = UiTheme.Label("", 17);
         page.AddChild(_singleCharacter);
 
-        page.AddChild(Section("menu_mode_label"));
-        var modes = new HBoxContainer();
-        var group = new ButtonGroup();
-        var modeHint = Hint("");
-        foreach (var mode in Enum.GetValues<GameMode>())
-        {
-            string id = mode.ToString().ToLowerInvariant();
-            bool playable = GameSession.PlayableModes.Contains(mode);
-            var button = new Button
-            {
-                Name = "Mode_" + id, ToggleMode = true, ButtonGroup = group, SizeFlagsHorizontal = SizeFlags.ExpandFill,
-                CustomMinimumSize = new Vector2(0, 44), Disabled = !playable, ButtonPressed = mode == GameSession.Mode,
-                Text = playable ? Loc.Text("mode_" + id) : Loc.Format("fmt_menu_coming_soon", Loc.Text("mode_" + id)),
-                TooltipText = Loc.Text("mode_" + id + "_desc"),
-            };
-            button.Pressed += () => { GameSession.Mode = mode; modeHint.Text = Loc.Text("mode_" + id + "_desc"); };
-            modes.AddChild(button);
-        }
-        page.AddChild(modes);
-        modeHint.Text = Loc.Text("mode_" + GameSession.Mode.ToString().ToLowerInvariant() + "_desc");
-        page.AddChild(modeHint);
-        page.AddChild(Hint(Loc.Text("menu_stage_auto")));
+        // Mode → its cards → difficulty (M-39 · M-40), shared with the room; the pick is saved for the next start.
+        _playSetup = new PlaySetupPanel { Name = "PlaySetup" };
+        _playSetup.Build(PlaySetup.FromSession(), "Play_");
+        _playSetup.Changed += setup => { _sfx.Play("ui_click"); setup.Apply(); GameSettings.Save(); };
+        page.AddChild(_playSetup);
 
-        page.AddChild(Section("menu_squad_label"));
-        var squad = new OptionButton { Name = "SquadChoice", CustomMinimumSize = new Vector2(0, 38) };
+        var squadRow = new HBoxContainer();
+        var squadLabel = Section("menu_squad_label");
+        squadLabel.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        squadRow.AddChild(squadLabel);
+        var squad = new OptionButton { Name = "SquadChoice", CustomMinimumSize = new Vector2(220, 36) };
         foreach (int size in GameSession.SquadChoices) squad.AddItem(Loc.Text("squad_" + size), size);
         squad.Select(Array.IndexOf(GameSession.SquadChoices, GameSession.ValidSquad(GameSession.SquadSize)));
         squad.ItemSelected += i => { GameSession.SquadSize = GameSession.SquadChoices[(int)i]; GameSettings.Save(); };
-        page.AddChild(squad);
-        page.AddChild(Hint(Loc.Text("menu_squad_hint")));
-
-        page.AddChild(Section("menu_test_options"));
-        var tests = new HBoxContainer();
-        var theme = new OptionButton { Name = "StageThemeChoice", SizeFlagsHorizontal = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(0, 38), TooltipText = Loc.Text("custom_stage_theme") };
-        var themes = new[] { "zombie", "animals", "armed" };
-        foreach (var id in themes) theme.AddItem(Loc.Text("theme_" + id));
-        theme.Select(Math.Max(0, Array.IndexOf(themes, GameSession.SelectedTheme)));
-        theme.ItemSelected += i => { GameSession.SelectedTheme = themes[(int)i]; GameSettings.Save(); };
-        tests.AddChild(theme);
-        var escape = new CheckButton { Name = "DebugEscape", Text = Loc.Text("debug_escape_option"), ButtonPressed = GameSession.DebugEscapeEnabled };
-        escape.AddThemeFontSizeOverride("font_size", 14);
-        escape.Toggled += on => GameSession.DebugEscapeEnabled = on;
-        tests.AddChild(escape);
-        page.AddChild(tests);
+        squadRow.AddChild(squad);
+        page.AddChild(squadRow);
 
         page.AddChild(new Control { SizeFlagsVertical = SizeFlags.ExpandFill });
         var start = new Button { Name = "StartGame", Text = Loc.Text("ui_menu_start"), CustomMinimumSize = new Vector2(0, 50) };
@@ -419,27 +391,10 @@ public partial class MainMenu : Control
         page.AddChild(_lobbyNetwork);
 
         // Only the host picks; everyone sees the choice, and a new one clears everyone's ready.
-        page.AddChild(Section("menu_mode_label"));
-        var modes = new HBoxContainer();
-        var group = new ButtonGroup();
-        _lobbyModes.Clear();
-        foreach (var mode in Enum.GetValues<GameMode>())
-        {
-            string id = mode.ToString().ToLowerInvariant();
-            bool playable = GameSession.PlayableModes.Contains(mode);
-            var button = new Button
-            {
-                Name = "Lobby_Mode_" + id, ToggleMode = true, ButtonGroup = group, SizeFlagsHorizontal = SizeFlags.ExpandFill,
-                CustomMinimumSize = new Vector2(0, 44), TooltipText = Loc.Text("mode_" + id + "_desc"),
-                Text = playable ? Loc.Text("mode_" + id) : Loc.Format("fmt_menu_coming_soon", Loc.Text("mode_" + id)),
-            };
-            button.Pressed += () => { _sfx.Play("ui_click"); _lobby?.SetMode(mode); };
-            modes.AddChild(button);
-            _lobbyModes[mode] = button;
-        }
-        page.AddChild(modes);
-        _lobbyModeHint = Hint("");
-        page.AddChild(_lobbyModeHint);
+        _lobbySetup = new PlaySetupPanel { Name = "LobbySetup" };
+        _lobbySetup.Build(PlaySetup.FromSession(), "Lobby_");
+        _lobbySetup.Changed += setup => { _sfx.Play("ui_click"); _lobby?.SetSetup(setup); };
+        page.AddChild(_lobbySetup);
 
         _lobbyCount = UiTheme.Label("", 17, UiTheme.Selection);
         _lobbyCount.Name = "Lobby_Count";
@@ -509,12 +464,7 @@ public partial class MainMenu : Control
             };
             _lobbyNetwork.Text = list + "\n" + port;
         }
-        foreach (var (mode, button) in _lobbyModes)
-        {
-            button.SetPressedNoSignal(mode == _lobby.Mode);
-            button.Disabled = !host || _lobby.InMatch || !GameSession.PlayableModes.Contains(mode);
-        }
-        _lobbyModeHint.Text = Loc.Text("mode_" + _lobby.Mode.ToString().ToLowerInvariant() + "_desc");
+        _lobbySetup.Show(_lobby.Setup, host && !_lobby.InMatch);
 
         _lobbyCount.Text = Loc.Format("fmt_lobby_players", _lobby.Members.Count, NetLaunch.MaxPlayers);
         foreach (var child in _lobbyPlayers.GetChildren()) { _lobbyPlayers.RemoveChild(child); child.QueueFree(); }
@@ -593,14 +543,6 @@ public partial class MainMenu : Control
         PercentSlider(page, "Settings_MasterVolume", "settings_volume_master", GameSettings.MasterVolume, v => { GameSettings.MasterVolume = v; GameSettings.ApplyAudio(); });
         PercentSlider(page, "Settings_SfxVolume", "settings_volume_sfx", GameSettings.SfxVolume, v => { GameSettings.SfxVolume = v; GameSettings.ApplyAudio(); });
         PercentSlider(page, "Settings_AmbienceVolume", "settings_volume_ambience", GameSettings.AmbienceVolume, v => { GameSettings.AmbienceVolume = v; GameSettings.ApplyAudio(); });
-
-        page.AddChild(Section("settings_gameplay"));
-        PercentSlider(page, "Settings_Recoil", "settings_recoil", GameSettings.RecoilScale, v => GameSettings.RecoilScale = v);
-        page.AddChild(Hint(Loc.Text("settings_recoil_hint")));
-        var revive = new CheckButton { Name = "Settings_Revive", Text = Loc.Text("settings_revive"), ButtonPressed = GameSettings.ReviveEnabled };
-        revive.Toggled += on => { GameSettings.ReviveEnabled = on; GameSettings.Save(); };
-        page.AddChild(revive);
-        page.AddChild(Hint(Loc.Text("settings_revive_hint")));
 
         page.AddChild(new Control { SizeFlagsVertical = SizeFlags.ExpandFill });
         page.AddChild(Hint(Loc.Text(GameSettings.Loaded ? "settings_saved_hint" : "settings_not_saved_hint")));
@@ -860,6 +802,7 @@ public partial class MainMenu : Control
         _starting = true;
         _sfx.Play("ui_click");
         GameSession.SelectedCharacterId = Selected.Id;
+        _playSetup.Setup.Apply();
         GameSession.StartCampaign();
         GameSettings.Save();
         await ToSignal(GetTree().CreateTimer(.09f), SceneTreeTimer.SignalName.Timeout);
