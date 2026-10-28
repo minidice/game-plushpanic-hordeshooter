@@ -140,6 +140,7 @@ public partial class StageNet : Node
             _batch.Begin(NetEvent.Roster); WriteRoster(_batch.W);
         }
         _readyPeers.Add(peer);
+        NetLaunch.SetLoadingTimeout(Multiplayer, peer, false);
         GD.Print($"[net] peer {peer} joined as {characterId}");
         // Welcome: who the host plays, then every enemy and dropped weapon that exists right now.
         var welcome = new NetEventBatch();
@@ -618,6 +619,7 @@ public partial class StageNet : Node
                 {
                     Peers[HostPeer] = _stage.AddRemoteSurvivor(CharacterCatalog.Player(hostCharacter), _stage.Map.PlayerStart, HostPeer);
                     Started = true;
+                    NetLaunch.SetLoadingTimeout(Multiplayer, HostPeer, false);
                     GD.Print($"[net] synced with the host ({hostCharacter})");
                 }
                 ApplyWorld(r);

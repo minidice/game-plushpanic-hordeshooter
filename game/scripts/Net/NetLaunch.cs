@@ -79,6 +79,14 @@ public static class NetLaunch
     /// <summary>127.x.x.x always means this PC: typed for another PC it can never connect (I-76).</summary>
     public static bool IsLoopback(string address) => address.StartsWith("127.") || address == "localhost";
 
+    // Map construction blocks the main thread (and ENet polling). Give room/loading peers a bounded
+    // grace period, then restore normal loss detection as soon as their stage handshake completes.
+    internal static void SetLoadingTimeout(MultiplayerApi api, int peerId, bool loading)
+    {
+        if (api.MultiplayerPeer is ENetMultiplayerPeer enet)
+            enet.GetPeer(peerId)?.SetTimeout(32, loading ? 30000 : 5000, loading ? 60000 : 30000);
+    }
+
     /// <summary>Opens the room. False when the port is taken (another game already hosts on this PC).</summary>
     public static bool Host(SceneTree tree)
     {

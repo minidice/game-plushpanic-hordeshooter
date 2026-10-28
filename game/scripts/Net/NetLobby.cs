@@ -92,6 +92,7 @@ public partial class NetLobby : Node
         else
         {
             Multiplayer.ServerDisconnected += OnHostLeft;
+            NetLaunch.SetLoadingTimeout(Multiplayer, HostPeer, true);
             RpcId(HostPeer, MethodName.Hello, _character, Version);
         }
     }
@@ -122,6 +123,7 @@ public partial class NetLobby : Node
             RpcId(peer, MethodName.Refused, "msg_net_peer_refused");
             return;
         }
+        NetLaunch.SetLoadingTimeout(Multiplayer, peer, true);
         if (Members.FirstOrDefault(m => m.Peer == peer) is { } known) known.Character = character;
         else Members.Add(new Member { Peer = peer, Character = character });
         GD.Print($"[lobby] peer {peer} came in as {character}");
@@ -184,6 +186,7 @@ public partial class NetLobby : Node
     {
         if (Role != NetRole.Host || !InMatch) return;
         InMatch = Live = false;
+        foreach (var m in Members.Where(m => m.Peer != HostPeer)) NetLaunch.SetLoadingTimeout(Multiplayer, m.Peer, true);
         foreach (var m in Members) m.Ready = m.Peer == HostPeer;
         GD.Print("[lobby] back to the room");
         Broadcast();
@@ -273,6 +276,7 @@ public partial class NetLobby : Node
         var r = new NetReader(data);
         Setup = new PlaySetup((GameMode)r.U8(), r.Str(), (Difficulty)r.U8());
         InMatch = r.U8() != 0;
+        if (!InMatch) NetLaunch.SetLoadingTimeout(Multiplayer, HostPeer, true);
         int count = r.U8();
         Members.Clear();
         for (int i = 0; i < count; i++) Members.Add(new Member { Peer = r.I32(), Character = r.Str(), Ready = r.U8() != 0 });
@@ -297,6 +301,7 @@ public partial class NetLobby : Node
     private void BackToRoom()
     {
         if (Role != NetRole.Client) return;
+        NetLaunch.SetLoadingTimeout(Multiplayer, HostPeer, true);
         InMatch = false;
         Changed?.Invoke();
         LeaveMatch(this);

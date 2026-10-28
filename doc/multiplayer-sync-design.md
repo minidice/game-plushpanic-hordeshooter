@@ -145,6 +145,8 @@
 
 ## 10. 구현 결과와 남은 한계 (2026-10-20)
 
+**2026-10-29 로비 동시 시작 수정(I-133)**: 큰 맵 생성 중 메인 스레드가 멈춰 ENet 응답이 늦어지는 구간을 위해 로비/로딩 중 연결 대기는 최소30초·최대60초(factor32)를 사용한다. 호스트 ClientReady/클라이언트 최초 World 수신 후 일반 최소5초·최대30초로 복구하고 로비 복귀 때 다시 적용한다. 실제 두 프로세스에서 준비→시작→로비 복귀→재시작을 검사한다: `game/tests/Run-LobbyStartCheck.ps1`(빌드 후 실행). [원인·검증](features/multiplayer/log/002-code-lobby-loading-timeout.md). 서로 다른 두 PC/인터넷 검증을 대체하지 않는다.
+
 **한 PC에서 빠르게**: `game/Start-Multi-Test.cmd` 더블클릭(= `Start-Game.ps1 -NetPair`) — 빌드 한 번, 방장 창이 뜨고 4초 뒤 참가 창이 자동으로 붙는다.
 
 **다른 PC와(같은 공유기)**: 방장이 방을 만들면 화면 안내와 일시정지 화면에 `192.168.x.x` 같은 주소가 나온다. 다른 PC는 메뉴 → 멀티에서 그 주소로 참가. 처음 방을 만들 때 Windows 방화벽이 묻으면 **개인 네트워크 허용**. 다른 PC에도 같은 버전의 게임이 필요하다: 개발 PC에서 `game/Export-Game.cmd`를 실행하면 `build/HordeShooter-windows.zip`이 생긴다. 이 압축을 다른 PC에 풀고 `HordeShooter.exe`를 실행(Godot·.NET SDK 불필요, 폴더 안 파일은 함께 둘 것). 코드나 데이터가 바뀌면 두 PC 모두 다시 내보낸 같은 버전을 써야 한다(다르면 참가 거절). 인터넷 너머는 아래 방 목록.
