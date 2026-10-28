@@ -138,7 +138,7 @@ public partial class Hud
         float fraction = Mathf.Clamp((float)gun.Mag / gun.Def.MagSize, 0, 1);
         float ammoAlpha = Mathf.Clamp(1 - w * 2, 0, 1);
         if (fraction > 0 && ammoAlpha > 0)
-            SightArc(c, center, radius, start, start + sweep * fraction, new Color(ActionLight, .9f * ammoAlpha), 2.8f, SightBlue);
+            SightArc(c, center, radius, start + sweep * (1 - fraction), start + sweep, new Color(ActionLight, .9f * ammoAlpha), 2.8f, SightBlue);
         if (w > 0 && _weaponAction.Progress > 0)
             DrawLightArc(c, center, radius, start + sweep * _weaponAction.Progress, ActionGlow, w, start);
         DrawFireGlyph(c, center + glyphDirection * (restingRadius + 2), gun.Def, 1 - w);
