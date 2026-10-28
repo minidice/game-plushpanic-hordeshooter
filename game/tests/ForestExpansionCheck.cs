@@ -108,16 +108,20 @@ public partial class ForestExpansionCheck : Node
         p.TeleportTo(new(54,.05f,-6));await Walk(new(62,0,-7),true);await Shot("low-walk-roll");
         p.TeleportTo(new(244,2.45f,-50));foreach(var point in new[]{new Vector3(250,2.4f,-48),new(252,2.4f,-48),new(262,1.2f,-46),new(273,1.2f,-47)})await Walk(point,false);
         await Shot("yard-ramp-walk");
-        p.TeleportTo(new(146,2.45f,-38));p.Weapons.Pickup(ArmoryCatalog.Weapon("m4"),null);_stage.Cam.SnapTo(p.Position+Vector3.Up);await Frames(45);
-        int before=_stage.Kills;
-        for(int i=0;i<6;i++)_stage.SpawnEnemy<Enemy>(_stage.CommonDefinition,new Vector3(149+i%3*1.2f,2.4f,-39+i/3*1.2f),awake:true);
-        await Frames(10);await Shot("high-enemies");
-        for(int i=0;i<1800 && _stage.Kills-before<6;i++)
+        p.Weapons.Pickup(ArmoryCatalog.Weapon("m4"),null);
+        foreach(var (combatName,combatAt) in new[]{("high",new Vector3(146,2.45f,-38)),("surface-pilot",new Vector3(94,1.25f,-24))})
         {
-            var enemy=_stage.AllEnemies.Where(e=>!e.IsDead).OrderBy(e=>e.Position.DistanceSquaredTo(p.Position)).FirstOrDefault();
-            if(enemy==null)break;if(p.Gun.Mag==0)p.PressReload();p.SetControls(Vector2.Zero,enemy.Position+Vector3.Up*Player.AimHeight,true);await Frames(1);
+            p.TeleportTo(combatAt);_stage.Cam.SnapTo(p.Position+Vector3.Up);await Frames(45);
+            int before=_stage.Kills;
+            for(int i=0;i<6;i++)_stage.SpawnEnemy<Enemy>(_stage.CommonDefinition,combatAt+new Vector3(3+i%3*1.2f,-.05f,-1+i/3*1.2f),awake:true);
+            await Frames(10);await Shot(combatName+"-enemies");
+            for(int i=0;i<1800 && _stage.Kills-before<6;i++)
+            {
+                var enemy=_stage.AllEnemies.Where(e=>!e.IsDead).OrderBy(e=>e.Position.DistanceSquaredTo(p.Position)).FirstOrDefault();
+                if(enemy==null)break;if(p.Gun.Mag==0)p.PressReload();p.SetControls(Vector2.Zero,enemy.Position+Vector3.Up*Player.AimHeight,true);await Frames(1);
+            }
+            p.SetControls(Vector2.Zero,p.Position+Vector3.Right*5,false);Check(_stage.Kills-before==6,"actual gunfire clears six moving enemies in "+combatName);await Shot(combatName+"-combat-cleared");
         }
-        p.SetControls(Vector2.Zero,p.Position+Vector3.Right*5,false);Check(_stage.Kills-before==6,"actual gunfire clears six moving enemies in high forest");await Shot("high-combat-cleared");
         var outside=map.KitProps.Where(t=>t.Position.X<32||t.Position.X>=282).Select(t=>$"{Asset(t)}:{t.Position}:{t.Rotation}").OrderBy(s=>s).ToArray();
         int floors=map.FloorRects,voids=map.VoidRects;_stage.Free();await Frames(2);
         var baseline=new LayoutMap{ForestExpanded=false};_stage=new Stage{MapOverride=baseline,DirectorEnabled=false,SquadOverride=0,CharacterOverride="goose",ModeOverride=GameMode.Scenario};AddChild(_stage);await Frames(3);

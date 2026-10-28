@@ -5,6 +5,8 @@ using System.Linq;
 
 namespace HordeShooter;
 
+public enum GraphicsQualityLevel { High=0, Low=1 }
+
 /// <summary>
 /// Player options and the last menu choices, saved to <see cref="Path"/>.
 /// Values are read live (every shot, every bus update), so the settings page can change them at any time.
@@ -24,6 +26,23 @@ public static class GameSettings
     public static float AmbienceVolume { get; set; } = 1f;
     /// <summary>Game option "revive" for single player (multiplayer: a room option). Default on (decisions.md M-18).</summary>
     public static bool ReviveEnabled { get; set; } = true;
+    private static GraphicsQualityLevel _shadowQuality=GraphicsQualityLevel.High, _surfaceQuality=GraphicsQualityLevel.High;
+    public static event Action? GraphicsQualityChanged;
+    public static GraphicsQualityLevel ShadowQuality
+    {
+        get=>_shadowQuality;
+        set { ValidateQuality(value);if(_shadowQuality==value)return;_shadowQuality=value;GraphicsQualityChanged?.Invoke(); }
+    }
+    public static GraphicsQualityLevel SurfaceQuality
+    {
+        get=>_surfaceQuality;
+        set { ValidateQuality(value);if(_surfaceQuality==value)return;_surfaceQuality=value;ApplySurfaceQuality();GraphicsQualityChanged?.Invoke(); }
+    }
+    private static void ValidateQuality(GraphicsQualityLevel value)
+    { if(!Enum.IsDefined(value))throw new ArgumentException("Unknown graphics quality",nameof(value)); }
+    private static GraphicsQualityLevel ReadQuality(ConfigFile cfg,string key) =>
+        (int)cfg.GetValue("graphics",key,0)==1?GraphicsQualityLevel.Low:GraphicsQualityLevel.High;
+    public static void ApplySurfaceQuality() => RenderingServer.GlobalShaderParameterSet("graphics_surface_low",SurfaceQuality==GraphicsQualityLevel.Low);
     private static PetModelQuality _petQuality=PetModelQuality.High;
     public static event Action<PetModelQuality>? PetQualityChanged;
     public static PetModelQuality PetQuality
@@ -58,6 +77,8 @@ public static class GameSettings
             ReviveEnabled = (bool)cfg.GetValue("options", "revive", true);
             int petQuality=(int)cfg.GetValue("graphics","pet_quality",0);
             PetQuality=petQuality == 1 ? PetModelQuality.Low : PetModelQuality.High;
+            ShadowQuality=ReadQuality(cfg,"shadow_quality");
+            SurfaceQuality=ReadQuality(cfg,"surface_quality");
             GameSession.SelectedCharacterId = (string)cfg.GetValue("menu", "character", GameSession.DefaultCharacterId);
             GameSession.SquadSize = GameSession.ValidSquad((int)cfg.GetValue("menu", "squad_size", GameSession.DefaultSquadSize));
             GameSession.SelectedTheme = (string)cfg.GetValue("menu", "theme", GameSession.SelectedTheme);
@@ -65,6 +86,7 @@ public static class GameSettings
         }
         Loaded = true;
         ApplyAudio();
+        ApplySurfaceQuality();
     }
 
     /// <summary>Writes only after <see cref="Load"/>, so test scenes leave the player's file alone.</summary>
@@ -79,6 +101,8 @@ public static class GameSettings
         cfg.SetValue("options", "volume_ambience", AmbienceVolume);
         cfg.SetValue("options", "revive", ReviveEnabled);
         cfg.SetValue("graphics","pet_quality",(int)PetQuality);
+        cfg.SetValue("graphics","shadow_quality",(int)ShadowQuality);
+        cfg.SetValue("graphics","surface_quality",(int)SurfaceQuality);
         cfg.SetValue("menu", "character", GameSession.SelectedCharacterId);
         cfg.SetValue("menu", "squad_size", GameSession.SquadSize);
         cfg.SetValue("menu", "theme", GameSession.SelectedTheme);
@@ -95,6 +119,8 @@ public static class GameSettings
         RecoilScale = MasterVolume = SfxVolume = AmbienceVolume = 1f;
         ReviveEnabled = true;
         PetQuality=PetModelQuality.High;
+        ShadowQuality=SurfaceQuality=GraphicsQualityLevel.High;
+        ApplySurfaceQuality();
         NetLaunch.LastAddress = "";
         Loc.Language = Loc.Fallback;
         ApplyAudio();

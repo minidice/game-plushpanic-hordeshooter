@@ -35,8 +35,18 @@ public static class TerrainEdgeArt
 
     private static float Relief(Vector3 p)=>.5f+.28f*Mathf.Sin(p.X*2.3f+p.Z*1.7f)+.22f*Mathf.Sin(p.X*5.1f-p.Z*3.2f);
 
+    // Linear interpolation keeps the 0.5m wall segments on broad, shared planes.
+    // Every endpoint depends on world position, never on the segment that owns it.
+    private static float RockPlane(Vector3 p,float size)
+    {
+        float x=p.X/size,z=p.Z/size,ix=Mathf.Floor(x),iz=Mathf.Floor(z);
+        float Value(float a,float b)=>.5f+.5f*Mathf.Sin(a*12.9898f+b*78.233f);
+        return Mathf.Lerp(Mathf.Lerp(Value(ix,iz),Value(ix+1,iz),x-ix),
+            Mathf.Lerp(Value(ix,iz+1),Value(ix+1,iz+1),x-ix),z-iz);
+    }
+
     /// <summary>Visual-only wall skin, at most 18cm outside the existing solid. A narrow lip joins the flat top.</summary>
-    public static void Rock(SurfaceTool s,Vector3 a,Vector3 b,float lowA,float lowB,float highA,float highB,Vector3 outward)
+    public static void Rock(SurfaceTool s,Vector3 a,Vector3 b,float lowA,float lowB,float highA,float highB,Vector3 outward,bool forestQuality=false)
     {
         if(Mathf.Max(highA-lowA,highB-lowB)<.035f)return;
         Vector3 Point(Vector3 p,float low,float high,int row)
@@ -48,9 +58,24 @@ public static class TerrainEdgeArt
             float y=Mathf.Lerp(low-.025f,high+.006f,t);
             if(row==4)y+=.025f+.035f*Relief(p);
             if(row>0&&row<3)y+=Mathf.Sin(p.X*3+p.Z*2+row)*Mathf.Min(.07f,height*.06f);
-            return new Vector3(p.X,y,p.Z)+outward*offset;
+            var original=new Vector3(p.X,y,p.Z)+outward*offset;
+            float quality=forestQuality?ForestSurfaceQuality.Weight(new Vector2(p.X,p.Z)):0;
+            if(quality<=0)return original;
+            float plane=RockPlane(p,1.5f),chip=RockPlane(p+new Vector3(8.5f,0,3.5f),2.5f);
+            float facetT=row switch{0=>0,1=>.13f+.08f*chip,2=>.65f+.12f*plane,3=>.91f+.035f*chip,_=>1};
+            float facetOffset=row switch{0=>.035f+.025f*plane,1=>.105f+.065f*plane,2=>.105f+.065f*plane,3=>.035f+.07f*chip,_=>.025f+.035f*plane};
+            facetOffset*=Mathf.Min(1,height/.35f);
+            float facetY=Mathf.Lerp(low-.025f,high+.006f,facetT);
+            if(row==4)facetY+=.025f+.025f*chip;
+            return original.Lerp(new Vector3(p.X,facetY,p.Z)+outward*facetOffset,quality);
+        }
+        Vector3 Cap(Vector3 p,float high)
+        {
+            float quality=forestQuality?ForestSurfaceQuality.Weight(new Vector2(p.X,p.Z)):0;
+            float width=Mathf.Lerp(.18f,.38f+.24f*RockPlane(p,2.5f),quality);
+            return (p with{Y=high+.006f})-outward*width;
         }
         for(int row=0;row<4;row++)Quad(s,Point(a,lowA,highA,row),Point(b,lowB,highB,row),Point(b,lowB,highB,row+1),Point(a,lowA,highA,row+1),outward);
-        Quad(s,Point(a,lowA,highA,4),Point(b,lowB,highB,4),(b with{Y=highB+.006f})-outward*.18f,(a with{Y=highA+.006f})-outward*.18f,Vector3.Up);
+        Quad(s,Point(a,lowA,highA,4),Point(b,lowB,highB,4),Cap(b,highB),Cap(a,highA),Vector3.Up);
     }
 }

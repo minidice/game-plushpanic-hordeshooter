@@ -20,6 +20,7 @@ void fragment() {
 
     private Stage Stage => GetParent<Stage>();
     public bool Paused { get; private set; }
+    public bool GraphicsOpen { get; private set; }
 
     private Control _root = null!;
     private Label _objective = null!, _timer = null!, _notice = null!, _hp = null!;
@@ -27,8 +28,10 @@ void fragment() {
     private HudEquipmentSlot _slot1 = null!, _slot2 = null!, _slot3 = null!, _throwables = null!, _medkit = null!;
     private ColorRect _blind = null!;
     private Label _endTitle = null!, _endBody = null!;
-    private PanelContainer _endPanel = null!, _pausePanel = null!;
-    private Button _pauseQuality = null!;
+    private PanelContainer _endPanel = null!, _pausePanel = null!, _graphicsPanel = null!;
+    private Button _pauseGraphics = null!;
+    private Control _pauseInputBlocker = null!;
+    private GraphicsOptions _graphicsOptions = null!;
     private ShaderMaterial _darkVignette = null!, _hurtVignette = null!, _heliumVignette = null!;
 
     /// <summary>The card pick window is open (<see cref="CardWindow"/>): the mouse shows and only walking and leaping work.</summary>
@@ -96,7 +99,12 @@ void fragment() {
         _endBody.HorizontalAlignment = HorizontalAlignment.Center;
         endBox.AddChild(_endBody);
 
+        _pauseInputBlocker = new Control { Name = "PauseInputBlocker", Visible = false, MouseFilter = Control.MouseFilterEnum.Stop };
+        _pauseInputBlocker.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+        _root.AddChild(_pauseInputBlocker);
         _pausePanel = CenterPanel(out var pauseBox);
+        _pausePanel.Name = "PausePanel";
+        _pausePanel.MouseFilter = Control.MouseFilterEnum.Stop;
         var pauseTitle = UiTheme.Label(Loc.Text("ui_pause_title"), 40, UiTheme.Accent);
         pauseTitle.HorizontalAlignment = HorizontalAlignment.Center;
         pauseBox.AddChild(pauseTitle);
@@ -109,20 +117,46 @@ void fragment() {
         pauseBody.AutowrapMode = TextServer.AutowrapMode.WordSmart;
         pauseBody.HorizontalAlignment = HorizontalAlignment.Center;
         pauseBox.AddChild(pauseBody);
-        // The companion model quality can change mid-match: the models swap their meshes at once (pet-model-spec.md 품질 설정).
-        _pauseQuality = new Button { Name = "PauseCompanionQuality", FocusMode = Control.FocusModeEnum.None, MouseFilter = Control.MouseFilterEnum.Stop };
-        ShowPauseQuality();
-        _pauseQuality.Pressed += () =>
-        {
-            GameSettings.PetQuality = GameSettings.PetQuality == PetModelQuality.High ? PetModelQuality.Low : PetModelQuality.High;
-            GameSettings.Save();
-            ShowPauseQuality();
-        };
-        pauseBox.AddChild(_pauseQuality);
+        _pauseGraphics = new Button { Name = "Pause_Graphics", Text = Loc.Text("settings_graphics"), FocusMode = Control.FocusModeEnum.All, MouseFilter = Control.MouseFilterEnum.Stop };
+        _pauseGraphics.Pressed += OpenGraphicsOptions;
+        pauseBox.AddChild(_pauseGraphics);
+
+        _graphicsPanel = CenterPanel(out var graphicsBox);
+        _graphicsPanel.Name = "PauseGraphicsPanel";
+        _graphicsPanel.MouseFilter = Control.MouseFilterEnum.Stop;
+        graphicsBox.CustomMinimumSize = new Vector2(650, 0);
+        var graphicsTitle = UiTheme.Label(Loc.Text("settings_graphics"), 36, UiTheme.Accent);
+        graphicsTitle.HorizontalAlignment = HorizontalAlignment.Center;
+        graphicsBox.AddChild(graphicsTitle);
+        _graphicsOptions = new GraphicsOptions { Name = "GraphicsOptions" };
+        graphicsBox.AddChild(_graphicsOptions);
+        var graphicsBack = new Button { Name = "Graphics_Back", Text = Loc.Text("menu_back"), CustomMinimumSize = new Vector2(0, 42) };
+        graphicsBack.Pressed += CloseGraphicsOptions;
+        graphicsBox.AddChild(graphicsBack);
     }
 
-    private void ShowPauseQuality() => _pauseQuality.Text = Loc.Format("fmt_pause_companion_quality",
-        Loc.Text(GameSettings.PetQuality == PetModelQuality.High ? "settings_quality_high" : "settings_quality_low"));
+    public void OpenGraphicsOptions()
+    {
+        if (!Paused || Stage.State != StageState.Playing) return;
+        GraphicsOpen = true;
+        UpdatePausePanels();
+        _graphicsOptions.FocusSelected();
+    }
+
+    private void CloseGraphicsOptions()
+    {
+        GraphicsOpen = false;
+        UpdatePausePanels();
+        // The pause root advertises Enter to restart/return to room. Do not leave that key on a button.
+        if (Paused) GetViewport().GuiReleaseFocus();
+    }
+
+    private void UpdatePausePanels()
+    {
+        _pauseInputBlocker.Visible = Paused;
+        _pausePanel.Visible = Paused && !GraphicsOpen;
+        _graphicsPanel.Visible = Paused && GraphicsOpen;
+    }
 
     private T Place<T>(T control, float ax, float ay, Vector2 offset, bool growLeft, bool growUp, bool centerX = false) where T : Control
     {
@@ -223,10 +257,9 @@ void fragment() {
         float helium = player.HeliumTime > 0 ? .35f + .15f * Mathf.Sin(stage.Elapsed * 6) : 0;
         _heliumVignette.SetShaderParameter("strength", helium);
 
+        if (!playing && Paused) SetPaused(false);
         UpdateEndPanel(stage, player);
-        // The setting may have changed in the main menu or elsewhere since the panel was built.
-        if (Paused && !_pausePanel.Visible) ShowPauseQuality();
-        _pausePanel.Visible = Paused;
+        UpdatePausePanels();
         if (InventoryOpen && (!playing || Paused || player.IsDead)) SetInventoryOpen(false);
         UpdateWeaponAction((float)delta);
         bool captured = playing && !Paused && !InventoryOpen && !CardWindowOpen && !stage.AllStopped && GetWindow().HasFocus();
@@ -257,6 +290,12 @@ void fragment() {
     public override void _UnhandledInput(InputEvent e)
     {
         var stage = Stage;
+        if (GraphicsOpen)
+        {
+            if (e.IsActionPressed(GameInput.Pause) || e.IsActionPressed("ui_cancel")) CloseGraphicsOptions();
+            GetViewport().SetInputAsHandled();
+            return;
+        }
         if (e.IsActionPressed(GameInput.Zoom)) stage.Cam.Close = !stage.Cam.Close;
         if (e.IsActionPressed(GameInput.Inventory) && stage.State == StageState.Playing && !Paused)
         {
@@ -271,7 +310,7 @@ void fragment() {
             return;
         }
 
-        if (e.IsActionPressed(GameInput.Pause))
+        if (e.IsActionPressed(GameInput.Pause) || e.IsActionPressed("ui_cancel"))
         {
             if (stage.State != StageState.Playing) GoMenu();
             else SetPaused(!Paused);
@@ -302,9 +341,13 @@ void fragment() {
 
     public void SetPaused(bool paused)
     {
-        Paused = paused;
+        Stage.Player.SuppressMenuInput();
+        Paused = paused && Stage.State == StageState.Playing;
+        GraphicsOpen = false;
+        UpdatePausePanels();
+        if (Paused) SetInventoryOpen(false);
         // Online the world keeps running for everyone; only the menu opens (multiplayer-sync-design.md 3장).
-        GetTree().Paused = (paused && Stage.Role == NetRole.Offline) || Stage.AllStopped;
+        GetTree().Paused = (Paused && Stage.Role == NetRole.Offline) || Stage.AllStopped;
     }
 
     // ---------- painters ----------

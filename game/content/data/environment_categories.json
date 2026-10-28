@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "domain": [
+    { "id": "indoor", "kor": "실내", "eng": "Indoor" },
+    { "id": "outdoor", "kor": "실외", "eng": "Outdoor" }
+  ],
+  "indoor_light": [
+    { "id": "dark", "kor": "완전히 어두운 실내", "eng": "Fully dark interior" },
+    { "id": "daylit", "kor": "햇빛이 조금 들어오는 실내", "eng": "Interior with some daylight" }
+  ],
+  "outdoor_time": [
+    { "id": "dawn", "kor": "새벽", "eng": "Dawn" },
+    { "id": "morning", "kor": "아침", "eng": "Morning" },
+    { "id": "noon", "kor": "밝은 한낮", "eng": "Bright noon" },
+    { "id": "sunset", "kor": "붉은 노을", "eng": "Red sunset" },
+    { "id": "dusk", "kor": "어두워지는 저녁", "eng": "Darkening evening" },
+    { "id": "night", "kor": "밤", "eng": "Night" }
+  ],
+  "weather": [
+    { "id": "clear", "kor": "강수 없음", "eng": "Clear / no precipitation" },
+    { "id": "sunny", "kor": "햇빛이 드는 날씨", "eng": "Sunny" },
+    { "id": "overcast", "kor": "흐림", "eng": "Overcast" },
+    { "id": "rain", "kor": "비 내림", "eng": "Rain" },
+    { "id": "snow", "kor": "눈 내림", "eng": "Snow" }
+  ],
+  "ground": [
+    { "id": "dry", "kor": "마른 바닥", "eng": "Dry ground" },
+    { "id": "wet", "kor": "젖은 바닥", "eng": "Wet ground" },
+    { "id": "snow_covered", "kor": "눈 쌓인 바닥", "eng": "Snow-covered ground" }
+  ],
+  "examples": [
+    { "id": "dark_interior", "kor": "어두운 실내", "eng": "Dark interior", "selection": { "domain": "indoor", "indoor_light": "dark", "weather": "clear", "ground": "dry" } },
+    { "id": "daylit_interior", "kor": "햇빛이 스미는 실내", "eng": "Daylit interior", "selection": { "domain": "indoor", "indoor_light": "daylit", "weather": "sunny", "ground": "dry" } },
+    { "id": "rain_outside_shelter", "kor": "비 오는 바깥과 실내", "eng": "Sheltered interior with rain outside", "selection": { "domain": "indoor", "indoor_light": "daylit", "weather": "rain", "ground": "dry" } },
+    { "id": "clear_dawn", "kor": "새벽", "eng": "Clear dawn", "selection": { "domain": "outdoor", "outdoor_time": "dawn", "weather": "clear", "ground": "dry" } },
+    { "id": "sunny_morning", "kor": "햇빛 드는 아침", "eng": "Sunny morning", "selection": { "domain": "outdoor", "outdoor_time": "morning", "weather": "sunny", "ground": "dry" } },
+    { "id": "sunny_noon", "kor": "밝은 한낮", "eng": "Sunny noon", "selection": { "domain": "outdoor", "outdoor_time": "noon", "weather": "sunny", "ground": "dry" } },
+    { "id": "red_sunset", "kor": "붉은 노을", "eng": "Red sunset", "selection": { "domain": "outdoor", "outdoor_time": "sunset", "weather": "clear", "ground": "dry" } },
+    { "id": "overcast_dusk", "kor": "흐리고 어두워지는 저녁", "eng": "Overcast dusk", "selection": { "domain": "outdoor", "outdoor_time": "dusk", "weather": "overcast", "ground": "dry" } },
+    { "id": "clear_night", "kor": "밤", "eng": "Clear night", "selection": { "domain": "outdoor", "outdoor_time": "night", "weather": "clear", "ground": "dry" } },
+    { "id": "rainy_evening", "kor": "비 내리는 저녁", "eng": "Rainy evening", "selection": { "domain": "outdoor", "outdoor_time": "dusk", "weather": "rain", "ground": "wet" } },
+    { "id": "after_rain", "kor": "비 온 뒤", "eng": "After rain", "selection": { "domain": "outdoor", "outdoor_time": "morning", "weather": "clear", "ground": "wet" } },
+    { "id": "falling_snow", "kor": "눈 내림", "eng": "Falling snow", "selection": { "domain": "outdoor", "outdoor_time": "night", "weather": "snow", "ground": "snow_covered" } },
+    { "id": "after_snow", "kor": "눈 쌓인 뒤", "eng": "After snow", "selection": { "domain": "outdoor", "outdoor_time": "noon", "weather": "clear", "ground": "snow_covered" } },
+    { "id": "sunny_snow_cover", "kor": "햇빛과 쌓인 눈", "eng": "Sunshine on accumulated snow", "selection": { "domain": "outdoor", "outdoor_time": "noon", "weather": "sunny", "ground": "snow_covered" } }
+  ]
+}

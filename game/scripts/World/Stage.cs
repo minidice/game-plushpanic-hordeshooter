@@ -261,6 +261,8 @@ public partial class Stage : Node3D
         Mode = ModeOverride ?? (GetTree().CurrentScene == this ? GameSession.Mode : GameMode.Scenario);
         // The map sizes the flow field before it builds into it.
         bool running = GetTree().CurrentScene == this;
+        // Direct stage launches bypass MainMenu (including Start-Game.ps1 --zone).
+        if (running && !GameSettings.Loaded) GameSettings.Load();
         var map = MapOverride ?? StageMap.Create(Mode, running ? GameSession.ScenarioStage : 1);
         var area = map.Area;
         Flow = new FlowField(area.Position.X, area.Position.Y, area.End.X, area.End.Y);
@@ -343,6 +345,7 @@ public partial class Stage : Node3D
 
         Hud = new Hud { Name = "Hud" };
         AddChild(Hud);
+        AddChild(new GraphicsQualityController{Name="GraphicsQuality"});
         if (ModeRules == null) ShowNotice(Loc.Text(Objective == Objective.LeaveSafeRoom ? "msg_stage_start" : Map.RouteStartKey));
         // A stage that starts out on the route (no safe-room door to open) wakes the director at once.
         if (ModeRules == null && Objective != Objective.LeaveSafeRoom && DirectorEnabled) Director.Begin();
@@ -922,6 +925,7 @@ public partial class Stage : Node3D
     {
         FocusedInteractable = null;
         RevivePromptTarget = null;
+        if(Hud?.Paused==true){_holding=null;HoldProgress=0;HoldCancelled=true;return;}
         if (Player.IsDead || Player.IsDowned || Player.IsStunned || Player.IsRestrained) return;
         RevivePromptTarget = Player.Reviving ?? Player.DownedTeammateInReach();
         float best = float.MaxValue;

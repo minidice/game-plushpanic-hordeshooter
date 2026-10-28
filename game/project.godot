@@ -30,6 +30,13 @@ project/assembly_name="HordeShooter"
 3d/physics_engine="Jolt Physics"
 common/physics_ticks_per_second=60
 
+[shader_globals]
+
+graphics_surface_low={
+"type": "bool",
+"value": false
+}
+
 [rendering]
 renderer/rendering_method="forward_plus"
 anti_aliasing/quality/msaa_3d=2

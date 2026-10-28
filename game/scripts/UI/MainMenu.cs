@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace HordeShooter;
 
-public enum MenuPage { Home, Customize, Single, Multi, Settings, Lobby }
+public enum MenuPage { Home, Customize, Single, Multi, Settings, Lobby, Graphics }
 
 /// <summary>
 /// Main menu (doc/menu-multiplayer-plan.md 1장): home → customize / single / multi / settings, and the room (2장)
@@ -120,6 +120,7 @@ public partial class MainMenu : Control
         AddPage(right, MenuPage.Single, BuildSingle());
         AddPage(right, MenuPage.Multi, BuildMulti());
         AddPage(right, MenuPage.Settings, BuildSettings());
+        AddPage(right, MenuPage.Graphics, BuildGraphics());
         AddPage(right, MenuPage.Lobby, BuildLobby());
         column.AddChild(UiTheme.Label(Hud.ControlsText, 14, UiTheme.Muted));
 
@@ -139,6 +140,7 @@ public partial class MainMenu : Control
 
     public void ShowPage(MenuPage page)
     {
+        var previousPage = Page;
         // Keyboard changes to a slider never fire DragEnded, so leaving the page also saves.
         if (Page == MenuPage.Settings && page != MenuPage.Settings) GameSettings.Save();
         Page = page;
@@ -148,12 +150,18 @@ public partial class MainMenu : Control
         if (page == MenuPage.Lobby) RefreshLobby();
         if (page == MenuPage.Multi) _roomTimer = 0; // list right away
         if (page == MenuPage.Single && _characters.Count > 0) _singleCharacter.Text = Loc.Format("fmt_menu_single_character", Loc.Text(Selected.DisplayName));
+        if (page == MenuPage.Graphics)
+        {
+            (_pages[page].FindChild("GraphicsOptions", true, false) as GraphicsOptions)?.FocusSelected();
+            return;
+        }
         // Enter presses the focused button, so each page focuses the action Enter should take.
         var focus = page switch
         {
             MenuPage.Customize when _buttons.Count > 0 => _buttons[_index],
             MenuPage.Home => _pages[page].FindChild("Menu_Single", true, false) as Button,
             MenuPage.Single => _pages[page].FindChild("StartGame", true, false) as Button,
+            MenuPage.Settings when previousPage == MenuPage.Graphics => _pages[page].FindChild("Settings_Graphics", true, false) as Button,
             MenuPage.Lobby => _lobby?.Role == NetRole.Host ? _lobbyStart : _lobbyReady,
             _ => _pages[page].FindChildren("*", "Button", true, false).OfType<Button>().FirstOrDefault(b => !b.Disabled),
         };
@@ -565,15 +573,9 @@ public partial class MainMenu : Control
         language.ItemSelected += i => SetLanguage(languages[(int)i]);
         page.AddChild(language);
 
-        var petRow=new HBoxContainer();
-        var petLabel=UiTheme.Label(Loc.Text("settings_pet_quality"),17);
-        petLabel.SizeFlagsHorizontal=SizeFlags.ExpandFill;petRow.AddChild(petLabel);
-        var petQuality=new OptionButton { Name="Settings_PetQuality",CustomMinimumSize=new Vector2(190,38) };
-        petQuality.AddItem(Loc.Text("settings_quality_high"));
-        petQuality.AddItem(Loc.Text("settings_quality_low"));
-        petQuality.Select((int)GameSettings.PetQuality);
-        petQuality.ItemSelected += i => { GameSettings.PetQuality=(PetModelQuality)i;GameSettings.Save(); };
-        petRow.AddChild(petQuality);page.AddChild(petRow);
+        var graphics = new Button { Name = "Settings_Graphics", Text = Loc.Text("settings_graphics"), CustomMinimumSize = new Vector2(0, 42) };
+        graphics.Pressed += () => Open(MenuPage.Graphics);
+        page.AddChild(graphics);
 
         page.AddChild(Section("settings_sound"));
         PercentSlider(page, "Settings_MasterVolume", "settings_volume_master", GameSettings.MasterVolume, v => { GameSettings.MasterVolume = v; GameSettings.ApplyAudio(); });
@@ -591,6 +593,18 @@ public partial class MainMenu : Control
         page.AddChild(new Control { SizeFlagsVertical = SizeFlags.ExpandFill });
         page.AddChild(Hint(Loc.Text(GameSettings.Loaded ? "settings_saved_hint" : "settings_not_saved_hint")));
         page.AddChild(BackButton(MenuPage.Settings));
+        return page;
+    }
+
+    private VBoxContainer BuildGraphics()
+    {
+        var page = new VBoxContainer();
+        page.AddChild(Title("settings_graphics"));
+        page.AddChild(new GraphicsOptions { Name = "GraphicsOptions" });
+        page.AddChild(new Control { SizeFlagsVertical = SizeFlags.ExpandFill });
+        var back = new Button { Name = "Graphics_Back", Text = Loc.Text("menu_back"), CustomMinimumSize = new Vector2(0, 40) };
+        back.Pressed += () => Open(MenuPage.Settings);
+        page.AddChild(back);
         return page;
     }
 
@@ -790,6 +804,12 @@ public partial class MainMenu : Control
 
     public override void _UnhandledInput(InputEvent e)
     {
+        if (e.IsActionPressed("ui_cancel") && Page == MenuPage.Graphics)
+        {
+            Open(MenuPage.Settings);
+            GetViewport().SetInputAsHandled();
+            return;
+        }
         if (e.IsActionPressed("ui_cancel") && Page == MenuPage.Lobby) LeaveLobby();
         else if (e.IsActionPressed("ui_cancel") && Page != MenuPage.Home) Open(MenuPage.Home);
         else if (e.IsActionPressed(GameInput.Confirm) && Page == MenuPage.Home) Open(MenuPage.Single);

@@ -106,7 +106,7 @@ menu_home_single_desc,"Choose Scenario, Outpost or Onslaught and set AI squadmat
 menu_home_multi,Multiplayer
 menu_home_multi_desc,Private rooms for up to 6 players — coming soon
 menu_home_settings,Settings
-menu_home_settings_desc,"Language, volume, shooting recoil"
+menu_home_settings_desc,"Graphics, language, volume, shooting recoil"
 menu_home_quit,Quit
 menu_back,← Back  [Esc]
 menu_customize_title,Customize
@@ -257,8 +257,14 @@ fmt_level_up,Level {0}! Pick a card
 fmt_hud_level,Lv {0}
 
 settings_pet_quality,Companion model quality
+settings_graphics,Graphics
+settings_shadow_quality,Shadow quality
+settings_shadow_hint,High: detailed shadows. Low: simple ground shadows.
+settings_surface_quality,Surface quality
+settings_surface_hint,High: detailed surface shading. Low: simpler surface shading.
+settings_pet_hint,High: detailed companion models. Low: simpler companion models.
 settings_quality_high,High
-settings_quality_low,Low (lighter)
+settings_quality_low,Low
 fmt_pause_companion_quality,Companion model quality: {0}  (click to change)
 sidekick_cadet,Goose Cadet
 sidekick_scout,Duck Scout

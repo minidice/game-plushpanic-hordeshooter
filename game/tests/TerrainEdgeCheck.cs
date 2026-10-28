@@ -54,6 +54,15 @@ public partial class TerrainEdgeCheck : Node
             var at=ramps[i].Position;p.TeleportTo(at+new Vector3(-1,2,0));_stage.Cam.SnapTo(at);await Frames(40);await Shot("ramp-"+i,at);
         }
         await Shot("wall",new Vector3(70,.5f,-24));
+        var boulders=map.KitProps.Where(n=>n.GetChildren().OfType<Node3D>().Any(c=>c.SceneFilePath.EndsWith("/surface_boulder.glb"))).ToArray();
+        Check(boulders.Length==1,"one authored surface boulder replaces the pilot rock");
+        var boulder=boulders.Single();
+        Check(boulder is StaticBody3D && _stage.Flow.IsBlocked(boulder.Position)
+            && boulder.GetChildren().OfType<CollisionShape3D>().Any(c=>c.Shape is CylinderShape3D cylinder
+                && Mathf.Abs(cylinder.Radius-1.05f)<.001f && Mathf.Abs(cylinder.Height-1.2f)<.001f),
+            "pilot boulder retains original solid and flow footprint");
+        await Shot("surface-boulder",new Vector3(84,1.6f,-32));
+        await Shot("surface-path",new Vector3(94,1.25f,-24));
         foreach(var ramp in ramps)
         {
             var dir=ramp.Basis.X;var across=ramp.Basis.Z;float run=6;

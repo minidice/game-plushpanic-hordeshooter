@@ -106,7 +106,7 @@ menu_home_single_desc,"시나리오 · 거점 · 난전 중 선택, AI 분대원
 menu_home_multi,멀티플레이
 menu_home_multi_desc,최대 6명 비공개방 — 준비 중
 menu_home_settings,설정
-menu_home_settings_desc,"언어, 볼륨, 사격 반동"
+menu_home_settings_desc,"그래픽, 언어, 볼륨, 사격 반동"
 menu_home_quit,종료
 menu_back,← 뒤로  [Esc]
 menu_customize_title,커스터마이징
@@ -257,8 +257,14 @@ fmt_level_up,레벨 {0}! 카드를 고르세요
 fmt_hud_level,Lv {0}
 
 settings_pet_quality,소환수 모델 품질
-settings_quality_high,고품질
-settings_quality_low,저품질 (가벼움)
+settings_graphics,그래픽
+settings_shadow_quality,그림자 품질
+settings_shadow_hint,높음: 정밀한 그림자. 낮음: 간단한 바닥 그림자.
+settings_surface_quality,표면 품질
+settings_surface_hint,높음: 세밀한 표면 표현. 낮음: 간단한 표면 표현.
+settings_pet_hint,높음: 세밀한 소환수 모델. 낮음: 간단한 소환수 모델.
+settings_quality_high,높음
+settings_quality_low,낮음
 fmt_pause_companion_quality,소환수 모델 품질: {0}  (눌러서 바꾸기)
 sidekick_cadet,거위 부사수
 sidekick_scout,오리 정찰병

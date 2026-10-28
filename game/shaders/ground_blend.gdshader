@@ -46,11 +46,19 @@ void fragment() {
 	float gravel = smoothstep(0.30, 0.70, w.b + n * 0.45);
 	float asphalt = smoothstep(0.45, 0.55, w.g + n * 0.10);
 	vec2 q = ROT * p;
-	float patch = 0.93 + 0.14 * (vnoise(q * 0.33) * 0.6 + vnoise(ROT * q * 0.9) * 0.4);
+	float patch;
+	if(graphics_surface_low)patch=0.93+0.14*vnoise(q*0.33);
+	else patch = 0.93 + 0.14 * (vnoise(q * 0.33) * 0.6 + vnoise(ROT * q * 0.9) * 0.4);
 	vec3 col = woodland_grass(grass_color * patch,p);
-	col = mix(col, gravel_color * (0.94 + 0.12 * vnoise(q * 2.1)), gravel);
-	col = mix(col, dirt_color * (0.95 + 0.10 * (vnoise(q * 0.45 + 7.0) * 0.6 + vnoise(ROT * q * 1.3) * 0.4)), dirt);
-	col = mix(col, asphalt_color * (0.96 + 0.08 * vnoise(q * 1.3 + 3.0)), asphalt);
+	if(graphics_surface_low) {
+		col = mix(col, gravel_color * patch, gravel);
+		col = mix(col, dirt_color * patch, dirt);
+		col = mix(col, asphalt_color, asphalt);
+	} else {
+		col = mix(col, gravel_color * (0.94 + 0.12 * vnoise(q * 2.1)), gravel);
+		col = mix(col, dirt_color * (0.95 + 0.10 * (vnoise(q * 0.45 + 7.0) * 0.6 + vnoise(ROT * q * 1.3) * 0.4)), dirt);
+		col = mix(col, asphalt_color * (0.96 + 0.08 * vnoise(q * 1.3 + 3.0)), asphalt);
+	}
 	// Centre line: dashes 1 m long every 1.8 m.
 	if (lane.w > 0.0 && p.x > lane.x && p.x < lane.y) {
 		float across = abs(p.y - lane.z);
@@ -58,10 +66,12 @@ void fragment() {
 		col = mix(col, paint_color, (1.0 - smoothstep(lane.w * 0.8, lane.w, across)) * dash * asphalt);
 	}
 	// Pebble speckles on grass and dirt (not on asphalt).
-	vec2 cell = floor(p * 3.0);
-	vec2 off = fract(p * 3.0) - vec2(hash(cell + 3.1), hash(cell + 7.7));
-	float speck = step(hash(cell), 0.16) * (1.0 - smoothstep(0.05, 0.09, length(off)));
-	col = mix(col, speck_color, speck * 0.75 * (1.0 - asphalt));
+	if(!graphics_surface_low) {
+		vec2 cell = floor(p * 3.0);
+		vec2 off = fract(p * 3.0) - vec2(hash(cell + 3.1), hash(cell + 7.7));
+		float speck = step(hash(cell), 0.16) * (1.0 - smoothstep(0.05, 0.09, length(off)));
+		col = mix(col, speck_color, speck * 0.75 * (1.0 - asphalt));
+	}
 	ALBEDO = col;
 	ROUGHNESS = mix(0.96, 0.9, asphalt);
 }

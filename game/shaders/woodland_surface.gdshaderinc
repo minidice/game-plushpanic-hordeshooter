@@ -1,3 +1,4 @@
+#include "res://shaders/graphics_surface_quality.gdshaderinc"
 // Matches WoodlandCover.Density. Used on both the painted floor and its far continuation.
 float woodland_density(vec2 p) {
     float wave=.5+.25*sin(p.x*.53+p.y*.17+.8*sin(p.y*.31))+.25*sin(p.y*.29-p.x*.24);
@@ -5,6 +6,8 @@ float woodland_density(vec2 p) {
 }
 vec3 woodland_grass(vec3 color,vec2 p) {
     float density=woodland_density(p);
+    // Retain the cover's broad colour distribution without derivative-filtered strokes.
+    if(graphics_surface_low)return color*mix(.89,1.03,density);
     vec2 q=mat2(vec2(.8,-.6),vec2(.6,.8))*p;
     // Short directional strokes, filtered by their screen footprint to avoid distant shimmer.
     vec2 grid=q*18.0;

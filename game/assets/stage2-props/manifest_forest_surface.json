@@ -1,0 +1,33 @@
+{
+  "revision": 1,
+  "contract": "plushpanic_outdoor_v1",
+  "units": "metres",
+  "up_axis": "+Y",
+  "assets": [
+    {
+      "id": "surface_boulder",
+      "name": "Forest pilot fractured moss boulder",
+      "category": "Forest surface quality pilot",
+      "file": "surface_boulder.glb",
+      "dimensions_m": [
+        2.771,
+        1.39,
+        1.911
+      ],
+      "actual_dimensions_m": [
+        2.38822,
+        1.32868,
+        1.61945
+      ],
+      "bounds_min_y": 0.0,
+      "collision": {
+        "kind": "cylinder",
+        "radius": 1.05,
+        "height": 1.2
+      },
+      "occlusion_parts": [],
+      "triangles": 1196,
+      "note": "Dedicated pilot asset; broad bevelled stone and fitted shallow moss. Keep role. Dimensions preserve original boulder placement/exclusion envelope; actual_dimensions_m measures mesh."
+    }
+  ]
+}

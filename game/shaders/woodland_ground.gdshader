@@ -8,7 +8,8 @@ float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(
 uniform vec3 grass : source_color=vec3(0.424,0.502,0.325);
 void fragment(){
     vec2 p=mat2(vec2(.8,-.6),vec2(.6,.8))*world.xz;
-    float n=noise(p*.33)*.6+noise(p*.9)*.4;
+    float n=noise(p*.33);
+    if(!graphics_surface_low)n=n*.6+noise(p*.9)*.4;
     ALBEDO=woodland_grass(grass*(.93+.14*n),world.xz);
     ROUGHNESS=.97;
 }

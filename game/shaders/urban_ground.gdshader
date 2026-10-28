@@ -5,6 +5,7 @@
 // Colours are written in sRGB like the kit palette and turned linear at the end.
 shader_type spatial;
 render_mode diffuse_burley;
+#include "res://shaders/graphics_surface_quality.gdshaderinc"
 uniform sampler2D map : filter_linear, repeat_disable;
 uniform vec4 area;
 uniform float edge_range = 6.0;
@@ -15,6 +16,8 @@ float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}
 float fbm(vec2 p){return .55*noise(p)+.3*noise(p*2.1+7.3)+.15*noise(p*4.3+1.7);}
 vec3 asphalt(vec2 xz){
+    // Broad asphalt tone only: omit grit, repair-cell searches, cracks and oil layers.
+    if(graphics_surface_low)return vec3(.30,.31,.32)*(.86+.22*noise(xz*.25));
     float n=fbm(xz*.25), fine=noise(xz*9.), grit=hash(floor(xz*14.));
     vec3 c=vec3(.30,.31,.32)*(.86+.22*n)+(grit-.5)*.035+(fine-.5)*.02;
     // Repair patches: some 6 m cells hold a darker, smoother rectangle.
@@ -34,6 +37,10 @@ vec3 asphalt(vec2 xz){
 vec3 concrete(vec2 xz){
     vec2 slab=floor(xz/3.), f=fract(xz/3.);
     float joint=max(1.-smoothstep(.0,.025,min(f.x,1.-f.x)),1.-smoothstep(.0,.025,min(f.y,1.-f.y)));
+    if(graphics_surface_low){
+        vec3 c=vec3(.50,.50,.47)*(.88+.12*hash(slab))*.96;
+        return mix(c,c*.62,joint);
+    }
     vec3 c=vec3(.50,.50,.47)*(.88+.12*hash(slab))*(.9+.12*fbm(xz*.35))+(hash(floor(xz*12.))-.5)*.03;
     float stain=smoothstep(.66,.8,fbm(xz*.22+17.));
     c*=1.-.18*stain;
@@ -44,10 +51,15 @@ vec3 paving(vec2 xz){
     t.x+=step(.5,fract(floor(t.y)*.5))*.5;
     vec2 f=fract(t);
     float grout=max(1.-smoothstep(.0,.07,min(f.x,1.-f.x)),1.-smoothstep(.0,.1,min(f.y,1.-f.y)));
+    if(graphics_surface_low){
+        vec3 c=vec3(.60,.58,.54)*(.88+.16*hash(floor(t)))*.97;
+        return mix(c,c*.66,grout);
+    }
     vec3 c=vec3(.60,.58,.54)*(.88+.16*hash(floor(t)))*(.92+.1*fbm(xz*.4));
     return mix(c,c*.66,grout);
 }
 vec3 gravel(vec2 xz){
+    if(graphics_surface_low)return mix(vec3(.33,.32,.29),vec3(.43,.41,.37),noise(xz*.3))*.98;
     float n=fbm(xz*.3), speck=noise(xz*6.)*.6+noise(xz*17.)*.4;
     vec3 c=mix(vec3(.33,.32,.29),vec3(.43,.41,.37),n);
     return c*(.86+.24*speck);
@@ -66,7 +78,9 @@ void fragment(){
                 float kerb_in=pave+wobble, kerb_out=pave+.3+wobble;
                 // Gutter just off the kerb, then the kerb stone, then the pavement against the wall.
                 c=mix(c,c*.78,1.-smoothstep(kerb_out,kerb_out+.35,d));
-                c=mix(c,vec3(.66,.65,.61)*(.9+.1*noise(xz*3.)),smoothstep(kerb_in-.03,kerb_in,d)*(1.-smoothstep(kerb_out-.03,kerb_out,d)));
+                float kerb_tone=.95;
+                if(!graphics_surface_low)kerb_tone=.9+.1*noise(xz*3.);
+                c=mix(c,vec3(.66,.65,.61)*kerb_tone,smoothstep(kerb_in-.03,kerb_in,d)*(1.-smoothstep(kerb_out-.03,kerb_out,d)));
                 c=mix(c,paving(xz),1.-smoothstep(kerb_in-.03,kerb_in,d));
             }
         }else c=concrete(xz);

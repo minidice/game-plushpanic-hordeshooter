@@ -19,6 +19,7 @@ public sealed partial class LayoutMap
         var material=new ShaderMaterial { Shader=GD.Load<Shader>(shader) };
         material.SetShaderParameter("forest_enabled",ForestStudyEnabled);
         material.SetShaderParameter("forest_expanded",ForestExpanded);
+        material.SetShaderParameter("forest_surface_quality",ForestStudyEnabled);
         var segments=new List<Vector4>();
         foreach(var route in Layout.Routes.Values)for(int i=0;i+1<route.Length;i++)
             if(Mathf.Min(route[i].X,route[i+1].X)<282)
@@ -86,12 +87,26 @@ public sealed partial class LayoutMap
         var sources=new[]{PropLibrary.Instance("forest_grass_a")!,PropLibrary.Instance("forest_grass_b")!};
         var meshes=sources.Select(s=>s.FindChildren("*",nameof(MeshInstance3D),true,false).OfType<MeshInstance3D>().Single().Mesh).ToArray();
         var material=new ShaderMaterial {Shader=GD.Load<Shader>("res://shaders/forest_grass.gdshader")};
+        material.SetShaderParameter("forest_surface_quality",ForestStudyEnabled);
         foreach(var ((cx,cz,kind),instances) in groups)
         {
             var multi=new MultiMesh { TransformFormat=MultiMesh.TransformFormatEnum.Transform3D,UseColors=true,Mesh=meshes[kind],InstanceCount=instances.Count };
             for(int i=0;i<instances.Count;i++)
             {
-                multi.SetInstanceTransform(i,instances[i]);
+                var transform=instances[i];
+                var point=new Vector2(transform.Origin.X,transform.Origin.Z);
+                float quality=ForestSurfaceQuality.Weight(point);
+                if(quality>0)
+                {
+                    // Keep roots, exclusions and RNG consumption fixed; broad size groups break up the even sprinkle.
+                    float clump=.5f+.5f*Mathf.Sin(point.X*.83f+Mathf.Sin(point.Y*.61f)*1.8f)*Mathf.Sin(point.Y*.72f-point.X*.19f);
+                    clump=Mathf.SmoothStep(.26f,.78f,clump);
+                    float shoulder=Mathf.SmoothStep(2.3f,4.3f,PathDistance(point));
+                    float width=Mathf.Lerp(1,Mathf.Lerp(.52f,1.14f,clump),quality);
+                    float height=Mathf.Lerp(1,Mathf.Lerp(.62f,1.12f,clump)*Mathf.Lerp(.78f,1,shoulder),quality);
+                    transform.Basis=transform.Basis.Scaled(new Vector3(width,height,width));
+                }
+                multi.SetInstanceTransform(i,transform);
                 float v=rng.RandfRange(.88f,1.12f);multi.SetInstanceColor(i,new Color(v,v,1,1));
             }
             root.AddChild(new MultiMeshInstance3D {Name=$"Grass_{cx}_{cz}_{kind}",Multimesh=multi,

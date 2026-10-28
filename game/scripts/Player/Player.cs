@@ -305,8 +305,17 @@ public partial class Player : CharacterBody3D
         if (dir.LengthSquared() > .04f) AimDirection = dir.Normalized();
     }
 
+    /// <summary>Menu clicks must not become weapon input when the online world continues or the menu closes.</summary>
+    public void SuppressMenuInput()
+    {
+        _move=Vector2.Zero;
+        _fire=_firePressed=_aimHeld=_throwPressed=_cancelPressed=_reloadPressed=_healPressed=_rollPressed=_reviveHeld=false;
+        _cycle=_slotPressed=0;_fireAfterCards=true;
+    }
+
     private void ReadInput()
     {
+        if(Stage.Hud?.Paused==true){SuppressMenuInput();return;}
         _move = Input.GetVector(GameInput.MoveLeft, GameInput.MoveRight, GameInput.MoveUp, GameInput.MoveDown);
         var groundMove=Stage.Cam.GroundMovement(_move);
         _move=new Vector2(groundMove.X,groundMove.Z);

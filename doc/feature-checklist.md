@@ -1,5 +1,12 @@
 # 게임 기능 체크리스트
 
+- [x] M-37 낮은 그림자 나무 가시성 보정: 실제 배치 수관보다 넓은 원형 음영·중심 농도 유지. GPU 회귀37 검사와 실제 렌더 확인. [원인·검사·제약](features/menu-ui/log/007-code-tree-simple-shadow.md).
+
+- [x] M-37 개인 그래픽 옵션: ESC/설정 → 그래픽에서 그림자·표면·소환수 높음/낮음 즉시 적용·저장. 직접 맵 실행 설정 복원, 단순 접지 그림자, 실제 입력/렌더33·메뉴44·소환수39 검사와 높음/낮음 성능 비교. [결과·제약](features/menu-ui/log/006-code-graphics-options.md).
+- [x] M-37 환경 종류 데이터: 실내 채광/실외 시간6종·날씨·잔류 바닥 상태 분리, 조합265 검사. 랜덤 시간대 폐기. 실제 조명/날씨 효과와 Studio 편집 연결은 후속. [분류 규격](features/art-environment/environment-categories.md).
+
+- [x] A-23/A-24/A-25 숲 표면 품질 비교 구역: 현재 Stage 3의 44×40 m에서 Blender 바위·이끼, 흙길, 풀 군집 개선. 지형45/숲69 검사·실제 렌더·전후 성능 확인. 전체 확대·최종 미술 수락은 별도. [변경·렌더·수치·제약](features/art-environment/log/002-art-forest-surface-quality.md).
+
 - [x] A-19 사망 흔적: 원색 원판을 짙은 계열별 체액·불규칙한 고임·부분 반사/건조로 교체. 방울/층 높이/160개 상한, 비사망 건조 흔적 분리, 실제 렌더·회귀 확인. [변경·검사·남은 제약](features/effects-audio/log/017-code-body-fluid.md).
 
 - [x] A-27/A-28 공간 채움 외형 수락·보존, A-29 나머지5종만 외곽 위치/크기/높이 조정. 수락 대상241프레임 픽셀 동일·실제 안/밖 피해 검사. [검사·렌더·제약](features/effects-audio/log/015-art-remaining-burst-radius.md).

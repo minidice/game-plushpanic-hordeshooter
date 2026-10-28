@@ -23,6 +23,8 @@ public partial class ForestPerformance : Node
             if(OS.GetCmdlineArgs().Contains("--fixed-fps"))throw new Exception("Wall-clock performance requires no --fixed-fps");
             DisplayServer.WindowSetVsyncMode(DisplayServer.VSyncMode.Disabled);DisplayServer.WindowMoveToForeground();OS.LowProcessorUsageMode=false;Engine.MaxFps=0;
             string label=OS.GetCmdlineUserArgs().FirstOrDefault()??"expanded";
+            if(label.StartsWith("graphics-"))
+                GameSettings.ShadowQuality=GameSettings.SurfaceQuality=label=="graphics-low"?GraphicsQualityLevel.Low:GraphicsQualityLevel.High;
             var map=new LayoutMap{ForestExpanded=label!="before"};var load=Stopwatch.StartNew();
             _stage=new Stage {MapOverride=map,DirectorEnabled=false,SquadOverride=0,CharacterOverride="goose",ModeOverride=GameMode.Scenario};AddChild(_stage);
             double buildMs=load.Elapsed.TotalMilliseconds;

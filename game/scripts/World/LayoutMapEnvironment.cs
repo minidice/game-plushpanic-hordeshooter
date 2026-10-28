@@ -233,6 +233,13 @@ public sealed partial class LayoutMap
         if(!Flat(p,radius+.4f) || PathDistance(p)<3.8f+radius || Layout.Links.Any(l=>p.DistanceTo(l.From)<radius+3 || p.DistanceTo(l.To)<radius+3)
             || Layout.Markers.Any(m=>p.DistanceTo(m.Pos)<radius+7) || Layout.Supplies.Any(s=>p.DistanceTo(s.Pos)<radius+3))return null;
         var prop=Prop(id,FloorAt(p),yaw);
+        if(prop!=null && id=="boulder" && ForestStudyEnabled && ForestSurfaceQuality.Weight(p)>=1
+            && PropLibrary.Instance("surface_boulder") is { } surfaceModel)
+        {
+            // Replace only the drawing; keep the original rock's collision, cover and surface-audio identity.
+            var original=prop.GetChildren().OfType<Node3D>().Single(n=>n.SceneFilePath==info.File);
+            original.Free();prop.AddChild(surfaceModel);
+        }
         if(prop!=null)PropOcclusion.Attach(_stage,prop);
         return prop;
     }
@@ -346,7 +353,7 @@ public sealed partial class LayoutMap
                     var tangent=(b-a).Normalized();
                     float la=_stage.Tiers.GroundY(a+outward*.02f+tangent*.001f),lb=_stage.Tiers.GroundY(b+outward*.02f-tangent*.001f);
                     float ha=_stage.Tiers.GroundY(a-outward*.02f+tangent*.001f),hb=_stage.Tiers.GroundY(b-outward*.02f-tangent*.001f);
-                    if(Mathf.Max(ha-la,hb-lb)>.035f)TerrainEdgeArt.Rock(Batch(a),a,b,la,lb,ha,hb,outward);
+                    if(Mathf.Max(ha-la,hb-lb)>.035f)TerrainEdgeArt.Rock(Batch(a),a,b,la,lb,ha,hb,outward,ForestStudyEnabled);
                 }
             }
         }
@@ -360,7 +367,7 @@ public sealed partial class LayoutMap
                 float t0=i/24f,t1=(i+1)/24f;
                 var a=ramp.ToGlobal(new Vector3((t0-.5f)*run,-TierMap.Height*.5f,side*width*.5f));
                 var b=ramp.ToGlobal(new Vector3((t1-.5f)*run,-TierMap.Height*.5f,side*width*.5f));
-                TerrainEdgeArt.Rock(Batch(a),a,b,low,low,low+TierMap.TerrainRampProfile(t0)*TierMap.Height,low+TierMap.TerrainRampProfile(t1)*TierMap.Height,ramp.Basis.Z*side);
+                TerrainEdgeArt.Rock(Batch(a),a,b,low,low,low+TierMap.TerrainRampProfile(t0)*TierMap.Height,low+TierMap.TerrainRampProfile(t1)*TierMap.Height,ramp.Basis.Z*side,ForestStudyEnabled);
             }
         }
         var rockMaterial=ForestMaterial("res://shaders/stage2_ground.gdshader");rockMaterial.SetShaderParameter("terrain_rock",true);

@@ -192,10 +192,12 @@ public partial class CompanionCheck : Node
               p2.Pet.Weapon != null && d2.Drone.Equipment != null, "switching it mid-match swaps their models at once, gear kept");
         _stage.Hud.SetPaused(true);
         for (int i = 0; i < 3; i++) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        var pause = _stage.Hud.FindChild("PauseCompanionQuality", true, false) as Button;
+        _stage.Hud.OpenGraphicsOptions();
+        var pause = _stage.Hud.FindChild("Graphics_Pet_Low", true, false) as Button;
         Check(pause != null && pause.IsVisibleInTree() && pause.Text.Contains(Loc.Text("settings_quality_low")), "the pause menu shows the setting: " + pause?.Text);
-        pause!.EmitSignal(BaseButton.SignalName.Pressed);
-        Check(GameSettings.PetQuality == PetModelQuality.High && p2.Pet!.Quality == PetModelQuality.High && pause.Text.Contains(Loc.Text("settings_quality_high")),
+        var high = (Button)_stage.Hud.FindChild("Graphics_Pet_High",true,false);
+        high.EmitSignal(BaseButton.SignalName.Pressed);
+        Check(GameSettings.PetQuality == PetModelQuality.High && p2.Pet!.Quality == PetModelQuality.High && high.ButtonPressed && !pause!.ButtonPressed,
             "and its button switches it back mid-match");
         _stage.Hud.SetPaused(false);
         for (int i = 0; i < 3; i++) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);

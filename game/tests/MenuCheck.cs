@@ -159,11 +159,13 @@ public partial class MenuCheck : Node
         GameSettings.Path = SettingsPath;
         GameSettings.Load();
         Click("Menu_Settings");
-        Check(_menu.FindChild("Settings_PetQuality",true,false) is OptionButton,"settings provide high and low pet quality");
-        var petQuality=Ui<OptionButton>("Settings_PetQuality");
-        Check(petQuality.ItemCount==2 && petQuality.Selected==0 && GameSettings.PetQuality==PetModelQuality.High,"pet quality defaults to high");
-        petQuality.Select(1);petQuality.EmitSignal(OptionButton.SignalName.ItemSelected,1);
+        Click("Settings_Graphics");
+        Check(_menu.Page==MenuPage.Graphics,"settings opens separate graphics page");
+        var petQuality=Ui<Button>("Graphics_Pet_High");
+        Check(petQuality.ButtonPressed && GameSettings.PetQuality==PetModelQuality.High,"pet quality defaults to high");
+        Click("Graphics_Pet_Low");
         Check(GameSettings.PetQuality==PetModelQuality.Low,"low pet quality can be selected");
+        Click("Graphics_Back");
         await Frames(2);
         float fullRecoil = Knockback.Recoil(100);
         Ui<HSlider>("Settings_Recoil").Value = 40;
