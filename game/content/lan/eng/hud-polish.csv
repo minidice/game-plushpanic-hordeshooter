@@ -9,8 +9,8 @@ hud_melee_hint,CLOSE RANGE   ·   LMB
 hud_no_refill_hint,NO REFILL   ·   R
 hud_special,Special
 hud_reticle_legend,"RETICLE GUIDE
-Center dot: aim point · Inner ticks: aimed spread · Diagonal ticks: current spread
-Inner tick range warning: amber means reduced damage · Red means out of range
-Outer diagonal ticks glow red while firing, then cool down
+Center dot: aim point · Weapon silhouette: current spread · Faint inner ticks: aimed spread
+Sight range warning: amber means reduced damage · Red means out of range
+Outer arc: magazine · One stroke: single · Multiple strokes: burst count · Chevrons: automatic
 A full gold ring readies the next critical shot · Double slashes confirm a hit
-Reloading or charging replaces the aiming ticks with a progress ring"
+Reload or charge morphs the magazine arc into a progress ring · Sight edges warm up on firing"

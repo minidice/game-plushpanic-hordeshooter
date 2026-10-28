@@ -476,8 +476,8 @@ void fragment() {
 
     private static readonly Color ReticleFar = new("ffb347"), ReticleOut = new("ff5a4f"), ReticleHot = new("ff6b6b"),
         HitMarkHot = new("ff9a3c"), HitMarkCrit = new("ffd65c");
-    /// <summary>Reticle sizes in 900-high UI pixels (doc/weapon-aim-reference.md 8.3): ticks long and thick enough to read.</summary>
-    public const float ReticleTickLength = 14, ReticleTickWidth = 4, ReticleMinRadius = 12, ReticleDot = 2.5f;
+    /// <summary>Reticle sizes in 900-high UI pixels; family strokes and magazine layout live in HudReticle.</summary>
+    public const float ReticleTickLength = 14, ReticleMinRadius = 12, ReticleDot = 2.5f;
     /// <summary>A hit's double slash lives this long; at most this many show at once (C-30).</summary>
     public const float HitMarkSeconds = .4f;
     public const int MaxHitMarks = 4;
@@ -504,13 +504,6 @@ void fragment() {
         }
         c.DrawLine(a, b, new Color(0, 0, 0, .28f * color.A), width + 2, true);
         c.DrawLine(a, b, color, width, true);
-    }
-
-    private static void ReticleTick(Control c, Vector2 center, Vector2 dir, float radius, Color color, float heat = 0)
-    {
-        var from = center + dir * (radius + 2);
-        // The outer cone is supporting information; keep the aimed cone visually dominant.
-        ReticleLine(c, from, from + dir * 10, color, 2.5f, ReticleHot, heat);
     }
 
     private void DrawHitMarks(Control c, Vector2 center, float radius)
@@ -587,49 +580,29 @@ void fragment() {
         float distance = Mathf.Max(1, (aim - player.GlobalPosition).Length());
         float Radius(float spread) =>
             Mathf.Max(ReticleMinRadius, (cam.UnprojectPosition(aim + cam.GlobalTransform.Basis.X * distance * Mathf.Tan(Mathf.DegToRad(spread * .5f))) - center).Length());
-        float radius = Radius(gun.Spread);
-        float aimed = Mathf.Min(radius, Radius(gun.AimedSpread));
+        // Multi-pellet weapons resolve a separate cone, including wide-buckshot traits.
+        float cone = gun.Def.Pellets > 1 ? gun.Def.PelletSpread * (gun.Def.BaseSpread > 0
+            ? Mathf.Lerp(1, gun.Def.AimSpread / gun.Def.BaseSpread, gun.AimProgress) : 1) : gun.Spread;
+        float aimedCone = gun.Def.Pellets > 1 ? gun.Def.PelletSpread * (gun.Def.BaseSpread > 0
+            ? gun.Def.AimSpread / gun.Def.BaseSpread : 1) : gun.AimedSpread;
+        float radius = Radius(cone);
+        float aimed = Mathf.Min(radius, Radius(aimedCone));
         // Past the effective range the reticle turns amber (damage falls off), past the maximum red (no hit; C-27, C-30).
         float reach = player.IsAiming ? gun.Def.AimRangeMultiplier : 1;
         var range = gun.IsMelee ? HudWhite : distance > gun.Def.MaxRange * reach ? ReticleOut : distance > gun.Def.EffectiveRange * reach ? ReticleFar : HudWhite;
         var color = player.CritReady ? HudWarm : new Color(range, .98f);
         color.A *= 1 - actionWeight;
 
-        // Straight ticks and the dot: the cone fully aimed, always white (or the range / crit colour); shots only push them
-        // out. Diagonal ticks: the cone now, while it is wider (hip fire, moving, shots) - red and glowing as the gun fires,
-        // cooling back to white once it stops (doc/weapon-aim-reference.md 8.3).
-        foreach (var dir in new[] { Vector2.Up, Vector2.Down, Vector2.Left, Vector2.Right })
-        {
-            var from = center + dir * (aimed + 2);
-            ReticleLine(c, from, from + dir * ReticleTickLength, color, ReticleTickWidth, ReticleHot, 0);
-        }
-        c.DrawCircle(center, ReticleDot + 1, new Color(0, 0, 0, .4f * (1 - actionWeight)), true, -1, true);
-        c.DrawCircle(center, ReticleDot, color, true, -1, true);
-        if (radius - aimed > 3)
-        {
-            float heat = gun.Reloading ? 0 : gun.Heat;
-            var outer = color.Lerp(ReticleHot, heat);
-            outer.A = color.A * Mathf.Lerp(.65f, .9f, heat);
-            foreach (var dir in new[] { new Vector2(1, 1), new Vector2(-1, 1), new Vector2(1, -1), new Vector2(-1, -1) })
-                ReticleTick(c, center, dir.Normalized(), radius, outer, heat);
-        }
+        DrawGunSight(c, center, gun.Def, radius, aimed, color, gun.Reloading ? 0 : gun.Heat);
         DrawHitMarks(c, center, aimed);
-        DrawWeaponActionRing(c, center);
-        radius += ReticleTickLength - 6;
+        DrawMagazineAction(c, center, gun, radius);
 
         if (player.FocusTarget != null && actionWeight < .01f)
         {
             float focus = Mathf.Min(1, player.FocusTime / Player.CritFocusTime);
-            c.DrawArc(center, radius + 7, 0, Mathf.Tau, 96, new Color(0, 0, 0, .25f), 5, true);
+            c.DrawArc(center, radius + 26, 0, Mathf.Tau, 96, new Color(0, 0, 0, .25f), 5, true);
             if (focus > 0)
-                DrawLightArc(c, center, radius + 7, -Mathf.Pi / 2 + Mathf.Tau * focus, UiTheme.Accent, player.CritReady ? .95f : .65f);
-        }
-
-        var font = c.GetThemeDefaultFont();
-        if (!_weaponAction.Active && actionWeight < .01f && !gun.IsMelee && gun.ShotCooldown <= 0 && gun.Mag <= Mathf.Max(1, gun.Def.MagSize / 6))
-        {
-            c.DrawString(font, center + new Vector2(-60, radius + 32), Loc.Text(gun.Mag == 0 ? "ui_hud_mag_empty" : "ui_hud_ammo_low"),
-                HorizontalAlignment.Center, 120, 16, UiTheme.Accent);
+                DrawLightArc(c, center, radius + 26, -Mathf.Pi / 2 + Mathf.Tau * focus, UiTheme.Accent, player.CritReady ? .95f : .65f);
         }
     }
 }

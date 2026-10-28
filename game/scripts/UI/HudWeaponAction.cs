@@ -131,15 +131,15 @@ public partial class Hud
     }
 
     // A bounded stack of translucent strokes gives a soft halo without textures or scene bloom.
-    private static void DrawLightArc(Control c, Vector2 center, float radius, float end, Color tint, float opacity)
+    private static void DrawLightArc(Control c, Vector2 center, float radius, float end, Color tint, float opacity, float start = -Mathf.Pi / 2)
     {
         for (int i = 10; i >= 1; i--)
         {
             float edge = i / 10f;
-            c.DrawArc(center, radius, -Mathf.Pi / 2, end, 96,
+            c.DrawArc(center, radius, start, end, 96,
                 new Color(tint, (.025f + .045f * (1 - edge)) * opacity), 4 + i * 1.2f, true);
         }
-        c.DrawArc(center, radius, -Mathf.Pi / 2, end, 96, new Color(tint.Lerp(Colors.White, .45f), .8f * opacity), 5, true);
-        c.DrawArc(center, radius, -Mathf.Pi / 2, end, 96, new Color(ActionLight, .98f * opacity), 3.2f, true);
+        c.DrawArc(center, radius, start, end, 96, new Color(tint.Lerp(Colors.White, .45f), .8f * opacity), 5, true);
+        c.DrawArc(center, radius, start, end, 96, new Color(ActionLight, .98f * opacity), 3.2f, true);
     }
 }
