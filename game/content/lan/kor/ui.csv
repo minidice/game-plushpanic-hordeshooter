@@ -3,7 +3,7 @@ key,text
 ui_controls,"WASD 이동   마우스 조준   좌클릭 사격   Space 도약   1·2·3 무기 교체   우클릭/Ctrl 조준   G 투척 조준   Q 구급상자   E 줍기   I 배낭(거점)
 R 재장전   Tab 확대/축소   Esc 일시정지"
 # 메인 메뉴
-ui_menu_title,HORDE SHOOTER  (가칭)
+ui_menu_title,ESCAPE FUR DEAD
 ui_menu_subtitle,쿼터뷰 협동 호드 슈터 — 프로토타입
 ui_menu_start,출격  [Enter]
 # HUD
@@ -309,3 +309,6 @@ hud_interaction_interrupted,피격으로 중단
 hud_interaction_release,키를 떼고 다시 누르기
 hud_interaction_out_of_reach,범위 밖
 hud_interaction_other_reviver,동료가 구조 중
+
+menu_home_play,게임 시작
+menu_home_character,캐릭터

@@ -5,11 +5,11 @@ using System.Linq;
 
 namespace HordeShooter;
 
-public enum MenuPage { Home, Customize, Single, Multi, Settings, Lobby, Graphics }
+public enum MenuPage { Home, Customize, Single, Multi, Settings, Lobby, Graphics, Play }
 
 /// <summary>
 /// Main menu (doc/menu-multiplayer-plan.md 1장): home → customize / single / multi / settings, and the room (2장)
-/// after creating or joining one. The character preview stays on the left for every page; only the right-hand page changes.
+/// after creating or joining one. Home presents the character in a room; detail pages retain the workshop preview.
 /// </summary>
 public partial class MainMenu : Control
 {
@@ -55,6 +55,7 @@ public partial class MainMenu : Control
         GameInput.Ensure();
         GetTree().Paused = false;
         Input.MouseMode = Input.MouseModeEnum.Visible;
+        GetWindow().Title = "ESCAPE FUR DEAD";
         // The real game boots into this scene; test scenes add the menu under their own root and keep defaults.
         if (!GameSettings.Loaded && GetTree().CurrentScene == this) GameSettings.Load();
         // Two-player test from the command line (multiplayer-sync-design.md 6장): --host skips the menu and starts at
@@ -99,6 +100,7 @@ public partial class MainMenu : Control
         margin.SetAnchorsPreset(LayoutPreset.FullRect);
         foreach (var edge in new[] { "left", "right", "top", "bottom" }) margin.AddThemeConstantOverride("margin_" + edge, 24);
         AddChild(margin);
+        _detailLayout = margin;
         var column = new VBoxContainer();
         column.AddThemeConstantOverride("separation", 12);
         margin.AddChild(column);
@@ -123,7 +125,6 @@ public partial class MainMenu : Control
         pagePanel.AddThemeStyleboxOverride("panel", UiTheme.Plate(UiTheme.Surface, UiTheme.Edge, 24, 18));
         pagePanel.AddChild(right);
         row.AddChild(pagePanel);
-        AddPage(right, MenuPage.Home, BuildHome());
         AddPage(right, MenuPage.Customize, BuildCustomize());
         AddPage(right, MenuPage.Single, BuildSingle());
         AddPage(right, MenuPage.Multi, BuildMulti());
@@ -131,6 +132,7 @@ public partial class MainMenu : Control
         AddPage(right, MenuPage.Graphics, BuildGraphics());
         AddPage(right, MenuPage.Lobby, BuildLobby());
         column.AddChild(UiTheme.Label(Hud.ControlsText, 14, UiTheme.Muted));
+        BuildHomeShell();
 
         int saved = _characters.FindIndex(c => c.Id == GameSession.SelectedCharacterId);
         Select(saved >= 0 ? saved : 0, playSound: false);
@@ -153,6 +155,7 @@ public partial class MainMenu : Control
         if (Page == MenuPage.Settings && page != MenuPage.Settings) GameSettings.Save();
         Page = page;
         foreach (var (key, control) in _pages) control.Visible = key == page;
+        ShowHomeShell(page);
         _previewTools.Visible = page == MenuPage.Customize;
         _description.Visible = page != MenuPage.Customize;
         if (page == MenuPage.Lobby) RefreshLobby();
@@ -167,7 +170,8 @@ public partial class MainMenu : Control
         var focus = page switch
         {
             MenuPage.Customize when _buttons.Count > 0 => _buttons[_index],
-            MenuPage.Home => _pages[page].FindChild("Menu_Single", true, false) as Button,
+            MenuPage.Home => _pages[page].FindChild("Menu_Play", true, false) as Button,
+            MenuPage.Play => _pages[page].FindChild(previousPage == MenuPage.Multi ? "Menu_Multi" : "Menu_Single", true, false) as Button,
             MenuPage.Single => _pages[page].FindChild("StartGame", true, false) as Button,
             MenuPage.Settings when previousPage == MenuPage.Graphics => _pages[page].FindChild("Settings_Graphics", true, false) as Button,
             MenuPage.Lobby => _lobby?.Role == NetRole.Host ? _lobbyStart : _lobbyReady,
@@ -187,21 +191,18 @@ public partial class MainMenu : Control
     private VBoxContainer BuildHome()
     {
         var page = new VBoxContainer();
-        page.AddChild(new Control { CustomMinimumSize = new Vector2(0, 12) });
         foreach (var (name, key, target) in new (string, string, MenuPage?)[]
         {
-            ("Menu_Customize", "menu_home_customize", MenuPage.Customize),
-            ("Menu_Single", "menu_home_single", MenuPage.Single),
-            ("Menu_Multi", "menu_home_multi", MenuPage.Multi),
+            ("Menu_Play", "menu_home_play", MenuPage.Play),
+            ("Menu_Customize", "menu_home_character", MenuPage.Customize),
             ("Menu_Settings", "menu_home_settings", MenuPage.Settings),
             ("Menu_Quit", "menu_home_quit", null),
         })
         {
-            var button = BigButton(name, Loc.Text(key));
+            var button = HomeButton(name, Loc.Text(key));
             if (target is { } open) button.Pressed += () => Open(open);
             else button.Pressed += Quit;
             page.AddChild(button);
-            if (Loc.Has(key + "_desc")) page.AddChild(Hint(Loc.Text(key + "_desc")));
         }
         return page;
     }
@@ -578,7 +579,6 @@ public partial class MainMenu : Control
     {
         var button = new Button { Name = name, Text = text, Disabled = disabled, CustomMinimumSize = new Vector2(0, 54), Alignment = HorizontalAlignment.Left };
         button.AddThemeFontSizeOverride("font_size", 22);
-        if (name == "Menu_Single") StylePrimary(button);
         return button;
     }
 
@@ -601,7 +601,7 @@ public partial class MainMenu : Control
     private Button BackButton(MenuPage from)
     {
         var back = new Button { Name = "Back_" + from, Text = Loc.Text("menu_back"), CustomMinimumSize = new Vector2(0, 40) };
-        back.Pressed += () => Open(MenuPage.Home);
+        back.Pressed += () => Open(from is MenuPage.Single or MenuPage.Multi ? MenuPage.Play : MenuPage.Home);
         return back;
     }
 
@@ -628,6 +628,7 @@ public partial class MainMenu : Control
     private VBoxContainer BuildPreviewColumn()
     {
         var previewColumn = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsStretchRatio = .95f };
+        _previewColumn = previewColumn;
         previewColumn.AddThemeConstantOverride("separation", 8);
         previewColumn.AddChild(BuildPreview());
         var nameRow = new HBoxContainer();
@@ -688,6 +689,7 @@ public partial class MainMenu : Control
     private Control BuildPreview()
     {
         var container = new SubViewportContainer { Name = "CharacterPreview", Stretch = true, CustomMinimumSize = new Vector2(520, 320), SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill };
+        _previewContainer = container;
         var viewport = new SubViewport { OwnWorld3D = true, Msaa3D = Viewport.Msaa.Msaa4X };
         container.AddChild(viewport);
         var env = new Godot.Environment
@@ -699,7 +701,9 @@ public partial class MainMenu : Control
         viewport.AddChild(new WorldEnvironment { Environment = env });
         viewport.AddChild(new DirectionalLight3D { RotationDegrees = new Vector3(-50, -35, 0), LightEnergy = 1.2f, LightColor = new Color("edf4ff"), ShadowEnabled = true });
         viewport.AddChild(new DirectionalLight3D { RotationDegrees = new Vector3(-20, 150, 0), LightEnergy = .35f, LightColor = new Color("a8c8ff") });
-        Mat.Mesh(viewport, new CylinderMesh { TopRadius = 1.6f, BottomRadius = 1.6f, Height = .1f }, new Vector3(0, -.05f, 0), Mat.Solid("253549"));
+        _previewPlatform = Mat.Mesh(viewport, new CylinderMesh { TopRadius = 1.6f, BottomRadius = 1.6f, Height = .1f }, new Vector3(0, -.05f, 0), Mat.Solid("253549"));
+        _homeRoom = BuildHomeRoom();
+        viewport.AddChild(_homeRoom);
         _turntable = new Node3D();
         viewport.AddChild(_turntable);
         _previewCamera = new Camera3D { Fov = 35 };
@@ -738,6 +742,14 @@ public partial class MainMenu : Control
     {
         if (_rig == null) return;
         float h = Selected.ColliderHeight;
+        if (Page is MenuPage.Home or MenuPage.Play)
+        {
+            _previewCamera.Position = new Vector3(0, h * 1.15f, h * 2.8f + 1);
+            _previewCamera.LookAt(new Vector3(0, h * .52f, 0), Vector3.Up);
+            _previewCamera.HOffset = -h * .85f;
+            return;
+        }
+        _previewCamera.HOffset = 0;
         _previewCamera.Position = new Vector3(0, h * .75f, (h * 2.6f + 1.5f) / (float)_zoom.Value);
         _previewCamera.LookAt(new Vector3(0, h * .45f, 0), Vector3.Up);
     }
@@ -753,14 +765,15 @@ public partial class MainMenu : Control
         _time += dt;
         if (Page == MenuPage.Multi && RoomDirectory.Enabled && (_roomTimer -= dt) <= 0) RefreshRooms();
         if (Page == MenuPage.Lobby && PortOpener.State != _shownPort) RefreshLobby();
-        if (_autoRotate.ButtonPressed)
+        if (Page is not (MenuPage.Home or MenuPage.Play) && _autoRotate.ButtonPressed)
         {
             _turntable.RotateY(dt * .22f);
             _rotation.SetValueNoSignal(Mathf.Wrap(Mathf.RadToDeg(_turntable.Rotation.Y), -180, 180));
         }
-        float movement = _posePreview == 1 ? 1 : 0;
-        _rig?.SetLocomotionPose(dt, movement, _posePreview == 2);
-        _rig?.Animate(dt, movement, _posePreview == 2 ? Mathf.Max(0, Mathf.Sin(_time * 15)) * .5f : 0, 0, Vector3.Zero);
+        float movement = Page == MenuPage.Customize && _posePreview == 1 ? 1 : 0;
+        bool firing = Page == MenuPage.Customize && _posePreview == 2;
+        _rig?.SetLocomotionPose(dt, movement, firing);
+        _rig?.Animate(dt, movement, firing ? Mathf.Max(0, Mathf.Sin(_time * 15)) * .5f : 0, 0, Vector3.Zero);
     }
 
     public override void _UnhandledInput(InputEvent e)
@@ -772,8 +785,9 @@ public partial class MainMenu : Control
             return;
         }
         if (e.IsActionPressed("ui_cancel") && Page == MenuPage.Lobby) LeaveLobby();
+        else if (e.IsActionPressed("ui_cancel") && Page is MenuPage.Single or MenuPage.Multi) Open(MenuPage.Play);
         else if (e.IsActionPressed("ui_cancel") && Page != MenuPage.Home) Open(MenuPage.Home);
-        else if (e.IsActionPressed(GameInput.Confirm) && Page == MenuPage.Home) Open(MenuPage.Single);
+        else if (e.IsActionPressed(GameInput.Confirm) && Page == MenuPage.Home) Open(MenuPage.Play);
         else if (e.IsActionPressed(GameInput.Confirm) && Page == MenuPage.Single) StartGame();
         else if (Page != MenuPage.Customize) return;
         else if (e.IsActionPressed(GameInput.MoveRight) || e.IsActionPressed(GameInput.MoveDown) || e.IsActionPressed("ui_right")) Select(_index + 1);

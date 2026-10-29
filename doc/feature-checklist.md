@@ -1,5 +1,9 @@
 # 게임 기능 체크리스트
 
+- [x] M-0 타이틀: ESCAPE FUR DEAD를 한글/영문 메뉴·창 제목·Windows 내보내기 제품 표시명에 적용. 빌드와 MenuCheck54, 실제1600×900 렌더 확인. 패키지 재생성은 미실행. [기록019](features/menu-ui/log/019-code-escape-fur-dead-title.md).
+
+- [x] M-0/M-38 후속: 홈을 게임 시작·캐릭터·설정·종료의 텍스트 목록과 배경 캐릭터로 단순화. 싱글/멀티 선택·뒤로·언어 변경·미리보기 복귀 검사, 한글/영문 1280×720·1600×900 렌더 확인. 상세 메뉴/HUD 개편과 최종 미술 수락은 후속. [기록018](features/menu-ui/log/018-code-minimal-home.md).
+
 - [x] L-12/L-34/L-35·M-38 후속: 캠페인 거점 외 탄약 제거, 캠페인1 몽둥이8.5 피해 시작, 상호작용 진행은 무기 슬롯 위 한 곳. [레벨 기록](features/level/log/018-code-campaign-supply-start.md), [UI 기록](features/menu-ui/log/017-code-interaction-progress-dock.md). 전체 플레이 밸런스·실제2PC는 후속.
 - [x] M-38 공통 UI 스타일·월드 상호작용: 최근 조준/탄창 UI 유지, 대상 안내/피격 취소/완료·설정/장비/인벤토리 표현 통일. 홈·커스터마이징·출격 준비·로비의 조작부/미리보기도 청백색 공통 스타일 적용. 외형 최종 수락·실제2PC 비교는 남음. [상호작용 기록](features/menu-ui/log/013-code-ui-consistency.md), [메뉴 후속](features/menu-ui/log/014-code-menu-entry-style.md)
 - [x] 조준점 실험실: `game/Start-Game.ps1 -ReticleLab`로 전체21종(쌍권총 포함) 직접 선택/F11·F12 순환, 무적·무한 예비탄·장전 비교. [변경·검사·사용법](features/menu-ui/log/010-code-reticle-lab.md).

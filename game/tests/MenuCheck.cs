@@ -54,15 +54,31 @@ public partial class MenuCheck : Node
         await OpenMenu();
         Check(_menu.Page == MenuPage.Home && PageVisible(MenuPage.Home) && !PageVisible(MenuPage.Single) && !PageVisible(MenuPage.Customize),
             "menu opens on the home page");
-        Check(new[] { "Menu_Customize", "Menu_Single", "Menu_Multi", "Menu_Settings", "Menu_Quit" }.All(n => _menu.FindChild(n, true, false) is Button { Disabled: false }),
-            "home lists customize, single, multi, settings and quit");
+        Check(new[] { "Menu_Play", "Menu_Customize", "Menu_Settings", "Menu_Quit" }.All(n => Ui<Button>(n).IsVisibleInTree())
+              && !Ui<Button>("Menu_Single").IsVisibleInTree() && !Ui<Button>("Menu_Multi").IsVisibleInTree(),
+            "home presents only play, character, settings and quit; solo/multi belong to the next choice");
+        Check(!Ui<Control>("PreviewPanel").IsVisibleInTree() && !Ui<Control>("MenuPanel").IsVisibleInTree(),
+            "home hides the workshop panels and their detailed information");
         Check(!GameSettings.Loaded, "a menu inside a test scene does not load the player's settings");
         await Shot("menu-home");
-        Check(GetViewport().GuiGetFocusOwner()?.Name == "Menu_Single", "home focuses single play, so Enter starts the usual path");
+        Check(GetViewport().GuiGetFocusOwner()?.Name == "Menu_Play", "home focuses Play");
         GetViewport().PushInput(new InputEventKey { Keycode = Key.Enter, PhysicalKeycode = Key.Enter, Pressed = true });
         GetViewport().PushInput(new InputEventKey { Keycode = Key.Enter, PhysicalKeycode = Key.Enter, Pressed = false });
         await Frames(2);
-        Check(_menu.Page == MenuPage.Single && GetViewport().GuiGetFocusOwner()?.Name == "StartGame", "Enter on home opens single play with the start button focused");
+        Check(_menu.Page == MenuPage.Play && GetViewport().GuiGetFocusOwner()?.Name == "Menu_Single",
+            "Enter opens the solo/multi choice without launching a match");
+        await Shot("menu-play");
+        _menu._UnhandledInput(new InputEventAction { Action = "ui_cancel", Pressed = true });
+        await Frames(2);
+        Check(_menu.Page == MenuPage.Home && GetViewport().GuiGetFocusOwner()?.Name == "Menu_Play", "Esc returns from play choice to focused home");
+        Click("Menu_Play");
+        await Frames(2);
+        GetViewport().PushInput(new InputEventKey { Keycode = Key.Enter, PhysicalKeycode = Key.Enter, Pressed = true });
+        GetViewport().PushInput(new InputEventKey { Keycode = Key.Enter, PhysicalKeycode = Key.Enter, Pressed = false });
+        await Frames(2);
+        Check(_menu.Page == MenuPage.Single && GetViewport().GuiGetFocusOwner()?.Name == "StartGame", "Enter on play choice opens single play with the start button focused");
+        Check(Ui<Control>("CharacterPreview").GetParent() != Ui<Control>("HomeShell") && Ui<Control>("PreviewPanel").IsVisibleInTree(),
+            "leaving home restores the same preview to the detail page");
         _menu.ShowPage(MenuPage.Home);
         await Frames(2);
 
@@ -84,6 +100,7 @@ public partial class MenuCheck : Node
         Check(_menu.Page == MenuPage.Home && !Ui<Control>("PreviewTools").Visible, "back returns home and hides preview tools");
 
         // Single: the game setup (mode → card → difficulty, M-39 · M-40), squad option, start.
+        Click("Menu_Play");
         Click("Menu_Single");
         await Frames(2);
         Check(_menu.Page == MenuPage.Single && PageVisible(MenuPage.Single) && !PageVisible(MenuPage.Home), "single page opens");
@@ -127,7 +144,7 @@ public partial class MenuCheck : Node
         }
         _menu._UnhandledInput(new InputEventAction { Action = "ui_cancel", Pressed = true });
         await Frames(2);
-        Check(_menu.Page == MenuPage.Home, "Esc goes back to the home page");
+        Check(_menu.Page == MenuPage.Play, "Esc from single goes back to the solo/multi choice");
 
         // Multi: two-player test by address (room codes and public rooms come later).
         Click("Menu_Multi");
@@ -181,6 +198,9 @@ public partial class MenuCheck : Node
         else GD.Print($"SKIP: room page (UDP {NetLaunch.Port} is in use on this PC)");
         Click("Back_Multi");
         await Frames(2);
+        Check(_menu.Page == MenuPage.Play && GetViewport().GuiGetFocusOwner()?.Name == "Menu_Multi", "back from multiplayer restores focus to multiplayer");
+        Click("Back_Play");
+        await Frames(2);
 
         // Settings: live values, saved and restored.
         GameSettings.Path = SettingsPath;
@@ -214,6 +234,12 @@ public partial class MenuCheck : Node
             "switching language rebuilds the menu on the settings page");
         Check(Ui<Button>("Back_Settings").Text == Loc.Table("eng")["menu_back"] && Loc.Text("menu_settings_title") != koreanTitle, "menu text is now English");
         await Shot("menu-settings-eng");
+        _menu.ShowPage(MenuPage.Home);
+        await Frames(2);
+        Check(Ui<Button>("Menu_Play").Text == "Play" && Ui<Button>("Menu_Customize").Text == "Character",
+            "the rebuilt home uses English labels");
+        await Shot("menu-home-eng");
+        _menu.ShowPage(MenuPage.Settings);
         Click("Back_Settings");
         await Frames(2);
 

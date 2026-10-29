@@ -3,7 +3,7 @@ key,text
 ui_controls,"WASD Move   Mouse Aim   LMB Fire   Space Leap   1·2·3 Switch weapon   RMB/Ctrl Aim   G Aim throw   Q Medkit   E Pick up   I Backpack (Outpost)
 R Reload   Tab Zoom   Esc Pause"
 # Main menu
-ui_menu_title,HORDE SHOOTER  (working title)
+ui_menu_title,ESCAPE FUR DEAD
 ui_menu_subtitle,Isometric co-op horde shooter — prototype
 ui_menu_start,Deploy  [Enter]
 # HUD
@@ -309,3 +309,6 @@ hud_interaction_interrupted,Interrupted by damage
 hud_interaction_release,Release and hold again
 hud_interaction_out_of_reach,Out of reach
 hud_interaction_other_reviver,Teammate is reviving
+
+menu_home_play,Play
+menu_home_character,Character
