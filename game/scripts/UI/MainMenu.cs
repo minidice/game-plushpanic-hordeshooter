@@ -106,7 +106,7 @@ public partial class MainMenu : Control
         margin.AddChild(column);
         var heading = new HBoxContainer();
         heading.AddThemeConstantOverride("separation", 24);
-        heading.AddChild(UiTheme.Label(Loc.Text("ui_menu_title"), 34, UiTheme.Selection));
+        heading.AddChild(UiTheme.Label(Loc.Text("ui_menu_title"), 34, UiTheme.Selection, title: true));
         var subtitle = UiTheme.Label(Loc.Text("ui_menu_subtitle"), 17, UiTheme.Muted);
         subtitle.VerticalAlignment = VerticalAlignment.Center;
         heading.AddChild(subtitle);

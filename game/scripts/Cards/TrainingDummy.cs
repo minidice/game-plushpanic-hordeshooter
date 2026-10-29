@@ -41,6 +41,7 @@ public partial class TrainingDummy : Enemy
             .Rotation = new Vector3(Mathf.Pi * .5f, 0, 0);
         _dps = new Label3D
         {
+            Font = UiFonts.Get(),
             Position = Vector3.Up * 2.2f,
             Billboard = BaseMaterial3D.BillboardModeEnum.Enabled,
             FontSize = 48, OutlineSize = 10, PixelSize = .01f, NoDepthTest = true,

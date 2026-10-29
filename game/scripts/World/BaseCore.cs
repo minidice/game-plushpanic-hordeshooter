@@ -41,6 +41,7 @@ public partial class BaseCore : StaticBody3D
         AddChild(_light);
         AddChild(new Label3D
         {
+            Font = UiFonts.Get(),
             Text = Loc.Text("ui_floor_base"), Position = new Vector3(0, .03f, 1.6f), RotationDegrees = new Vector3(-90, 0, 0),
             FontSize = 64, PixelSize = .012f, Modulate = new Color("9dffc0", .85f), OutlineSize = 0,
         });

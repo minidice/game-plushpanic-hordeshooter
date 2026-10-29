@@ -89,7 +89,7 @@ void fragment() {
 
     private Control BuildTitle()
     {
-        var box = new VBoxContainer { Alignment = BoxContainer.AlignmentMode.Center, MouseFilter = Control.MouseFilterEnum.Ignore, Modulate = new Color(1, 1, 1, 0) };
+        var box = new VBoxContainer { Theme = UiTheme.Get(), Alignment = BoxContainer.AlignmentMode.Center, MouseFilter = Control.MouseFilterEnum.Ignore, Modulate = new Color(1, 1, 1, 0) };
         box.SetAnchorsPreset(Control.LayoutPreset.FullRect);
         box.AddThemeConstantOverride("separation", 6);
         var number = new Label { Name = "Number", HorizontalAlignment = HorizontalAlignment.Center };

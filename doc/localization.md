@@ -49,6 +49,15 @@ UI 문구는 용도 자리에 `ui`(고정 문구), `msg`(알림·떠오르는 �
 - **다른 언어로 화면 확인**: `Godot --path . res://tests/Capture.tscn -- --lang=eng`로 실행하면 `output/*-eng.png`로 캡처합니다.
 - **추가하기**: `content/lan/jpn/` 폴더를 만들고, kor 폴더의 CSV를 복사해 `text` 열만 번역합니다. 각 CSV 옆에 `.import` 파일(`importer="keep"`)도 같이 둡니다. 이 파일이 없으면 Godot이 CSV를 번역 리소스로 가져가 버립니다.
 
+## 언어별 글꼴
+
+- 설정: `game/content/data/ui_fonts.json`. 언어 ID(`kor`, `eng`, 이후 `jpn` 등) 아래에 `body`·`menu`·`title`의 `res://` 폰트 경로를 각각 둔다. 한·영은 현재 Pretendard Regular/Bold/ExtraBold 원본을 공유하지만 각 언어 항목은 독립적이다. **한 언어의 경로만 바꾸면 다른 언어는 바뀌지 않는다.** 수정 후 게임을 다시 실행한다.
+- 새 언어를 추가할 때 폰트 설정은 선택 사항이다. 언어/역할이 없거나 값이 비어 있으면 해당 역할 굵기의 `SystemFont`를 쓴다. 다른 언어의 번들 글꼴을 강제로 상속하지 않는다. 잘못된 경로·다른 타입 리소스·손상된 JSON은 시스템 글꼴로 대체하고 진단 경고를 남긴다.
+- 번들 글꼴에 없는 문자는 시스템 폰트 체인 및 Godot의 시스템 폴백을 사용한다. OS에 설치된 폰트에도 해당 글자가 없으면 표시를 보장할 수 없다. 일본어/중국어/아랍어 등 정식 지원 시 자형·연결·줄바꿈·폭을 별도 검수한다.
+- `Loc.LanguageChanged`가 `UiFonts`의 공유 `FontVariation.BaseFont`를 바꾸므로 이미 만들어진 테마와 월드 글꼴 참조도 갱신된다. **문구**가 생성 때 정해지는 이름표/바닥/알림의 기존 재생성 규칙은 유지한다.
+- 적용 굵기·역할: [UI 규격](features/menu-ui/ui-style-spec.md#글꼴). Pretendard 정적 파일과 `LICENSE.txt`는 `assets/fonts/pretendard/`에 보관한다. 내보내기 설정은 라이선스를 PCK에 포함하고, `Export-Game.ps1`은 `licenses/<폰트 폴더>/LICENSE.txt`를 실행 파일 옆에도 복사하여 ZIP에 넣는다. 에디터에서 직접 내보내면 읽을 수 있는 라이선스 파일도 별도로 함께 배포한다.
+- 검사: `res://tests/FontCheck.tscn`은 역할·한/영 전환·기존 UI/월드 참조 갱신·미설정 언어·개별 언어 교체·오류 설정 대체를 확인한다. 실제 렌더는 `MenuCheck`와 `InteractionUiCheck`로 확인한다.
+
 ## 아직 옮기지 않은 것
 
 화면에 나오는 문구는 모두 `ui.csv`로 옮겼습니다. 아래는 개발자용이라 일부러 코드에 한국어로 남겨 둔 것입니다.

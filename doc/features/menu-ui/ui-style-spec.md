@@ -21,6 +21,20 @@
 
 공통 색·패널을 새 화면에서 다시 숫자로 복제하지 않는다. 기본 면은 `UiTheme.Plate`(기존 HUD 호출은 `HudPlate`), 진행은 `UiTheme.DrawProgress`, 선택은 `Selection`을 쓴다. 별도 색은 역할이 있는 경우만 지정한다.
 
+## 글꼴
+
+2026-10-30 M-42: `UiFonts`가 역할별 공유 글꼴을 제공하고 `UiTheme` 및 월드 `Label3D`가 사용한다. `content/data/ui_fonts.json`의 `kor`/`eng`에는 같은 Pretendard v1.3.9 파일을 연결한다.
+
+| 역할 키 | 현재 파일 | 적용 |
+|---|---|---|
+| `body` | Pretendard-Regular.otf | 기본 Label·본문·설명·입력·HUD 직접 그리기·월드 이름표/바닥/알림 |
+| `menu` | Pretendard-Bold.otf | Button·OptionButton·CheckButton·CheckBox·TabContainer·TabBar·PopupMenu |
+| `title` | Pretendard-ExtraBold.otf | 홈 및 상세 메뉴의 게임 제목, `TitleLabel` 테마 변형 |
+
+400/700/800은 제작 초기값. 실제 폰트 파일을 사용하며 기존 가독성용 외곽선은 유지한다. 기본 크기18px, 홈 제목52px/메뉴26px 등 기존 치수는 유지한다. 다른 UI는 기본 Regular이며 큰 글자라는 이유만으로 자동 굵게 하지 않는다.
+
+언어별 교체·시스템 대체 계약은 [다국어 규격](../../localization.md#언어별-글꼴), 검증/렌더/제약은 [기록021](log/021-code-pretendard-ui.md).
+
 ## 메뉴·게임 진입 전 화면
 
 사용자 후속 요청(2026-10-28): 메뉴와 게임 진입 전 화면에도 같은 품질을 적용하고, 어울리지 않는 주황·노랑 메뉴 강조를 없앤다. [작업 기록014](log/014-code-menu-entry-style.md).

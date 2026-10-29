@@ -47,6 +47,15 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Godot import failed.' }
     & $console --headless --path $PSScriptRoot --export-release 'Windows Desktop' (Join-Path $out 'HordeShooter.exe') *> (Join-Path $PSScriptRoot 'output/export.log')
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path (Join-Path $out 'HordeShooter.exe'))) { throw 'Export failed. See game/output/export.log' }
+    # Keep font copyright notices readable without unpacking the game's PCK.
+    foreach ($fontDir in Get-ChildItem (Join-Path $PSScriptRoot 'assets/fonts') -Directory) {
+        $license = Join-Path $fontDir.FullName 'LICENSE.txt'
+        if (Test-Path -LiteralPath $license) {
+            $licenseOut = Join-Path $out ('licenses/' + $fontDir.Name)
+            New-Item -ItemType Directory -Force $licenseOut | Out-Null
+            Copy-Item -LiteralPath $license -Destination (Join-Path $licenseOut 'LICENSE.txt')
+        }
+    }
     # Without the .NET data folder the game starts with no scripts at all: treat that as a failed export.
     if (-not (Get-ChildItem $out -Directory -Filter 'data_HordeShooter_*')) { throw 'Export has no .NET data folder (C# not exported). See game/output/export.log' }
     if ((& "$PSScriptRoot/tests/Get-CampaignBuildFingerprint.ps1") -ne $fingerprint) { throw 'Source changed during export; packaging blocked.' }
