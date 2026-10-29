@@ -20,10 +20,11 @@ public sealed class WeaponRecoil
     public Vector2 Offset { get; private set; }
     private float _quiet, _return = 200;
 
-    public void Kick(WeaponDefinition def, RandomNumberGenerator rng)
+    /// <param name="scale">Worn gear's recoil factor (C-34): both the climb and the sideways kick, not the slide back.</param>
+    public void Kick(WeaponDefinition def, RandomNumberGenerator rng, float scale = 1f)
     {
         if (def.RecoilUp <= 0 && def.RecoilSide <= 0) return;
-        var kicked = Offset + new Vector2(rng.RandfRange(-def.RecoilSide, def.RecoilSide), -def.RecoilUp);
+        var kicked = Offset + new Vector2(rng.RandfRange(-def.RecoilSide, def.RecoilSide), -def.RecoilUp) * scale;
         Offset = kicked.LimitLength(MaxOffset);
         _quiet = def.FireInterval + QuietAfter;
         _return = def.RecoilReturn;

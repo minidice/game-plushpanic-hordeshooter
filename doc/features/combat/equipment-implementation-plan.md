@@ -7,7 +7,7 @@
 **Tech Stack:** Godot4.7.2 .NET, C#, CSV 데이터, 기존 HUD 컨트롤·Godot 검사 장면.
 **Spec:** [장비 설계](equipment-movement-plan.md), [수락한 옵션 표](equipment-option-tuning.md#장비-옵션의-효과와-발동-조건), [옵션 · 배치 데이터](item-option-data.md), C-32·C-34·C-36·M-41.
 
-현재는 **Task1 구현(2026-10-30, 데이터·평가), Task2~5 미구현**이다. 사용자가 정한 내용과 아래 AI의 구현 선택을 구분한다. 이 문서가 다른 후보 수치나 무기별 저격 확률의 수락을 뜻하지 않는다.
+현재는 **Task1·2 구현(2026-10-30, 데이터·평가·실제 사격 연결), Task3~5 미구현**이다. 사용자가 정한 내용과 아래 AI의 구현 선택을 구분한다. 이 문서가 다른 후보 수치나 무기별 저격 확률의 수락을 뜻하지 않는다.
 
 ## Global Constraints
 
@@ -56,12 +56,13 @@
 **Files:** 새 `game/scripts/Equipment/EquipmentCombat.cs`; 수정 `Player.cs`, `Weapons/WeaponController.cs`, `Weapons/WeaponRecoil.cs`, `UI/HudReticle.cs`; 새 `game/tests/EquipmentCombatCheck.cs/.tscn`와 필요 시 `WeaponAimCheck.cs`.
 **Interfaces:** `EquipmentCombat.IsCritical(bool guaranteed, float chance, float sample01)`는 보장 여부와 확률을 판정하는 순수 함수. `WeaponRecoil.Kick(WeaponDefinition def, RandomNumberGenerator rng, float scale = 1f)`로 기존 호출 호환. Task1의 Evaluate를 실제 발사/근접 명중 시점에 사용한다.
 
-- [ ] 실패 검사: sample0.029는3%에서true,0.031은false, guaranteed=true는 sample0.999에서도true. 조준 고글은 비조준0/조준0.06. 집중 준비 중과 집중 다음 한 발의 피해를 구별한다.
-- [ ] 실패 검사: 집중 피해 장비에서 기본100·치명타 배율2.5이면 집중 한 발325, 이후 일반 치명타250. 보장 한 발을 쏘면 집중을 소비하고 다음 탄에1.3배가 남지 않는다.
-- [ ] 발사 단위 난수와 상태를 사용해 직사/산탄/점사/근접의 실제 피해에 연결한다. 새 확률은 권한 있는 시뮬레이션에서 결정하며 클라이언트 표시 난수로 체력을 바꾸지 않는다.
-- [ ] 현재 `CritReady`가 IsLocal에 묶여 있는 점을 처리한다. 사람 플레이어의 집중 평가는 오프라인/호스트에서 해당 플레이어의 수신 조준점으로 평가하도록 분리하고 기존0.5초·조준 배율·발사 소비를 유지한다. 원격 플레이어 집중은 Task4에서 실측 검증한다.
-- [ ] 퍼짐은 이동·조준·연사 반영 후 실제 발사 각도와 HUD에 같은 배율 적용. 반동은 Kick에 배율 전달. 집중 피해 증가는 임의의 확률 치명타에 붙이지 않는다.
-- [ ] 실제 산탄/점사·다른 플레이어·장비 교체·조준 해제 검사와 `WeaponAimCheck`, `MovementEchoCheck` 통과 후 기록·커밋한다.
+- [x] 실패 검사: sample0.029는3%에서true,0.031은false, guaranteed=true는 sample0.999에서도true. 조준 고글은 비조준0/조준0.06. 집중 준비 중과 집중 다음 한 발의 피해를 구별한다.
+- [x] 실패 검사: 집중 피해 장비에서 기본100·치명타 배율2.5이면 집중 한 발325, 이후 일반 치명타250. 보장 한 발을 쏘면 집중을 소비하고 다음 탄에1.3배가 남지 않는다.
+- [x] 발사 단위 난수와 상태를 사용해 직사/산탄/점사/근접의 실제 피해에 연결한다. 새 확률은 권한 있는 시뮬레이션에서 결정하며 클라이언트 표시 난수로 체력을 바꾸지 않는다.
+- [x] 현재 `CritReady`가 IsLocal에 묶여 있는 점을 처리한다. 사람 플레이어의 집중 평가는 오프라인/호스트에서 해당 플레이어의 수신 조준점으로 평가하도록 분리하고 기존0.5초·조준 배율·발사 소비를 유지한다. 원격 플레이어 집중은 Task4에서 실측 검증한다.
+- [x] 퍼짐은 이동·조준·연사 반영 후 실제 발사 각도와 HUD에 같은 배율 적용. 반동은 Kick에 배율 전달. 집중 피해 증가는 임의의 확률 치명타에 붙이지 않는다.
+- [x] 실제 산탄/점사·다른 플레이어·장비 교체·조준 해제 검사와 `WeaponAimCheck`, `MovementEchoCheck` 통과 후 기록·커밋한다.
+- 완료 2026-10-30 — [기록018](log/018-code-equipment-combat.md). 확률 치명타는 발사마다 난수 하나(별도 생성기), 관통 전 첫 명중만, 호스트·혼자일 때만 굴림. 원격 집중은 호스트가 받은 조준점으로(시야는 로컬만), 실제 두 PC 확인은 Task4.
 
 ## Task3: 현장 교체와 두 슬롯 표시
 

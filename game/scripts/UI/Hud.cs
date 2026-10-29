@@ -560,11 +560,9 @@ void fragment() {
         float distance = Mathf.Max(1, (aim - player.GlobalPosition).Length());
         float Radius(float spread) =>
             Mathf.Max(ReticleMinRadius, (cam.UnprojectPosition(aim + cam.GlobalTransform.Basis.X * distance * Mathf.Tan(Mathf.DegToRad(spread * .5f))) - center).Length());
-        // Multi-pellet weapons resolve a separate cone, including wide-buckshot traits.
-        float cone = gun.Def.Pellets > 1 ? gun.Def.PelletSpread * (gun.Def.BaseSpread > 0
-            ? Mathf.Lerp(1, gun.Def.AimSpread / gun.Def.BaseSpread, gun.AimProgress) : 1) : gun.Spread;
-        float aimedCone = gun.Def.Pellets > 1 ? gun.Def.PelletSpread * (gun.Def.BaseSpread > 0
-            ? gun.Def.AimSpread / gun.Def.BaseSpread : 1) : gun.AimedSpread;
+        // The same cone the shot leaves in: a shotgun's pellet cone, worn gear's narrowing (C-34).
+        float cone = player.Weapons.ShotCone(gun);
+        float aimedCone = player.Weapons.ShotCone(gun, fullyAimed: true);
         float radius = Radius(cone);
         float aimed = Mathf.Min(radius, Radius(aimedCone));
         // Past the effective range the reticle turns amber (damage falls off), past the maximum red (no hit; C-27, C-30).

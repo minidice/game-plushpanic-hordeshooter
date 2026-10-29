@@ -18,6 +18,10 @@ public partial class WeaponController : Node
     private Player _player = null!;
     private Stage Stage => _player.Stage;
     private readonly RandomNumberGenerator _rng = new();
+    // Crit rolls draw from their own generator, so worn gear never shifts the spread and recoil sequence.
+    private readonly RandomNumberGenerator _critRng = new();
+    // The worn gear's part in the shot being fired, fixed as it leaves the barrel (C-34, equipment plan Task 2).
+    private ShotGear _shot = ShotGear.None;
     private WeaponDefinition? _shownDef;
     private Node3D? _visual;
     private Node3D? _heldThrowable;
@@ -374,6 +378,7 @@ public partial class WeaponController : Node
             default:
                 var origin = _player.GlobalPosition + Vector3.Up * Player.AimHeight;
                 var surfaces = new List<NetSurfaceHit>(NetSurfaceHit.MaxPerShot);
+                _shot = RollShot();
                 var end = Hitscan(def, origin, dir, def.Damage * _player.OutgoingDamage, def.HitPower, RangeScale(def), surfaces, out bool crit);
                 WeaponShotEffect.Play(Stage.Effects, def, origin, origin, end, crit, muzzleFlash: false);
                 Stage.Net?.OnShot(_player, def, origin, new[] { end }, _player.AimPoint, surfaces);
@@ -482,6 +487,7 @@ public partial class WeaponController : Node
         _player.Rig.SetLocomotionPose(0,0,true);
         var def = state.Def;
         ShotsFired++;
+        _shot = RollShot();
         _player.InterruptAutoRun();
         // The team's "special weapon twice" card (M-29 plan 16.6): every slot-3 kind goes off once more.
         if (!_echoing && def.Slot == WeaponSlot.Special && Stage.ModeRules?.CardEffects is { } cards && cards.SpecialShots > 1)
@@ -506,7 +512,7 @@ public partial class WeaponController : Node
                 Stage.Net?.OnShot(_player, def, MuzzlePosition, System.Array.Empty<Vector3>(), _player.AimPoint);
                 return;
             case FireMode.Projectile:
-                var rocketDir = Spread(dir, state.Spread);
+                var rocketDir = Spread(dir, ShotCone(state));
                 Rocket.Launch(Stage, MuzzlePosition, rocketDir, def, _player.GetRid(), _player);
                 WeaponShotEffect.Flash(Stage.Effects, def, MuzzlePosition, rocketDir);
                 Stage.Net?.OnShot(_player, def, MuzzlePosition, new[] { MuzzlePosition + rocketDir }, _player.AimPoint);
@@ -535,10 +541,7 @@ public partial class WeaponController : Node
                 var origin = _player.GlobalPosition + Vector3.Up * Player.AimHeight;
                 // Pellets split the shot's damage and push: all of them hitting = the full number.
                 int pellets = Mathf.Max(1, def.Pellets);
-                // A shotgun's pellet cone tightens with aiming too, in the same share as its aim cone (C-30).
-                float cone = pellets > 1
-                    ? def.PelletSpread * (def.BaseSpread > 0 ? Mathf.Lerp(1, def.AimSpread / def.BaseSpread, state.AimProgress) : 1)
-                    : state.Spread;
+                float cone = ShotCone(state);
                 var ends = Stage.Net != null ? new System.Collections.Generic.List<Vector3>(pellets) : null;
                 var surfaces = new List<NetSurfaceHit>(NetSurfaceHit.MaxPerShot);
                 float rangeScale = RangeScale(def);
@@ -564,7 +567,7 @@ public partial class WeaponController : Node
         // Squadmates take a third of the push, so a shotgun does not leave them behind the leader.
         if (def.RecoilPower > 0) _player.Shove(-dir * Knockback.Recoil(def.RecoilPower) * (_player.IsBot ? .3f : 1f));
         // The aim point kicks on the shooter's own PC (C-30); the host and the others only see where they aim.
-        if (_player.IsLocal) _player.Recoil.Kick(def, _rng);
+        if (_player.IsLocal) _player.Recoil.Kick(def, _rng, _player.Gear.Evaluate(_player.IsAiming, false).Recoil);
         float shake = def.Category switch
         {
             WeaponCategory.Heavy => .3f,
@@ -589,6 +592,49 @@ public partial class WeaponController : Node
             if (toFocus.LengthSquared() > .04f) return toFocus.Normalized();
         }
         return _player.AimDirection;
+    }
+
+    /// <summary>
+    /// The cone a shot of <paramref name="gun"/> leaves in, now or once fully aimed: a shotgun's pellet cone tightens with
+    /// aiming in the same share as its aim cone (C-30), and worn gear narrows it (C-34). The reticle draws the same.
+    /// </summary>
+    public float ShotCone(WeaponState gun, bool fullyAimed = false)
+    {
+        var def = gun.Def;
+        float aim = fullyAimed ? 1 : gun.AimProgress;
+        float cone = def.Pellets > 1
+            ? def.PelletSpread * (def.BaseSpread > 0 ? Mathf.Lerp(1, def.AimSpread / def.BaseSpread, aim) : 1)
+            : fullyAimed ? gun.AimedSpread : gun.Spread;
+        return cone * _player.Gear.Evaluate(fullyAimed || _player.IsAiming, false).Spread;
+    }
+
+    /// <summary>
+    /// The worn gear's part in one shot (or swing): crit chance and damage for its aim state, and the shot's one crit roll.
+    /// A chance crit is the host's call; a client's own shot only shows what it can know, the focused crit (C-32).
+    /// </summary>
+    private ShotGear RollShot()
+    {
+        bool aiming = _player.IsAiming;
+        var gear = _player.Gear.Evaluate(aiming, false);
+        return new ShotGear(gear.CritChance, gear.CritDamage, _player.Gear.Evaluate(aiming, true).CritDamage,
+            Stage.Authoritative ? _critRng.Randf() : 1f);
+    }
+
+    /// <summary>
+    /// Whether this hit crits and how hard: the focused target's first hit always (C-32), any first hit on the gear's chance
+    /// (one roll per shot, so a shotgun's pellets agree). Focus-only crit damage goes on the focused hit alone.
+    /// </summary>
+    private bool Crit(Enemy target, int pierced, WeaponDefinition def, out float factor)
+    {
+        bool guaranteed = pierced == 0 && target == _player.FocusTarget && _player.CritReady;
+        bool crit = pierced == 0 && EquipmentCombat.IsCritical(guaranteed, _shot.Chance, _shot.Sample);
+        factor = crit ? EquipmentCombat.CritFactor(def.CritMultiplier, _player.GatherCrit, guaranteed ? _shot.FocusCritDamage : _shot.CritDamage) : 1f;
+        return crit;
+    }
+
+    private readonly record struct ShotGear(float Chance, float CritDamage, float FocusCritDamage, float Sample)
+    {
+        public static readonly ShotGear None = new(0, 1, 1, 1);
     }
 
     private Vector3 Spread(Vector3 dir, float spreadDegrees)
@@ -628,9 +674,9 @@ public partial class WeaponController : Node
                     exclude.Add(low.GetRid());
                     end = low.GlobalPosition + Vector3.Up * Player.AimHeight;
                     float lowFalloff = def.FalloffAt(along, rangeScale);
-                    bool lowCrit = pierced == 0 && low == _player.FocusTarget && _player.CritReady;
+                    bool lowCrit = Crit(low, pierced, def, out float lowFactor);
                     crit |= lowCrit;
-                    low.TakeHit(new HitInfo(damage * lowFalloff * (lowCrit ? def.CritMultiplier * (1 + _player.GatherCrit) : 1f), dir, end, lowCrit, power, _player, def.TypeId));
+                    low.TakeHit(new HitInfo(damage * lowFalloff * lowFactor, dir, end, lowCrit, power, _player, def.TypeId));
                     damage *= .8f;
                     continue;
                 }
@@ -649,9 +695,9 @@ public partial class WeaponController : Node
             switch (hit.Collider)
             {
                 case Enemy enemy when !enemy.IsDead:
-                    bool isCrit = pierced == 0 && enemy == _player.FocusTarget && _player.CritReady;
+                    bool isCrit = Crit(enemy, pierced, def, out float factor);
                     crit |= isCrit;
-                    enemy.TakeHit(new HitInfo(damage * falloff * (isCrit ? def.CritMultiplier * (1 + _player.GatherCrit) : 1f), dir, end, isCrit, power, _player, def.TypeId));
+                    enemy.TakeHit(new HitInfo(damage * falloff * factor, dir, end, isCrit, power, _player, def.TypeId));
                     exclude.Add(hit.Rid);
                     damage *= .8f;
                     continue;
@@ -728,11 +774,13 @@ public partial class WeaponController : Node
             .OrderBy(t => t.to.Length())
             .Take(def.MeleeMaxTargets)
             .ToList();
+        // A swing rolls once at its impact, for every monster it reaches.
+        _shot = RollShot();
         foreach (var (enemy, to) in targets)
         {
             var push = to.LengthSquared() > .001f ? to.Normalized() : dir;
-            bool crit = enemy == _player.FocusTarget && _player.CritReady;
-            enemy.TakeHit(new HitInfo(def.Damage * _player.OutgoingDamage * (crit ? def.CritMultiplier * (1 + _player.GatherCrit) : 1f), push, enemy.GlobalPosition + Vector3.Up, crit, def.HitPower,
+            bool crit = Crit(enemy, 0, def, out float factor);
+            enemy.TakeHit(new HitInfo(def.Damage * _player.OutgoingDamage * factor, push, enemy.GlobalPosition + Vector3.Up, crit, def.HitPower,
                 _player, def.TypeId));
         }
         foreach (var prop in Stage.Props)

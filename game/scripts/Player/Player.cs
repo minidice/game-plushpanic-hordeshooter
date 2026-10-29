@@ -61,7 +61,6 @@ public partial class Player : CharacterBody3D
     public Vector3 AimDirection { get; private set; } = Vector3.Right;
     public Enemy? FocusTarget { get; private set; }
     public float FocusTime { get; private set; }
-    // Focus needs this PC's own view of the enemies, so only the local player can line up a crit.
     /// <summary>Client: a hit the host reported (the arc on the HUD; health arrives with the snapshot).</summary>
     public void ShowNetHit(Vector3 direction)
     {
@@ -70,7 +69,12 @@ public partial class Player : CharacterBody3D
         if (direction.LengthSquared() > .0001f) HitFrom?.Invoke(direction.Normalized());
     }
 
-    public bool CritReady => IsLocal && FocusTarget != null && FocusTime >= CritFocusTime;
+    /// <summary>
+    /// The next shot at <see cref="FocusTarget"/> is a sure crit (C-32). People only, never squadmates: the shooter's own PC
+    /// lines it up for its HUD, and the host does too for a remote person from the aim they send, since the host's
+    /// damage is the real one (equipment plan Task 2). Other PCs never judge someone else's focus.
+    /// </summary>
+    public bool CritReady => !IsBot && (IsLocal || Stage.Authoritative) && FocusTarget != null && FocusTime >= CritFocusTime;
 
     /// <summary>
     /// One crit per focus (decisions.md C-32): every shot (a swing once it lands) spends the focus built so far, so the
@@ -499,7 +503,8 @@ public partial class Player : CharacterBody3D
         float best = float.MaxValue;
         foreach (var enemy in Stage.Enemies)
         {
-            if (enemy.IsDead || !enemy.IsSeen) continue;
+            // IsSeen is this PC's view; the host cannot know what a remote person sees, so it judges by their aim alone.
+            if (enemy.IsDead || (IsLocal && !enemy.IsSeen)) continue;
             var d = enemy.GlobalPosition - AimPoint;
             d.Y = 0;
             float reach = enemy.Definition.ColliderRadius + .4f;
