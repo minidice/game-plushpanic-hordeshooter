@@ -1,0 +1,11 @@
+group,option,weight
+#그룹 ID(장비가 가리킴),옵션 ID(options.csv),비중(1 이상; 그룹 합에 대한 비율이 확률)
+keen_cap,crit_chance_always_1,1
+scope_goggles,crit_chance_aiming_1,1
+lucky_cap,crit_damage_always_1,1
+hunter_hat,crit_damage_aiming_1,1
+focus_band,crit_damage_focused_1,1
+steady_vest,spread_always_1,1
+marksman_vest,spread_aiming_1,1
+brace_vest,recoil_always_1,1
+shoulder_harness,recoil_aiming_1,1

@@ -1,0 +1,11 @@
+id,slot,name,icon,option_group
+#장비 ID,슬롯(head · armor),이름 키,아이콘(Task 3에서 Codex),옵션 그룹(option_groups.csv; 바닥에 생길 때 하나로 정함)
+keen_cap,head,name_gear_keen_cap,,keen_cap
+scope_goggles,head,name_gear_scope_goggles,,scope_goggles
+lucky_cap,head,name_gear_lucky_cap,,lucky_cap
+hunter_hat,head,name_gear_hunter_hat,,hunter_hat
+focus_band,head,name_gear_focus_band,,focus_band
+steady_vest,armor,name_gear_steady_vest,,steady_vest
+marksman_vest,armor,name_gear_marksman_vest,,marksman_vest
+brace_vest,armor,name_gear_brace_vest,,brace_vest
+shoulder_harness,armor,name_gear_shoulder_harness,,shoulder_harness

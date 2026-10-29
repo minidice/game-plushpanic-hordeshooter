@@ -1,0 +1,5 @@
+id,name,param,param_min,param_max
+#조건 ID(코드의 EquipmentCondition),이름 키,변수 종류(none · seconds; 코드와 같아야 함),변수 최소,변수 최대
+always,name_cond_always,none,,
+aiming,name_cond_aiming,none,,
+focused_shot,name_cond_focused_shot,none,,

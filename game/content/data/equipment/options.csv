@@ -1,0 +1,11 @@
+id,stat,condition,param,value,grade
+#완성 옵션 ID,효과 ID(option_stats.csv),조건 ID(option_conditions.csv),조건 변수(none이면 빈칸),고정 값(효과의 단위),등급(표시 · 정렬용)
+crit_chance_always_1,crit_chance,always,,3,1
+crit_chance_aiming_1,crit_chance,aiming,,6,1
+crit_damage_always_1,crit_damage,always,,10,1
+crit_damage_aiming_1,crit_damage,aiming,,20,1
+crit_damage_focused_1,crit_damage,focused_shot,,30,1
+spread_always_1,spread_reduction,always,,10,1
+spread_aiming_1,spread_reduction,aiming,,15,1
+recoil_always_1,recoil_reduction,always,,15,1
+recoil_aiming_1,recoil_reduction,aiming,,25,1

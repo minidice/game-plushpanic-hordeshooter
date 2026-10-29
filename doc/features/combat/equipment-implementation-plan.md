@@ -7,7 +7,7 @@
 **Tech Stack:** Godot4.7.2 .NET, C#, CSV 데이터, 기존 HUD 컨트롤·Godot 검사 장면.
 **Spec:** [장비 설계](equipment-movement-plan.md), [수락한 옵션 표](equipment-option-tuning.md#장비-옵션의-효과와-발동-조건), [옵션 · 배치 데이터](item-option-data.md), C-32·C-34·C-36·M-41.
 
-현재는 **계획 작성 완료·코드 미구현**이다. 사용자가 정한 내용과 아래 AI의 구현 선택을 구분한다. 이 문서가 다른 후보 수치나 무기별 저격 확률의 수락을 뜻하지 않는다.
+현재는 **Task1 구현(2026-10-30, 데이터·평가), Task2~5 미구현**이다. 사용자가 정한 내용과 아래 AI의 구현 선택을 구분한다. 이 문서가 다른 후보 수치나 무기별 저격 확률의 수락을 뜻하지 않는다.
 
 ## Global Constraints
 
@@ -44,11 +44,12 @@
 **Files:** 새 `game/scripts/Equipment/EquipmentDefinition.cs`, `EquipmentCatalog.cs`, `OptionCatalog.cs`, `EquipmentLoadout.cs`, `game/scripts/Player/PlayerEquipment.cs`, `game/content/data/equipment/`의 `option_stats.csv`·`option_conditions.csv`·`options.csv`·`option_groups.csv`·`equipment.csv`(C-36, [데이터 설계](item-option-data.md) 2장); 새 `game/tests/EquipmentCheck.cs/.tscn`.
 **Interfaces:** `EquipmentSlot { Head, Armor }`. 효과·조건은 코드 열거형(`EquipmentEffect { CritChance, CritDamage, SpreadReduction, RecoilReduction }`, `EquipmentCondition { Always, Aiming, FocusedShot }`)에 대응하는 데이터 ID로 고르고, 효과·조건 표에 없는 ID나 코드에 없는 ID는 불러오기 오류다. `OptionDefinition`은 Id/Effect/Condition/Param/Value/Grade, `EquipmentDefinition`은 Id/Slot/Icon/NameKey/OptionGroup. `OptionCatalog.Roll(string group, RandomNumberGenerator rng)`은 가중치로 옵션 하나. 착용·바닥은 `GearItem(EquipmentDefinition Gear, OptionDefinition Option)`. `EquipmentLoadout.Equip(GearItem next)`는 이전 장비 또는null 반환. `Evaluate(bool aiming, bool focusedShot)`는 확률 가산·치명타 피해 배율·퍼짐 배율·반동 배율을 값으로 반환. `Player.Gear`가 소유한다.
 
-- [ ] 조건별9종 데이터(장비9개, 각자 한 줄 그룹)를 검사에 선언하고 빈 슬롯·잘못된 슬롯/수치·효과 범위 밖 값·없는 그룹/옵션 ID·가중치0 이하·`seconds` 조건의 빈 변수·집중 확률 조합 거부를 확인하는 실패 검사를 만든다. 여러 줄 그룹이 가중치대로 고르는지(고정 시드) 확인한다.
-- [ ] `EquipmentCheck` 실행해 장비 기능 부재로 실패함을 확인한다.
-- [ ] 데이터 로드·교체·순수 조건 평가를 구현하고 공유 WeaponDefinition을 수정하지 않는다.
-- [ ] 비조준/조준/집중 각 상태에서 확률0.03/0.06, 치명타1.1/1.2/1.3, 퍼짐0.90/0.85, 반동0.85/0.75를 검사한다. 다른 Player의 결과가 변하지 않는지 확인한다.
-- [ ] 전용 검사 통과·UID·새 작업 기록과 함께 이 작업 파일만 커밋한다.
+- [x] 조건별9종 데이터(장비9개, 각자 한 줄 그룹)를 검사에 선언하고 빈 슬롯·잘못된 슬롯/수치·효과 범위 밖 값·없는 그룹/옵션 ID·가중치0 이하·`seconds` 조건의 빈 변수·집중 확률 조합 거부를 확인하는 실패 검사를 만든다. 여러 줄 그룹이 가중치대로 고르는지(고정 시드) 확인한다.
+- [x] `EquipmentCheck` 실행해 장비 기능 부재로 실패함을 확인한다.
+- [x] 데이터 로드·교체·순수 조건 평가를 구현하고 공유 WeaponDefinition을 수정하지 않는다.
+- [x] 비조준/조준/집중 각 상태에서 확률0.03/0.06, 치명타1.1/1.2/1.3, 퍼짐0.90/0.85, 반동0.85/0.75를 검사한다. 다른 Player의 결과가 변하지 않는지 확인한다.
+- [x] 전용 검사 통과·UID·새 작업 기록과 함께 이 작업 파일만 커밋한다.
+- 완료 2026-10-30 — [기록017](log/017-code-equipment-data.md). 파일은 계획의 `EquipmentCatalog`·`OptionCatalog` 대신 `EquipmentDatabase` 하나, 데이터는 `game/content/data/equipment/`. `seconds` 조건 빈 변수는 해당 조건이 코드에 생길 때 시험(같은 검사 경로는 시험함).
 
 ## Task2: 실제 공격·조준 표시 연결
 

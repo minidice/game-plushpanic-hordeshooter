@@ -1,0 +1,6 @@
+id,name,unit,min,max,slots
+#효과 ID(코드의 EquipmentEffect, snake_case),이름 키(content/lan/<언어>/equipment.csv),pp=%p(확률) · pct=%(배율),값의 최소(안전 범위),값의 최대(안전 범위),붙을 수 있는 슬롯(head|armor)
+crit_chance,name_stat_crit_chance,pp,0,100,head|armor
+crit_damage,name_stat_crit_damage,pct,0,100,head|armor
+spread_reduction,name_stat_spread_reduction,pct,0,90,head|armor
+recoil_reduction,name_stat_recoil_reduction,pct,0,90,head|armor

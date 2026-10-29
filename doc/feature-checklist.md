@@ -1,6 +1,7 @@
 # 게임 기능 체크리스트
 
 - [x] C-1·C-35: 걷기3.6·자동 달리기4.2/대기2초, 구르기2회·종료부터 순차6초 회복·추가 사용 중 회복 지속, 일반 피해 중 동작 지속. HUD·멀티 보정과 전용/회귀 검사, 실제1600×900 렌더 확인. 수치 체감·실제2PC는 후속, 장비C-34는 미구현. [기록006](features/combat/log/006-code-automatic-movement-roll.md).
+- [x] C-34·C-36 장비 옵션 데이터 다섯 표(효과·조건·완성 옵션·옵션 그룹·장비)와 9개 테스트 장비, 비중 고르기·두 칸 착용·교체·조건 평가(`EquipmentCheck` 51). 사격 연결·HUD·줍기·동기화는 미구현(구현 계획 Task2~5). [기록017](features/combat/log/017-code-equipment-data.md).
 
 - [x] M-0 타이틀: ESCAPE FUR DEAD를 한글/영문 메뉴·창 제목·Windows 내보내기 제품 표시명에 적용. 빌드와 MenuCheck54, 실제1600×900 렌더 확인. 패키지 재생성은 미실행. [기록019](features/menu-ui/log/019-code-escape-fur-dead-title.md).
 
