@@ -111,4 +111,10 @@ public static class GameSession
     /// Off in a normal run (it left the menu with the test options, M-39).
     /// </summary>
     public static bool DebugEscapeEnabled { get; set; } = OS.GetCmdlineUserArgs().Contains("--debug-escape");
+
+    /// <summary>
+    /// Developer mode (decisions.md M-41): shows what play keeps hidden, such as gear options (C-36). Not saved; a room
+    /// follows its host. The game setup's checkbox sets it (equipment plan Task 4).
+    /// </summary>
+    public static bool DeveloperMode { get; set; }
 }

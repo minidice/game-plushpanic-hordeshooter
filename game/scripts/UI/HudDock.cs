@@ -61,6 +61,7 @@ public partial class Hud
         vitals.AddChild(_hp);
         vitals.AddChild(new Paint { Name = "HealthBar", CustomMinimumSize = new Vector2(220, 30), Painter = DrawHealth });
         dock.AddChild(vitals);
+        dock.AddChild(BuildGearPanel());
         dock.AddChild(new Paint { Name = "LeapGauge", CustomMinimumSize = new Vector2(74, 84), Painter = DrawLeap,
             TooltipText = Loc.Text("hud_roll_help") });
         _slot1 = new HudEquipmentSlot("SecondarySlot", "1");

@@ -7,7 +7,7 @@
 **Tech Stack:** Godot4.7.2 .NET, C#, CSV 데이터, 기존 HUD 컨트롤·Godot 검사 장면.
 **Spec:** [장비 설계](equipment-movement-plan.md), [수락한 옵션 표](equipment-option-tuning.md#장비-옵션의-효과와-발동-조건), [옵션 · 배치 데이터](item-option-data.md), C-32·C-34·C-36·M-41.
 
-현재는 **Task1·2 구현(2026-10-30, 데이터·평가·실제 사격 연결), Task3~5 미구현**이다. 사용자가 정한 내용과 아래 AI의 구현 선택을 구분한다. 이 문서가 다른 후보 수치나 무기별 저격 확률의 수락을 뜻하지 않는다.
+현재는 **Task1~3 구현(2026-10-30, 데이터·평가·실제 사격·바닥 교체·HUD), Task4·5 미구현**이다. 사용자가 정한 내용과 아래 AI의 구현 선택을 구분한다. 이 문서가 다른 후보 수치나 무기별 저격 확률의 수락을 뜻하지 않는다.
 
 ## Global Constraints
 
@@ -69,11 +69,12 @@
 **Files:** 새 `game/scripts/Equipment/EquipmentPickup.cs`, `game/scripts/World/StageEquipment.cs`, `game/scripts/UI/HudGear.cs`; 수정 `World/Stage.cs`, `UI/HudDock.cs`, `UI/HudEquipmentSlot.cs`, `content/lan/{kor,eng}/ui.csv`; 새 `game/assets/icons/equipment/` 아이콘, `game/tests/EquipmentPickupCheck.cs/.tscn`.
 **Interfaces:** `EquipmentPickup.Spawn(Stage stage, Vector3 at, GearItem item, int netId = 0)`(옵션은 호출 전에 정해져 있음, 바닥에 생길 때 한 번); `Stage.TryEquipPickup(EquipmentPickup pickup, Player who)`는 성공 여부 반환. Task1의 Equip이 반환한 장비를 **같은 옵션 그대로** 같은 높이 단의 안전한 바닥에 배출한다. 표시 판단 `Hud.GearInfoVisible`(초안)은 개발자 모드(M-41)일 때 참.
 
-- [ ] 실패 검사: 빈 슬롯 장착, 기존 장비 교체/배출, 팀원 재획득, 비활성·원거리·쓰러진/죽은 플레이어 요청 거부, 같은 장비 요청 무변화, 중복 요청당 지급1회.
-- [ ] 호스트에서만 교체한다. 입력 대상 무효화→장착→기존 장비 배출을 한 번에 수행하고 동일한 Pickup을 무한 공급하는 `WeaponPickup.Infinite` 규칙을 사용하지 않는다.
-- [ ] HUD에 모자/갑옷 아이콘·이름을 표시한다. 옵션 문장(조건/수치)과 현재 효과 활성 여부는 `GearInfoVisible`일 때만(C-36). 바닥 안내는 일반 화면에서 "착용 · 지금 장비는 바닥에"만, 개발자 모드에서 현재/교체 장비의 옵션을 비교한다. 단축 사용키·내구도 게이지·예비 슬롯을 추가하지 않는다.
-- [ ] 두 화면 모두 검사·렌더한다: 일반 화면에 옵션 문구가 어디에도 없음(HUD·바닥 안내·일시정지), 개발자 모드에서 옵션 문장과 켜짐이 실제 발동과 일치.
-- [ ] 캠페인/난전에서 표시·효과, 모드2에서 숨김·효과 없음, 기존 캐릭터 외형 유지 검사. 한국어/영어1280×720·1600×900 실제 렌더 확인 후 기록·커밋한다.
+- [x] 실패 검사: 빈 슬롯 장착, 기존 장비 교체/배출, 팀원 재획득, 비활성·원거리·쓰러진/죽은 플레이어 요청 거부, 같은 장비 요청 무변화, 중복 요청당 지급1회.
+- [x] 호스트에서만 교체한다. 입력 대상 무효화→장착→기존 장비 배출을 한 번에 수행하고 동일한 Pickup을 무한 공급하는 `WeaponPickup.Infinite` 규칙을 사용하지 않는다.
+- [x] HUD에 모자/갑옷 아이콘·이름을 표시한다. 옵션 문장(조건/수치)과 현재 효과 활성 여부는 `GearInfoVisible`일 때만(C-36). 바닥 안내는 일반 화면에서 "착용 · 지금 장비는 바닥에"만, 개발자 모드에서 현재/교체 장비의 옵션을 비교한다. 단축 사용키·내구도 게이지·예비 슬롯을 추가하지 않는다.
+- [x] 두 화면 모두 검사·렌더한다: 일반 화면에 옵션 문구가 어디에도 없음(HUD·바닥 안내·일시정지), 개발자 모드에서 옵션 문장과 켜짐이 실제 발동과 일치.
+- [x] 캠페인/난전에서 표시·효과, 모드2에서 숨김·효과 없음, 기존 캐릭터 외형 유지 검사. 한국어/영어1280×720·1600×900 실제 렌더 확인 후 기록·커밋한다.
+- 완료 2026-10-30 — [기록019](log/019-code-equipment-pickup-hud.md). 호스트·혼자만 교체(클라이언트 동기화는 Task4). 개발자 모드는 `GameSession.DeveloperMode` 값까지, 체크박스·방장 따름은 Task4. 아이콘은 Codex([지시문](../../model-briefs/equipment-icons.md)). 1280×720은 같은 `canvas_items` 늘이기라 1600×900 렌더로 대신했다.
 
 ## Task4: 멀티 동기화·단계 이월
 
