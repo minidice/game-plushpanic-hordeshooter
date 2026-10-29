@@ -12,6 +12,7 @@
 
 ## 상세 규격
 
+- [장비 두 슬롯 · 자동 달리기 · 구르기 설계 초안](equipment-movement-plan.md): 사용자 합의와 미결 사항, 구현 전
 - [weapon-spec.md](../../weapon-spec.md)
 - [weapon-aim-reference.md](../../weapon-aim-reference.md)
 - [combat-pacing-research.md](../../combat-pacing-research.md)
