@@ -13,6 +13,7 @@
 ## 상세 규격
 
 - [장비 두 슬롯 · 자동 달리기 · 구르기 설계 초안](equipment-movement-plan.md): 사용자 합의와 미결 사항, 구현 전
+- [아이템 옵션 · 배치 데이터 설계](item-option-data.md) (C-36 · M-41 · L-40): 효과 · 조건 · 완성 옵션 · 옵션 그룹 · 장비 표, 옵션 비공개와 개발자 모드, 맵 자리 코드 · 배치 표 · 랜덤 표, 구현 전
 - [weapon-spec.md](../../weapon-spec.md)
 - [weapon-aim-reference.md](../../weapon-aim-reference.md)
 - [combat-pacing-research.md](../../combat-pacing-research.md)
