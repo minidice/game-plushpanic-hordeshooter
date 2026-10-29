@@ -391,6 +391,7 @@ public abstract partial class StageMap
     {
         _stage.AddChild(new Label3D
         {
+            Font = UiFonts.Get(),
             Text = Loc.Text(textKey),
             Position = at + Vector3.Up * .03f,
             RotationDegrees = new Vector3(-90, 0, 0),

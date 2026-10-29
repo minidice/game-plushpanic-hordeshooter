@@ -40,7 +40,7 @@ public partial class MainMenu
         };
         navigation.AddThemeConstantOverride("separation", 0);
         _homeShell.AddChild(navigation);
-        var title = UiTheme.Label(Loc.Text("ui_menu_title").Replace(" FUR", "\nFUR"), 52, UiTheme.Paper);
+        var title = UiTheme.Label(Loc.Text("ui_menu_title").Replace(" FUR", "\nFUR"), 52, UiTheme.Paper, title: true);
         title.AddThemeConstantOverride("outline_size", 0);
         title.AddThemeConstantOverride("line_spacing", -4);
         navigation.AddChild(title);

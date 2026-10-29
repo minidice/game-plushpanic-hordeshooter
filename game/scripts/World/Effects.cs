@@ -143,6 +143,7 @@ public partial class Effects : Node3D
     {
         var label = new Label3D
         {
+            Font = UiFonts.Get(),
             Text = text,
             Position = at,
             Billboard = BaseMaterial3D.BillboardModeEnum.Enabled,

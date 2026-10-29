@@ -91,7 +91,7 @@ public partial class StatusVisualController : Node3D
     }
     private void AddLabel(string text, Vector3 at)
     {
-        var label = new Label3D { Text = text, FontSize = 40, OutlineSize = 10, PixelSize = Rig.Definition.ColliderHeight*.0011f,
+        var label = new Label3D { Text = text, Font = UiFonts.Get(), FontSize = 40, OutlineSize = 10, PixelSize = Rig.Definition.ColliderHeight*.0011f,
             Billboard = BaseMaterial3D.BillboardModeEnum.Enabled, Position = at, Modulate = Colors.White, OutlineModulate = new Color("172024") };
         _icons.AddChild(label); _badges.Add(label);
     }

@@ -1,0 +1,12 @@
+{
+  "kor": {
+    "body": "res://assets/fonts/pretendard/Pretendard-Regular.otf",
+    "menu": "res://assets/fonts/pretendard/Pretendard-Bold.otf",
+    "title": "res://assets/fonts/pretendard/Pretendard-ExtraBold.otf"
+  },
+  "eng": {
+    "body": "res://assets/fonts/pretendard/Pretendard-Regular.otf",
+    "menu": "res://assets/fonts/pretendard/Pretendard-Bold.otf",
+    "title": "res://assets/fonts/pretendard/Pretendard-ExtraBold.otf"
+  }
+}

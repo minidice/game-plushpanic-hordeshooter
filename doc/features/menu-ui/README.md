@@ -12,6 +12,8 @@
 
 ## 상세 규격
 
+- [Pretendard 적용 설계·계획](pretendard-plan.md) (M-42): 한·영 공통 폰트, 언어별 교체, 시스템 폴백
+
 - [게임 설정 설계안 · 사용자 선택](play-setup-plan.md) (M-39 · M-40): 모드 → 카드 → 난이도, 인게임 쓰러짐 표시
 
 - [localization.md](../../localization.md)

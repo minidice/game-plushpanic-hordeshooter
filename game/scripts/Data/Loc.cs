@@ -18,10 +18,18 @@ public static class Loc
     private static readonly Dictionary<string, Dictionary<string, string>> Tables = new();
     private static string _language = Fallback;
 
+    public static event System.Action? LanguageChanged;
+
     public static string Language
     {
         get => _language;
-        set => _language = string.IsNullOrEmpty(value) ? Fallback : value;
+        set
+        {
+            string next = string.IsNullOrEmpty(value) ? Fallback : value;
+            if (next == _language) return;
+            _language = next;
+            LanguageChanged?.Invoke();
+        }
     }
 
     public static IReadOnlyList<string> Languages => DirAccess.GetDirectoriesAt(Dir).OrderBy(d => d).ToList();
