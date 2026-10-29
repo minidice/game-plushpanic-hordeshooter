@@ -66,8 +66,8 @@ public partial class Hud
     private void BuildWeaponAction()
     {
         _weaponActionGauge = Place(new Paint { Name = "WeaponActionGauge", CustomMinimumSize = new(248, 22), Painter = DrawWeaponActionGauge },
-            .5f, 1, new(0, -204), true, true, centerX: true);
-        _weaponActionLabel = Place(HudLabel("", 14, HudWhite), .5f, 1, new(0, -232), true, true, centerX: true);
+            .5f, 1, new(0, -228), true, true, centerX: true);
+        _weaponActionLabel = Place(HudLabel("", 14, HudWhite), .5f, 1, new(0, -256), true, true, centerX: true);
         _weaponActionLabel.Name = "WeaponActionLabel";
         _weaponActionLabel.CustomMinimumSize = new(248, 0);
         _weaponActionLabel.HorizontalAlignment = HorizontalAlignment.Center;

@@ -76,7 +76,7 @@ public partial class ReloadUiCheck : Node
                 {
                     Check(label.Visible && (label.Text.Contains("49%") || label.Text.Contains("50%")), "bottom label follows the actual half reload");
                     Check(ammo.GetThemeColor("font_color") != UiTheme.Danger, "reload status does not compete with danger warnings");
-                    Check(ammo.GetThemeFontSize("font_size") < 28, "reload status is quieter than the ready ammo count");
+                    Check(ammo.GetThemeColor("font_color") == Hud.HudMuted, "reload status is quieter than the ready ammo count (muted; the pill keeps one size, M-42)");
                     if (Windowed) await CheckReloadReticle(stage);
                     int rounds = gun.Mag;
                     Check(!gun.Trigger(true, true) && gun.Mag == rounds, "trigger cannot shoot during magazine reload");
@@ -111,7 +111,7 @@ public partial class ReloadUiCheck : Node
             gun.CancelReload();
             stage.Hud._Process(.02);
             Check(label.Visible && !label.Text.Contains("100%"), "cancellation never claims completion");
-            Check(ammo.GetThemeColor("font_color") == UiTheme.Danger && ammo.GetThemeFontSize("font_size") == 28,
+            Check(ammo.GetThemeColor("font_color") == UiTheme.Danger,
                 "cancelling reload immediately restores the readable low ammo warning");
             await Shot("cancel");
             // Stable fully visible samples exercise tiny fills independently of the entrance fade.

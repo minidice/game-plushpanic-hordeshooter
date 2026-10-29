@@ -174,7 +174,8 @@ public partial class Hud
         var size = _worldInteraction.GetCombinedMinimumSize();
         if (docked)
         {
-            _worldInteraction.Position = new Vector2((viewport.X - size.X) / 2, viewport.Y - size.Y - 126);
+            // Above the active weapon's name and ammo pills over the bottom row (M-42).
+            _worldInteraction.Position = new Vector2((viewport.X - size.X) / 2, viewport.Y - size.Y - 156);
             return;
         }
         var anchor = InteractionAnchor(_interactionTarget!);

@@ -31,3 +31,13 @@
 - 해결: ① 서버 `/api/health`에 `renderer`(starting · ready · stopped)와 마지막 `error`를 더함 — 준비된 뒤 렌더러가 꺼지거나 렌더 시간 초과로 멈추면 `stopped`. ② 실행기는 기존 Studio가 `stopped`면 `/api/reload`로 렌더러 재시작(빌드 · 가져오기 · 시작)을 한 번 요청하고 최대 5분 기다린다. ③ 기다려도 준비되지 않으면 오류로 끝내지 않고 경고와 함께 브라우저를 연다(md · 기획서는 렌더러 없이 동작, 미리보기는 페이지의 다시 읽기로 재시도). 서버가 아예 없으면 이전처럼 오류.
 - 재발 방지 · 검사 경로: `node studio/tests/launcher.mjs` — "a stopped renderer is restarted once, then the page opens"(가짜 서버). 실제 서버에서 렌더러를 끄면 health `stopped` · `Godot renderer exited (…)`, `/api/reload` 뒤 `ready` 확인([log/008](log/008-code-studio-level-design.md)).
 - 남은 제약: 이 수정 전에 켠 Studio(health에 `renderer`가 없음)는 재시작을 요청하지 못하고 3분 뒤 경고와 함께 브라우저만 연다 — 한 번 종료하고 다시 실행해야 한다. 서버 코드가 바뀌어도 이미 켠 서버는 옛 코드 그대로다([log/006](log/006-check-studio-roster-stale-server.md)). 렌더러가 꺼진 근본 원인은 모름.
+
+## I-139 CaptureArtDirection의 W 이동 방향 검사가 main에서 실패
+
+- 증상: 창 모드 `res://tests/CaptureArtDirection.tscn`이 종료 1로 끝난다. 실패 문구는 `W moves screen-up with diagonal camera`다(`tests/CaptureArtDirection.cs` 36행: `GroundMovement(Vector2.Up)`의 화면 방향이 위쪽이고 가로 성분 < 0.1이어야 함). 이 검사 뒤의 HUD 하단 줄 겹침 · 화면 안 검사(`CheckDock`)와 장면 캡처가 돌지 못한다.
+- 확인: 2026-10-30, main `a2c647c`를 새 작업 폴더에 받아 고치지 않고 실행해도 같은 문구로 실패한다. M-42 하단 HUD 변경과는 관계없다(바꾼 쪽에서도 같은 줄에서 실패).
+- 원인(추정): 검사가 바로 위 D 방향 검사는 통과하고 W에서만 실패한다. 카메라 기울기 · 대각선 각도 설정이나 `CameraRig.GroundMovement` 계산이 바뀐 뒤 검사 기대값이 갱신되지 않았을 가능성. 실제 값은 아직 찍어 보지 않았다.
+- 해결: 아직 없음.
+- 재발 방지 · 검사 경로: 원인을 찾은 뒤 실패 문구에 실제 `up` 벡터를 함께 찍게 하고, 기대값 또는 이동 계산을 고친다. 그때까지 하단 HUD 겹침은 `EquipmentPickupCheck`의 하단 줄 검사(M-42)로 대신 확인한다.
+- 남은 제약: 화면 기준 이동이 실제 플레이에서 틀렸는지는 확인하지 않았다(검사만 실패).
+

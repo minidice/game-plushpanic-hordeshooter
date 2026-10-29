@@ -107,8 +107,8 @@ public partial class EquipmentPickupCheck : Node
         // ---------- what the HUD shows ----------
         await Frames(3);
         var hidden = EquipmentText.Describe(me.Gear.Head!.Option);
-        Check(Ui<Control>("GearPanel").Visible && Ui<Label>("HeadGearName").Text == Loc.Text(me.Gear.Head.Gear.NameKey)
-              && Ui<Label>("ArmorGearName").Text == Loc.Text("name_gear_brace_vest"), "the HUD shows both pieces by name");
+        Check(Ui<Control>("GearPanel").Visible && Ui<HudEquipmentSlot>("HeadSlot").Title == Loc.Text(me.Gear.Head.Gear.NameKey)
+              && Ui<HudEquipmentSlot>("ArmorSlot").Title == Loc.Text("name_gear_brace_vest"), "the HUD tiles carry both pieces (name as tooltip)");
         Check(!Ui<Label>("HeadGearOption").Visible && !Ui<Label>("ArmorGearOption").Visible, "normally no option line");
         Check(Texts(_stage.Hud).All(t => !t.Contains(hidden)) && !far.Prompt.Contains(EquipmentText.Describe(far.Item.Option)),
             "normally the option text is nowhere: HUD, floor prompt");
@@ -118,6 +118,7 @@ public partial class EquipmentPickupCheck : Node
         _stage.Hud.SetPaused(false);
         far.GlobalPosition = me.GlobalPosition + new Vector3(.8f, 0, 0);
         await Frames(4);
+        Dock();
         await Shot("normal");
 
         GameSession.DeveloperMode = true;
@@ -127,14 +128,24 @@ public partial class EquipmentPickupCheck : Node
             $"developer mode shows each worn option ({headLine.Text})");
         Check(far.Prompt.Contains(EquipmentText.Describe(far.Item.Option)) && far.Prompt.Contains(hidden),
             $"developer mode compares the floor piece with the worn one in its prompt ({far.Prompt})");
-        Check(headLine.Text.StartsWith(EquipmentText.Off), "an aiming option reads off from the hip");
+        Check(headLine.Text.Contains(EquipmentText.Off + " "), "an aiming option reads off from the hip");
         me.Loadout.SetSlot(2, ArmoryCatalog.Weapon("m4"));
         me.Weapons.SelectSlot(2);
         me.HoldAim(true);
         await Frames(20);
-        Check(me.IsAiming && Ui<Label>("HeadGearOption").Text.StartsWith(EquipmentText.On), "and on while aiming");
+        Check(me.IsAiming && Ui<Label>("HeadGearOption").Text.Contains(EquipmentText.On + " "), "and on while aiming");
         await Shot("dev");
         me.HoldAim(false);
+        // An empty magazine turns the active weapon's pills red (M-42).
+        GameSession.DeveloperMode = false;
+        me.Gun.SetAmmo(0, 60);
+        await Frames(3);
+        Check(Ui<Label>("ActiveWeaponName").Text == Loc.Text("hud_ammo_unloaded") && Ui<Label>("ActiveAmmo").Text.StartsWith("00"),
+            "an empty magazine says it is not loaded");
+        await Shot("empty");
+        me.Gun.SetAmmo(0, 0);
+        await Frames(2);
+        Check(Ui<Label>("ActiveWeaponName").Text == Loc.Text("hud_ammo_out"), "no ammo at all says so");
         GameSession.DeveloperMode = false;
         _stage.QueueFree();
         await Frames(2);
@@ -157,6 +168,23 @@ public partial class EquipmentPickupCheck : Node
             stage.QueueFree();
             await Frames(2);
         }
+    }
+
+    /// <summary>
+    /// The bottom row (M-42) fits the screen with no tile over another, and the active weapon's pills sit above its tile
+    /// and below the interaction prompt (CaptureArtDirection's dock check cannot run while I-139 is open).
+    /// </summary>
+    private void Dock()
+    {
+        var view = GetViewport().GetVisibleRect();
+        var dock = Ui<Control>("EquipmentDock").GetGlobalRect();
+        Check(dock.Position.X >= 0 && dock.End.X <= view.Size.X && dock.End.Y <= view.Size.Y, $"the bottom row fits the screen ({dock})");
+        var tiles = Ui<Control>("EquipmentDock").FindChildren("*", "", true, false).OfType<HudEquipmentSlot>()
+            .Where(t => t.IsVisibleInTree()).Select(t => t.TileRect).OrderBy(r => r.Position.X).ToList();
+        Check(tiles.Count == 7 && tiles.Zip(tiles.Skip(1)).All(p => p.First.End.X <= p.Second.Position.X), $"seven tiles side by side, none over another ({tiles.Count})");
+        var info = Ui<Control>("ActiveInfo").GetGlobalRect();
+        var prompt = Ui<Control>("InteractionPrompt").GetGlobalRect();
+        Check(info.End.Y <= tiles[0].Position.Y && info.Position.Y >= prompt.End.Y - 1, $"the weapon pills sit between the tiles and the prompt ({info} / {prompt})");
     }
 
     private static IEnumerable<string> Texts(Node root)

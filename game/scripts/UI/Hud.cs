@@ -24,7 +24,7 @@ void fragment() {
 
     private Control _root = null!;
     private Label _objective = null!, _timer = null!, _notice = null!, _hp = null!;
-    private Label _ammo = null!, _reserve = null!, _ammoHint = null!, _status = null!, _prompt = null!, _help = null!;
+    private Label _ammo = null!, _reserve = null!, _status = null!, _prompt = null!, _help = null!;
     private HudEquipmentSlot _slot1 = null!, _slot2 = null!, _slot3 = null!, _throwables = null!, _medkit = null!;
     private ColorRect _blind = null!;
     private Label _endTitle = null!, _endBody = null!;
@@ -79,10 +79,10 @@ void fragment() {
         BuildStatusEffects();
         BuildWeaponAction();
 
-        _status = Place(HudLabel("", 17, UiTheme.Helium), .5f, 1, new Vector2(0, -166), true, true, centerX: true);
+        _status = Place(HudLabel("", 17, UiTheme.Helium), .5f, 1, new Vector2(0, -196), true, true, centerX: true);
         _status.Name = "Status";
         _status.HorizontalAlignment = HorizontalAlignment.Center;
-        _prompt = Place(HudLabel("", 18, HudWhite), .5f, 1, new Vector2(0, -132), true, true, centerX: true);
+        _prompt = Place(HudLabel("", 18, HudWhite), .5f, 1, new Vector2(0, -162), true, true, centerX: true);
         _prompt.Name = "InteractionPrompt";
         _prompt.HorizontalAlignment = HorizontalAlignment.Center;
 
@@ -209,30 +209,22 @@ void fragment() {
         _hp.Text = player.IsHealing ? Loc.Format("fmt_hud_healing", (int)(player.HealProgress * 100)) : (player.DisplayLabel.Length > 0 ? player.DisplayLabel : Loc.Text(player.Definition.DisplayName)) + DownPips(stage, player);
         UpdateGear(stage, player);
         _medkit.UpdateSlot(Loc.Text("hud_medkit"), player.IsHealing ? $"{(int)(player.HealProgress * 100)}%" : $"×{player.Medkits}", "", "medkit", player.IsHealing, player.Medkits > 0);
-        _ammo.Text = gun.IsMelee ? Loc.Text("hud_melee")
-            : gun.CooldownLeft > 0 ? Loc.Format("fmt_hud_cooldown", Mathf.CeilToInt(gun.CooldownLeft))
-            : gun.Reloading ? Loc.Text("ui_hud_reload")
-            : $"{gun.Mag:00} / {(gun.HasInfiniteReserve ? "∞" : gun.Reserve.ToString("00"))}";
-        bool low = !gun.IsMelee && gun.Mag <= Mathf.Max(1, gun.Def.MagSize / 6);
-        bool busy = !gun.IsMelee && (gun.Reloading || gun.CooldownLeft > 0);
-        _ammo.AddThemeColorOverride("font_color", busy ? HudMuted : low ? UiTheme.Danger : HudWhite);
-        _ammo.AddThemeFontSizeOverride("font_size", busy ? 18 : 28);
-        _reserve.Text = gun.Def.DisplayName;
-        _ammoHint.Text = Loc.Text(gun.IsMelee ? "hud_melee_hint" : !gun.HasInfiniteReserve && !gun.Def.Refillable ? "hud_no_refill_hint" : "hud_ammo_hint");
-
         var loadout = player.Loadout;
         var secondary = loadout.Secondary;
-        _slot1.UpdateSlot(secondary.Def.DisplayName, secondary.IsMelee ? "" : SlotAmmo(secondary), secondary.Def.IconPath,
+        // Weapon tiles show no ammo of their own (M-42): the active one's ammo floats above its tile.
+        _slot1.UpdateSlot(secondary.Def.DisplayName, "", secondary.Def.IconPath,
             secondary.IsMelee ? "melee" : "pistol", loadout.ActiveSlot == 1, true);
         var primary = loadout.Primary;
-        _slot2.UpdateSlot(primary?.Def.DisplayName ?? Loc.Text("hud_empty"), primary == null ? "" : SlotAmmo(primary),
+        _slot2.UpdateSlot(primary?.Def.DisplayName ?? Loc.Text("hud_empty"), "",
             primary?.Def.IconPath ?? "", "rifle", loadout.ActiveSlot == 2, primary != null);
         var special = loadout.Special;
-        _slot3.UpdateSlot(special?.Def.DisplayName ?? Loc.Text("hud_special"), special == null ? "" : SlotAmmo(special),
+        _slot3.UpdateSlot(special?.Def.DisplayName ?? Loc.Text("hud_special"), special?.CooldownLeft > 0 ? SlotAmmo(special) : "",
             special?.Def.IconPath ?? "", "rifle", loadout.ActiveSlot == 3, special != null);
         var throwable = loadout.CurrentThrowable;
         _throwables.UpdateSlot(throwable?.DisplayName ?? Loc.Text("hud_throwable"), throwable == null ? "—" : $"×{loadout.Count(throwable)}",
             throwable?.IconPath ?? "", "throwable", player.Weapons.AimingThrow, throwable != null);
+        UpdateActiveInfo(player, player.Weapons.AimingThrow && throwable != null ? _throwables
+            : loadout.ActiveSlot switch { 1 => _slot1, 3 => _slot3, _ => _slot2 });
         _blind.Color = new Color(1, 1, 1, Mathf.Clamp(player.BlindTime / 1.2f, 0, 1) * .95f);
         UpdateStatusEffects(player);
 
