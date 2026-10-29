@@ -19,10 +19,12 @@ function Run-Scene([string]$Name, [string[]]$Extra = @(), [string]$Label = $Name
     $errorLog = Join-Path $output "$Prefix-$Label.err"
     $arguments = @('--headless', '--max-fps', '60', '--path', "`"$gameRoot`"", "res://tests/$Name.tscn") + $Extra
     $process = Start-Process -FilePath $Godot -ArgumentList $arguments -WindowStyle Hidden -PassThru -RedirectStandardOutput $log -RedirectStandardError $errorLog
+    # PowerShell 5.1 can lose ExitCode after redirected child exit unless its handle is retained.
+    $null = $process.Handle
     try {
         if (-not $process.WaitForExit(300000)) { $process.Kill(); throw "$Label timed out after 300 seconds." }
         $code = $process.ExitCode
-    } finally { if (-not $process.HasExited) { $process.Kill() } }
+    } finally { if (-not $process.HasExited) { $process.Kill() }; $process.Dispose() }
     Get-Content -LiteralPath $errorLog | Add-Content -LiteralPath $log
     $engineErrors = @(Select-String -LiteralPath $log -Pattern '^ERROR:|^SCRIPT ERROR:')
     $networkWarnings = @(Select-String -LiteralPath $log -Pattern 'above the MTU|different data|could not apply|RPC.*not found')

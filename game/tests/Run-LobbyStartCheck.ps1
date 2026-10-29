@@ -15,7 +15,10 @@ try {
         if (-not $Windowed) { $argsForTest += '--headless' }
         else { $argsForTest += @('--resolution', '1280x720') }
         $argsForTest += @("res://tests/$Scene.tscn", '--', "--role=$role", "--port=$Port")
-        $testProcesses += Start-Process -FilePath $Godot -ArgumentList $argsForTest -WindowStyle Hidden -PassThru -RedirectStandardOutput "$gameRoot/output/$Prefix-$role.log" -RedirectStandardError "$gameRoot/output/$Prefix-$role.err"
+        $process = Start-Process -FilePath $Godot -ArgumentList $argsForTest -WindowStyle Hidden -PassThru -RedirectStandardOutput "$gameRoot/output/$Prefix-$role.log" -RedirectStandardError "$gameRoot/output/$Prefix-$role.err"
+        # Retain the handle before exit so PowerShell 5.1 preserves the redirected child's ExitCode.
+        $null = $process.Handle
+        $testProcesses += $process
         if ($role -eq 'host') { Start-Sleep -Seconds 2 }
     }
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
@@ -26,5 +29,5 @@ try {
         if ($process.ExitCode -ne 0) { throw 'Lobby start check failed. Inspect the role logs.' }
     }
 } finally {
-    foreach ($process in $testProcesses) { if (-not $process.HasExited) { $process.Kill() } }
+    foreach ($process in $testProcesses) { if (-not $process.HasExited) { $process.Kill() }; $process.Dispose() }
 }

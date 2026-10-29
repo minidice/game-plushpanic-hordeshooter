@@ -6,11 +6,11 @@ Isometric Co-op PvE Horde Shooter — 귀엽고 우스꽝스러운 동물 캐릭
 
 ## 실행
 
-Windows에서 Godot 4.7.2 .NET과 .NET SDK를 준비한 뒤 `game/Start-Game.cmd`를 실행한다. 스크립트의 기본 Godot 경로와 다른 경우 `game/Start-Game.ps1 -GodotDir '설치 경로'`를 사용한다.
+Windows에서 Godot 4.7.2 .NET과 .NET SDK를 준비한 뒤 `game/Start-Game.cmd`를 실행한다. PC별 설치 경로는 사용자 환경변수 `GODOT_DIR`로 지정한다([설정 방법](game/README.md#pc별-godot-경로)). 한 번만 다른 경로로 실행하려면 `game/Start-Game.ps1 -GodotDir '설치 경로'`를 사용한다.
 
 실행·조작·검사 방법: [게임 README](game/README.md).
 
-`game/nuget.config`는 현재 개발 PC의 Godot 로컬 패키지 경로(`D:/Util/Godot/.../GodotSharp/Tools/nupkgs`)를 사용한다. Godot 설치 위치가 다르면 해당 소스도 실제 경로에 맞춰 수정한다. 다른 PC의 초기 설치는 아직 검증하지 않았다.
+`game/nuget.config`는 `%GODOT_DIR%/GodotSharp/Tools/nupkgs`에서 로컬 패키지를 읽는다. PC마다 `GODOT_DIR`만 설정하면 공통 설정 파일을 수정할 필요가 없다. `Start-Game.ps1`과 `Export-Game.ps1`은 선택한 설치 경로를 빌드 프로세스에도 전달한다. 배포에는 같은 버전의 .NET Export Templates도 설치해야 한다([배포 환경 안내](game/README.md#pc별-godot-경로)). `dotnet build`를 직접 실행하거나 에디터에서 빌드할 때는 해당 프로세스에 `GODOT_DIR`이 설정되어 있어야 한다. C 드라이브 설치 PC에서 패키지 복원·빌드 경고 0개, 오류 0개를 확인했다([기록](doc/features/tech-tools/log/011-code-nuget-godot-dir.md)).
 
 ## 구조와 기록
 

@@ -1,5 +1,10 @@
 param(
-    [string]$GodotDir = 'D:\Util\Godot\Godot_v4.7.2-stable_mono_win64',
+    # Explicit -GodotDir overrides the machine's GODOT_DIR; keep the original default as fallback.
+    [string]$GodotDir = $(if ($env:GODOT_DIR) {
+        $env:GODOT_DIR
+    } else {
+        'D:\Util\Godot\Godot_v4.7.2-stable_mono_win64'
+    }),
     [switch]$Test,
     [switch]$InputCheck,
     [switch]$Capture,
@@ -34,7 +39,10 @@ if (-not (Test-Path -LiteralPath $console)) { throw "Godot 4.7.2 .NET not found 
 if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) { throw '.NET SDK 8+ is required.' }
 
 Push-Location $PSScriptRoot
+$previousGodotDir = $env:GODOT_DIR
 try {
+    # NuGet expands %GODOT_DIR% in nuget.config; use the same resolved path as the engine.
+    $env:GODOT_DIR = $GodotDir
     & dotnet build HordeShooter.csproj --nologo -v q
     if ($LASTEXITCODE -ne 0) { throw 'C# build failed.' }
     # Imports new or changed assets (GLB models) before running.
@@ -72,4 +80,7 @@ try {
     } else {
         Start-Process -FilePath $windowed -ArgumentList '--path', ('"' + $PSScriptRoot + '"') -WorkingDirectory $PSScriptRoot
     }
-} finally { Pop-Location }
+} finally {
+    $env:GODOT_DIR = $previousGodotDir
+    Pop-Location
+}

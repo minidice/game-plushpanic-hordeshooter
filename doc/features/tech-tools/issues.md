@@ -15,6 +15,15 @@
 
 > 2026-10-26 검토(T-27 공유 꾸러미): 새 이슈 없음. 장면 촬영 도구를 처음 돌릴 때 장면을 바꿀 때마다 `ObjectDisposedException`이 났으나 동료 AI(`SquadBrain`)를 멈추자 사라졌다. 촬영 도구가 Stage를 바로 지우고 새로 만드는 방식에서만 확인했고 게임의 실제 전환에서 나는지는 확인하지 않았다(추정 · 미확인, [log/004](log/004-code-share-pack.md)).
 
+## I-46 PC별 Godot 로컬 NuGet 경로
+
+- 상태: **해결**, 2026-10-29. [최초 기록](../../issues.md)(2026-10-20)의 ID 유지.
+- 증상·원인: `game/nuget.config`의 `GodotLocal472`가 D 드라이브의 개발 PC 설치 경로에 고정되어 다른 PC에서 패키지 복원·초기 빌드 시 설정 파일 수정이 필요했다. 2026-10-29 C 경로를 환경변수로 지정해도 기존 설정의 `dotnet nuget list source` 결과가 D 경로인 것을 확인했다.
+- 해결: NuGet 소스를 `%GODOT_DIR%/GodotSharp/Tools/nupkgs`로 변경. `Start-Game.ps1`도 선택한 엔진 경로를 자식 빌드의 `GODOT_DIR`에 일시 반영한다. 명시적 `-GodotDir`과 기존 D 기본값 실행도 같은 패키지 폴더를 사용하며, 종료·실패 시 기존 프로세스 값을 복원한다.
+- 검사: C 경로에서 `dotnet nuget list source --configfile game/nuget.config --format Detailed` 결과와 실제 사용자 환경변수로 `dotnet build game/HordeShooter.csproj --nologo -v minimal` 성공 확인. 복원 완료, 종료 코드 0, 경고 0개·오류 0개. [기록 011](log/011-code-nuget-godot-dir.md).
+- 재발 방지·남은 제약: PC별 절대 경로를 공통 NuGet 설정에 쓰지 않는다. 직접 `dotnet build`나 에디터·IDE 빌드는 실행 프로세스에 `GODOT_DIR`이 있어야 한다. 환경변수가 없으면 NuGet 자체에는 D 경로 기본값이 없다. D 설치 PC의 재빌드, 게임 실행·통합 검사·렌더는 이번에 하지 않았다.
+
+- 2026-10-29 배포 환경 후속: `Export-Game.ps1`에도 같은 경로 선택·하위 빌드 전달·복원을 적용했다. C 설치 PC에 4.7.2 .NET Windows x64 템플릿을 설치했다. 표준 배포에서 발견한 Windows PowerShell 5.1의 리디렉션된 Godot 자식 종료 코드 null 문제는 검사 실행기 두 곳에서 핸들을 보관하도록 수정했다. 최초 실패·재현·최종 검증 범위는 [기록 012](log/012-code-export-godot-dir.md)에 구분한다. 앞선 기록 011의 미검증 항목은 당시 결과이며 후속 실행 결과는 012를 따른다.
 ## I-130 Studio를 다시 실행해도 브라우저가 뜨지 않음(렌더러가 멈춘 기존 Studio)
 
 - 증상: `studio/Start-Studio.ps1`을 실행해도 웹 브라우저가 열리지 않는다(사용자 보고, 2026-10-27). 실행기는 "Waiting for existing Studio"에서 3분 기다린 뒤 오류로 끝난다.

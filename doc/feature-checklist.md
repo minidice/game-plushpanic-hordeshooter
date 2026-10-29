@@ -642,6 +642,8 @@
 
 ## 기록 · 문서 (T-26)
 
+- [x] `Start-Game.ps1`의 PC별 Godot 설치 경로: `-GodotDir` → `GODOT_DIR` → 기존 기본 경로. 사용자 환경변수 설정 및 PowerShell 5.1 경로 선택 검사 완료(2026-10-29) — [기록 010](features/tech-tools/log/010-code-godot-dir-environment.md). 후속: NuGet 소스도 `GODOT_DIR` 사용, 선택한 엔진 경로를 빌드 환경과 일치시킴. C 설치 PC 복원·빌드 경고 0/오류 0 확인, I-46 해결 — [기록 011](features/tech-tools/log/011-code-nuget-godot-dir.md).
+
 - [x] 기록 문서를 기능별 폴더로(앞으로만 새 구조, 옛 기록은 그대로) — [기록 001](features/tech-tools/log/001-doc-records-split.md)
 - [x] Studio 최상단 「리소스 | md」와 문서 목록 · 검색 · 읽기 — [기록 002](features/tech-tools/log/002-code-studio-md-menu.md)
 - [x] `codex/mammal-weapon-arms` 병합 검증 — [기록 003](features/tech-tools/log/003-check-merge-mammal-weapon-arms.md)

@@ -23,7 +23,40 @@ Godot **4.7.2 .NET (C#) + Jolt**. 기획 기준은 [`doc/idea.md`](../doc/idea.m
 
 다른 PC에서 실행: `build/HordeShooter-windows.zip`을 풀고 `HordeShooter.exe` 실행(Godot·.NET 설치 불필요). 처음 내보낼 때 Godot 4.7.2 .NET 내보내기 템플릿이 필요합니다(에디터 → 내보내기 템플릿 관리, `%APPDATA%\Godot\export_templates\4.7.2.stable.mono`).
 
-필요 환경: Godot 4.7.2 .NET(기본 경로 `D:\Util\Godot\Godot_v4.7.2-stable_mono_win64`), .NET SDK 8 이상. 에디터에서 열려면 Godot .NET 에디터로 `game/project.godot`를 가져옵니다.
+필요 환경: Godot 4.7.2 .NET, .NET SDK 8 이상. 에디터에서 열려면 Godot .NET 에디터로 `game/project.godot`를 가져옵니다.
+
+### PC별 Godot 경로
+
+`Start-Game.ps1`과 `Export-Game.ps1`은 **명시한 `-GodotDir` → 프로세스 환경변수 `GODOT_DIR` → 기존 기본 경로 `D:\Util\Godot\Godot_v4.7.2-stable_mono_win64`** 순서로 설치 폴더를 선택합니다. `Start-Game.cmd`와 `Start-Multi-Test.cmd`도 이 스크립트를 사용합니다. 환경변수가 없거나 빈 값이면 기존 기본 경로를 사용합니다.
+
+각 PC에서 PowerShell로 사용자 환경변수를 한 번 등록합니다. 값은 실행 파일이 들어 있는 폴더이며, 경로 문자열 안에 따옴표를 추가로 넣지 않습니다.
+
+```powershell
+[Environment]::SetEnvironmentVariable(
+    'GODOT_DIR',
+    'C:\Util\Godot\Godot_v4.7.2-stable_mono_win64',
+    'User'
+)
+```
+
+등록 뒤에는 실행하는 터미널·Codex·MiniToolManage 등을 완전히 종료하고 다시 엽니다. 현재 PowerShell에서도 바로 적용하려면 다음을 실행합니다.
+
+```powershell
+$env:GODOT_DIR = [Environment]::GetEnvironmentVariable('GODOT_DIR', 'User')
+```
+
+PC별 값은 Windows 사용자 설정에만 저장되어 Git에 포함되지 않습니다. 별도 로컬 설정 파일이나 `.gitignore` 변경은 필요 없습니다.
+
+`nuget.config`의 로컬 패키지 소스도 `%GODOT_DIR%/GodotSharp/Tools/nupkgs`를 사용합니다([NuGet 환경변수 문법](https://learn.microsoft.com/en-us/nuget/reference/nuget-config-file#using-environment-variables)). 두 스크립트는 `-GodotDir` 또는 기존 기본값으로 선택한 경로까지 빌드용 `GODOT_DIR`에 일시 적용하고, 스크립트가 끝나거나 실패하면 원래 프로세스 값을 복원합니다. Windows에 등록된 사용자 환경변수는 변경하지 않습니다.
+
+직접 빌드하려면 `GODOT_DIR`을 설정한 터미널에서 실행합니다(저장소 루트 기준).
+
+```powershell
+$env:GODOT_DIR = [Environment]::GetEnvironmentVariable('GODOT_DIR', 'User')
+dotnet build game/HordeShooter.csproj --nologo
+```
+
+환경변수를 등록하지 않은 PC는 `Start-Game.ps1`의 기본값으로 실행하거나, 위 명령 전에 실제 설치 폴더를 `$env:GODOT_DIR`에 지정합니다. Godot 에디터·IDE에서 직접 빌드할 때도 환경변수를 상속하도록 등록 후 다시 열어야 합니다. 환경변수가 없으면 NuGet은 `%GODOT_DIR%`를 그대로 취급하므로 `dotnet build` 자체에는 D 경로 기본값이 적용되지 않습니다. 배포 실행기도 선택한 설치 경로를 캠페인 사전 검사·NuGet·내보내기에 전달합니다. 배포에는 같은 버전의 **4.7.2 .NET Export Templates**가 필요합니다. [공식 다운로드](https://godotengine.org/download/archive/4.7.2-stable/)에서 .NET 템플릿을 받아 Godot의 Editor → Manage Export Templates에서 설치합니다. Windows 설치 위치는 `%APPDATA%\Godot\export_templates\4.7.2.stable.mono`입니다. 표준 배포는 캠페인·멀티플레이 검사 통과 후 `build/windows`와 ZIP을 생성합니다.
 
 ## 조작
 

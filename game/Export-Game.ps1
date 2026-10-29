@@ -3,7 +3,12 @@
 # Copy the whole folder (or unzip the zip) to the other PC and run HordeShooter.exe.
 # Needs the Godot 4.7.2 .NET export templates (Editor → Manage Export Templates, or %APPDATA%\Godot\export_templates\4.7.2.stable.mono).
 param(
-    [string]$GodotDir = 'D:\Util\Godot\Godot_v4.7.2-stable_mono_win64',
+    # Explicit -GodotDir overrides the machine's GODOT_DIR; keep the original default as fallback.
+    [string]$GodotDir = $(if ($env:GODOT_DIR) {
+        $env:GODOT_DIR
+    } else {
+        'D:\Util\Godot\Godot_v4.7.2-stable_mono_win64'
+    }),
     [switch]$NoZip
 )
 $ErrorActionPreference = 'Stop'
@@ -13,7 +18,10 @@ $templates = Join-Path $env:APPDATA 'Godot\export_templates\4.7.2.stable.mono\wi
 if (-not (Test-Path -LiteralPath $templates)) { throw "Export templates missing: $templates" }
 
 Push-Location $PSScriptRoot
+$previousGodotDir = $env:GODOT_DIR
 try {
+    # Validation, NuGet and export must all use the selected engine installation.
+    $env:GODOT_DIR = $GodotDir
     # A green result belongs to exact source/assets/tests, not just a branch name or an old successful run.
     $reportPath = Join-Path $PSScriptRoot 'output/campaign-validation.json'
     $fingerprint = & "$PSScriptRoot/tests/Get-CampaignBuildFingerprint.ps1"
@@ -51,4 +59,7 @@ try {
         Write-Host "Zip: $zip"
     }
     Write-Host "Exported to $out"
-} finally { Pop-Location }
+} finally {
+    $env:GODOT_DIR = $previousGodotDir
+    Pop-Location
+}

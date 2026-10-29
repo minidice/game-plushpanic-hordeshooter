@@ -14,7 +14,13 @@ public partial class CampaignProgressionCheck : Node
     {
         ulong end = Time.GetTicksMsec() + (ulong)seconds * 1000;
         while (!predicate() && Time.GetTicksMsec() < end) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        if (!predicate()) throw new Exception(message);
+        if (!predicate())
+        {
+            string state = GetTree().CurrentScene is Stage stage
+                ? $"stage={stage.Map.StageNumber} started={stage.Net?.Started} peers={stage.Net?.Peers.Count} stopped={stage.AllStopped} transition={StageTransition.Busy} paused={GetTree().Paused} received={stage.Net?.BytesReceived} snapshots={stage.Net?.SnapshotsReceived} applyErrors={stage.Net?.ApplyErrors} role={stage.Role}"
+                : $"scene={GetTree().CurrentScene?.Name}";
+            throw new Exception($"{message}; {state}; fps={Engine.GetFramesPerSecond()}");
+        }
         GD.Print("PASS: " + message);
     }
     private async Task Frames(int n) { for (int i = 0; i < n; i++) await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame); }
