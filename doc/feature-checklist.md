@@ -642,6 +642,7 @@
 - [x] Studio 최상단 「리소스 | md」와 문서 목록 · 검색 · 읽기 — [기록 002](features/tech-tools/log/002-code-studio-md-menu.md)
 - [x] `codex/mammal-weapon-arms` 병합 검증 — [기록 003](features/tech-tools/log/003-check-merge-mammal-weapon-arms.md)
 - [x] Studio 「기획서」 메뉴 — 첫 하위 「레벨디자인」: 맵별 구역 기능 · 평면도(T-28, 2026-10-27) — [기록 008](features/tech-tools/log/008-code-studio-level-design.md). 다른 기획서 하위 메뉴는 아직
+- [x] 홍보 영상 촬영 장면(2026-10-29): AI 4명 전투 컷 6개 + 제목, Movie Maker 1920 × 1080 · 60fps, 품질 낮은 곳 제외, `tools/Make-PromoReel.ps1` — [기록 009](features/tech-tools/log/009-code-promo-reel.md). mp4 변환(ffmpeg) · 음악은 아직
 - [ ] 옛 기록을 기능 폴더로 옮기기(필요한 기능부터)
 
 ## 로컬 개발용 Studio (T-25, 2026-10-24)
