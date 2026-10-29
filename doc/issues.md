@@ -3,6 +3,7 @@
 - **I-72 후속** · 이동/장비계획 병합 검사에서 무제한 프레임 위치 오차2회 실패·60fps32개 통과, 원인 미확정·미해결 유지 · 2026-10-30 · [본문](features/multiplayer/issues.md#i-72-후속-로컬-위치-동기화-검사-간헐-실패-2026-10-29)
 
 - **I-90 후속** · 멀티 캠페인1→2→3 연속 전환·개인 장비 이월·현재 맵 재합류 구현 · 해결·회귀 통과 · 2026-10-29 · [본문](features/multiplayer/issues.md#i-90-후속-멀티-캠페인-연속-전환-점검)
+- **I-139** · `CaptureArtDirection` 창 모드가 main에서 "W moves screen-up with diagonal camera"로 실패, 뒤의 HUD 겹침 검사가 돌지 못함 · 열림 · 2026-10-30 · [본문](features/tech-tools/issues.md#i-139-captureartdirection의-w-이동-방향-검사가-main에서-실패)
 - **I-138** · 캠페인1 컨테이너 사다리 두 곳의 접근 바닥 공백으로 상단이 높이0에 생성됨 · 해결·회귀 통과 · 2026-10-29 · [본문](features/multiplayer/issues.md#i-138-캠페인1-컨테이너-사다리-접근-공백)
 
 - **I-135** · 큰 캠페인 후반 좌표가 통신의 ±327m 범위에서 잘려 참가자 상호작용·목적지 도착 판정 실패 · 해결·회귀 통과 · 2026-10-29 · [본문](features/multiplayer/issues.md#i-135-큰-캠페인-좌표가-통신-범위를-넘음)
