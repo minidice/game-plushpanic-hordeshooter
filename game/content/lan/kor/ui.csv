@@ -312,3 +312,4 @@ hud_interaction_other_reviver,동료가 구조 중
 
 menu_home_play,게임 시작
 menu_home_character,캐릭터
+hud_roll_help,구르기 2회 · 종료부터 한 칸씩 6초 회복 · 무적 없음

@@ -147,6 +147,8 @@ public partial class Player
         return new NetPlayerState
         {
             Peer = PeerId, MotionRevision = MotionRevision, TravelKind = TravelKind, Position = GlobalPosition, Aim = TravelKind != 0 ? GlobalPosition + Rig.Forward * 8 : AimPoint, Health = Health, Medkits = Medkits, BleedLeft = BleedLeft, Flags = flags,
+            RollCharges = RollCharges, RollRechargeLeft = RollRechargeLeft, RollRechargeActive = _rollRechargeActive,
+            RollPressSeen = _pressSeen[(int)NetPress.Roll],
             ActiveSlot = l.ActiveSlot, TapStacks = TapStacks, Mad = (MadSize > 0 ? 1 : MadSize < 0 ? 2 : 0) + MadLevel * 4,
             Daze = Mathf.Clamp(Mathf.CeilToInt(DazeTime * 10), 0, 255), Weak = Mathf.Clamp(Mathf.CeilToInt(WeakTime * 10), 0, 255),
             Pole = Pole > 0 ? 1 : Pole < 0 ? 2 : 0,
@@ -165,12 +167,20 @@ public partial class Player
         NetApplying = true;
         try
         {
+            // A snapshot preceding our latest press must not give back the locally predicted charge.
+            if (Stage.Role == NetRole.Client && (!IsLocal || s.RollPressSeen == _pressCounts[(int)NetPress.Roll]))
+            {
+                RollCharges = Mathf.Clamp(s.RollCharges, 0, MaxRollCharges);
+                RollRechargeLeft = RollCharges == MaxRollCharges ? 0 : Mathf.Clamp(s.RollRechargeLeft, 0, RollCooldown);
+                _rollRechargeActive = RollCharges < MaxRollCharges && s.RollRechargeActive;
+            }
             bool dead = s.Flags.HasFlag(NetPlayerFlags.Dead), downed = s.Flags.HasFlag(NetPlayerFlags.Downed);
             if (dead && !IsDead) { Health = 0; Die(Vector3.Zero); return; }
             if (downed && !IsDowned && !IsDead) GoDown();
             else if (!downed && IsDowned) Revive();
             if (s.Health < Health && !IsDowned)
             {
+                InterruptAutoRun();
                 Rig.FlashHit();
                 _hurt = 1;
                 DamageFlash = Mathf.Min(1, DamageFlash + .5f + (Health - s.Health) / 40f);

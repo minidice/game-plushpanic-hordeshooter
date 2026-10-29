@@ -12,7 +12,7 @@ public partial class Player
     {
         _gondola=gondola;
         _gondolaPosition=GlobalPosition;
-        _rollTime=0;
+        FinishRoll();
         _push=Vector3.Zero;
         Weapons.EndThrowAim(); Weapons.CancelMeleeSwing();
         IsHealing=false; IsAiming=false; AimBlend=0;
@@ -33,6 +33,7 @@ public partial class Player
     {
         if (_gondola!=gondola) return;
         _gondola=null;
+        InterruptAutoRun();
         Velocity=Vector3.Zero; NetMotion=null;
         ClearGondolaControls();
     }

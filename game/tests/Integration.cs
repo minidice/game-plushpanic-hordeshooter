@@ -739,12 +739,13 @@ public partial class Integration : Node
         player.PressRoll();
         await Frames(3);
         player.TakeDamage(20, Vector3.Left);
-        Check(player.IsRolling && player.Health == hp, "rolling dodges damage");
+        Check(player.IsRolling && player.Health == hp - 20, "rolling takes damage without cancelling the roll");
         await Frames(30);
         Check(player.GlobalPosition.X > blocker.GlobalPosition.X && player.GlobalPosition.X - startX > 3f, "roll carries the player through a zombie");
         player.PressRoll();
         await Frames(2);
-        Check(!player.IsRolling && player.RollCooldownLeft > Player.RollCooldown - 1, "roll has a 5 second cooldown");
+        Check(player.IsRolling && player.RollCharges == 0 && player.RollCooldownLeft > 5,
+            "second stored roll works without resetting the six second recharge");
         player.SetControls(Vector2.Zero, new Vector3(40, 1, 0), false);
         // Awake zombies nearby moan now and then.
         int groans = stage.Sfx.Played.GetValueOrDefault("groan");

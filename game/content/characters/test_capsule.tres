@@ -14,6 +14,6 @@ PrimaryColor = Color(0.55, 0.6, 0.42, 1)
 SecondaryColor = Color(0.16, 0.16, 0.14, 1)
 ColliderRadius = 0.45
 ColliderHeight = 1.7
-MoveSpeed = 4.4
+MoveSpeed = 3.6
 MaxHealth = 100
 WaddleDegrees = 9.0

@@ -71,6 +71,7 @@ public partial class NetCodecCheck : Node
         {
             Peer = 2, Position = new Vector3(64.37f, 0, -3.12f), Aim = new Vector3(70, 1, 0), Health = 87, Medkits = 1, BleedLeft = 12.5f,
             Flags = NetPlayerFlags.Downed | NetPlayerFlags.HostMoves, ActiveSlot = 2, TapStacks = 7,
+            RollCharges = 1, RollPressSeen = 255, RollRechargeLeft = 4.321f, RollRechargeActive = true,
             Secondary = NetIds.Weapon("m1911"), SecondaryMag = 15, SecondaryReserve = 0,
             Primary = NetIds.Weapon("m4"), PrimaryMag = 37, PrimaryReserve = 250,
             Special = NetIds.Weapon("railgun"), SpecialMag = 1, SpecialReserve = 3,
@@ -108,6 +109,8 @@ public partial class NetCodecCheck : Node
                 $"a snapshot with {count} enemies survives the round trip ({bytes.Length} bytes)");
             if (count == 0)
             {
+                Check(p.RollCharges == 1 && p.RollPressSeen == 255 && Mathf.Abs(p.RollRechargeLeft - 4.321f) < .001f && p.RollRechargeActive,
+                    "roll charges, timer phase and acknowledged input survive serialization");
                 var plain = new NetSnapshot { Players = { new NetPlayerState { Peer = 3, Throwables = new() } } };
                 Check(NetSnapshot.Decode(plain.Encode()).Players[0].Backpack == null, "a survivor without a backpack (outside Outpost) stays without one");
             }

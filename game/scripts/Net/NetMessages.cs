@@ -155,6 +155,9 @@ public struct NetPlayerState
     public Vector3 Position, Aim;
     public int Health, Medkits;
     public float BleedLeft;
+    public int RollCharges, RollPressSeen;
+    public float RollRechargeLeft;
+    public bool RollRechargeActive;
     public NetPlayerFlags Flags;
     public int ActiveSlot;
     /// <summary>Tap dance steps (M-29): the client walks its own survivor, so it needs them.</summary>
@@ -179,6 +182,9 @@ public struct NetPlayerState
         w.U8(Health);
         w.U8(Medkits);
         w.U8(Mathf.Clamp(Mathf.RoundToInt(BleedLeft * 4), 0, 255));
+        w.U8(RollCharges); w.U8(RollPressSeen);
+        w.U16(Mathf.Clamp(Mathf.RoundToInt(RollRechargeLeft * 1000), 0, 65535));
+        w.U8(RollRechargeActive ? 1 : 0);
         w.U8((int)Flags);
         w.U8(ActiveSlot);
         w.U8(TapStacks);
@@ -200,6 +206,7 @@ public struct NetPlayerState
         var s = new NetPlayerState
         {
             Peer = r.I32(), MotionRevision = r.I32(), TravelKind = (byte)r.U8(), Position = r.Pos(), Aim = r.Pos(), Health = r.U8(), Medkits = r.U8(), BleedLeft = r.U8() / 4f,
+            RollCharges = r.U8(), RollPressSeen = r.U8(), RollRechargeLeft = r.U16() / 1000f, RollRechargeActive = r.U8() != 0,
             Flags = (NetPlayerFlags)r.U8(), ActiveSlot = r.U8(), TapStacks = r.U8(), Mad = r.U8(), Daze = r.U8(), Weak = r.U8(), Pole = r.U8(),
             Secondary = r.U16(), SecondaryMag = r.U16(), SecondaryReserve = r.U16(),
             Primary = r.S16(), PrimaryMag = r.U16(), PrimaryReserve = r.U16(),

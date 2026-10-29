@@ -61,7 +61,8 @@ public partial class Hud
         vitals.AddChild(_hp);
         vitals.AddChild(new Paint { Name = "HealthBar", CustomMinimumSize = new Vector2(220, 30), Painter = DrawHealth });
         dock.AddChild(vitals);
-        dock.AddChild(new Paint { Name = "LeapGauge", CustomMinimumSize = new Vector2(74, 84), Painter = DrawLeap });
+        dock.AddChild(new Paint { Name = "LeapGauge", CustomMinimumSize = new Vector2(74, 84), Painter = DrawLeap,
+            TooltipText = Loc.Text("hud_roll_help") });
         _slot1 = new HudEquipmentSlot("SecondarySlot", "1");
         _slot2 = new HudEquipmentSlot("PrimarySlot", "2");
         _slot3 = new HudEquipmentSlot("SpecialSlot", "3");
@@ -94,21 +95,22 @@ public partial class Hud
 
     private void DrawLeap(Control c)
     {
-        var left = Stage.Player.RollCooldownLeft;
+        var player = Stage.Player;
+        var left = player.RollRechargeLeft;
         var center = new Vector2(c.Size.X / 2, 32);
-        var ready = left <= 0;
+        var ready = player.RollCharges > 0;
         c.DrawCircle(center, 28, new Color(.008f, .016f, .025f, .70f), true, -1, true);
         c.DrawArc(center, 26, 0, Mathf.Tau, 96, new Color(.28f, .36f, .48f, .25f), 3, true);
-        var progress = 1 - Mathf.Clamp(left / Player.RollCooldown, 0, 1);
+        var progress = player.RollCharges == Player.MaxRollCharges ? 1 : 1 - Mathf.Clamp(left / Player.RollCooldown, 0, 1);
         if (progress > 0)
             DrawLightArc(c, center, 26, -Mathf.Pi / 2 + Mathf.Tau * progress, UiTheme.ActionGlow, ready ? 1 : .55f);
         var font = c.GetThemeDefaultFont();
-        if (ready)
-        {
-            // A simple lightning mark reads as the leap ability without implying an extra stat.
-            c.DrawColoredPolygon(new[] { center + new Vector2(3, -13), center + new Vector2(-9, 2), center + new Vector2(-1, 2), center + new Vector2(-4, 14), center + new Vector2(10, -3), center + new Vector2(2, -3) }, HudWhite);
-        }
-        else c.DrawString(font, new Vector2(0, 38), $"{left:0.0}", HorizontalAlignment.Center, c.Size.X, 17, HudWhite);
+        c.DrawString(font, new Vector2(0, 36), $"{player.RollCharges}/{Player.MaxRollCharges}",
+            HorizontalAlignment.Center, c.Size.X, 19, ready ? HudWhite : HudMuted);
+        for (int i = 0; i < Player.MaxRollCharges; i++)
+            c.DrawCircle(center + new Vector2((i - .5f) * 12, 14), 3, i < player.RollCharges ? UiTheme.ActionGlow : HudMuted.Darkened(.55f), true, -1, true);
+        if (left > 0)
+            c.DrawString(font, new Vector2(0, 65), $"{left:0.0}s", HorizontalAlignment.Center, c.Size.X, 11, HudMuted);
         c.DrawString(font, new Vector2(0, 78), "SPACE", HorizontalAlignment.Center, c.Size.X, 11, HudMuted);
     }
 }

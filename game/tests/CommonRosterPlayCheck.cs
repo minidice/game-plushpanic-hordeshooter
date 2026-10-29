@@ -69,7 +69,7 @@ public partial class CommonRosterPlayCheck : Node
         zombie.Reaction=Reaction.Hunter;float before=player.GlobalPosition.X-zombie.GlobalPosition.X;
         Frame(new(15,1,0),18);await Frames(240);
         float after=player.GlobalPosition.X-zombie.GlobalPosition.X;
-        Check(zombie.Speed>player.Definition.MoveSpeed&&zombie.Speed<player.Definition.MoveSpeed*1.1f,"ordinary infected speed is subtly faster than unmodified survivor");
+        Check(zombie.Speed>Player.AutoRunSpeed&&zombie.Speed<Player.AutoRunSpeed*1.1f,"ordinary infected speed is subtly faster than automatic running");
         Check(after<before-.35f&&after>1,"walking pursuit gradually closes the gap without instant contact");await Shot("pursuit");
         float rollBefore=after;player.PressRoll();await Frames(30);
         Check(player.GlobalPosition.X-zombie.GlobalPosition.X>rollBefore+1,"roll still creates an escape opening");

@@ -473,7 +473,7 @@ public partial class Enemy : CharacterBody3D
             to.Y = 0;
             float distance = to.Length();
             // Re-evaluate the real target at impact: a dodge, sidestep or new wall makes the swing miss.
-            if (!IsDead && StunTime <= 0 && !player.IsDead && !player.IsRolling &&
+            if (!IsDead && StunTime <= 0 && !player.IsDead &&
                 (Stage.Tiers.Any || height < 1.1f) && distance <= Radius + player.Definition.ColliderRadius + AttackReach &&
                 (distance < .001f || _meleeDirection.Dot(to / distance) >= .55f) &&
                 CanReachAcrossTiers(player))

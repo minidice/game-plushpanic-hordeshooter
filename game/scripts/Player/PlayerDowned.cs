@@ -51,7 +51,7 @@ public partial class Player
         IsHealing = false;
         StunTime = 0;
         _tumble = 0;
-        _rollTime = 0;
+        FinishRoll();
         _push = Vector3.Zero;
         Gun.CancelReload();
         Weapons.EndThrowAim();
@@ -93,6 +93,7 @@ public partial class Player
         ReviveProgress = 0;
         RevivedBy = null;
         Health = Mathf.Min(MaxHealth, Rules.ReviveHealth);
+        InterruptAutoRun();
         BleedLeft = 0;
         Rig.ResetPose();
         Stage.Sfx.PlayAt("heal", GlobalPosition + Vector3.Up);

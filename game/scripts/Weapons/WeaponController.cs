@@ -337,6 +337,7 @@ public partial class WeaponController : Node
     private void Echo(WeaponDefinition def, int n)
     {
         if (_player.IsDead || _player.IsDowned) return;
+        _player.InterruptAutoRun();
         Echoes++;
         _echoing = true;
         var dir = AimDirection();
@@ -481,6 +482,7 @@ public partial class WeaponController : Node
         _player.Rig.SetLocomotionPose(0,0,true);
         var def = state.Def;
         ShotsFired++;
+        _player.InterruptAutoRun();
         // The team's "special weapon twice" card (M-29 plan 16.6): every slot-3 kind goes off once more.
         if (!_echoing && def.Slot == WeaponSlot.Special && Stage.ModeRules?.CardEffects is { } cards && cards.SpecialShots > 1)
         {

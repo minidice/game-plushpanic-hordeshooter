@@ -73,7 +73,7 @@ public partial class CharacterDefinition : Resource
     [Export] public float ColliderRadius { get; set; } = .45f;
     [Export] public float ColliderHeight { get; set; } = 1.8f;
     /// <summary>Survivors only; a monster's speed and health come from monsters.csv (<see cref="MonsterDefinition"/>).</summary>
-    [Export] public float MoveSpeed { get; set; } = 4.2f;
+    [Export] public float MoveSpeed { get; set; } = 3.6f;
     /// <summary>Survivors only, like <see cref="MoveSpeed"/>.</summary>
     [Export] public int MaxHealth { get; set; } = 100;
 

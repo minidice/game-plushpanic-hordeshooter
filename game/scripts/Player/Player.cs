@@ -15,7 +15,7 @@ public partial class Player : CharacterBody3D
     public const float HealDuration = 2.6f;
     public const float CritFocusTime = .5f;
     public const float CritMultiplier = 2.5f;
-    public const float RollCooldown = 5f;
+    public const float RollCooldown = 6f;
     public const float RollTime = .42f;
     public const float RollSpeed = 10f;
     private const float Gravity = 20f;
@@ -55,7 +55,8 @@ public partial class Player : CharacterBody3D
     public float StunTime { get; private set; }
     public bool IsStunned => StunTime > 0;
     public bool IsRolling => _rollTime > 0;
-    public float RollCooldownLeft { get; private set; }
+    /// <summary>Compatibility for diagnostics: time to the next charge, not whether a spare roll is available.</summary>
+    public float RollCooldownLeft => RollRechargeLeft;
     public Vector3 AimPoint { get; private set; }
     public Vector3 AimDirection { get; private set; } = Vector3.Right;
     public Enemy? FocusTarget { get; private set; }
@@ -64,6 +65,7 @@ public partial class Player : CharacterBody3D
     /// <summary>Client: a hit the host reported (the arc on the HUD; health arrives with the snapshot).</summary>
     public void ShowNetHit(Vector3 direction)
     {
+        InterruptAutoRun();
         direction.Y = 0;
         if (direction.LengthSquared() > .0001f) HitFrom?.Invoke(direction.Normalized());
     }
@@ -125,7 +127,11 @@ public partial class Player : CharacterBody3D
         if (whole <= 0) return;
         _drainDebt -= whole;
         int lowest = Mathf.CeilToInt(MaxHealth * floor);
-        if (Health > lowest) Health = Mathf.Max(lowest, Health - whole);
+        if (Health > lowest)
+        {
+            Health = Mathf.Max(lowest, Health - whole);
+            InterruptAutoRun();
+        }
     }
     /// <summary>Gather! (M-29 16.6.1): this survivor's bonus while in the ring — damage, crit damage or fire rounds (host-set, 0 = none).</summary>
     public float GatherDamage { get; set; }
@@ -357,6 +363,7 @@ public partial class Player : CharacterBody3D
     {
         if (Stage.Role == NetRole.Client && NetTravelKind != 0)
         {
+            InterruptAutoRun();
             if (NetMotion is { } at) GlobalPosition = at;
             Velocity = Vector3.Zero; ClearGondolaControls();
             Rig.Face(AimDirection);
@@ -382,6 +389,7 @@ public partial class Player : CharacterBody3D
         if (IsLocal && Stage.Role == NetRole.Client) RecordNetEdges();
         if (OnLadder || OnZipline)
         {
+            InterruptAutoRun();
             // On a ladder or a zipline: no shooting, using or rolling (L-16 · L-18); presses made now are dropped.
             if (OnLadder) LadderStep(dt);
             else ZiplineStep(dt);
@@ -392,7 +400,7 @@ public partial class Player : CharacterBody3D
             return;
         }
         HeliumTime = Mathf.Max(0, HeliumTime - dt);
-        RollCooldownLeft = Mathf.Max(0, RollCooldownLeft - dt);
+        TickRollRecharge(dt);
         // A daze (honk beam) holds like a stun but keeps them on their feet.
         bool knocked = StunTime > 0;
         bool stunned = knocked || DazeTime > 0;
@@ -419,9 +427,12 @@ public partial class Player : CharacterBody3D
         if (_cycle != 0 && !IsRestrained) Weapons.CycleThrowable(_cycle);
         if (_reloadPressed && !busy && !Weapons.AimingThrow && Gun.StartReload()) PlayOwn("reload_start");
 
+        TickAutoRun(dt, busy);
         var move = stunned || IsRestrained || Reviving != null || Weapons.Planted ? Vector3.Zero : new Vector3(_move.X, 0, _move.Y).LimitLength(1);
-        float speed = Definition.MoveSpeed * (IsHealing ? .35f : 1f) * (Gun.Reloading ? .85f : 1f) * HandlingSpeedScale * (1 + TapStacks * LabCards.TapSpeedPerStack) *
+        float speed = Definition.MoveSpeed * (IsAutoRunning ? AutoRunSpeed / WalkSpeed : 1f) * (IsHealing ? .35f : 1f) * (Gun.Reloading ? .85f : 1f) * HandlingSpeedScale * (1 + TapStacks * LabCards.TapSpeedPerStack) *
                       MadSpeedScale * (WeakTime > 0 ? 1 - HonkBeamWeakSpeed : 1);
+        // C-35: even a light weapon or positive card modifier must not outrun the ordinary infected.
+        speed = Mathf.Min(speed, AutoRunSpeed);
         bool grounded = IsOnFloor() && Velocity.Y <= 0;
         _push = _push.MoveToward(Vector3.Zero, dt * (grounded ? 10f : 1.2f));
         var horizontal = IsRestrained ? RestraintVelocity() : IsRolling ? KeepOnTier(_rollDirection * RollSpeed * MadRollScale) : KeepOnTier(move * speed) + _push;
@@ -568,11 +579,11 @@ public partial class Player : CharacterBody3D
 
     private void TryStartRoll(bool stunned)
     {
-        if (stunned || IsRolling || IsHealing || IsRestrained || RollCooldownLeft > 0) return;
+        if (stunned || IsRolling || IsHealing || IsRestrained || RollCharges <= 0) return;
         var input = new Vector3(_move.X, 0, _move.Y);
         _rollDirection = input.LengthSquared() > .01f ? input.Normalized() : AimDirection;
         _rollTime = RollTime;
-        RollCooldownLeft = RollCooldown;
+        SpendRollCharge();
         _rollBumped.Clear();
         Stage.Sfx.PlayAt("roll", GlobalPosition + Vector3.Up * .5f);
         // Roll through the crowd instead of into it.
@@ -598,9 +609,8 @@ public partial class Player : CharacterBody3D
             enemy.Shove(lateral, 50f, 0, this);
         }
         if (_rollTime > 0) return;
-        _rollTime = 0;
+        FinishRoll();
         Rig.Pose.Transform = Transform3D.Identity;
-        CollisionMask = Layers.MovementWorld | Layers.Enemy | Layers.Props;
     }
 
     private void PushProps()
@@ -619,7 +629,8 @@ public partial class Player : CharacterBody3D
     {
         // On a client only the host decides damage; local blasts and hazards are just pictures (M-20).
         if (!Stage.Authoritative && !NetApplying) return;
-        if (IsDead || Invulnerable || IsRolling || amount <= 0) return;
+        if (IsDead || Invulnerable || amount <= 0) return;
+        InterruptAutoRun();
         if (IsDowned) { BleedFromHit(); return; }
         StopReviving();
         int damage = Mathf.CeilToInt(amount);
@@ -732,7 +743,7 @@ public partial class Player : CharacterBody3D
         IsHealing = false;
         StunTime = 0;
         _tumble = 0;
-        _rollTime = 0;
+        FinishRoll();
         Gun.CancelReload();
         CollisionLayer = 0;
         CollisionMask = 0;
